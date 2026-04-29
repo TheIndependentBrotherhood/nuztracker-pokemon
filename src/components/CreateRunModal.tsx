@@ -24,7 +24,7 @@ export default function CreateRunModal({ onClose }: Props) {
     if (!gameName.trim()) return;
     const run = createRun({ gameName: gameName.trim(), region, difficulty, isShinyHuntMode, isRandomMode });
     onClose();
-    router.push(`/run?id=${run.id}`);
+    router.push(`/run/?id=${run.id}`);
   }
 
   return (
