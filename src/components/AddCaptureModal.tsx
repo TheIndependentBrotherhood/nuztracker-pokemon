@@ -33,14 +33,34 @@ export default function AddCaptureModal({ runId, zoneId, zoneName, onClose }: Pr
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const timer = setTimeout(async () => {
-      if (query.length < 2) { setResults([]); setSearching(false); return; }
-      setSearching(true);
+      if (query.length < 2) {
+        if (!cancelled) {
+          setResults([]);
+          setSearching(false);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setSearching(true);
+      }
+
       const r = await searchPokemon(query);
+
+      if (cancelled) return;
+
       setResults(r);
       setSearching(false);
     }, 300);
-    return () => { clearTimeout(timer); setSearching(false); };
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      setSearching(false);
+    };
   }, [query]);
 
   async function handleSelect(item: { name: string; url: string }) {
