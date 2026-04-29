@@ -8,9 +8,12 @@ export async function encodeTeam(captures: Capture[]): Promise<string> {
   const pako = await import('pako');
   const compressed = pako.gzip(data);
   
-  let binary = '';
-  compressed.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return btoa(binary);
+  const chunkSize = 0x8000;
+  const parts: string[] = [];
+  for (let i = 0; i < compressed.length; i += chunkSize) {
+    parts.push(String.fromCharCode(...compressed.subarray(i, i + chunkSize)));
+  }
+  return btoa(parts.join(''));
 }
 
 export async function decodeTeam(base64: string): Promise<Capture[]> {
