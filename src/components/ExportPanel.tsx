@@ -36,7 +36,7 @@ export default function ExportPanel({ run, teamViewId }: Props) {
   async function handleGenerateUrl() {
     if (run.team.length === 0) return;
     const base64 = await encodeTeam(run.team);
-    const url = buildShareUrl(run.team, base64, { showTypes: true, showLevels: true });
+    const url = buildShareUrl(base64, { showTypes: true, showLevels: true });
     const full = `${window.location.origin}${url}`;
     setShareUrl(full);
   }

@@ -32,7 +32,6 @@ export async function decodeTeam(base64: string): Promise<Capture[]> {
 }
 
 export function buildShareUrl(
-  captures: Capture[],
   base64: string,
   options: { showTypes?: boolean; showLevels?: boolean } = {}
 ): string {
