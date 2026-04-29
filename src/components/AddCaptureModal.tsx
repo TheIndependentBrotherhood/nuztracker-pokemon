@@ -80,7 +80,11 @@ export default function AddCaptureModal({ runId, zoneId, zoneName, onClose }: Pr
             />
             {selected && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={getSpriteUrl(selected.id, isShiny)} alt="" className="w-10 h-10 object-contain" />
+              <img
+                src={getSpriteUrl(selected.id, isShiny)}
+                alt={`${isShiny ? 'Shiny ' : ''}${selected.name} sprite`}
+                className="w-10 h-10 object-contain"
+              />
             )}
           </div>
           {results.length > 0 && (
