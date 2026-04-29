@@ -12,7 +12,7 @@ Tous les fichiers se trouvent dans `public/data/` (versionnés dans Git après g
 
 | Fichier                   | Source PokeAPI            | Taille  | Fréquence MAJ                    | Priorité     |
 | ------------------------- | ------------------------- | ------- | -------------------------------- | ------------ |
-| `pokemon-list.json`       | `/pokemon?limit=1025`     | ~2-3 MB | Annuelle (nouvelles générations) | **Haute**    |
+| `pokemon-list.json`       | `/pokemon?limit=1350`     | ~2-3 MB | Annuelle (nouvelles générations) | **Haute**    |
 | `regions.json`            | `/region/` + `/location/` | ~200 KB | Annuelle                         | **Haute**    |
 | `type-charts.json`        | `/generation/{1,2,6}/`    | ~15 KB  | Très rarement                    | **Critique** |
 | `type-sprites.json`       | `/type/{name}/sprites`    | ~200 KB | Annuelle                         | **Moyenne**  |
