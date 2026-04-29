@@ -24,7 +24,7 @@ export default function MapView({ run }: Props) {
 
   return (
     <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-      <div className="p-3 bg-gray-750 border-b border-gray-700 flex items-center gap-4">
+      <div className="p-3 bg-gray-800 border-b border-gray-700 flex items-center gap-4">
         <h3 className="font-bold text-white capitalize">{run.region} Region Map</h3>
         <div className="flex gap-3 text-xs">
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gray-500 inline-block"></span> Not Visited</span>
