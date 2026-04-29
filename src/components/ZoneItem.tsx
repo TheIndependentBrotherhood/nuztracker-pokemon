@@ -52,10 +52,18 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
     <>
       <div
         ref={ref}
+        role="button"
+        tabIndex={0}
         className={`border-b border-gray-700/50 p-3 transition-all ${statusColors[visualStatus] ?? statusColors['not-visited']} ${
           isSelected ? 'ring-2 ring-yellow-400/50' : ''
         }`}
         onClick={() => setSelectedZone(isSelected ? null : zone.id)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setSelectedZone(isSelected ? null : zone.id);
+          }
+        }}
       >
         <div className="flex items-center gap-2">
           <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusDots[visualStatus] ?? statusDots['not-visited']}`} />

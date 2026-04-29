@@ -34,13 +34,13 @@ export default function AddCaptureModal({ runId, zoneId, zoneName, onClose }: Pr
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (query.length < 2) { setResults([]); return; }
+      if (query.length < 2) { setResults([]); setSearching(false); return; }
       setSearching(true);
       const r = await searchPokemon(query);
       setResults(r);
       setSearching(false);
     }, 300);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); setSearching(false); };
   }, [query]);
 
   async function handleSelect(item: { name: string; url: string }) {

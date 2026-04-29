@@ -43,7 +43,7 @@ export default function RunList({ runs }: RunListProps) {
           <div
             key={run.id}
             className="bg-gray-800 border border-gray-700 rounded-xl p-5 hover:border-yellow-400/50 transition-all cursor-pointer group"
-            onClick={() => router.push(`/run?id=${run.id}`)}
+            onClick={() => router.push(`/run/?id=${run.id}`)}
           >
             <div className="flex justify-between items-start">
               <div>
