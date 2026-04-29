@@ -118,7 +118,10 @@ export default function AddCaptureModal({ runId, zoneId, zoneName, onClose }: Pr
               max={100}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
               value={level}
-              onChange={(e) => setLevel(parseInt(e.target.value) || 1)}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setLevel(isNaN(val) ? 1 : Math.min(100, Math.max(1, val)));
+              }}
             />
           </div>
           <div className="flex-1">

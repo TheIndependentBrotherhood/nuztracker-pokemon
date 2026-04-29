@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useRunStore } from '@/store/runStore';
 import { getRun } from '@/lib/storage';
 import StatsBar from '@/components/StatsBar';
@@ -13,14 +13,14 @@ import ExportPanel from '@/components/ExportPanel';
 
 type Tab = 'zones' | 'team' | 'types';
 
-export default function RunPageClient() {
-  const params = useParams();
+function RunPageContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { runs, loadRuns, setCurrentRun } = useRunStore();
   const [tab, setTab] = useState<Tab>('zones');
   const [mounted, setMounted] = useState(false);
 
-  const id = params.id as string;
+  const id = searchParams.get('id') ?? '';
 
   useEffect(() => {
     setMounted(true);
@@ -109,5 +109,17 @@ export default function RunPageClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RunPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
+        Loading run...
+      </div>
+    }>
+      <RunPageContent />
+    </Suspense>
   );
 }
