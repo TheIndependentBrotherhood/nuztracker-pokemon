@@ -76,6 +76,7 @@ export default function ExportPanel({ run, teamViewId }: Props) {
           />
           <button
             onClick={handleCopy}
+            aria-label={copied ? 'Copied!' : 'Copy share URL to clipboard'}
             className="bg-gray-600 hover:bg-gray-500 px-3 py-1.5 rounded text-sm transition-colors"
           >
             {copied ? '✓' : '📋'}
