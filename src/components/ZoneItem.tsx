@@ -32,9 +32,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
     const order: Zone['status'][] = ['not-visited', 'visited', 'captured'];
     const current = order.indexOf(zone.status);
     const next = order[(current + 1) % order.length];
-    if (next !== 'captured') {
-      setZoneStatus(runId, zone.id, next);
-    }
+    setZoneStatus(runId, zone.id, next);
   }
 
   return (

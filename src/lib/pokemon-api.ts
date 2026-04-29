@@ -2,6 +2,8 @@ import { PokemonApiData } from './types';
 
 const BASE_URL = 'https://pokeapi.co/api/v2';
 
+let pokemonListCache: Array<{ name: string; url: string }> | null = null;
+
 export async function fetchPokemon(nameOrId: string | number): Promise<PokemonApiData> {
   const res = await fetch(`${BASE_URL}/pokemon/${nameOrId}`);
   if (!res.ok) throw new Error(`Pokemon not found: ${nameOrId}`);
@@ -11,12 +13,13 @@ export async function fetchPokemon(nameOrId: string | number): Promise<PokemonAp
 export async function searchPokemon(query: string): Promise<Array<{ name: string; url: string }>> {
   if (!query || query.length < 2) return [];
   try {
-    const res = await fetch(`${BASE_URL}/pokemon?limit=1302`);
-    const data = await res.json();
+    if (!pokemonListCache) {
+      const res = await fetch(`${BASE_URL}/pokemon?limit=1302`);
+      const data = await res.json();
+      pokemonListCache = data.results as Array<{ name: string; url: string }>;
+    }
     const lower = query.toLowerCase();
-    return (data.results as Array<{ name: string; url: string }>)
-      .filter((p) => p.name.includes(lower))
-      .slice(0, 10);
+    return pokemonListCache.filter((p) => p.name.includes(lower)).slice(0, 10);
   } catch {
     return [];
   }

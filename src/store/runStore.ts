@@ -115,16 +115,16 @@ export const useRunStore = create<RunStore>((set, get) => ({
     if (!run) return;
     const updatedRun = {
       ...run,
-      zones: run.zones.map((z) =>
-        z.id === zoneId
-          ? {
-              ...z,
-              captures: z.captures.filter((c) => c.id !== captureId),
-              status: z.captures.length <= 1 ? ('visited' as const) : z.status,
-              updatedAt: Date.now(),
-            }
-          : z
-      ),
+      zones: run.zones.map((z) => {
+        if (z.id !== zoneId) return z;
+        const remaining = z.captures.filter((c) => c.id !== captureId);
+        return {
+          ...z,
+          captures: remaining,
+          status: remaining.length === 0 ? ('visited' as const) : z.status,
+          updatedAt: Date.now(),
+        };
+      }),
       team: run.team.filter((c) => c.id !== captureId),
     };
     get().updateRun(updatedRun);
