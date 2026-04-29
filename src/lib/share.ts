@@ -38,5 +38,5 @@ export function buildShareUrl(
   const params = new URLSearchParams({ team: base64 });
   if (options.showTypes) params.set('showTypes', 'true');
   if (options.showLevels) params.set('showLevels', 'true');
-  return `/share?${params.toString()}`;
+  return `/share/?${params.toString()}`;
 }

@@ -37,7 +37,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
     set({ runs });
   },
 
-  setCurrentRun: (run) => set({ currentRun: run }),
+  setCurrentRun: (run) => set({ currentRun: run, selectedZoneId: null }),
 
   createRun: (data) => {
     const zoneTemplates = getZonesForRegion(data.region);

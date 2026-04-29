@@ -42,6 +42,8 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
   const visualStatus = zone.captures.length >= 2 ? 'multiple' : zone.status;
 
   function handleStatusCycle() {
+    // Prevent cycling away from 'captured' while captures still exist
+    if (zone.captures.length > 0 && zone.status === 'captured') return;
     const order: Zone['status'][] = ['not-visited', 'visited', 'captured'];
     const current = order.indexOf(zone.status);
     const next = order[(current + 1) % order.length];
@@ -73,8 +75,13 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
               e.stopPropagation();
               handleStatusCycle();
             }}
-            className="text-xs text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded transition-colors"
-            title="Cycle status"
+            className={`text-xs bg-gray-700 px-2 py-0.5 rounded transition-colors ${
+              zone.captures.length > 0 && zone.status === 'captured'
+                ? 'text-gray-600 cursor-not-allowed'
+                : 'text-gray-400 hover:text-white hover:bg-gray-600'
+            }`}
+            title={zone.captures.length > 0 && zone.status === 'captured' ? 'Remove captures first to change status' : 'Cycle status'}
+            disabled={zone.captures.length > 0 && zone.status === 'captured'}
           >
             {zone.status === 'not-visited' ? '👁' : zone.status === 'visited' ? '✓' : '🔴'}
           </button>
