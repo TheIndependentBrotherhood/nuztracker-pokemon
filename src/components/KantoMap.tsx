@@ -13,6 +13,7 @@ const statusColor: Record<string, string> = {
   'not-visited': '#4B5563',
   visited: '#60A5FA',
   captured: '#34D399',
+  multiple: '#FB923C',
 };
 
 const zoneLayout: Record<string, { x: number; y: number; w: number; h: number; label: string }> = {

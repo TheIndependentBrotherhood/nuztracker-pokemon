@@ -13,7 +13,9 @@ export default function MapView({ run }: Props) {
 
   function getZoneStatus(zoneId: string) {
     const zone = run.zones.find((z) => z.id === zoneId);
-    return zone?.status ?? 'not-visited';
+    if (!zone) return 'not-visited';
+    if (zone.captures.length >= 2) return 'multiple';
+    return zone.status;
   }
 
   function handleZoneClick(zoneId: string) {
@@ -28,6 +30,7 @@ export default function MapView({ run }: Props) {
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gray-500 inline-block"></span> Not Visited</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-400 inline-block"></span> Visited</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span> Captured</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-400 inline-block"></span> Multiple</span>
         </div>
       </div>
       <KantoMap

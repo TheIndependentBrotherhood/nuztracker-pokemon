@@ -16,7 +16,7 @@ type Tab = 'zones' | 'team' | 'types';
 function RunPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { runs, loadRuns, setCurrentRun } = useRunStore();
+  const { runs, loadRuns, setCurrentRun, updateRun } = useRunStore();
   const [tab, setTab] = useState<Tab>('zones');
   const [mounted, setMounted] = useState(false);
 
@@ -59,12 +59,37 @@ function RunPageContent() {
           <h1 className="font-bold text-white text-lg">{run.gameName}</h1>
           <p className="text-xs text-gray-400 capitalize">{run.region} • {run.difficulty}</p>
         </div>
-        <div className="ml-auto flex gap-2 text-sm text-gray-400">
+        <div className="ml-auto flex gap-2 items-center text-sm text-gray-400">
           {run.isShinyHuntMode && <span>✨ Shiny</span>}
           {run.isRandomMode && <span>🎲 Random</span>}
-          <span className={`capitalize ${run.status === 'in-progress' ? 'text-green-400' : 'text-gray-400'}`}>
-            {run.status}
-          </span>
+          {run.status === 'in-progress' ? (
+            <>
+              <button
+                onClick={() => updateRun({ ...run, status: 'completed' })}
+                className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors"
+              >
+                ✓ Complete
+              </button>
+              <button
+                onClick={() => updateRun({ ...run, status: 'abandoned' })}
+                className="text-xs bg-red-800 hover:bg-red-700 text-white px-2 py-1 rounded transition-colors"
+              >
+                ✗ Abandon
+              </button>
+            </>
+          ) : (
+            <>
+              <span className={`capitalize font-medium ${run.status === 'completed' ? 'text-blue-400' : 'text-red-400'}`}>
+                {run.status === 'completed' ? '✓ Completed' : '✗ Abandoned'}
+              </span>
+              <button
+                onClick={() => updateRun({ ...run, status: 'in-progress' })}
+                className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
+              >
+                ↩ Resume
+              </button>
+            </>
+          )}
         </div>
       </header>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Zone } from '@/lib/types';
 import { useRunStore } from '@/store/runStore';
 import AddCaptureModal from './AddCaptureModal';
@@ -16,17 +16,30 @@ const statusColors: Record<string, string> = {
   'not-visited': 'border-gray-600 bg-gray-800/50',
   visited: 'border-blue-500 bg-blue-900/20',
   captured: 'border-green-500 bg-green-900/20',
+  multiple: 'border-orange-400 bg-orange-900/20',
 };
 
 const statusDots: Record<string, string> = {
   'not-visited': 'bg-gray-500',
   visited: 'bg-blue-400',
   captured: 'bg-green-500',
+  multiple: 'bg-orange-400',
 };
 
 export default function ZoneItem({ zone, runId, isSelected }: Props) {
   const { setZoneStatus, setSelectedZone } = useRunStore();
   const [showCapture, setShowCapture] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll into view when this zone becomes selected
+  useEffect(() => {
+    if (isSelected && ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isSelected]);
+
+  // Visual status: orange when multiple captures
+  const visualStatus = zone.captures.length >= 2 ? 'multiple' : zone.status;
 
   function handleStatusCycle() {
     const order: Zone['status'][] = ['not-visited', 'visited', 'captured'];
@@ -38,13 +51,14 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
   return (
     <>
       <div
-        className={`border-b border-gray-700/50 p-3 transition-all ${statusColors[zone.status]} ${
+        ref={ref}
+        className={`border-b border-gray-700/50 p-3 transition-all ${statusColors[visualStatus] ?? statusColors['not-visited']} ${
           isSelected ? 'ring-2 ring-yellow-400/50' : ''
         }`}
         onClick={() => setSelectedZone(isSelected ? null : zone.id)}
       >
         <div className="flex items-center gap-2">
-          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusDots[zone.status]}`} />
+          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusDots[visualStatus] ?? statusDots['not-visited']}`} />
           <span className="text-sm font-medium flex-1 cursor-pointer">{zone.zoneName}</span>
           <button
             onClick={(e) => {
@@ -56,17 +70,15 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
           >
             {zone.status === 'not-visited' ? '👁' : zone.status === 'visited' ? '✓' : '🔴'}
           </button>
-          {zone.status !== 'not-visited' && zone.captures.length === 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCapture(true);
-              }}
-              className="text-xs text-yellow-400 hover:text-yellow-300 bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded transition-colors"
-            >
-              + Catch
-            </button>
-          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCapture(true);
+            }}
+            className="text-xs text-yellow-400 hover:text-yellow-300 bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded transition-colors"
+          >
+            + Catch
+          </button>
         </div>
 
         {zone.captures.length > 0 && (
@@ -81,17 +93,9 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
                 />
                 <span className="text-xs text-gray-300">{c.nickname || c.pokemonName}</span>
                 <span className="text-xs text-gray-500">Lv{c.level}</span>
+                {c.isShiny && <span className="text-xs">✨</span>}
               </div>
             ))}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCapture(true);
-              }}
-              className="text-xs text-yellow-400 bg-gray-700 px-1.5 py-0.5 rounded hover:bg-gray-600"
-            >
-              +
-            </button>
           </div>
         )}
       </div>
