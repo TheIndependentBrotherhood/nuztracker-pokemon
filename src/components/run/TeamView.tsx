@@ -16,6 +16,7 @@ export default function TeamView({ run, id }: Props) {
   const teamSlots = Array.from({ length: 6 }, (_, i) => run.team[i] ?? null);
   const { updateTeam } = useRunStore();
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
+  const [dragOverCaptured, setDragOverCaptured] = useState(false);
 
   // Get all captured pokémons not in team
   const capturedNotInTeam = run.zones
@@ -27,7 +28,9 @@ export default function TeamView({ run, id }: Props) {
     slotIndex: number,
   ) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+    // Accept both move (from team) and copy (from captured)
+    e.dataTransfer.dropEffect =
+      e.dataTransfer.effectAllowed === "copy" ? "copy" : "move";
     setDragOverSlot(slotIndex);
   };
 
@@ -65,6 +68,32 @@ export default function TeamView({ run, id }: Props) {
       if (capturedPokemon && run.team.length < 6) {
         updateTeam(run.id, [...run.team, capturedPokemon]);
       }
+    }
+  };
+
+  const handleDragOverCaptured = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    // Only accept move from team (not copy from captured)
+    if (e.dataTransfer.effectAllowed === "move") {
+      e.dataTransfer.dropEffect = "move";
+      setDragOverCaptured(true);
+    }
+  };
+
+  const handleDragLeaveCaptured = () => {
+    setDragOverCaptured(false);
+  };
+
+  const handleDropOnCaptured = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOverCaptured(false);
+
+    const pokemonId = e.dataTransfer.getData("pokemonId");
+
+    if (pokemonId) {
+      // Remove from team
+      const updatedTeam = run.team.filter((p) => p.id !== pokemonId);
+      updateTeam(run.id, updatedTeam);
     }
   };
 
@@ -124,79 +153,90 @@ export default function TeamView({ run, id }: Props) {
         </Box>
         <Grid container spacing={1.5}>
           {teamSlots.map((capture, i) => (
-            <Grid
-              item
-              xs={6}
-              sm={4}
-              key={i}
-              onDragOver={(e) => handleDragOverSlot(e, i)}
-              onDragLeave={handleDragLeaveSlot}
-              onDrop={(e) => handleDropOnSlot(e, i)}
-              sx={{
-                transition: "all 200ms ease",
-                background:
-                  dragOverSlot === i
-                    ? "rgba(59, 130, 246, 0.1)"
-                    : "transparent",
-                borderRadius: "0.75rem",
-                p: dragOverSlot === i ? 1 : 0,
-              }}
-            >
-              <PokemonCard capture={capture} slotIndex={i} runId={run.id} />
+            <Grid item xs={6} sm={4} key={i}>
+              <Box
+                onDragOver={(e) => handleDragOverSlot(e, i)}
+                onDragLeave={handleDragLeaveSlot}
+                onDrop={(e) => handleDropOnSlot(e, i)}
+                sx={{
+                  transition: "all 200ms ease",
+                  background:
+                    dragOverSlot === i
+                      ? "rgba(59, 130, 246, 0.1)"
+                      : "transparent",
+                  borderRadius: "0.75rem",
+                  p: dragOverSlot === i ? 1 : 0,
+                  height: "100%",
+                }}
+              >
+                <PokemonCard capture={capture} slotIndex={i} runId={run.id} />
+              </Box>
             </Grid>
           ))}
         </Grid>
       </Box>
 
-      {/* Captured Pokémons Section */}
-      {capturedNotInTeam.length > 0 && (
+      {/* Captured Pokémons Section - Always visible */}
+      <Box
+        sx={{
+          background: "#fff",
+          border: "2px solid #000",
+          borderRadius: "1rem",
+          p: 2,
+        }}
+        onDragOver={handleDragOverCaptured}
+        onDragLeave={handleDragLeaveCaptured}
+        onDrop={handleDropOnCaptured}
+      >
         <Box
           sx={{
-            background: "#fff",
-            border: "2px solid #000",
-            borderRadius: "1rem",
-            p: 2,
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+            pb: 1.5,
+            borderBottom: "2px solid #000",
+            background: dragOverCaptured
+              ? "rgba(59, 130, 246, 0.05)"
+              : "transparent",
+            transition: "all 200ms ease",
+            mx: -2,
+            px: 2,
           }}
         >
+          <Typography
+            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
+          >
+            📦 Pokémons capturés ({capturedNotInTeam.length})
+          </Typography>
+        </Box>
+        {capturedNotInTeam.length === 0 ? (
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              mb: 2,
-              pb: 1.5,
-              borderBottom: "2px solid #000",
+              justifyContent: "center",
+              minHeight: "120px",
+              color: "#999",
             }}
           >
-            <Typography
-              sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
-            >
-              📦 Pokémons capturés ({capturedNotInTeam.length})
+            <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
+              Zone de réserve (glisse les pokémons ici pour les retirer de
+              l'équipe)
             </Typography>
           </Box>
+        ) : (
           <Grid container spacing={1.5}>
-            {capturedNotInTeam.map((capture, i) => (
-              <Grid
-                item
-                xs={6}
-                sm={4}
-                key={i}
-                sx={{
-                  transition: "all 200ms ease",
-                  background: "transparent",
-                  borderRadius: "0.75rem",
-                  p: 0,
-                }}
-              >
+            {capturedNotInTeam.map((capture) => (
+              <Grid item xs={6} sm={4} key={capture.id}>
                 <CapturedPokemonCard
-                  key={capture.id}
                   capture={capture}
                   onAddToTeam={handleAddCapturedToTeam}
                 />
               </Grid>
             ))}
           </Grid>
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   );
 }
