@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Stack, Typography, Box } from "@mui/material";
+import {
+  Stack,
+  Typography,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
 import { Run, Zone, Capture } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
+import StyledTextField from "@/components/ui/StyledTextField";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
 
@@ -14,6 +24,9 @@ interface Props {
 export default function StatsBar({ run }: Props) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportWidth, setExportWidth] = useState(408);
+  const [exportHeight, setExportHeight] = useState(720);
 
   const total = run.zones.length;
   const visited = run.zones.filter(
@@ -33,8 +46,13 @@ export default function StatsBar({ run }: Props) {
 
   // Export handlers for team stats card
   async function handleExportPng() {
+    setShowExportDialog(true);
+  }
+
+  async function performExport() {
     setExporting(true);
     setExportError("");
+    setShowExportDialog(false);
 
     try {
       const element = document.getElementById("team-export-target");
@@ -43,15 +61,19 @@ export default function StatsBar({ run }: Props) {
         return;
       }
 
+      // Save original dimensions
+      const originalWidth = element.style.width;
+      const originalHeight = element.style.height;
+
+      // Apply export dimensions to the element
+      element.style.width = `${exportWidth}px`;
+      element.style.height = `${exportHeight}px`;
+
       const { default: html2canvas } = await import("html2canvas");
 
-      // Fixed height for 6 pokemon - 1920x1080 resolution
-      // Always use same dimensions regardless of team size
-      const height = 1080;
-
       const canvas = await html2canvas(element, {
-        width: 1920,
-        height: 1080,
+        width: exportWidth,
+        height: exportHeight,
         scale: 1,
         backgroundColor: "rgba(0, 0, 0, 0)",
         logging: false,
@@ -59,6 +81,10 @@ export default function StatsBar({ run }: Props) {
         allowTaint: true,
         imageTimeout: 0,
       });
+
+      // Restore original dimensions
+      element.style.width = originalWidth;
+      element.style.height = originalHeight;
 
       const link = document.createElement("a");
       link.href = canvas.toDataURL("image/png");
@@ -89,7 +115,7 @@ export default function StatsBar({ run }: Props) {
   const teamActions = [
     {
       icon: "🖼",
-      title: "Export team as PNG (1280x720)",
+      title: "Export team as PNG",
       onClick: handleExportPng,
       disabled: exporting || run.team.length === 0,
     },
@@ -352,6 +378,128 @@ export default function StatsBar({ run }: Props) {
           }}
         />
       </Box>
+
+      {/* PNG Export Dialog */}
+      <Dialog
+        open={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: "1.5rem",
+            border: "3px solid #000",
+            boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.3)",
+            backgroundColor: "#fff",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: 700,
+            fontSize: "1.25rem",
+            color: "#000",
+            borderBottom: "2px solid #000",
+          }}
+        >
+          Exporter l&apos;image PNG
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            pt: "24px !important",
+            pb: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            maxHeight: "calc(100vh - 300px)",
+            overflow: "auto",
+          }}
+        >
+          <StyledTextField
+            label="Largeur (px)"
+            type="number"
+            value={exportWidth}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 408;
+              setExportWidth(Math.max(408, Math.min(1920, value)));
+            }}
+            fullWidth
+          />
+          <StyledTextField
+            label="Hauteur (px)"
+            type="number"
+            value={exportHeight}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 720;
+              setExportHeight(Math.max(720, Math.min(1080, value)));
+            }}
+            fullWidth
+          />
+          <Typography sx={{ fontSize: "0.875rem", color: "#666" }}>
+            408x720px à 1920x1080px
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ borderTop: "2px solid #000", pt: 2, gap: 2 }}>
+          <Button
+            onClick={() => setShowExportDialog(false)}
+            sx={{
+              border: "3px solid #000",
+              borderRadius: "1.5rem",
+              color: "#000",
+              fontWeight: 700,
+              textTransform: "none",
+              fontSize: "1rem",
+              px: 4,
+              py: 1,
+              backgroundColor: "#fff",
+              boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                transform: "translate(-2px, -2px)",
+                boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
+              },
+              "&:active": {
+                transform: "translate(1px, 1px)",
+                boxShadow: "2px 2px 0 rgba(0, 0, 0, 0.2)",
+              },
+            }}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={performExport}
+            disabled={exporting}
+            sx={{
+              border: "3px solid #000",
+              borderRadius: "1.5rem",
+              background: "#000",
+              color: "#fff",
+              fontWeight: 700,
+              textTransform: "none",
+              fontSize: "1rem",
+              px: 4,
+              py: 1,
+              boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                transform: "translate(-2px, -2px)",
+                boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
+              },
+              "&:active": {
+                transform: "translate(1px, 1px)",
+                boxShadow: "2px 2px 0 rgba(0, 0, 0, 0.2)",
+              },
+              "&:disabled": {
+                backgroundColor: "#ccc",
+                borderColor: "#999",
+                color: "#666",
+                transform: "none",
+                boxShadow: "2px 2px 0 rgba(0, 0, 0, 0.1)",
+              },
+            }}
+          >
+            {exporting ? "Export..." : "Exporter"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
