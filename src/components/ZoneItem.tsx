@@ -12,24 +12,20 @@ interface Props {
   isSelected: boolean;
 }
 
-const statusConfig: Record<string, { border: string; bg: string; dot: string }> = {
+const statusConfig: Record<string, { bg: string; dot: string }> = {
   'not-visited': {
-    border: 'border-slate-700/40',
     bg: 'bg-transparent',
     dot: 'bg-slate-600',
   },
   visited: {
-    border: 'border-blue-500/40',
     bg: 'bg-blue-500/5',
     dot: 'bg-blue-400',
   },
   captured: {
-    border: 'border-emerald-500/40',
     bg: 'bg-emerald-500/5',
     dot: 'bg-emerald-500',
   },
   multiple: {
-    border: 'border-orange-400/40',
     bg: 'bg-orange-500/5',
     dot: 'bg-orange-400',
   },
