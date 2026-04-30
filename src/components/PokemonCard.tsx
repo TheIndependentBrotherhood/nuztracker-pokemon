@@ -28,30 +28,34 @@ export default function PokemonCard({ capture, slotIndex, runId }: Props) {
 
   if (!capture) {
     return (
-      <div className="bg-gray-700/30 border border-dashed border-gray-600 rounded-xl p-4 flex items-center justify-center min-h-[100px]">
-        <span className="text-gray-600 text-sm">
-          Empty Slot {slotIndex + 1}
-        </span>
+      <div className="bg-slate-800/30 border border-dashed border-slate-700/50 rounded-xl p-4 flex items-center justify-center min-h-[100px]">
+        <span className="text-slate-600 text-xs">Slot {slotIndex + 1}</span>
       </div>
     );
   }
 
   const genderSymbol =
     capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : "";
+  const genderColor =
+    capture.gender === "male"
+      ? "text-blue-400"
+      : capture.gender === "female"
+        ? "text-pink-400"
+        : "text-slate-500";
 
   return (
     <>
       <div
-        className="bg-gray-700/50 border border-gray-600 hover:border-yellow-400/50 rounded-xl p-3 cursor-pointer transition-all hover:scale-105 relative group"
+        className="bg-slate-800/60 border border-slate-700/50 hover:border-blue-500/40 rounded-xl p-3 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/10 relative group"
         onClick={() => setShowDetail(true)}
       >
         {capture.isShiny && (
-          <span className="absolute top-1 right-1 text-xs">✨</span>
+          <span className="absolute top-1.5 right-1.5 text-xs">✨</span>
         )}
         <button
           onClick={handleRemove}
-          className="absolute top-1 left-1 text-xs text-red-400 hover:text-red-300 bg-gray-800/80 rounded px-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          title="Remove from team"
+          className="absolute top-1.5 left-1.5 text-xs text-red-400 hover:text-red-300 bg-slate-900/80 rounded px-1 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Retirer de l'équipe"
         >
           ✕
         </button>
@@ -59,17 +63,23 @@ export default function PokemonCard({ capture, slotIndex, runId }: Props) {
         <img
           src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
           alt={capture.pokemonName}
-          className="w-14 h-14 object-contain mx-auto"
+          className="w-14 h-14 object-contain mx-auto drop-shadow"
         />
         <div className="text-center mt-1">
-          <div className="text-sm font-bold text-white truncate">
+          <div className="text-sm font-semibold text-white truncate leading-tight">
             {capture.nickname || capture.pokemonName}
-            <span className="text-gray-400 ml-1 text-xs">{genderSymbol}</span>
+            {genderSymbol && (
+              <span className={`ml-1 text-xs font-normal ${genderColor}`}>
+                {genderSymbol}
+              </span>
+            )}
           </div>
-          <div className="text-xs text-gray-400 capitalize">
-            {capture.pokemonName}
-          </div>
-          <div className="text-xs text-gray-400">Lv.{capture.level}</div>
+          {capture.nickname && (
+            <div className="text-xs text-slate-500 capitalize truncate">
+              {capture.pokemonName}
+            </div>
+          )}
+          <div className="text-xs text-slate-400 mt-0.5">Lv.{capture.level}</div>
         </div>
       </div>
 

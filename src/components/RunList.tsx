@@ -15,28 +15,31 @@ export default function RunList({ runs }: RunListProps) {
   if (runs.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="text-6xl mb-4">🎮</div>
-        <p className="text-gray-400 text-lg">
-          No runs yet. Start your first Nuzlocke!
+        <div className="text-5xl mb-4">🎮</div>
+        <p className="text-slate-400 text-base">
+          Aucun run pour l&apos;instant. Lancez votre premier Nuzlocke !
         </p>
       </div>
     );
   }
 
-  const statusColors: Record<string, string> = {
-    "in-progress": "text-green-400",
-    completed: "text-blue-400",
-    abandoned: "text-red-400",
-  };
-
-  const statusLabels: Record<string, string> = {
-    "in-progress": "▶ In Progress",
-    completed: "✓ Completed",
-    abandoned: "✗ Abandoned",
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    "in-progress": {
+      label: "Active",
+      className: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+    },
+    completed: {
+      label: "Terminé",
+      className: "bg-blue-500/15 text-blue-400 border border-blue-500/30",
+    },
+    abandoned: {
+      label: "Abandonné",
+      className: "bg-red-500/15 text-red-400 border border-red-500/30",
+    },
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="space-y-3">
       {runs.map((run) => {
         const captureCount = run.zones.reduce(
           (acc, z) => acc + z.captures.length,
@@ -45,70 +48,75 @@ export default function RunList({ runs }: RunListProps) {
         const visitedCount = run.zones.filter(
           (z) => z.status !== "not-visited",
         ).length;
+        const status = statusConfig[run.status] ?? statusConfig["in-progress"];
 
         return (
           <div
             key={run.id}
-            className="bg-gray-800 border border-gray-700 rounded-xl p-5 hover:border-yellow-400/50 transition-all cursor-pointer group"
+            className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-5 hover:border-blue-500/40 hover:bg-slate-800/90 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
             onClick={() => router.push(`/run/?id=${run.id}`)}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-yellow-400 transition-colors">
+            <div className="flex justify-between items-start gap-3">
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold text-white group-hover:text-blue-300 transition-colors truncate">
                   {run.gameName}
                 </h3>
-                <p className="text-gray-400 text-sm capitalize">
+                <p className="text-slate-400 text-xs capitalize mt-0.5">
                   {run.region} Region
                 </p>
               </div>
-              <span
-                className={`text-sm font-medium ${statusColors[run.status]}`}
-              >
-                {statusLabels[run.status]}
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${status.className}`}>
+                {status.label}
               </span>
             </div>
 
-            <div className="mt-3 flex gap-4 text-sm text-gray-300 flex-wrap">
-              <span>
-                🗺 {visitedCount}/{run.zones.length} zones
-              </span>
-              <span>🔴 {captureCount} captures</span>
-              {run.isShinyHuntMode && <span>✨ Shiny Hunt</span>}
-              {run.isRandomMode && (
-                <span className="text-blue-400">
-                  🎲 Randomizer
-                  {run.randomizerOptions && (
-                    <span className="text-gray-400 ml-1">
-                      (
-                      {[
-                        run.randomizerOptions.randomizeTypes && "types",
-                        run.randomizerOptions.randomizeAbilities && "abilities",
-                        run.randomizerOptions.randomizeEncounters &&
-                          "encounters",
-                        run.randomizerOptions.randomizeEvolvedForms &&
-                          "evolutions",
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
-                      )
-                    </span>
-                  )}
-                </span>
-              )}
+            {/* Progress bar */}
+            <div className="mt-3">
+              <div className="flex justify-between text-xs text-slate-500 mb-1">
+                <span>{visitedCount}/{run.zones.length} zones visitées</span>
+                <span>{captureCount} captures</span>
+              </div>
+              <div className="h-1.5 bg-slate-700/60 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: run.zones.length > 0
+                      ? `${(visitedCount / run.zones.length) * 100}%`
+                      : '0%',
+                    background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)',
+                  }}
+                />
+              </div>
             </div>
 
             <div className="mt-3 flex justify-between items-center">
-              <span className="text-xs text-gray-500">
-                {new Date(run.createdAt).toLocaleDateString()}
-              </span>
+              <div className="flex gap-3 text-xs text-slate-400 flex-wrap">
+                {run.isShinyHuntMode && <span>✨ Shiny</span>}
+                {run.isRandomMode && (
+                  <span className="text-blue-400">
+                    🎲 Random
+                    {run.randomizerOptions && (
+                      <span className="text-slate-500 ml-1">
+                        ({[
+                          run.randomizerOptions.randomizeTypes && "types",
+                          run.randomizerOptions.randomizeAbilities && "talents",
+                          run.randomizerOptions.randomizeEncounters && "rencontres",
+                          run.randomizerOptions.randomizeEvolvedForms && "évolutions",
+                        ].filter(Boolean).join(", ")})
+                      </span>
+                    )}
+                  </span>
+                )}
+                <span>{new Date(run.createdAt).toLocaleDateString()}</span>
+              </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (confirm("Delete this run?")) deleteRun(run.id);
+                  if (confirm("Supprimer ce run ?")) deleteRun(run.id);
                 }}
-                className="text-xs text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-xs text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 rounded hover:bg-red-500/10"
               >
-                Delete
+                Supprimer
               </button>
             </div>
           </div>
