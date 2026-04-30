@@ -111,7 +111,7 @@ export default function ExportPanel({ run, teamViewId }: Props) {
 
       // Capture with CORS-safe options
       const canvas = await html2canvas(el, {
-        backgroundColor: "#1f2937",
+        backgroundColor: "#FEF3E2",
         scale: 2,
         useCORS: true, // Enable CORS image loading
         allowTaint: true, // Allow tainted canvas (fallback)
@@ -155,12 +155,12 @@ export default function ExportPanel({ run, teamViewId }: Props) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 mt-4">
-      <h3 className="font-bold text-white mb-3">Export &amp; Share</h3>
+    <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl p-4 border-2 border-black">
+      <h3 className="font-bold text-black mb-3">📤 Export &amp; Share</h3>
 
       {/* Error message */}
       {exportError && (
-        <div className="mb-3 p-2 bg-red-900 border border-red-700 rounded text-red-200 text-sm">
+        <div className="mb-3 p-3 bg-red-100 border-2 border-red-500 rounded-xl text-red-900 text-sm font-bold">
           ⚠️ {exportError}
         </div>
       )}
@@ -174,7 +174,7 @@ export default function ExportPanel({ run, teamViewId }: Props) {
               ? "Add Pokémon to team first"
               : "Export team as PNG (1280x720)"
           }
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-1"
         >
           {exporting ? "⏳ Exporting..." : "🖼 Export PNG"}
         </button>
@@ -186,7 +186,7 @@ export default function ExportPanel({ run, teamViewId }: Props) {
               ? "Add Pokémon to team first"
               : "Generate shareable URL (gzip+base64)"
           }
-          className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-1"
         >
           🔗 Generate Share URL
         </button>
@@ -195,7 +195,7 @@ export default function ExportPanel({ run, teamViewId }: Props) {
       {shareUrl && (
         <div className="mt-3 flex gap-2">
           <input
-            className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-xs text-gray-300 focus:outline-none"
+            className="flex-1 bg-white border-2 border-black rounded-xl px-4 py-2 text-sm text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             value={shareUrl}
             readOnly
           />

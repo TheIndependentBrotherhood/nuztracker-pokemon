@@ -1,27 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useRunStore } from '@/store/runStore';
-import { getRun } from '@/lib/storage';
-import StatsBar from '@/components/StatsBar';
-import MapView from '@/components/MapView';
-import ZoneList from '@/components/ZoneList';
-import TeamView from '@/components/TeamView';
-import TypeAnalysis from '@/components/TypeAnalysis';
-import ExportPanel from '@/components/ExportPanel';
-import Header from '@/components/Header';
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useRunStore } from "@/store/runStore";
+import { getRun } from "@/lib/storage";
+import StatsBar from "@/components/StatsBar";
+import MapView from "@/components/MapView";
+import ZoneList from "@/components/ZoneList";
+import TeamView from "@/components/TeamView";
+import TypeAnalysis from "@/components/TypeAnalysis";
+import ExportPanel from "@/components/ExportPanel";
+import Header from "@/components/Header";
+import StyledButton from "@/components/StyledButton";
 
-type Tab = 'zones' | 'team' | 'types';
+type Tab = "zones" | "team" | "types";
 
 function RunPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { runs, loadRuns, setCurrentRun, updateRun } = useRunStore();
-  const [tab, setTab] = useState<Tab>('zones');
+  const [tab, setTab] = useState<Tab>("zones");
   const [mounted, setMounted] = useState(false);
 
-  const id = searchParams.get('id') ?? '';
+  const id = searchParams.get("id") ?? "";
 
   useEffect(() => {
     setMounted(true);
@@ -38,114 +39,139 @@ function RunPageContent() {
 
   if (!run) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white border-4 border-black rounded-3xl p-8 shadow-lg">
           <div className="text-6xl mb-4">😿</div>
-          <p className="text-slate-400 text-lg">Run introuvable</p>
-          <button
-            onClick={() => router.push('/')}
-            className="mt-4 text-blue-400 hover:text-blue-300 transition-colors"
+          <p className="text-black text-lg font-bold mb-6">Run introuvable</p>
+          <StyledButton
+            onClick={() => router.push("/")}
+            variant="secondary"
+            sx={{ px: 6, py: 1 }}
           >
             ← Retour à l&apos;accueil
-          </button>
+          </StyledButton>
         </div>
       </div>
     );
   }
 
   const statusActions =
-    run.status === 'in-progress' ? (
+    run.status === "in-progress" ? (
       <>
-        <button
-          onClick={() => updateRun({ ...run, status: 'completed' })}
-          className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+        <StyledButton
+          onClick={() => updateRun({ ...run, status: "completed" })}
+          variant="primary"
         >
           ✓ Terminer
-        </button>
-        <button
-          onClick={() => updateRun({ ...run, status: 'abandoned' })}
-          className="text-xs bg-red-800/80 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+        </StyledButton>
+        <StyledButton
+          onClick={() => updateRun({ ...run, status: "abandoned" })}
+          variant="danger"
         >
           ✗ Abandonner
-        </button>
+        </StyledButton>
       </>
     ) : (
       <>
-        <span
-          className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-            run.status === 'completed'
-              ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
-              : 'bg-red-500/15 text-red-400 border border-red-500/30'
-          }`}
+        <div
+          style={{
+            display: "inline-block",
+            background: run.status === "completed" ? "#d1fae5" : "#fee2e2",
+            color: run.status === "completed" ? "#065f46" : "#7f1d1d",
+            padding: "12px 16px",
+            borderRadius: "2rem",
+            border: "3px solid #000",
+            fontWeight: 700,
+            fontSize: "1rem",
+          }}
         >
-          {run.status === 'completed' ? '✓ Terminé' : '✗ Abandonné'}
-        </span>
-        <button
-          onClick={() => updateRun({ ...run, status: 'in-progress' })}
-          className="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+          {run.status === "completed" ? "✓ Terminé" : "✗ Abandonné"}
+        </div>
+        <StyledButton
+          onClick={() => updateRun({ ...run, status: "in-progress" })}
+          variant="secondary"
         >
           ↩ Reprendre
-        </button>
+        </StyledButton>
       </>
     );
+
+  const backAction = (
+    <StyledButton
+      onClick={() => router.push("/")}
+      variant="secondary"
+      sx={{ px: 3 }}
+    >
+      ← Accueil
+    </StyledButton>
+  );
 
   const headerSubtitle = [
     run.region,
     run.difficulty,
-    run.isShinyHuntMode && '✨ Shiny',
-    run.isRandomMode && '🎲 Random',
+    run.isShinyHuntMode && "✨ Shiny",
+    run.isRandomMode && "🎲 Random",
   ]
     .filter(Boolean)
-    .join(' • ');
+    .join(" • ");
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-blue-50 to-purple-50 flex flex-col">
       <Header
         showBack
         title={run.gameName}
         subtitle={headerSubtitle}
+        backAction={backAction}
         actions={statusActions}
       />
 
       <StatsBar run={run} />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: Map */}
-        <div className="w-3/5 p-4 overflow-y-auto border-r border-slate-700/50">
-          <MapView run={run} />
-          <ExportPanel run={run} teamViewId="team-export-target" />
-        </div>
-
-        {/* Right: Tabs */}
-        <div className="w-2/5 flex flex-col overflow-hidden bg-slate-900/40">
-          <div className="flex border-b border-slate-700/50">
-            {(['zones', 'team', 'types'] as Tab[]).map((t) => (
+      <div className="flex flex-1 overflow-hidden gap-4 p-4">
+        {/* Left: Tabs */}
+        <div className="w-1/2 flex flex-col bg-white border-3 border-black rounded-2xl overflow-hidden shadow-lg">
+          <div className="flex border-b-2 border-black bg-gradient-to-r from-blue-100 to-purple-100">
+            {(["zones", "team", "types"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 py-3 text-sm font-medium transition-all ${
+                className={`flex-1 py-3 text-sm font-bold transition-all border-b-4 ${
                   tab === t
-                    ? 'text-blue-400 border-b-2 border-blue-500 bg-blue-500/5'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? "text-black bg-blue-200 border-black"
+                    : "text-slate-600 hover:text-black border-transparent"
                 }`}
               >
-                {t === 'zones' ? '🗺 Zones' : t === 'team' ? '⚔️ Équipe' : '🔬 Types'}
+                {t === "zones"
+                  ? "🗺 Zones"
+                  : t === "team"
+                    ? "⚔️ Équipe"
+                    : "🔬 Types"}
               </button>
             ))}
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {tab === 'zones' && <ZoneList run={run} />}
-            {tab === 'team' && (
-              <div className="p-3">
+            {tab === "zones" && <ZoneList run={run} />}
+            {tab === "team" && (
+              <div className="p-4">
                 <TeamView run={run} id="team-export-target" />
               </div>
             )}
-            {tab === 'types' && (
-              <div className="p-3">
+            {tab === "types" && (
+              <div className="p-4">
                 <TypeAnalysis run={run} />
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Right: Map */}
+        <div className="w-1/2 bg-white border-3 border-black rounded-2xl overflow-hidden shadow-lg flex flex-col">
+          <div className="flex-1 overflow-y-auto p-4">
+            <MapView run={run} />
+          </div>
+          <div className="border-t-2 border-black p-4 bg-yellow-50">
+            <ExportPanel run={run} teamViewId="team-export-target" />
           </div>
         </div>
       </div>

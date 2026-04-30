@@ -6,12 +6,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  Select,
   MenuItem,
   FormControlLabel,
   Checkbox,
-  Button,
   Box,
   Typography,
   Stack,
@@ -20,6 +17,9 @@ import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
 import { regions } from "@/lib/zones";
 import { RandomizerOptions } from "@/lib/types";
+import StyledButton from "./StyledButton";
+import StyledTextField from "./StyledTextField";
+import StyledSelect from "./StyledSelect";
 
 interface Props {
   onClose: () => void;
@@ -101,7 +101,7 @@ export default function CreateRunModal({ onClose }: Props) {
           </Typography>
 
           {/* Game Name */}
-          <TextField
+          <StyledTextField
             autoFocus
             label="Nom du Run"
             placeholder="ex. FireRed Nuzlocke"
@@ -109,74 +109,21 @@ export default function CreateRunModal({ onClose }: Props) {
             value={gameName}
             onChange={(e) => setGameName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "1.5rem",
-                backgroundColor: "#fff",
-                border: "2px solid #000",
-                "& fieldset": { border: "none" },
-                "&:hover": { backgroundColor: "#fff" },
-                "&.Mui-focused": {
-                  backgroundColor: "#fff",
-                  "& fieldset": { border: "none" },
-                },
-              },
-              "& .MuiOutlinedInput-input": {
-                color: "#000",
-                fontWeight: 500,
-                padding: "16.5px 14px",
-              },
-              "& .MuiInputBase-input::placeholder": {
-                color: "#aaa",
-                opacity: 1,
-                paddingLeft: "2px",
-                marginY: "2px",
-              },
-              "& .MuiInputLabel-root": {
-                color: "#666",
-                fontWeight: 600,
-                paddingLeft: "2px",
-                marginY: "2px",
-                "&.Mui-focused": {
-                  color: "#000",
-                  transform: "translate(14px, -17px) scale(0.75)",
-                },
-                "&.MuiInputLabel-shrink": {
-                  transform: "translate(14px, -17px) scale(0.75)",
-                },
-              },
-            }}
           />
 
           {/* Region Select */}
-          <Select
+          <StyledSelect
             label="Région"
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             fullWidth
-            sx={{
-              borderRadius: "1.5rem",
-              backgroundColor: "#fff",
-              border: "2px solid #000",
-              color: "#000",
-              fontWeight: 600,
-              "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-              "& svg": { color: "#000" },
-              "& .MuiInputLabel-root": {
-                color: "#666",
-                fontWeight: 600,
-                "&.Mui-focused": {
-                  color: "#000",
-                },
-              },
-            }}
           >
             {regions.map((r) => (
               <MenuItem key={r.id} value={r.id}>
                 {r.name} — {r.game}
               </MenuItem>
             ))}
-          </Select>
+          </StyledSelect>
 
           {/* Toggles */}
           <Stack spacing={1}>
@@ -289,50 +236,22 @@ export default function CreateRunModal({ onClose }: Props) {
       </DialogContent>
 
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button
+        <StyledButton
           onClick={onClose}
-          sx={{
-            border: "2px solid #000",
-            color: "#000",
-            fontWeight: 700,
-            borderRadius: "2rem",
-            textTransform: "none",
-            flexGrow: 1,
-            py: 1.2,
-            "&:hover": {
-              backgroundColor: "rgba(0, 0, 0, 0.05)",
-            },
-          }}
+          variant="secondary"
+          sx={{ flexGrow: 1 }}
         >
           Annuler
-        </Button>
-        <Button
+        </StyledButton>
+        <StyledButton
           onClick={handleCreate}
           disabled={!gameName.trim()}
-          variant="contained"
-          sx={{
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            border: "3px solid #000",
-            color: "#fff",
-            fontWeight: 700,
-            borderRadius: "2rem",
-            textTransform: "none",
-            flexGrow: 1,
-            py: 1.2,
-            boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              transform: "translate(-2px, -2px)",
-              boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
-            },
-            "&:disabled": {
-              opacity: 0.5,
-              cursor: "not-allowed",
-            },
-          }}
+          variant="primary"
+          shape="pill"
+          sx={{ flexGrow: 1 }}
         >
-          🚀 Démarrer !
-        </Button>
+          🚀 Créer le Run
+        </StyledButton>
       </DialogActions>
     </Dialog>
   );

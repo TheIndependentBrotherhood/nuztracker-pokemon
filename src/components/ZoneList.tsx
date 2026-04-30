@@ -1,52 +1,53 @@
-'use client';
+"use client";
 
-import { Run } from '@/lib/types';
-import { useRunStore } from '@/store/runStore';
-import ZoneItem from './ZoneItem';
-import { useState } from 'react';
+import { Run } from "@/lib/types";
+import { useRunStore } from "@/store/runStore";
+import ZoneItem from "./ZoneItem";
+import { useState } from "react";
 
 interface Props {
   run: Run;
 }
 
 const FILTERS = [
-  { key: 'all', label: 'Toutes' },
-  { key: 'not-visited', label: 'Non visitées' },
-  { key: 'visited', label: 'Visitées' },
-  { key: 'captured', label: 'Capturées' },
+  { key: "all", label: "Toutes" },
+  { key: "not-visited", label: "Non visitées" },
+  { key: "visited", label: "Visitées" },
+  { key: "captured", label: "Capturées" },
 ] as const;
 
-type FilterKey = typeof FILTERS[number]['key'];
+type FilterKey = (typeof FILTERS)[number]["key"];
 
 export default function ZoneList({ run }: Props) {
   const { selectedZoneId } = useRunStore();
-  const [filter, setFilter] = useState<FilterKey>('all');
-  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [search, setSearch] = useState("");
 
   const filtered = run.zones.filter((z) => {
-    if (filter !== 'all' && z.status !== filter) return false;
-    if (search && !z.zoneName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filter !== "all" && z.status !== filter) return false;
+    if (search && !z.zoneName.toLowerCase().includes(search.toLowerCase()))
+      return false;
     return true;
   });
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b border-slate-700/50 space-y-2">
+      <div className="p-4 border-b-2 border-black space-y-3 bg-gradient-to-r from-blue-50 to-purple-50">
         <input
-          className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+          className="w-full bg-white border-2 border-black rounded-2xl px-4 py-2.5 text-sm text-black font-bold placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           placeholder="Rechercher une zone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <div className="flex gap-1">
+        <div className="flex gap-2">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`flex-1 text-xs py-1 rounded-md transition-all ${
+              className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 transition-all ${
                 filter === f.key
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : 'bg-slate-700/60 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                  ? "bg-blue-500 text-white border-black shadow-md"
+                  : "bg-white text-black border-black hover:bg-blue-50"
               }`}
             >
               {f.label}
@@ -54,7 +55,7 @@ export default function ZoneList({ run }: Props) {
           ))}
         </div>
       </div>
-      <div className="overflow-y-auto flex-1">
+      <div className="overflow-y-auto flex-1 bg-white">
         {filtered.map((zone) => (
           <ZoneItem
             key={zone.id}
@@ -64,7 +65,7 @@ export default function ZoneList({ run }: Props) {
           />
         ))}
         {filtered.length === 0 && (
-          <div className="text-center text-slate-500 py-10 text-sm">
+          <div className="text-center text-black font-bold py-10 text-sm">
             Aucune zone trouvée
           </div>
         )}

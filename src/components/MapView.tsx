@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Run } from '@/lib/types';
-import { useRunStore } from '@/store/runStore';
-import KantoMap from './KantoMap';
+import { Run } from "@/lib/types";
+import { useRunStore } from "@/store/runStore";
+import KantoMap from "./KantoMap";
 
 interface Props {
   run: Run;
@@ -13,8 +13,8 @@ export default function MapView({ run }: Props) {
 
   function getZoneStatus(zoneId: string) {
     const zone = run.zones.find((z) => z.id === zoneId);
-    if (!zone) return 'not-visited';
-    if (zone.captures.length >= 2) return 'multiple';
+    if (!zone) return "not-visited";
+    if (zone.captures.length >= 2) return "multiple";
     return zone.status;
   }
 
@@ -23,22 +23,38 @@ export default function MapView({ run }: Props) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-      <div className="p-3 bg-gray-800 border-b border-gray-700 flex items-center gap-4">
-        <h3 className="font-bold text-white capitalize">{run.region} Region Map</h3>
-        <div className="flex gap-3 text-xs">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-gray-500 inline-block"></span> Not Visited</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-400 inline-block"></span> Visited</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span> Captured</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-400 inline-block"></span> Multiple</span>
+    <div className="rounded-2xl overflow-hidden border-3 border-black bg-white">
+      <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 border-b-3 border-black flex items-center justify-between">
+        <h3 className="font-bold text-black text-lg capitalize">
+          {run.region} Region Map
+        </h3>
+        <div className="flex gap-4 text-xs font-bold">
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-gray-400 border-2 border-black"></span>{" "}
+            Not Visited
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-blue-400 border-2 border-black"></span>{" "}
+            Visited
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-green-500 border-2 border-black"></span>{" "}
+            Captured
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-orange-400 border-2 border-black"></span>{" "}
+            Multiple
+          </span>
         </div>
       </div>
-      <KantoMap
-        zones={run.zones}
-        selectedZoneId={selectedZoneId}
-        onZoneClick={handleZoneClick}
-        getZoneStatus={getZoneStatus}
-      />
+      <div className="p-4 bg-white">
+        <KantoMap
+          zones={run.zones}
+          selectedZoneId={selectedZoneId}
+          onZoneClick={handleZoneClick}
+          getZoneStatus={getZoneStatus}
+        />
+      </div>
     </div>
   );
 }

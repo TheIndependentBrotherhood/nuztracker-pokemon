@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Container,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Container, Stack, Typography } from "@mui/material";
+import StyledButton from "./StyledButton";
+import StatCard from "./StatCard";
 
 interface Props {
   runsCount: number;
@@ -17,64 +11,12 @@ interface Props {
   onNewRun: () => void;
 }
 
-const StatCard = ({
-  value,
-  label,
-  color,
-}: {
-  value: number;
-  label: string;
-  color: string;
-}) => (
-  <Card
-    sx={{
-      background: color,
-      border: "3px solid #000",
-      borderRadius: "1.5rem",
-      boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.2)",
-      flex: 1,
-      minWidth: 0,
-      transition: "all 0.3s ease-in-out",
-      "&:hover": {
-        transform: "scale(1.05)",
-        boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.3)",
-      },
-    }}
-  >
-    <CardContent sx={{ textAlign: "center", p: { xs: 1.5, sm: 3 } }}>
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: 900,
-          fontSize: { xs: "2rem", sm: "3rem" },
-          color: "#000",
-          mb: 1,
-        }}
-      >
-        {value}
-      </Typography>
-      <Typography
-        sx={{
-          fontSize: { xs: "0.75rem", sm: "0.875rem" },
-          fontWeight: 700,
-          color: "#000",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-        }}
-      >
-        {label}
-      </Typography>
-    </CardContent>
-  </Card>
-);
-
 export default function HeroSection({
   runsCount,
   activeCount,
   capturesCount,
   onNewRun,
 }: Props) {
-
   return (
     <Box component="section" sx={{ py: { xs: 4, md: 6 }, px: 2 }}>
       <Container maxWidth="md">
@@ -131,33 +73,9 @@ export default function HeroSection({
           </Stack>
 
           {/* CTA Button */}
-          <Button
-            onClick={onNewRun}
-            variant="contained"
-            sx={{
-              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-              border: "3px solid #000",
-              borderRadius: "9999px",
-              color: "#fff",
-              px: 4,
-              py: 1.5,
-              fontWeight: 700,
-              fontSize: "1rem",
-              boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
-              transition: "all 0.2s ease-in-out",
-              textTransform: "none",
-              "&:hover": {
-                transform: "translate(-2px, -2px)",
-                boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
-              },
-              "&:active": {
-                transform: "translate(1px, 1px)",
-                boxShadow: "2px 2px 0 rgba(0, 0, 0, 0.2)",
-              },
-            }}
-          >
+          <StyledButton onClick={onNewRun} variant="primary" shape="pill">
             🚀 Démarrer mon Run
-          </Button>
+          </StyledButton>
         </Stack>
       </Container>
     </Box>

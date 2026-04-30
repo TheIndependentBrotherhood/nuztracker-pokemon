@@ -7,10 +7,16 @@ interface Props {
   showBack?: boolean;
   title?: string;
   subtitle?: string;
+  backAction?: React.ReactNode;
   actions?: React.ReactNode;
 }
 
-export default function Header({ title, subtitle, actions }: Props) {
+export default function Header({
+  title,
+  subtitle,
+  backAction,
+  actions,
+}: Props) {
   return (
     <AppBar
       position="sticky"
@@ -26,7 +32,12 @@ export default function Header({ title, subtitle, actions }: Props) {
         <Toolbar
           sx={{ display: "flex", justifyContent: "space-between", p: 1 }}
         >
-          {/* Left: Logo or Title */}
+          {/* Left: Back action */}
+          {backAction && (
+            <Box sx={{ display: "flex", mr: 2 }}>{backAction}</Box>
+          )}
+
+          {/* Center: Logo or Title */}
           {title ? (
             <Box sx={{ flex: 1, minWidth: 0, textAlign: "center" }}>
               <Typography
@@ -72,7 +83,7 @@ export default function Header({ title, subtitle, actions }: Props) {
 
           {/* Right: Actions */}
           {actions && (
-            <Box sx={{ display: "flex", gap: 1, ml: 2 }}>{actions}</Box>
+            <Box sx={{ display: "flex", gap: 2, ml: 2 }}>{actions}</Box>
           )}
         </Toolbar>
       </Container>
