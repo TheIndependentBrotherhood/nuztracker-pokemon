@@ -102,7 +102,7 @@ export default function AddCaptureModal({
       sx={{
         position: "fixed",
         inset: 0,
-        background: "rgba(3, 7, 18, 0.8)",
+        background: "rgba(0, 0, 0, 0.5)",
         backdropFilter: "blur(4px)",
         display: "flex",
         alignItems: "center",
@@ -119,13 +119,13 @@ export default function AddCaptureModal({
     >
       <Box
         sx={{
-          background: "#1e293b",
-          borderRadius: "1rem",
+          background: "#FEF3E2",
+          borderRadius: "1.5rem",
           p: 3,
           width: "100%",
           maxWidth: "448px",
-          border: "1px solid rgba(71, 85, 105, 0.6)",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+          border: "3px solid #000",
+          boxShadow: "0 20px 25px rgba(0, 0, 0, 0.2)",
           animation: "slideUp 300ms ease",
           "@keyframes slideUp": {
             "0%": { opacity: 0, transform: "translateY(20px)" },
@@ -136,11 +136,11 @@ export default function AddCaptureModal({
       >
         <Box sx={{ mb: 2.5 }}>
           <Typography
-            sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff" }}
+            sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#000" }}
           >
             Ajouter une capture
           </Typography>
-          <Typography sx={{ color: "#94a3b8", fontSize: "0.875rem", mt: 0.25 }}>
+          <Typography sx={{ color: "#666", fontSize: "0.875rem", mt: 0.25 }}>
             📍 {zoneName}
           </Typography>
         </Box>
@@ -155,7 +155,7 @@ export default function AddCaptureModal({
               fontWeight: 500,
               textTransform: "uppercase",
               letterSpacing: "0.05em",
-              color: "#94a3b8",
+              color: "#000",
               mb: 1.5,
             }}
           >
@@ -173,22 +173,22 @@ export default function AddCaptureModal({
               autoFocus
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  background: "rgba(15, 23, 42, 0.6)",
-                  color: "#fff",
+                  background: "#fff",
+                  color: "#000",
                   fontSize: "0.875rem",
                   "& fieldset": {
-                    borderColor: "#475569",
+                    borderColor: "#000",
                   },
                   "&:hover fieldset": {
-                    borderColor: "#475569",
+                    borderColor: "#000",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#3b82f6",
-                    boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                    boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
                   },
                 },
                 "& .MuiOutlinedInput-input::placeholder": {
-                  color: "#64748b",
+                  color: "#999",
                   opacity: 1,
                 },
               }}
@@ -215,14 +215,14 @@ export default function AddCaptureModal({
                 top: "100%",
                 left: 0,
                 right: 0,
-                background: "#1e293b",
-                border: "1px solid #475569",
+                background: "#fff",
+                border: "2px solid #000",
                 borderRadius: "0.75rem",
                 mt: 0.5,
                 maxHeight: "192px",
                 overflowY: "auto",
                 zIndex: 10,
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+                boxShadow: "0 10px 15px rgba(0, 0, 0, 0.1)",
               }}
             >
               {results.map((r) => (
@@ -239,11 +239,11 @@ export default function AddCaptureModal({
                     border: "none",
                     fontSize: "0.875rem",
                     textTransform: "capitalize",
-                    color: "#cbd5e1",
+                    color: "#000",
                     cursor: "pointer",
                     transition: "background-color 200ms",
                     "&:hover": {
-                      background: "rgba(71, 85, 105, 0.6)",
+                      background: "#f0f0f0",
                     },
                     "&:first-of-type": {
                       borderTopLeftRadius: "0.75rem",
@@ -261,7 +261,7 @@ export default function AddCaptureModal({
             </Box>
           )}
           {searching && (
-            <Typography sx={{ fontSize: "0.75rem", color: "#64748b", mt: 0.5 }}>
+            <Typography sx={{ fontSize: "0.75rem", color: "#666", mt: 0.5 }}>
               Recherche...
             </Typography>
           )}
@@ -277,7 +277,7 @@ export default function AddCaptureModal({
               fontWeight: 500,
               textTransform: "uppercase",
               letterSpacing: "0.05em",
-              color: "#94a3b8",
+              color: "#000",
               mb: 1.5,
             }}
           >
@@ -290,22 +290,22 @@ export default function AddCaptureModal({
             onChange={(e) => setNickname(e.target.value)}
             sx={{
               "& .MuiOutlinedInput-root": {
-                background: "rgba(15, 23, 42, 0.6)",
-                color: "#fff",
+                background: "#fff",
+                color: "#000",
                 fontSize: "0.875rem",
                 "& fieldset": {
-                  borderColor: "#475569",
+                  borderColor: "#000",
                 },
                 "&:hover fieldset": {
-                  borderColor: "#475569",
+                  borderColor: "#000",
                 },
                 "&.Mui-focused fieldset": {
                   borderColor: "#3b82f6",
-                  boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
                 },
               },
               "& .MuiOutlinedInput-input::placeholder": {
-                color: "#64748b",
+                color: "#999",
                 opacity: 1,
               },
             }}
@@ -323,7 +323,7 @@ export default function AddCaptureModal({
                 fontWeight: 500,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
-                color: "#94a3b8",
+                color: "#000",
                 mb: 1.5,
               }}
             >
@@ -339,18 +339,18 @@ export default function AddCaptureModal({
               }}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  background: "rgba(15, 23, 42, 0.6)",
-                  color: "#fff",
+                  background: "#fff",
+                  color: "#000",
                   fontSize: "0.875rem",
                   "& fieldset": {
-                    borderColor: "#475569",
+                    borderColor: "#000",
                   },
                   "&:hover fieldset": {
-                    borderColor: "#475569",
+                    borderColor: "#000",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#3b82f6",
-                    boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                    boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
                   },
                 },
               }}
@@ -365,7 +365,7 @@ export default function AddCaptureModal({
                 fontWeight: 500,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
-                color: "#94a3b8",
+                color: "#000",
                 mb: 1.5,
               }}
             >
@@ -376,21 +376,21 @@ export default function AddCaptureModal({
               value={gender}
               onChange={(e) => setGender(e.target.value as Capture["gender"])}
               sx={{
-                background: "rgba(15, 23, 42, 0.6)",
-                color: "#fff",
+                background: "#fff",
+                color: "#000",
                 fontSize: "0.875rem",
                 "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#475569",
+                  borderColor: "#000",
                 },
                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#475569",
+                  borderColor: "#000",
                 },
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                   borderColor: "#3b82f6",
-                  boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
                 },
                 "& .MuiSvgIcon-root": {
-                  color: "#cbd5e1",
+                  color: "#000",
                 },
               }}
             >
@@ -409,19 +409,19 @@ export default function AddCaptureModal({
               onChange={(e) => setIsShiny(e.target.checked)}
               sx={{
                 "& .MuiSwitch-switchBase": {
-                  color: "#475569",
+                  color: "#ccc",
                   "&.Mui-checked": {
                     color: "#3b82f6",
                   },
                 },
                 "& .MuiSwitch-track": {
-                  background: "#475569",
+                  background: "#ddd",
                 },
               }}
             />
           }
           label={
-            <Typography sx={{ fontSize: "0.875rem", color: "#cbd5e1" }}>
+            <Typography sx={{ fontSize: "0.875rem", color: "#000" }}>
               ✨ Est Shiny ?
             </Typography>
           }
@@ -433,17 +433,17 @@ export default function AddCaptureModal({
             onClick={onClose}
             sx={{
               flex: 1,
-              background: "#475569",
-              color: "#cbd5e1",
+              background: "#e5e5e5",
+              color: "#000",
               py: 1.5,
               borderRadius: "0.5rem",
               fontSize: "0.875rem",
               fontWeight: 500,
               textTransform: "none",
+              border: "2px solid #000",
               transition: "all 200ms",
               "&:hover": {
-                background: "#64748b",
-                color: "#fff",
+                background: "#ccc",
               },
             }}
           >
@@ -462,9 +462,10 @@ export default function AddCaptureModal({
               fontWeight: 700,
               textTransform: "none",
               transition: "all 200ms",
-              boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.2)",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              border: "2px solid transparent",
               "&:hover": {
-                boxShadow: "0 15px 25px -5px rgba(59, 130, 246, 0.3)",
+                boxShadow: "0 8px 12px rgba(0, 0, 0, 0.15)",
               },
               "&:disabled": {
                 opacity: 0.4,
