@@ -191,7 +191,7 @@ function RunPageContent() {
           <Box
             sx={{
               display: "flex",
-              borderBottom: "2px solid #000",
+              borderBottom: "3px solid #000",
               background: "linear-gradient(to right, #DBEAFE, #E9D5FF)",
             }}
           >
@@ -208,10 +208,11 @@ function RunPageContent() {
                   transition: "all 0.3s ease",
                   borderBottom: "4px solid",
                   borderBottomColor: tab === t ? "#000" : "transparent",
-                  backgroundColor: tab === t ? "#BFDBFE" : "transparent",
-                  color: tab === t ? "#000" : "#475569",
+                  backgroundColor: tab === t ? "#7dd3fc" : "transparent",
+                  color: tab === t ? "#000" : "#64748b",
                   "&:hover": {
                     color: "#000",
+                    backgroundColor: tab === t ? "#7dd3fc" : "#f0f4f8",
                   },
                   border: "none",
                   cursor: "pointer",

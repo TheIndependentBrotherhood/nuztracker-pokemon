@@ -37,7 +37,7 @@ function StatBar({
       <Typography
         sx={{
           fontSize: "0.75rem",
-          color: "#64748b",
+          color: "#666",
           width: "32px",
           textAlign: "right",
           flexShrink: 0,
@@ -48,7 +48,7 @@ function StatBar({
       <Box
         sx={{
           flex: 1,
-          background: "rgba(71, 85, 105, 0.6)",
+          background: "#e5e5e5",
           borderRadius: "999px",
           height: "6px",
           overflow: "hidden",
@@ -67,7 +67,7 @@ function StatBar({
       <Typography
         sx={{
           fontSize: "0.75rem",
-          color: "#94a3b8",
+          color: "#666",
           width: "28px",
           textAlign: "right",
           flexShrink: 0,
@@ -115,12 +115,12 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
     >
       <Box
         sx={{
-          background: "#1e293b",
-          borderRadius: "1rem",
+          background: "#FEF3E2",
+          borderRadius: "1.5rem",
           p: 3,
           width: "100%",
           maxWidth: "448px",
-          border: "1px solid rgba(71, 85, 105, 0.6)",
+          border: "3px solid #000",
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
           maxHeight: "90vh",
           overflowY: "auto",
@@ -163,7 +163,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                     alignItems: "center",
                     gap: 1,
                     flexWrap: "wrap",
-                    color: "#fff",
+                    color: "#000",
                   }}
                 >
                   {capture.nickname || capture.pokemonName}
@@ -184,7 +184,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                 </Typography>
                 <Typography
                   sx={{
-                    color: "#94a3b8",
+                    color: "#666",
                     fontSize: "0.75rem",
                     textTransform: "capitalize",
                     mt: 0.25,
@@ -207,6 +207,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                         color: "#fff",
                         textTransform: "capitalize",
                         background: typeColors[type.name] ?? "#888",
+                        border: "2px solid #000",
                       }}
                     >
                       {type.name}
@@ -214,7 +215,12 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                   ))}
                 </Box>
                 <Typography
-                  sx={{ fontSize: "0.75rem", color: "#94a3b8", mt: 0.75 }}
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: "#f59e0b",
+                    fontWeight: 700,
+                    mt: 0.75,
+                  }}
                 >
                   Lv. {capture.level}
                 </Typography>
@@ -231,7 +237,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                   fontWeight: 600,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  color: "#64748b",
+                  color: "#666",
                   mb: 1,
                 }}
               >
@@ -251,8 +257,8 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
               <Grid item xs={6}>
                 <Box
                   sx={{
-                    background: "rgba(15, 23, 42, 0.6)",
-                    border: "1px solid rgba(71, 85, 105, 0.25)",
+                    background: "#f0f4f8",
+                    border: "2px solid #cbd5e1",
                     borderRadius: "0.5rem",
                     p: 1.5,
                   }}
@@ -260,13 +266,13 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                   <Typography
                     sx={{
                       fontSize: "0.75rem",
-                      color: "#64748b",
+                      color: "#666",
                       mb: 0.25,
                     }}
                   >
                     Taille
                   </Typography>
-                  <Typography sx={{ fontWeight: 600 }}>
+                  <Typography sx={{ fontWeight: 600, color: "#000" }}>
                     {(data.height / 10).toFixed(1)} m
                   </Typography>
                 </Box>
@@ -274,8 +280,8 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
               <Grid item xs={6}>
                 <Box
                   sx={{
-                    background: "rgba(15, 23, 42, 0.6)",
-                    border: "1px solid rgba(71, 85, 105, 0.25)",
+                    background: "#f0f4f8",
+                    border: "2px solid #cbd5e1",
                     borderRadius: "0.5rem",
                     p: 1.5,
                   }}
@@ -283,13 +289,13 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                   <Typography
                     sx={{
                       fontSize: "0.75rem",
-                      color: "#64748b",
+                      color: "#666",
                       mb: 0.25,
                     }}
                   >
                     Poids
                   </Typography>
-                  <Typography sx={{ fontWeight: 600 }}>
+                  <Typography sx={{ fontWeight: 600, color: "#000" }}>
                     {(data.weight / 10).toFixed(1)} kg
                   </Typography>
                 </Box>
@@ -297,7 +303,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
             </Grid>
           </>
         ) : (
-          <Box sx={{ textAlign: "center", py: 6, color: "#f87171" }}>
+          <Box sx={{ textAlign: "center", py: 6, color: "#dc2626" }}>
             Impossible de charger les données
           </Box>
         )}
@@ -307,17 +313,18 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
           sx={{
             mt: 2.5,
             width: "100%",
-            background: "#475569",
-            color: "#cbd5e1",
+            background: "#e5e5e5",
+            color: "#000",
             py: 1.5,
             borderRadius: "0.5rem",
             fontSize: "0.875rem",
-            fontWeight: 500,
+            fontWeight: 600,
             textTransform: "none",
             transition: "all 200ms",
+            border: "2px solid #000",
             "&:hover": {
-              background: "#64748b",
-              color: "#fff",
+              background: "#ccc",
+              color: "#000",
             },
           }}
         >

@@ -226,8 +226,8 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
                   src={getSpriteUrl(c.pokemonId, c.isShiny)}
                   alt={c.pokemonName}
                   style={{
-                    width: "24px",
-                    height: "24px",
+                    width: "46px",
+                    height: "46px",
                     objectFit: "contain",
                   }}
                 />
