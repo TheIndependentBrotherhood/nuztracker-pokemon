@@ -24,6 +24,14 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
     .flatMap((z) => z.captures)
     .filter((c) => !run.team.find((t) => t.id === c.id));
 
+  // Helper function to find zone name for a capture
+  const getZoneForCapture = (captureId: string): string | undefined => {
+    const zone = run.zones.find((z) =>
+      z.captures.some((c) => c.id === captureId),
+    );
+    return zone?.zoneName;
+  };
+
   const handleDragOverSlot = (
     e: React.DragEvent<HTMLDivElement>,
     slotIndex: number,
@@ -182,7 +190,14 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                   height: "100%",
                 }}
               >
-                <PokemonCard capture={capture} slotIndex={i} runId={run.id} />
+                <PokemonCard
+                  capture={capture}
+                  slotIndex={i}
+                  runId={run.id}
+                  zone={
+                    capture ? getZoneForCapture(capture.id) || "Inconnue" : ""
+                  }
+                />
               </Box>
             </Grid>
           ))}
@@ -244,6 +259,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                 <CapturedPokemonCard
                   capture={capture}
                   onAddToTeam={handleAddCapturedToTeam}
+                  zone={getZoneForCapture(capture.id)}
                 />
               </Grid>
             ))}

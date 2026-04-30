@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Tooltip } from "@mui/material";
 import { Capture } from "@/lib/types";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { useRunStore } from "@/store/runStore";
@@ -11,9 +11,15 @@ interface Props {
   capture: Capture | null;
   slotIndex: number;
   runId: string;
+  zone: string;
 }
 
-export default function PokemonCard({ capture, slotIndex, runId }: Props) {
+export default function PokemonCard({
+  capture,
+  slotIndex,
+  runId,
+  zone,
+}: Props) {
   const [showDetail, setShowDetail] = useState(false);
   const { runs, updateTeam } = useRunStore();
 
@@ -65,149 +71,153 @@ export default function PokemonCard({ capture, slotIndex, runId }: Props) {
         ? "#ec4899"
         : "#94a3b8";
 
+  const tooltipTitle = `${capture.pokemonName}${capture.nickname ? ` (${capture.nickname})` : ""}${zone ? ` - ${zone}` : ""}`;
+
   return (
     <>
-      <Box
-        sx={{
-          background: "#fff3cd",
-          border: "2px solid #f59e0b",
-          borderRadius: "0.75rem",
-          p: 1.5,
-          cursor: "pointer",
-          transition: "all 200ms ease",
-          position: "relative",
-          maxHeight: "154px",
-          maxWidth: "120px",
-          minHeight: "154px",
-          minWidth: "120px",
-          display: "flex",
-          flexDirection: "column",
-          "&:hover": {
-            borderColor: "#3b82f6",
-            transform: "translateY(-2px)",
-            boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.2)",
-          },
-          "&:hover .remove-btn": {
-            opacity: 1,
-          },
-        }}
-        onClick={() => setShowDetail(true)}
-        draggable
-        onDragStart={(e) => {
-          e.dataTransfer?.setData("pokemonId", capture.id);
-          e.dataTransfer!.effectAllowed = "move";
-        }}
-      >
-        {capture.isShiny && (
-          <Typography
-            sx={{ position: "absolute", top: 1, right: 1, fontSize: "1rem" }}
-          >
-            ✨
-          </Typography>
-        )}
+      <Tooltip title={tooltipTitle}>
         <Box
-          component="button"
-          className="remove-btn"
-          onClick={handleRemove}
           sx={{
-            position: "absolute",
-            top: 1,
-            left: 1,
-            fontSize: "0.75rem",
-            color: "#dc2626",
-            background: "rgba(255, 255, 255, 0.9)",
-            borderRadius: "0.25rem",
-            px: 0.5,
-            py: 0.25,
-            opacity: 0,
-            transition: "opacity 200ms ease",
-            border: "1px solid #f87171",
+            background: "#fff3cd",
+            border: "2px solid #f59e0b",
+            borderRadius: "0.75rem",
+            p: 1.5,
             cursor: "pointer",
-            fontWeight: 600,
+            transition: "all 200ms ease",
+            position: "relative",
+            maxHeight: "154px",
+            maxWidth: "120px",
+            minHeight: "154px",
+            minWidth: "120px",
+            display: "flex",
+            flexDirection: "column",
             "&:hover": {
-              color: "#991b1b",
-              background: "#fca5a5",
+              borderColor: "#3b82f6",
+              transform: "translateY(-2px)",
+              boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.2)",
+            },
+            "&:hover .remove-btn": {
+              opacity: 1,
             },
           }}
-          title="Retirer de l'équipe"
-        >
-          ✕
-        </Box>
-
-        {/* Image container - properly centered */}
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "84px",
-            minWidth: "84px",
+          onClick={() => setShowDetail(true)}
+          draggable
+          onDragStart={(e) => {
+            e.dataTransfer?.setData("pokemonId", capture.id);
+            e.dataTransfer!.effectAllowed = "move";
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
-            alt={capture.pokemonName}
-            style={{
-              width: "80px",
-              height: "80px",
-              objectFit: "contain",
-              filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+          {capture.isShiny && (
+            <Typography
+              sx={{ position: "absolute", top: 1, right: 1, fontSize: "1rem" }}
+            >
+              ✨
+            </Typography>
+          )}
+          <Box
+            component="button"
+            className="remove-btn"
+            onClick={handleRemove}
+            sx={{
+              position: "absolute",
+              top: 3,
+              left: 3,
+              fontSize: "0.75rem",
+              color: "#dc2626",
+              background: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "0.25rem",
+              px: 0.5,
+              py: 0.25,
+              opacity: 0,
+              transition: "opacity 200ms ease",
+              border: "1px solid #f87171",
+              cursor: "pointer",
+              fontWeight: 600,
+              "&:hover": {
+                color: "#991b1b",
+                background: "#fca5a5",
+              },
             }}
-          />
-        </Box>
+            title="Retirer de l'équipe"
+          >
+            ✕
+          </Box>
 
-        {/* Info section */}
-        <Box sx={{ textAlign: "center", mt: 0.5 }}>
+          {/* Image container - properly centered */}
           <Box
             sx={{
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              color: "#000",
-              truncate: true,
-              lineHeight: 1.2,
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "84px",
+              minWidth: "84px",
             }}
           >
-            {capture.nickname || capture.pokemonName}
-            {genderSymbol && (
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
+              alt={capture.pokemonName}
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+              }}
+            />
+          </Box>
+
+          {/* Info section */}
+          <Box sx={{ textAlign: "center", mt: 0.5 }}>
+            <Box
+              sx={{
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                color: "#000",
+                truncate: true,
+                lineHeight: 1.2,
+              }}
+            >
+              {capture.nickname || capture.pokemonName}
+              {genderSymbol && (
+                <Typography
+                  component="span"
+                  sx={{
+                    ml: 0.5,
+                    fontSize: "0.75rem",
+                    fontWeight: 400,
+                    color: genderColor,
+                  }}
+                >
+                  {genderSymbol}
+                </Typography>
+              )}
+            </Box>
+            {capture.nickname && (
               <Typography
-                component="span"
                 sx={{
-                  ml: 0.5,
                   fontSize: "0.75rem",
-                  fontWeight: 400,
-                  color: genderColor,
+                  color: "#666",
+                  textTransform: "capitalize",
+                  truncate: true,
                 }}
               >
-                {genderSymbol}
+                {capture.pokemonName}
               </Typography>
             )}
-          </Box>
-          {capture.nickname && (
             <Typography
               sx={{
                 fontSize: "0.75rem",
-                color: "#666",
-                textTransform: "capitalize",
-                truncate: true,
+                color: "#f59e0b",
+                fontWeight: 700,
+                mt: 0.25,
               }}
             >
-              {capture.pokemonName}
+              Lv.{capture.level}
             </Typography>
-          )}
-          <Typography
-            sx={{
-              fontSize: "0.75rem",
-              color: "#f59e0b",
-              fontWeight: 700,
-              mt: 0.25,
-            }}
-          >
-            Lv.{capture.level}
-          </Typography>
+          </Box>
         </Box>
-      </Box>
+      </Tooltip>
 
       {showDetail && (
         <PokemonDetailModal
