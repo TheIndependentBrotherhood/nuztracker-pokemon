@@ -1,0 +1,6 @@
+{
+  "pokemon": [],
+  "generatedAt": "2026-04-30T01:00:00Z",
+  "totalCount": 0,
+  "_note": "Run 'npm run generate-cache' to populate this file with data from PokeAPI."
+}

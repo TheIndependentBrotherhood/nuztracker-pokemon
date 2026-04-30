@@ -1,0 +1,87 @@
+{
+  "abilities": [
+    {
+      "id": 11,
+      "name": "water-absorb",
+      "generation": "generation-iii",
+      "effect": "Immunity to Water-type moves and heals 25% max HP when hit by one",
+      "immuneTypes": ["water"],
+      "isImmunity": true
+    },
+    {
+      "id": 18,
+      "name": "flash-fire",
+      "generation": "generation-iii",
+      "effect": "Immunity to Fire-type moves; Fire-type moves used by others have no effect",
+      "immuneTypes": ["fire"],
+      "isImmunity": true
+    },
+    {
+      "id": 26,
+      "name": "levitate",
+      "generation": "generation-iii",
+      "effect": "Immunity to Ground-type moves",
+      "immuneTypes": ["ground"],
+      "isImmunity": true
+    },
+    {
+      "id": 65,
+      "name": "sap-sipper",
+      "generation": "generation-v",
+      "effect": "Immunity to Grass-type moves; raises Attack when hit by one",
+      "immuneTypes": ["grass"],
+      "isImmunity": true
+    },
+    {
+      "id": 68,
+      "name": "lightning-rod",
+      "generation": "generation-iii",
+      "effect": "Immunity to Electric-type moves and raises Special Attack when hit by one",
+      "immuneTypes": ["electric"],
+      "isImmunity": true
+    },
+    {
+      "id": 25,
+      "name": "wonder-guard",
+      "generation": "generation-iii",
+      "effect": "Only takes damage from super-effective moves",
+      "immuneTypes": ["all-except-super-effective"],
+      "isImmunity": false,
+      "special": true
+    },
+    {
+      "id": 61,
+      "name": "volt-absorb",
+      "generation": "generation-iv",
+      "effect": "Immunity to Electric-type moves; heals 25% max HP when hit by one",
+      "immuneTypes": ["electric"],
+      "isImmunity": true
+    },
+    {
+      "id": 57,
+      "name": "dry-skin",
+      "generation": "generation-iii",
+      "effect": "Takes 1.25x damage from Fire; immunity to Water-type moves and heals 25% max HP when hit by one",
+      "immuneTypes": ["water"],
+      "isImmunity": true,
+      "weakness": "fire"
+    },
+    {
+      "id": 67,
+      "name": "storm-drain",
+      "generation": "generation-iv",
+      "effect": "Immunity to Water-type moves and raises Special Attack when hit by one",
+      "immuneTypes": ["water"],
+      "isImmunity": true
+    },
+    {
+      "id": 111,
+      "name": "earth-eater",
+      "generation": "generation-ix",
+      "effect": "Immunity to Ground-type moves; heals 25% max HP when hit by one",
+      "immuneTypes": ["ground"],
+      "isImmunity": true
+    }
+  ],
+  "generatedAt": "2026-04-30T01:00:00Z"
+}
