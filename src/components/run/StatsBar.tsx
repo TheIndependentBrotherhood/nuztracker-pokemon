@@ -45,12 +45,19 @@ export default function StatsBar({ run }: Props) {
 
       const { default: html2canvas } = await import("html2canvas");
 
+      // Fixed height for 6 pokemon - 1920x1080 resolution
+      // Always use same dimensions regardless of team size
+      const height = 1080;
+
       const canvas = await html2canvas(element, {
-        width: 1280,
-        height: 720,
-        scale: 2,
-        backgroundColor: "#FFFEF0",
+        width: 1920,
+        height: 1080,
+        scale: 1,
+        backgroundColor: "rgba(0, 0, 0, 0)",
         logging: false,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 0,
       });
 
       const link = document.createElement("a");

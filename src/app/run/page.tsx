@@ -9,9 +9,12 @@ import StatsBar from "@/components/run/StatsBar";
 import MapView from "@/components/run/MapView";
 import ZoneList from "@/components/run/ZoneList";
 import TeamView from "@/components/run/TeamView";
+import TeamColumn from "@/components/share/TeamColumn";
 import TypeAnalysis from "@/components/run/TypeAnalysis";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
+import { fetchPokemon } from "@/lib/pokemon-api";
+import { PokemonApiData } from "@/lib/types";
 
 type Tab = "zones" | "team";
 
@@ -22,6 +25,9 @@ function RunPageContent() {
   const [tab, setTab] = useState<Tab>("zones");
   const [showTypesDrawer, setShowTypesDrawer] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [pokemonData, setPokemonData] = useState<
+    Record<number, PokemonApiData>
+  >({});
 
   const id = searchParams.get("id") ?? "";
 
@@ -38,6 +44,33 @@ function RunPageContent() {
   useEffect(() => {
     if (run) setCurrentRun(run);
   }, [run, setCurrentRun]);
+
+  // Load pokemon data for export display
+  useEffect(() => {
+    if (!run || run.team.length === 0) {
+      setPokemonData({});
+      return;
+    }
+
+    const loadPokemonData = async () => {
+      const dataMap: Record<number, PokemonApiData> = {};
+      await Promise.all(
+        run.team.map(async (pokemon) => {
+          try {
+            dataMap[pokemon.pokemonId] = await fetchPokemon(pokemon.pokemonId);
+          } catch (error) {
+            console.error(
+              `Failed to fetch pokemon ${pokemon.pokemonId}:`,
+              error,
+            );
+          }
+        }),
+      );
+      setPokemonData(dataMap);
+    };
+
+    loadPokemonData();
+  }, [run]);
 
   if (!mounted) return null;
 
@@ -231,11 +264,30 @@ function RunPageContent() {
               <Box sx={{ p: 2 }}>
                 <TeamView
                   run={run}
-                  id="team-export-target"
                   onToggleAnalysis={() => setShowTypesDrawer(!showTypesDrawer)}
                 />
               </Box>
             )}
+          </Box>
+
+          {/* Hidden export view for PNG - sprite + types in columns */}
+          <Box
+            id="team-export-target"
+            sx={{
+              position: "fixed",
+              left: "-9999px",
+              top: 0,
+              width: "1920px",
+              height: "1080px",
+              background: "transparent",
+              display: "flex",
+              justifyContent: "space-between",
+              flexDirection: "row",
+              padding: "0",
+            }}
+          >
+            <TeamColumn team={run.team} pokemonData={pokemonData} />
+            <TeamColumn team={run.team} pokemonData={pokemonData} mirror />
           </Box>
         </Box>
 

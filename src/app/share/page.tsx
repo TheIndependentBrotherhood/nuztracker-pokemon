@@ -2,11 +2,11 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Box, Typography, Grid } from "@mui/material";
+import { Box } from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
 import { decodeTeam } from "@/lib/share";
-import { fetchPokemon, getSpriteUrl } from "@/lib/pokemon-api";
-import { typeColors } from "@/lib/type-chart";
+import { fetchPokemon } from "@/lib/pokemon-api";
+import TeamColumn from "@/components/share/TeamColumn";
 
 function ShareContent() {
   const searchParams = useSearchParams();
@@ -16,9 +16,6 @@ function ShareContent() {
   >({});
   const [loading, setLoading] = useState(true);
 
-  const showTypes = searchParams.get("showTypes") === "true";
-  const showLevels = searchParams.get("showLevels") === "true";
-
   useEffect(() => {
     const encoded = searchParams.get("team");
     if (!encoded) {
@@ -27,12 +24,15 @@ function ShareContent() {
     }
     decodeTeam(encoded).then(async (captures) => {
       setTeam(captures);
+      // Fetch pokemon data for types
       const dataMap: Record<number, PokemonApiData> = {};
       await Promise.all(
         captures.map(async (c) => {
           try {
             dataMap[c.pokemonId] = await fetchPokemon(c.pokemonId);
-          } catch {}
+          } catch {
+            // silently fail
+          }
         }),
       );
       setPokemonData(dataMap);
@@ -48,8 +48,7 @@ function ShareContent() {
           alignItems: "center",
           justifyContent: "center",
           minHeight: "100vh",
-          background: "#111827",
-          color: "#fff",
+          backgroundColor: "rgba(0, 0, 0, 0)",
         }}
       >
         Loading team...
@@ -65,8 +64,7 @@ function ShareContent() {
           alignItems: "center",
           justifyContent: "center",
           minHeight: "100vh",
-          background: "#111827",
-          color: "#fff",
+          backgroundColor: "rgba(0, 0, 0, 0)",
         }}
       >
         No team data found
@@ -77,129 +75,18 @@ function ShareContent() {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        background: "#111827",
+        height: "100vh",
+        backgroundColor: "rgba(0, 0, 0, 0)",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 4,
+        justifyContent: "space-between",
+        overflow: "hidden",
       }}
     >
-      <Box
-        sx={{
-          background: "#1f2937",
-          borderRadius: "1rem",
-          p: 4,
-          border: "1px solid #4b5563",
-          width: "100%",
-          maxWidth: "1280px",
-          aspectRatio: "16 / 9",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: "1.875rem",
-            fontWeight: 900,
-            color: "#fbbf24",
-            textAlign: "center",
-            mb: 4,
-          }}
-        >
-          NuzTracker Team
-        </Typography>
-        <Grid container spacing={2} sx={{ flex: 1 }}>
-          {team.map((capture) => {
-            const data = pokemonData[capture.pokemonId];
-            const types = data?.types.map((t) => t.type.name) ?? [];
+      {/* Left column */}
+      <TeamColumn team={team} pokemonData={pokemonData} fullHeight />
 
-            return (
-              <Grid item xs={2} key={capture.id}>
-                <Box
-                  sx={{
-                    background: "#374151",
-                    borderRadius: "0.75rem",
-                    p: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 1,
-                    height: "100%",
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
-                    alt={capture.pokemonName}
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      objectFit: "contain",
-                    }}
-                  />
-                  <Box sx={{ textAlign: "center" }}>
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "#fff",
-                        fontSize: "0.875rem",
-                      }}
-                    >
-                      {capture.nickname || capture.pokemonName}
-                      {capture.isShiny && " ✨"}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "#9ca3af",
-                        fontSize: "0.75rem",
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {capture.pokemonName}
-                    </Typography>
-                    {showLevels && (
-                      <Typography
-                        sx={{ color: "#d1d5db", fontSize: "0.75rem" }}
-                      >
-                        Lv.{capture.level}
-                      </Typography>
-                    )}
-                  </Box>
-                  {showTypes && types.length > 0 && (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 0.5,
-                        flexWrap: "wrap",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {types.map((t) => (
-                        <Box
-                          key={t}
-                          sx={{
-                            px: 1,
-                            py: 0.25,
-                            borderRadius: "0.25rem",
-                            fontSize: "0.75rem",
-                            color: "#fff",
-                            textTransform: "capitalize",
-                            fontWeight: 500,
-                            background: typeColors[t] ?? "#888",
-                          }}
-                        >
-                          {t}
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-                </Box>
-              </Grid>
-            );
-          })}
-        </Grid>
-      </Box>
+      {/* Right column - mirror */}
+      <TeamColumn team={team} pokemonData={pokemonData} mirror fullHeight />
     </Box>
   );
 }
