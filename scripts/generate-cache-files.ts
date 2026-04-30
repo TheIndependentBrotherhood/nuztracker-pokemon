@@ -39,7 +39,7 @@ async function generatePokemonList() {
         id: number;
         name: string;
         types: { type: { name: string } }[];
-        sprites: { front_default: string };
+        sprites: { front_default: string | null };
         species: { url: string };
       };
 
@@ -59,7 +59,8 @@ async function generatePokemonList() {
         id: details.id,
         name: details.name,
         types: details.types.map((t) => t.type.name),
-        sprite: details.sprites.front_default,
+        sprite: details.sprites.front_default ??
+          `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${details.id}.png`,
         isLegendary: species.is_legendary || species.is_mythical,
         generation,
       });
@@ -116,10 +117,11 @@ async function generateRegions() {
           pokemon_encounters?: { pokemon: { url: string } }[];
         };
         for (const enc of areaData.pokemon_encounters ?? []) {
-          const pokemonData = (await fetchWithRetry(enc.pokemon.url)) as {
-            id: number;
-          };
-          pokemonIds.add(pokemonData.id);
+          // Parse the id directly from the URL (e.g. ".../pokemon/25/") to
+          // avoid one extra HTTP request per encounter.
+          const parts = enc.pokemon.url.replace(/\/$/, '').split('/');
+          const pokemonId = parseInt(parts[parts.length - 1], 10);
+          if (!isNaN(pokemonId)) pokemonIds.add(pokemonId);
         }
       }
 

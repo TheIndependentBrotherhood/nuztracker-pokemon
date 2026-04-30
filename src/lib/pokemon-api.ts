@@ -5,6 +5,9 @@ const BASE_URL = 'https://pokeapi.co/api/v2';
 // In-memory fallback for environments where the cache file hasn't been generated yet
 let pokemonListFallbackCache: Array<{ name: string; url: string }> | null = null;
 
+// Module-level cache for the static JSON file so it is only downloaded once
+let pokemonListJsonCache: Array<{ name: string; id: number }> | null = null;
+
 export async function fetchPokemon(nameOrId: string | number): Promise<PokemonApiData> {
   const res = await fetch(`${BASE_URL}/pokemon/${nameOrId}`);
   if (!res.ok) throw new Error(`Pokemon not found: ${nameOrId}`);
@@ -23,18 +26,23 @@ export async function searchPokemon(query: string): Promise<Array<{ name: string
 
   // Attempt to use the pre-generated static cache
   try {
-    const res = await fetch('/data/pokemon-list.json');
-    if (res.ok) {
-      const data = (await res.json()) as { pokemon?: { name: string; id: number }[] };
-      if (data.pokemon && data.pokemon.length > 0) {
-        return data.pokemon
-          .filter((p) => p.name.includes(lower))
-          .slice(0, 10)
-          .map((p) => ({
-            name: p.name,
-            url: `${BASE_URL}/pokemon/${p.id}`,
-          }));
+    if (!pokemonListJsonCache) {
+      const res = await fetch('/data/pokemon-list.json');
+      if (res.ok) {
+        const data = (await res.json()) as { pokemon?: { name: string; id: number }[] };
+        if (data.pokemon && data.pokemon.length > 0) {
+          pokemonListJsonCache = data.pokemon;
+        }
       }
+    }
+    if (pokemonListJsonCache) {
+      return pokemonListJsonCache
+        .filter((p) => p.name.includes(lower))
+        .slice(0, 10)
+        .map((p) => ({
+          name: p.name,
+          url: `${BASE_URL}/pokemon/${p.id}`,
+        }));
     }
   } catch {
     // Cache not available – fall through to the live API
