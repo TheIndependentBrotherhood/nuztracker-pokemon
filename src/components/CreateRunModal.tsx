@@ -1,6 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Checkbox,
+  Button,
+  Box,
+  Typography,
+  Stack,
+} from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
 import { regions } from "@/lib/zones";
@@ -50,187 +65,255 @@ export default function CreateRunModal({ onClose }: Props) {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
-      onClick={onClose}
+    <Dialog
+      open
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{
+        paper: {
+          sx: {
+            background: "#FEF3E2",
+            border: "3px solid #000",
+            borderRadius: "1.5rem",
+            boxShadow: "0 20px 25px rgba(0, 0, 0, 0.2)",
+          },
+        },
+      }}
     >
-      <div
-        className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-slate-700/60 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+      <DialogTitle
+        sx={{
+          fontWeight: 900,
+          fontSize: "1.5rem",
+          color: "#000",
+          pb: 1,
+        }}
       >
-        <div className="mb-5">
-          <h2 className="text-xl font-bold text-white">Nouveau Run</h2>
-          <p className="text-slate-400 text-sm mt-0.5">Configurez votre aventure Nuzlocke</p>
-        </div>
+        🎮 Nouveau Run
+      </DialogTitle>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
-              Nom du Run
-            </label>
-            <input
-              className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all"
-              placeholder="ex. FireRed Nuzlocke"
-              value={gameName}
-              onChange={(e) => setGameName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              autoFocus
-            />
-          </div>
+      <DialogContent sx={{ pb: 3, pt: 2 }}>
+        <Stack spacing={3}>
+          {/* Subtitle */}
+          <Typography
+            sx={{ color: "#666", fontSize: "0.95rem", fontWeight: 500 }}
+          >
+            Créez votre aventure Nuzlocke et lancez le défi
+          </Typography>
 
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
-              Région
-            </label>
-            <select
-              className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all appearance-none"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
+          {/* Game Name */}
+          <TextField
+            autoFocus
+            label="Nom du Run"
+            placeholder="ex. FireRed Nuzlocke"
+            fullWidth
+            value={gameName}
+            onChange={(e) => setGameName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "1.5rem",
+                backgroundColor: "#fff",
+                border: "2px solid #000",
+                "& fieldset": { border: "none" },
+                "&:hover": { backgroundColor: "#fff" },
+                "&.Mui-focused": {
+                  backgroundColor: "#fff",
+                  "& fieldset": { border: "none" },
+                },
+              },
+              "& .MuiOutlinedInput-input": {
+                color: "#000",
+                fontWeight: 500,
+                padding: "12px 16px",
+              },
+              "& .MuiInputBase-input::placeholder": {
+                color: "#aaa",
+                opacity: 1,
+              },
+            }}
+          />
+
+          {/* Region Select */}
+          <Select
+            label="Région"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            fullWidth
+            sx={{
+              borderRadius: "1.5rem",
+              backgroundColor: "#fff",
+              border: "2px solid #000",
+              color: "#000",
+              fontWeight: 600,
+              "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+              "& svg": { color: "#000" },
+            }}
+          >
+            {regions.map((r) => (
+              <MenuItem key={r.id} value={r.id}>
+                {r.name} — {r.game}
+              </MenuItem>
+            ))}
+          </Select>
+
+          {/* Toggles */}
+          <Stack spacing={1}>
+            <Typography
+              sx={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "#000",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
             >
-              {regions.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name} — {r.game}
-                </option>
-              ))}
-            </select>
-          </div>
+              ⚙️ Modes de Jeu
+            </Typography>
 
-          <div className="flex flex-col gap-3 pt-1">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative">
-                <input
-                  type="checkbox"
+            <FormControlLabel
+              control={
+                <Checkbox
                   checked={isShinyHuntMode}
                   onChange={(e) => setIsShinyHuntMode(e.target.checked)}
-                  className="sr-only"
                 />
-                <div
-                  className={`w-9 h-5 rounded-full transition-colors duration-200 ${
-                    isShinyHuntMode ? 'bg-blue-500' : 'bg-slate-600'
-                  }`}
-                />
-                <div
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                    isShinyHuntMode ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </div>
-              <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
-                ✨ Mode Shiny Hunt
-              </span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative">
-                <input
-                  type="checkbox"
+              }
+              label="✨ Mode Shiny Hunt"
+              sx={{
+                color: "#000",
+                fontWeight: 600,
+                p: 1.5,
+                border: "2px solid #000",
+                borderRadius: "1rem",
+                m: 0,
+              }}
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
                   checked={isRandomMode}
                   onChange={(e) => setIsRandomMode(e.target.checked)}
-                  className="sr-only"
                 />
-                <div
-                  className={`w-9 h-5 rounded-full transition-colors duration-200 ${
-                    isRandomMode ? 'bg-blue-500' : 'bg-slate-600'
-                  }`}
-                />
-                <div
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                    isRandomMode ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </div>
-              <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
-                🎲 Mode Randomizer
-              </span>
-            </label>
-          </div>
+              }
+              label="🎲 Mode Randomizer"
+              sx={{
+                color: "#000",
+                fontWeight: 600,
+                p: 1.5,
+                border: "2px solid #000",
+                borderRadius: "1rem",
+                m: 0,
+              }}
+            />
+          </Stack>
 
           {/* Randomizer Options */}
           {isRandomMode && (
-            <div className="bg-slate-900/60 border border-slate-600/60 rounded-xl p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
-                Options Randomizer
-              </h3>
-              <div className="space-y-2.5">
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={randomizerOptions.randomizeTypes}
-                    onChange={() => toggleRandomizerOption("randomizeTypes")}
-                    className="w-4 h-4 accent-blue-500"
-                  />
-                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">Types aléatoires</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={randomizerOptions.randomizeAbilities}
-                    onChange={() =>
-                      toggleRandomizerOption("randomizeAbilities")
-                    }
-                    className="w-4 h-4 accent-blue-500"
-                  />
-                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
-                    Talents aléatoires
-                  </span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={randomizerOptions.randomizeEncounters}
-                    onChange={() =>
-                      toggleRandomizerOption("randomizeEncounters")
-                    }
-                    className="w-4 h-4 accent-blue-500"
-                  />
-                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
-                    Rencontres aléatoires
-                  </span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={randomizerOptions.randomizeEvolvedForms}
-                    onChange={() =>
-                      toggleRandomizerOption("randomizeEvolvedForms")
-                    }
-                    className="w-4 h-4 accent-blue-500"
-                  />
-                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
-                    Évolutions aléatoires
-                  </span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={randomizerOptions.allowDuplicates}
-                    onChange={() => toggleRandomizerOption("allowDuplicates")}
-                    className="w-4 h-4 accent-blue-500"
-                  />
-                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
-                    Autoriser les doublons
-                  </span>
-                </label>
-              </div>
-            </div>
-          )}
-        </div>
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #F3E5F5 0%, #FCE4EC 100%)",
+                border: "2px solid #8b5cf6",
+                borderRadius: "1rem",
+                p: 2,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "#8b5cf6",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  mb: 2,
+                }}
+              >
+                🎛️ Options Randomizer
+              </Typography>
 
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-slate-300 hover:text-white text-sm font-medium transition-colors"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={!gameName.trim()}
-            className="flex-1 btn-gradient py-2.5 rounded-lg text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-          >
-            Démarrer !
-          </button>
-        </div>
-      </div>
-    </div>
+              <Stack spacing={1}>
+                {[
+                  { key: "randomizeTypes", label: "Types aléatoires" },
+                  { key: "randomizeAbilities", label: "Talents aléatoires" },
+                  {
+                    key: "randomizeEncounters",
+                    label: "Rencontres aléatoires",
+                  },
+                  {
+                    key: "randomizeEvolvedForms",
+                    label: "Évolutions aléatoires",
+                  },
+                  { key: "allowDuplicates", label: "Autoriser les doublons" },
+                ].map(({ key, label }) => (
+                  <FormControlLabel
+                    key={key}
+                    control={
+                      <Checkbox
+                        checked={
+                          randomizerOptions[key as keyof RandomizerOptions]
+                        }
+                        onChange={() =>
+                          toggleRandomizerOption(key as keyof RandomizerOptions)
+                        }
+                        size="small"
+                      />
+                    }
+                    label={label}
+                    sx={{ color: "#000", fontWeight: 500, m: 0 }}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          )}
+        </Stack>
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, gap: 1 }}>
+        <Button
+          onClick={onClose}
+          sx={{
+            border: "2px solid #000",
+            color: "#000",
+            fontWeight: 700,
+            borderRadius: "2rem",
+            textTransform: "none",
+            flexGrow: 1,
+            py: 1.2,
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.05)",
+            },
+          }}
+        >
+          Annuler
+        </Button>
+        <Button
+          onClick={handleCreate}
+          disabled={!gameName.trim()}
+          variant="contained"
+          sx={{
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            border: "3px solid #000",
+            color: "#fff",
+            fontWeight: 700,
+            borderRadius: "2rem",
+            textTransform: "none",
+            flexGrow: 1,
+            py: 1.2,
+            boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              transform: "translate(-2px, -2px)",
+              boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
+            },
+            "&:disabled": {
+              opacity: 0.5,
+              cursor: "not-allowed",
+            },
+          }}
+        >
+          🚀 Démarrer !
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

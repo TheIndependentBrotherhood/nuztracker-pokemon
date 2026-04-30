@@ -1,33 +1,38 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRunStore } from '@/store/runStore';
-import RunList from '@/components/RunList';
-import CreateRunModal from '@/components/CreateRunModal';
-import Header from '@/components/Header';
-import HeroSection from '@/components/HeroSection';
-import FeatureCard from '@/components/FeatureCard';
+import { useEffect, useState } from "react";
+import { Box, Container, Typography } from "@mui/material";
+import { useRunStore } from "@/store/runStore";
+import RunList from "@/components/RunList";
+import CreateRunModal from "@/components/CreateRunModal";
+import Header from "@/components/Header";
+import HeroSection from "@/components/HeroSection";
+import FeatureCard from "@/components/FeatureCard";
 
 const FEATURES = [
   {
-    icon: '🗺️',
-    title: 'Cartes Interactives',
-    description: 'Visualisez vos zones sur des cartes interactives pour chaque région Pokémon.',
+    icon: "🗺️",
+    title: "Cartes Interactives",
+    description:
+      "Visualisez vos zones sur des cartes interactives pour chaque région Pokémon.",
   },
   {
-    icon: '⚔️',
-    title: 'Gestion d\'Équipe',
-    description: 'Gérez votre équipe de 6 Pokémon avec sprites, types et statistiques.',
+    icon: "⚔️",
+    title: "Gestion d'Équipe",
+    description:
+      "Gérez votre équipe de 6 Pokémon avec sprites, types et statistiques.",
   },
   {
-    icon: '📊',
-    title: 'Analyse de Types',
-    description: 'Analysez les forces et faiblesses de votre équipe en temps réel.',
+    icon: "📊",
+    title: "Analyse de Types",
+    description:
+      "Analysez les forces et faiblesses de votre équipe en temps réel.",
   },
   {
-    icon: '✨',
-    title: 'Mode Shiny Hunt',
-    description: 'Activez le mode Shiny Hunt pour vos runs à la recherche des raretés.',
+    icon: "✨",
+    title: "Mode Shiny Hunt",
+    description:
+      "Activez le mode Shiny Hunt pour vos runs à la recherche des raretés.",
   },
 ];
 
@@ -40,42 +45,92 @@ export default function HomePage() {
   }, [loadRuns]);
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <Box sx={{ minHeight: "100vh" }}>
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 pb-16">
+      <Container maxWidth="lg" sx={{ py: 6, pb: 10 }}>
+        {/* Hero Section */}
         <HeroSection
           runsCount={runs.length}
-          activeCount={runs.filter((r) => r.status === 'in-progress').length}
+          activeCount={runs.filter((r) => r.status === "in-progress").length}
           capturesCount={runs.reduce((acc, r) => acc + r.team.length, 0)}
           onNewRun={() => setShowCreate(true)}
         />
 
-        {/* Features */}
-        <section className="mb-12 animate-fade-slide-in" style={{ animationDelay: '100ms' }}>
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4 text-center">
-            Fonctionnalités
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {FEATURES.map((f) => (
-              <FeatureCard key={f.title} {...f} />
-            ))}
-          </div>
-        </section>
-
-        {/* Recent runs */}
-        {runs.length > 0 && (
-          <section className="animate-fade-slide-in" style={{ animationDelay: '200ms' }}>
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">
-              Vos Runs
-            </h2>
-            <RunList runs={runs} />
-          </section>
+        {/* Features Grid */}
+        {runs.length === 0 && (
+          <Box component="section" sx={{ mt: 3, mb: 4 }}>
+            <Box sx={{ mb: 6, textAlign: "center" }}>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 900,
+                  color: "#000",
+                  mb: 1.5,
+                  fontSize: { xs: "1.75rem", sm: "2.25rem" },
+                }}
+              >
+                Prêt à commencer ?
+              </Typography>
+              <Typography
+                sx={{
+                  color: "#666",
+                  fontSize: "1.05rem",
+                  fontWeight: 500,
+                }}
+              >
+                Découvrez ce que NuzTracker peut faire pour vous
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "1fr 1fr",
+                  md: "repeat(4, 1fr)",
+                },
+                gap: 3,
+              }}
+            >
+              {FEATURES.map((f) => (
+                <FeatureCard key={f.title} {...f} />
+              ))}
+            </Box>
+          </Box>
         )}
-      </main>
 
-      {showCreate && <CreateRunModal onClose={() => setShowCreate(false)} />}
-    </div>
+        {/* Recent Runs */}
+        {runs.length > 0 && (
+          <Box component="section" sx={{ mt: 8 }}>
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 800,
+                  color: "#000",
+                  mb: 0.5,
+                }}
+              >
+                Vos Runs
+              </Typography>
+              <Typography
+                sx={{
+                  color: "#666",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                }}
+              >
+                {runs.length} run{runs.length > 1 ? "s" : ""} en cours ou
+                complétés
+              </Typography>
+            </Box>
+            <RunList runs={runs} />
+          </Box>
+        )}
+
+        {showCreate && <CreateRunModal onClose={() => setShowCreate(false)} />}
+      </Container>
+    </Box>
   );
 }
-

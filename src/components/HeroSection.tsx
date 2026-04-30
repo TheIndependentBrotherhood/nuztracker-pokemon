@@ -1,4 +1,14 @@
-'use client';
+"use client";
+
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 interface Props {
   runsCount: number;
@@ -7,53 +17,148 @@ interface Props {
   onNewRun: () => void;
 }
 
-export default function HeroSection({ runsCount, activeCount, capturesCount, onNewRun }: Props) {
-  return (
-    <section className="relative overflow-hidden py-16 px-4 text-center">
-      {/* Background glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59,130,246,0.15) 0%, transparent 70%)',
-        }}
-      />
-
-      <div className="relative animate-slide-up">
-        <h1 className="text-5xl sm:text-6xl font-black tracking-tight mb-3">
-          <span className="gradient-text">NuzTracker</span>
-        </h1>
-        <p className="text-slate-300 text-lg sm:text-xl max-w-xl mx-auto mb-2">
-          Suivi de votre aventure Pokémon
-        </p>
-        <p className="text-slate-500 text-sm max-w-md mx-auto mb-10">
-          Trackez vos runs Nuzlocke, gérez votre équipe et explorez les zones interactives.
-        </p>
-
-        {/* Stats */}
-        <div className="flex justify-center gap-4 mb-10">
-          <div className="bg-slate-800/70 border border-slate-700/60 rounded-xl px-5 py-3 min-w-[80px]">
-            <div className="text-2xl font-bold text-white">{runsCount}</div>
-            <div className="text-xs text-slate-400 uppercase tracking-wide mt-0.5">Runs</div>
-          </div>
-          <div className="bg-slate-800/70 border border-slate-700/60 rounded-xl px-5 py-3 min-w-[80px]">
-            <div className="text-2xl font-bold text-emerald-400">{activeCount}</div>
-            <div className="text-xs text-slate-400 uppercase tracking-wide mt-0.5">Active</div>
-          </div>
-          <div className="bg-slate-800/70 border border-slate-700/60 rounded-xl px-5 py-3 min-w-[80px]">
-            <div className="text-2xl font-bold text-blue-400">{capturesCount}</div>
-            <div className="text-xs text-slate-400 uppercase tracking-wide mt-0.5">Captures</div>
-          </div>
-        </div>
-
-        <button
-          onClick={onNewRun}
-          className="btn-gradient inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-white font-bold text-base shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+export default function HeroSection({
+  runsCount,
+  activeCount,
+  capturesCount,
+  onNewRun,
+}: Props) {
+  const StatCard = ({
+    value,
+    label,
+    color,
+  }: {
+    value: number;
+    label: string;
+    color: string;
+  }) => (
+    <Card
+      sx={{
+        background: color,
+        border: "3px solid #000",
+        borderRadius: "1.5rem",
+        boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.2)",
+        flex: 1,
+        minWidth: 0,
+        transition: "all 0.3s ease-in-out",
+        "&:hover": {
+          transform: "scale(1.05)",
+          boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.3)",
+        },
+      }}
+    >
+      <CardContent sx={{ textAlign: "center", p: { xs: 1.5, sm: 3 } }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 900,
+            fontSize: { xs: "2rem", sm: "3rem" },
+            color: "#000",
+            mb: 1,
+          }}
         >
-          <span>+</span>
-          New Run
-        </button>
-      </div>
-    </section>
+          {value}
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            fontWeight: 700,
+            color: "#000",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          {label}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <Box component="section" sx={{ py: { xs: 4, md: 6 }, px: 2 }}>
+      <Container maxWidth="md">
+        <Stack spacing={2.5} sx={{ alignItems: "center" }}>
+          {/* Title */}
+          <Typography
+            variant="h1"
+            sx={{
+              fontSize: { xs: "2.5rem", sm: "3.5rem", lg: "4.5rem" },
+              fontWeight: 900,
+              color: "#000",
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.1)",
+              textAlign: "center",
+            }}
+          >
+            NuzTracker
+          </Typography>
+
+          {/* Subtitle */}
+          <Stack spacing={1} sx={{ alignItems: "center", maxWidth: "600px" }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontSize: { xs: "1.125rem", sm: "1.5rem" },
+                fontWeight: 700,
+                color: "#000",
+                textAlign: "center",
+              }}
+            >
+              Votre tracker ultime pour les runs Nuzlocke
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+                color: "#666",
+                textAlign: "center",
+                fontWeight: 500,
+              }}
+            >
+              Suivi en temps réel, gestion d'équipe avancée et statistiques
+              détaillées pour vos aventures Pokémon les plus difficiles
+            </Typography>
+          </Stack>
+
+          {/* Stats Cards */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            sx={{ width: "100%", maxWidth: "600px" }}
+          >
+            <StatCard value={runsCount} label="Runs" color="#E3F2FD" />
+            <StatCard value={activeCount} label="Actifs" color="#E8F5E9" />
+            <StatCard value={capturesCount} label="Captures" color="#F3E5F5" />
+          </Stack>
+
+          {/* CTA Button */}
+          <Button
+            onClick={onNewRun}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+              border: "3px solid #000",
+              borderRadius: "9999px",
+              color: "#fff",
+              px: 4,
+              py: 1.5,
+              fontWeight: 700,
+              fontSize: "1rem",
+              boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
+              transition: "all 0.2s ease-in-out",
+              textTransform: "none",
+              "&:hover": {
+                transform: "translate(-2px, -2px)",
+                boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
+              },
+              "&:active": {
+                transform: "translate(1px, 1px)",
+                boxShadow: "2px 2px 0 rgba(0, 0, 0, 0.2)",
+              },
+            }}
+          >
+            🚀 Démarrer mon Run
+          </Button>
+        </Stack>
+      </Container>
+    </Box>
   );
 }
