@@ -104,6 +104,11 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
                 ? 'Supprimer les captures pour changer le statut'
                 : 'Changer le statut'
             }
+            aria-label={
+              zone.captures.length > 0 && zone.status === 'captured'
+                ? 'Supprimer les captures pour changer le statut'
+                : 'Changer le statut'
+            }
             disabled={zone.captures.length > 0 && zone.status === 'captured'}
           >
             {cycleLabel[zone.status]}
