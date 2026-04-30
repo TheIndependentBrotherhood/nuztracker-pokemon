@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Drawer } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getRun } from "@/lib/storage";
 import StatsBar from "@/components/run/StatsBar";
@@ -14,13 +14,14 @@ import ExportPanel from "@/components/run/ExportPanel";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
 
-type Tab = "zones" | "team" | "types";
+type Tab = "zones" | "team";
 
 function RunPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { runs, loadRuns, setCurrentRun, updateRun } = useRunStore();
   const [tab, setTab] = useState<Tab>("zones");
+  const [showTypesDrawer, setShowTypesDrawer] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const id = searchParams.get("id") ?? "";
@@ -195,7 +196,7 @@ function RunPageContent() {
               background: "linear-gradient(to right, #DBEAFE, #E9D5FF)",
             }}
           >
-            {(["zones", "team", "types"] as Tab[]).map((t) => (
+            {(["zones", "team"] as Tab[]).map((t) => (
               <Box
                 component="button"
                 key={t}
@@ -218,11 +219,7 @@ function RunPageContent() {
                   cursor: "pointer",
                 }}
               >
-                {t === "zones"
-                  ? "🗺 Zones"
-                  : t === "team"
-                    ? "⚔️ Équipe"
-                    : "🔬 Types"}
+                {t === "zones" ? "🗺 Zones" : "⚔️ Équipe"}
               </Box>
             ))}
           </Box>
@@ -231,12 +228,11 @@ function RunPageContent() {
             {tab === "zones" && <ZoneList run={run} />}
             {tab === "team" && (
               <Box sx={{ p: 2 }}>
-                <TeamView run={run} id="team-export-target" />
-              </Box>
-            )}
-            {tab === "types" && (
-              <Box sx={{ p: 2 }}>
-                <TypeAnalysis run={run} />
+                <TeamView
+                  run={run}
+                  id="team-export-target"
+                  onOpenTypes={() => setShowTypesDrawer(true)}
+                />
               </Box>
             )}
           </Box>
@@ -269,6 +265,80 @@ function RunPageContent() {
           </Box>
         </Box>
       </Box>
+
+      {/* Types Drawer */}
+      <Drawer
+        anchor="right"
+        open={showTypesDrawer}
+        onClose={() => setShowTypesDrawer(false)}
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: {
+              xs: "90%",
+              sm: "500px",
+            },
+            background: "#FEF3E2",
+            border: "3px solid #000",
+            borderLeft: "3px solid #000",
+            borderRadius: 0,
+            boxShadow: "-10px 0 25px rgba(0, 0, 0, 0.1)",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Drawer Header */}
+          <Box
+            sx={{
+              p: 2,
+              borderBottom: "2px solid #000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography
+              sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
+            >
+              🔬 Analyse
+            </Typography>
+            <Box
+              component="button"
+              onClick={() => setShowTypesDrawer(false)}
+              sx={{
+                color: "#000",
+                fontSize: "1.5rem",
+                p: 0.5,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                "&:hover": {
+                  opacity: 0.7,
+                },
+              }}
+              title="Fermer"
+            >
+              ✕
+            </Box>
+          </Box>
+
+          {/* Drawer Content */}
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              p: 2,
+            }}
+          >
+            <TypeAnalysis run={run} />
+          </Box>
+        </Box>
+      </Drawer>
     </Box>
   );
 }

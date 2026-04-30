@@ -10,9 +10,10 @@ import { useRunStore } from "@/store/runStore";
 interface Props {
   run: Run;
   id?: string;
+  onOpenTypes?: () => void;
 }
 
-export default function TeamView({ run, id }: Props) {
+export default function TeamView({ run, id, onOpenTypes }: Props) {
   const teamSlots = Array.from({ length: 6 }, (_, i) => run.team[i] ?? null);
   const { updateTeam } = useRunStore();
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
@@ -140,15 +141,27 @@ export default function TeamView({ run, id }: Props) {
             sx={{
               fontSize: "0.875rem",
               fontWeight: 700,
-              background: "#3b82f6",
-              color: "#fff",
+              background: "#fff",
+              color: "#000",
               px: 1.5,
               py: 0.5,
               borderRadius: "0.5rem",
               border: "2px solid #000",
+              cursor: "pointer",
+              transition: "all 200ms ease",
+              "&:hover": {
+                background: "#f0f4f8",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              },
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
             }}
+            onClick={onOpenTypes}
+            role="button"
+            tabIndex={0}
           >
-            {run.team.length}/6
+            🔬 Analyse
           </Box>
         </Box>
         <Grid container spacing={1.5}>
