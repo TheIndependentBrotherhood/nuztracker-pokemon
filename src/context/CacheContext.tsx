@@ -126,23 +126,45 @@ export function CacheProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function loadAll() {
-      const [pokemon, regions, typeCharts, typeSprites, abilities] =
-        await Promise.all([
-          fetch('/data/pokemon-list.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch pokemon-list.json: ${r.status}`); return r.json() as Promise<PokemonListCache>; }),
-          fetch('/data/regions.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch regions.json: ${r.status}`); return r.json() as Promise<RegionsCache>; }),
-          fetch('/data/type-charts.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch type-charts.json: ${r.status}`); return r.json() as Promise<TypeChartsCache>; }),
-          fetch('/data/type-sprites.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch type-sprites.json: ${r.status}`); return r.json() as Promise<TypeSpritesCache>; }),
-          fetch('/data/abilities-immunity.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch abilities-immunity.json: ${r.status}`); return r.json() as Promise<AbilitiesCache>; }),
-        ]);
+      const results = await Promise.allSettled([
+        fetch('/data/pokemon-list.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch pokemon-list.json: ${r.status}`); return r.json() as Promise<PokemonListCache>; }),
+        fetch('/data/regions.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch regions.json: ${r.status}`); return r.json() as Promise<RegionsCache>; }),
+        fetch('/data/type-charts.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch type-charts.json: ${r.status}`); return r.json() as Promise<TypeChartsCache>; }),
+        fetch('/data/type-sprites.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch type-sprites.json: ${r.status}`); return r.json() as Promise<TypeSpritesCache>; }),
+        fetch('/data/abilities-immunity.json').then((r) => { if (!r.ok) throw new Error(`Failed to fetch abilities-immunity.json: ${r.status}`); return r.json() as Promise<AbilitiesCache>; }),
+      ]);
+
+      const [pokemonResult, regionsResult, typeChartsResult, typeSpritesResult, abilitiesResult] = results;
+
+      if (pokemonResult.status === 'rejected') {
+        console.error('Failed to load pokemon-list.json:', pokemonResult.reason);
+      }
+      if (regionsResult.status === 'rejected') {
+        console.error('Failed to load regions.json:', regionsResult.reason);
+      }
+      if (typeChartsResult.status === 'rejected') {
+        console.error('Failed to load type-charts.json:', typeChartsResult.reason);
+      }
+      if (typeSpritesResult.status === 'rejected') {
+        console.error('Failed to load type-sprites.json:', typeSpritesResult.reason);
+      }
+      if (abilitiesResult.status === 'rejected') {
+        console.error('Failed to load abilities-immunity.json:', abilitiesResult.reason);
+      }
 
       if (!cancelled) {
-        setCache({ pokemon, regions, typeCharts, typeSprites, abilities, isLoaded: true });
+        setCache({
+          pokemon: pokemonResult.status === 'fulfilled' ? pokemonResult.value : defaultCache.pokemon,
+          regions: regionsResult.status === 'fulfilled' ? regionsResult.value : defaultCache.regions,
+          typeCharts: typeChartsResult.status === 'fulfilled' ? typeChartsResult.value : defaultCache.typeCharts,
+          typeSprites: typeSpritesResult.status === 'fulfilled' ? typeSpritesResult.value : defaultCache.typeSprites,
+          abilities: abilitiesResult.status === 'fulfilled' ? abilitiesResult.value : defaultCache.abilities,
+          isLoaded: true,
+        });
       }
     }
 
-    loadAll().catch((err) => {
-      console.error('Failed to load cache files:', err);
-    });
+    void loadAll();
 
     return () => {
       cancelled = true;
