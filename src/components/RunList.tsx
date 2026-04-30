@@ -90,9 +90,23 @@ export default function RunList({ runs }: RunListProps) {
             </div>
 
             <div className="mt-3 flex justify-between items-center">
-              <div className="flex gap-3 text-xs text-slate-400">
+              <div className="flex gap-3 text-xs text-slate-400 flex-wrap">
                 {run.isShinyHuntMode && <span>✨ Shiny</span>}
-                {run.isRandomMode && <span>🎲 Random</span>}
+                {run.isRandomMode && (
+                  <span className="text-blue-400">
+                    🎲 Random
+                    {run.randomizerOptions && (
+                      <span className="text-slate-500 ml-1">
+                        ({[
+                          run.randomizerOptions.randomizeTypes && "types",
+                          run.randomizerOptions.randomizeAbilities && "talents",
+                          run.randomizerOptions.randomizeEncounters && "rencontres",
+                          run.randomizerOptions.randomizeEvolvedForms && "évolutions",
+                        ].filter(Boolean).join(", ")})
+                      </span>
+                    )}
+                  </span>
+                )}
                 <span>{new Date(run.createdAt).toLocaleDateString()}</span>
               </div>
               <button

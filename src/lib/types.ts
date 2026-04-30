@@ -9,6 +9,14 @@ export interface Capture {
   createdAt: number;
 }
 
+export interface RandomizerOptions {
+  randomizeTypes: boolean;
+  randomizeAbilities: boolean;
+  randomizeEncounters: boolean;
+  randomizeEvolvedForms: boolean;
+  allowDuplicates: boolean;
+}
+
 export interface Zone {
   id: string;
   zoneName: string;
@@ -25,6 +33,7 @@ export interface Run {
   difficulty: "easy" | "normal" | "hard";
   isShinyHuntMode: boolean;
   isRandomMode: boolean;
+  randomizerOptions?: RandomizerOptions;
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];

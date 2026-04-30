@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
 import { regions } from "@/lib/zones";
+import { RandomizerOptions } from "@/lib/types";
 
 interface Props {
   onClose: () => void;
@@ -18,6 +19,23 @@ export default function CreateRunModal({ onClose }: Props) {
   const [isShinyHuntMode, setIsShinyHuntMode] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
 
+  const [randomizerOptions, setRandomizerOptions] = useState<RandomizerOptions>(
+    {
+      randomizeTypes: true,
+      randomizeAbilities: false,
+      randomizeEncounters: false,
+      randomizeEvolvedForms: false,
+      allowDuplicates: false,
+    },
+  );
+
+  function toggleRandomizerOption<K extends keyof RandomizerOptions>(key: K) {
+    setRandomizerOptions((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }
+
   function handleCreate() {
     if (!gameName.trim()) return;
     const run = createRun({
@@ -25,6 +43,7 @@ export default function CreateRunModal({ onClose }: Props) {
       region,
       isShinyHuntMode,
       isRandomMode,
+      randomizerOptions: isRandomMode ? randomizerOptions : undefined,
     });
     onClose();
     router.push(`/run/?id=${run.id}`);
@@ -36,7 +55,7 @@ export default function CreateRunModal({ onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-slate-700/60 shadow-xl animate-slide-up"
+        className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-slate-700/60 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5">
@@ -124,6 +143,76 @@ export default function CreateRunModal({ onClose }: Props) {
               </span>
             </label>
           </div>
+
+          {/* Randomizer Options */}
+          {isRandomMode && (
+            <div className="bg-slate-900/60 border border-slate-600/60 rounded-xl p-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+                Options Randomizer
+              </h3>
+              <div className="space-y-2.5">
+                <label className="flex items-center gap-2.5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeTypes}
+                    onChange={() => toggleRandomizerOption("randomizeTypes")}
+                    className="w-4 h-4 accent-blue-500"
+                  />
+                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">Types aléatoires</span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeAbilities}
+                    onChange={() =>
+                      toggleRandomizerOption("randomizeAbilities")
+                    }
+                    className="w-4 h-4 accent-blue-500"
+                  />
+                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
+                    Talents aléatoires
+                  </span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeEncounters}
+                    onChange={() =>
+                      toggleRandomizerOption("randomizeEncounters")
+                    }
+                    className="w-4 h-4 accent-blue-500"
+                  />
+                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
+                    Rencontres aléatoires
+                  </span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeEvolvedForms}
+                    onChange={() =>
+                      toggleRandomizerOption("randomizeEvolvedForms")
+                    }
+                    className="w-4 h-4 accent-blue-500"
+                  />
+                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
+                    Évolutions aléatoires
+                  </span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.allowDuplicates}
+                    onChange={() => toggleRandomizerOption("allowDuplicates")}
+                    className="w-4 h-4 accent-blue-500"
+                  />
+                  <span className="text-xs text-slate-300 group-hover:text-white transition-colors">
+                    Autoriser les doublons
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 mt-6">
