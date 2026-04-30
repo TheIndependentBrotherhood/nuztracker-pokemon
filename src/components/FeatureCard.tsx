@@ -25,22 +25,6 @@ export default function FeatureCard({ icon, title, description }: Props) {
           boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.3)",
           background: "linear-gradient(135deg, #FFEDCC 0%, #FFE8B6 100%)",
         },
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "3px",
-          background: "linear-gradient(90deg, #10b981 0%, #0ea5e9 100%)",
-          transition: "transform 0.3s ease-in-out",
-          transform: "scaleX(0)",
-          transformOrigin: "left",
-          zIndex: 1,
-        },
-        "&:hover::before": {
-          transform: "scaleX(1)",
-        },
       }}
     >
       <CardContent sx={{ p: 3, height: "100%" }}>
