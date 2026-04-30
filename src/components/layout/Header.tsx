@@ -30,16 +30,23 @@ export default function Header({
     >
       <Container maxWidth={false} sx={{ px: 0, mx: 0 }}>
         <Toolbar
-          sx={{ display: "flex", justifyContent: "space-between", p: 1 }}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            p: 1,
+            position: "relative",
+          }}
         >
           {/* Left: Back action */}
           {backAction && (
-            <Box sx={{ display: "flex", mr: 2 }}>{backAction}</Box>
+            <Box sx={{ display: "flex", position: "absolute", left: 16 }}>
+              {backAction}
+            </Box>
           )}
 
-          {/* Center: Logo or Title */}
+          {/* Center: Title */}
           {title && (
-            <Box sx={{ flex: 1, minWidth: 0, textAlign: "center" }}>
+            <Box sx={{ textAlign: "center" }}>
               <Typography
                 variant="h6"
                 sx={{
@@ -69,7 +76,11 @@ export default function Header({
 
           {/* Right: Actions */}
           {actions && (
-            <Box sx={{ display: "flex", gap: 2, ml: 2 }}>{actions}</Box>
+            <Box
+              sx={{ display: "flex", gap: 2, position: "absolute", right: 16 }}
+            >
+              {actions}
+            </Box>
           )}
         </Toolbar>
       </Container>

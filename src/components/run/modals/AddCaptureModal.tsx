@@ -332,7 +332,6 @@ export default function AddCaptureModal({
             <TextField
               fullWidth
               type="number"
-              inputProps={{ min: 1, max: 100 }}
               value={level}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
