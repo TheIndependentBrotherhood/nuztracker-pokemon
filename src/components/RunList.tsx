@@ -3,6 +3,7 @@
 import { Run } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useRunStore } from "@/store/runStore";
+import { Box, Typography, Grid } from "@mui/material";
 
 interface RunListProps {
   runs: Run[];
@@ -14,44 +15,65 @@ export default function RunList({ runs }: RunListProps) {
 
   if (runs.length === 0) {
     return (
-      <div className="text-center py-20 px-4">
-        <div className="text-7xl mb-6 animate-bounce">🎮</div>
-        <h3 className="text-xl font-bold text-black mb-2">
+      <Box sx={{ textAlign: "center", py: 20, px: 2 }}>
+        <Box
+          sx={{ fontSize: "4.5rem", mb: 3, animation: "bounce 1s infinite" }}
+        >
+          🎮
+        </Box>
+        <Typography
+          sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#000", mb: 1 }}
+        >
           Aucun run pour l&apos;instant
-        </h3>
-        <p className="text-gray-700 text-base font-medium">
+        </Typography>
+        <Typography
+          sx={{ color: "#374151", fontSize: "1rem", fontWeight: 500 }}
+        >
           Lancez votre premier Nuzlocke et démarrez l&apos;aventure !
-        </p>
-      </div>
+        </Typography>
+      </Box>
     );
   }
 
   const statusConfig: Record<
     string,
-    { label: string; icon: string; className: string; barColor: string }
+    {
+      label: string;
+      icon: string;
+      bgColor: string;
+      borderColor: string;
+      textColor: string;
+      barColor: string;
+    }
   > = {
     "in-progress": {
       label: "Active",
       icon: "▶️",
-      className: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
-      barColor: "from-emerald-500 to-green-400",
+      bgColor: "rgba(16, 185, 129, 0.1)",
+      borderColor: "#10b981",
+      textColor: "#10b981",
+      barColor: "linear-gradient(to right, #10b981, #06b6d4)",
     },
     completed: {
       label: "Terminé",
       icon: "✓",
-      className: "bg-blue-500/10 border-blue-500/30 text-blue-400",
-      barColor: "from-blue-500 to-cyan-400",
+      bgColor: "rgba(59, 130, 246, 0.1)",
+      borderColor: "#3b82f6",
+      textColor: "#3b82f6",
+      barColor: "linear-gradient(to right, #3b82f6, #06b6d4)",
     },
     abandoned: {
       label: "Abandonné",
       icon: "✕",
-      className: "bg-red-500/10 border-red-500/30 text-red-400",
-      barColor: "from-red-500 to-orange-400",
+      bgColor: "rgba(239, 68, 68, 0.1)",
+      borderColor: "#ef4444",
+      textColor: "#ef4444",
+      barColor: "linear-gradient(to right, #ef4444, #f97316)",
     },
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <Grid container spacing={2}>
       {runs.map((run) => {
         const captureCount = run.zones.reduce(
           (acc, z) => acc + z.captures.length,
@@ -65,100 +87,290 @@ export default function RunList({ runs }: RunListProps) {
         const status = statusConfig[run.status] ?? statusConfig["in-progress"];
 
         return (
-          <div
-            key={run.id}
-            className="group relative bg-[#E3F2FD] border-3 border-black rounded-2xl p-6 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer"
-            onClick={() => router.push(`/run/?id=${run.id}`)}
-          >
-            {/* Background gradient effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-cyan-500/0 pointer-events-none transition-all duration-300" />
-
-            {/* Content */}
-            <div className="relative z-10 space-y-4">
-              {/* Header */}
-              <div className="flex justify-between items-start gap-3">
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-bold text-black group-hover:text-blue-600 transition-colors truncate leading-tight">
-                    {run.gameName}
-                  </h3>
-                  <p className="text-gray-700 text-xs mt-1.5 capitalize font-medium">
-                    📍{" "}
-                    {run.region.charAt(0).toUpperCase() + run.region.slice(1)}
-                  </p>
-                </div>
-                <span
-                  className={`text-xs font-bold px-3 py-1.5 rounded-full shrink-0 border transition-all flex items-center gap-1 ${status.className}`}
-                >
-                  <span>{status.icon}</span>
-                  {status.label}
-                </span>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="bg-[#E8F5E9] rounded-lg p-3 border-2 border-black">
-                  <p className="text-xs text-black font-bold mb-0.5">Zones</p>
-                  <p className="text-lg font-bold text-[#10b981]">
-                    {visitedCount}/{run.zones.length}
-                  </p>
-                </div>
-                <div className="bg-[#F3E5F5] rounded-lg p-3 border-2 border-black">
-                  <p className="text-xs text-black font-bold mb-0.5">
-                    Captures
-                  </p>
-                  <p className="text-lg font-bold text-[#8b5cf6]">
-                    {captureCount}
-                  </p>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-black font-bold">Progression</span>
-                  <span className="font-bold text-black">
-                    {Math.round(progress)}%
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-300 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${status.barColor}`}
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Modes */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {run.isShinyHuntMode && (
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 font-medium">
-                    ✨ Shiny
-                  </span>
-                )}
-                {run.isRandomMode && (
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30 font-medium">
-                    🎲 Random
-                  </span>
-                )}
-                <span className="text-xs px-2.5 py-1 rounded-full bg-slate-700/50 text-slate-400 border border-slate-600/30 font-medium">
-                  📅 {new Date(run.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-
-              {/* Delete button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm("Supprimer ce run ?")) deleteRun(run.id);
+          <Grid item xs={12} md={6} key={run.id}>
+            <Box
+              sx={{
+                position: "relative",
+                background: "#E3F2FD",
+                border: "3px solid #000",
+                borderRadius: "1rem",
+                p: 3,
+                cursor: "pointer",
+                transition: "all 300ms ease",
+                "&:hover": {
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                  transform: "scale(1.05)",
+                },
+                "&:hover .delete-btn": {
+                  opacity: 1,
+                },
+                group: { position: "relative" },
+              }}
+              onClick={() => router.push(`/run/?id=${run.id}`)}
+            >
+              {/* Background gradient effect */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(to bottom right, rgba(59, 130, 246, 0), rgba(6, 182, 212, 0))",
+                  pointerEvents: "none",
+                  transition: "all 300ms ease",
                 }}
-                className="w-full text-xs py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50 transition-all font-medium opacity-0 group-hover:opacity-100"
+              />
+
+              {/* Content */}
+              <Box
+                sx={{
+                  position: "relative",
+                  zIndex: 10,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                }}
               >
-                🗑️ Supprimer
-              </button>
-            </div>
-          </div>
+                {/* Header */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                      sx={{
+                        fontSize: "1.125rem",
+                        fontWeight: 700,
+                        color: "#000",
+                        transition: "color 300ms ease",
+                        truncate: true,
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {run.gameName}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "#374151",
+                        fontSize: "0.75rem",
+                        mt: 1.5,
+                        fontWeight: 500,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      📍{" "}
+                      {run.region.charAt(0).toUpperCase() + run.region.slice(1)}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      px: 1.5,
+                      py: 0.75,
+                      borderRadius: "9999px",
+                      shrinkFlexBasis: 0,
+                      border: `2px solid ${status.borderColor}`,
+                      background: status.bgColor,
+                      color: status.textColor,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      transition: "all 300ms ease",
+                    }}
+                  >
+                    <span>{status.icon}</span>
+                    {status.label}
+                  </Box>
+                </Box>
+
+                {/* Stats */}
+                <Grid container spacing={1.5}>
+                  <Grid item xs={6}>
+                    <Box
+                      sx={{
+                        background: "#E8F5E9",
+                        borderRadius: "0.5rem",
+                        p: 1.5,
+                        border: "2px solid #000",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "0.75rem",
+                          color: "#000",
+                          fontWeight: 700,
+                          mb: 0.25,
+                        }}
+                      >
+                        Zones
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "1.125rem",
+                          fontWeight: 700,
+                          color: "#10b981",
+                        }}
+                      >
+                        {visitedCount}/{run.zones.length}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Box
+                      sx={{
+                        background: "#F3E5F5",
+                        borderRadius: "0.5rem",
+                        p: 1.5,
+                        border: "2px solid #000",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "0.75rem",
+                          color: "#000",
+                          fontWeight: 700,
+                          mb: 0.25,
+                        }}
+                      >
+                        Captures
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "1.125rem",
+                          fontWeight: 700,
+                          color: "#8b5cf6",
+                        }}
+                      >
+                        {captureCount}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+
+                {/* Progress bar */}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    <Typography sx={{ color: "#000", fontWeight: 700 }}>
+                      Progression
+                    </Typography>
+                    <Typography sx={{ fontWeight: 700, color: "#000" }}>
+                      {Math.round(progress)}%
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      height: "8px",
+                      background: "#d1d5db",
+                      borderRadius: "9999px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        height: "100%",
+                        borderRadius: "9999px",
+                        transition: "width 500ms ease",
+                        background: status.barColor,
+                        width: `${progress}%`,
+                      }}
+                    />
+                  </Box>
+                </Box>
+
+                {/* Modes */}
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {run.isShinyHuntMode && (
+                    <Box
+                      sx={{
+                        fontSize: "0.75rem",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: "9999px",
+                        background: "rgba(234, 179, 8, 0.15)",
+                        color: "#eab308",
+                        border: "1px solid rgba(234, 179, 8, 0.3)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      ✨ Shiny
+                    </Box>
+                  )}
+                  {run.isRandomMode && (
+                    <Box
+                      sx={{
+                        fontSize: "0.75rem",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: "9999px",
+                        background: "rgba(168, 85, 247, 0.15)",
+                        color: "#a855f7",
+                        border: "1px solid rgba(168, 85, 247, 0.3)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      🎲 Random
+                    </Box>
+                  )}
+                  <Box
+                    sx={{
+                      fontSize: "0.75rem",
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: "9999px",
+                      background: "rgba(51, 65, 85, 0.5)",
+                      color: "#cbd5e1",
+                      border: "1px solid rgba(71, 85, 99, 0.3)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    📅 {new Date(run.createdAt).toLocaleDateString()}
+                  </Box>
+                </Box>
+
+                {/* Delete button */}
+                <Box
+                  component="button"
+                  className="delete-btn"
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    if (confirm("Supprimer ce run ?")) deleteRun(run.id);
+                  }}
+                  sx={{
+                    width: "100%",
+                    fontSize: "0.75rem",
+                    py: 1,
+                    borderRadius: "0.5rem",
+                    background: "rgba(239, 68, 68, 0.1)",
+                    color: "#ef4444",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    transition: "all 300ms ease",
+                    fontWeight: 500,
+                    opacity: 0,
+                    cursor: "pointer",
+                    "&:hover": {
+                      background: "rgba(239, 68, 68, 0.2)",
+                      borderColor: "rgba(239, 68, 68, 0.5)",
+                    },
+                  }}
+                >
+                  🗑️ Supprimer
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
         );
       })}
-    </div>
+    </Grid>
   );
 }

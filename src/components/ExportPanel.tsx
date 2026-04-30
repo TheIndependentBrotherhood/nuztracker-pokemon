@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Box, Button, TextField, Typography } from "@mui/material";
 import { Run } from "@/lib/types";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
 
@@ -155,18 +156,38 @@ export default function ExportPanel({ run, teamViewId }: Props) {
   }
 
   return (
-    <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl p-4 border-2 border-black">
-      <h3 className="font-bold text-black mb-3">📤 Export &amp; Share</h3>
+    <Box
+      sx={{
+        background: "linear-gradient(to right, #fef3c7, #fed7aa)",
+        borderRadius: "1rem",
+        p: 2,
+        border: "2px solid #000",
+      }}
+    >
+      <Typography sx={{ fontWeight: 700, color: "#000", mb: 1.5 }}>
+        📤 Export &amp; Share
+      </Typography>
 
       {/* Error message */}
       {exportError && (
-        <div className="mb-3 p-3 bg-red-100 border-2 border-red-500 rounded-xl text-red-900 text-sm font-bold">
+        <Box
+          sx={{
+            mb: 1.5,
+            p: 1.5,
+            background: "#fee2e2",
+            border: "2px solid #ef4444",
+            borderRadius: "0.75rem",
+            color: "#7f1d1d",
+            fontSize: "0.875rem",
+            fontWeight: 700,
+          }}
+        >
           ⚠️ {exportError}
-        </div>
+        </Box>
       )}
 
-      <div className="flex gap-2 flex-wrap">
-        <button
+      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1.5 }}>
+        <Button
           onClick={handleExportPng}
           disabled={exporting || run.team.length === 0}
           title={
@@ -174,11 +195,31 @@ export default function ExportPanel({ run, teamViewId }: Props) {
               ? "Add Pokémon to team first"
               : "Export team as PNG (1280x720)"
           }
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-1"
+          sx={{
+            background: "#3b82f6",
+            color: "#fff",
+            px: 2,
+            py: 1,
+            borderRadius: "0.75rem",
+            fontSize: "0.875rem",
+            fontWeight: 700,
+            border: "2px solid #000",
+            transition: "all 300ms ease",
+            "&:hover": {
+              background: "#2563eb",
+            },
+            "&:disabled": {
+              opacity: 0.5,
+              cursor: "not-allowed",
+            },
+            "&:active": {
+              transform: "translateY(2px)",
+            },
+          }}
         >
           {exporting ? "⏳ Exporting..." : "🖼 Export PNG"}
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleGenerateUrl}
           disabled={run.team.length === 0}
           title={
@@ -186,34 +227,78 @@ export default function ExportPanel({ run, teamViewId }: Props) {
               ? "Add Pokémon to team first"
               : "Generate shareable URL (gzip+base64)"
           }
-          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-bold border-2 border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-1"
+          sx={{
+            background: "#a855f7",
+            color: "#fff",
+            px: 2,
+            py: 1,
+            borderRadius: "0.75rem",
+            fontSize: "0.875rem",
+            fontWeight: 700,
+            border: "2px solid #000",
+            transition: "all 300ms ease",
+            "&:hover": {
+              background: "#9333ea",
+            },
+            "&:disabled": {
+              opacity: 0.5,
+              cursor: "not-allowed",
+            },
+            "&:active": {
+              transform: "translateY(2px)",
+            },
+          }}
         >
           🔗 Generate Share URL
-        </button>
-      </div>
+        </Button>
+      </Box>
 
       {shareUrl && (
-        <div className="mt-3 flex gap-2">
-          <input
-            className="flex-1 bg-white border-2 border-black rounded-xl px-4 py-2 text-sm text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
+          <TextField
+            fullWidth
             value={shareUrl}
-            readOnly
+            inputProps={{ readOnly: true }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                background: "#fff",
+                border: "2px solid #000",
+                borderRadius: "0.75rem",
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                color: "#000",
+                "& fieldset": {
+                  border: "none",
+                },
+              },
+            }}
           />
-          <button
+          <Button
             onClick={handleCopy}
             aria-label={copied ? "Copied!" : "Copy share URL to clipboard"}
-            className="bg-gray-600 hover:bg-gray-500 px-3 py-1.5 rounded text-sm transition-colors"
+            sx={{
+              background: "#4b5563",
+              color: "#fff",
+              px: 1.5,
+              py: 0.75,
+              borderRadius: "0.25rem",
+              fontSize: "0.875rem",
+              transition: "all 300ms ease",
+              "&:hover": {
+                background: "#3d4654",
+              },
+            }}
           >
             {copied ? "✓" : "📋"}
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
 
       {/* Info message */}
-      <p className="mt-3 text-xs text-gray-400">
+      <Typography sx={{ mt: 1.5, fontSize: "0.75rem", color: "#6b7280" }}>
         💡 <strong>Note:</strong> PNG export works best with local sprites. If
-        sprites don't appear, they'll show as colored placeholders.
-      </p>
-    </div>
+        sprites don&apos;t appear, they&apos;ll show as colored placeholders.
+      </Typography>
+    </Box>
   );
 }

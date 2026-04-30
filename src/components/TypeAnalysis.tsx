@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 import { Run } from "@/lib/types";
 import { TYPES, getTypeDefenses, typeColors } from "@/lib/type-chart";
 import { fetchPokemon } from "@/lib/pokemon-api";
@@ -31,33 +41,90 @@ export default function TypeAnalysis({ run }: Props) {
 
   if (run.team.length === 0) {
     return (
-      <div className="text-center py-12 text-black font-bold text-sm">
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 6,
+          color: "#000",
+          fontWeight: 700,
+          fontSize: "0.875rem",
+        }}
+      >
         Ajoute des Pokémon à ton équipe pour voir l&apos;analyse des types
-      </div>
+      </Box>
     );
   }
 
   return (
-    <div className="overflow-x-auto bg-white rounded-2xl border-2 border-black">
-      <table className="w-full text-xs border-collapse">
-        <thead>
-          <tr className="bg-gradient-to-r from-blue-200 to-purple-200 border-b-2 border-black">
-            <th className="text-left p-3 text-black font-bold w-24">
+    <TableContainer
+      sx={{
+        background: "#fff",
+        borderRadius: "1rem",
+        border: "2px solid #000",
+        overflowX: "auto",
+      }}
+    >
+      <Table size="small" sx={{ width: "100%", borderCollapse: "collapse" }}>
+        <TableHead>
+          <TableRow
+            sx={{
+              background: "linear-gradient(to right, #BFDBFE, #E9D5FF)",
+              borderBottom: "2px solid #000",
+            }}
+          >
+            <TableCell
+              sx={{
+                textAlign: "left",
+                p: 1.5,
+                color: "#000",
+                fontWeight: 700,
+                width: "100px",
+                fontSize: "0.75rem",
+              }}
+            >
               Attack Type
-            </th>
+            </TableCell>
             {run.team.map((c) => (
-              <th
+              <TableCell
                 key={c.id}
-                className="p-2 text-center capitalize text-black font-bold w-16"
+                sx={{
+                  p: 1,
+                  textAlign: "center",
+                  textTransform: "capitalize",
+                  color: "#000",
+                  fontWeight: 700,
+                  width: "64px",
+                  fontSize: "0.75rem",
+                }}
               >
                 {(c.nickname || c.pokemonName).slice(0, 6)}
-              </th>
+              </TableCell>
             ))}
-            <th className="p-2 text-center text-black font-bold">Def x2+</th>
-            <th className="p-2 text-center text-black font-bold">Def x0.5-</th>
-          </tr>
-        </thead>
-        <tbody>
+            <TableCell
+              sx={{
+                p: 1,
+                textAlign: "center",
+                color: "#000",
+                fontWeight: 700,
+                fontSize: "0.75rem",
+              }}
+            >
+              Def x2+
+            </TableCell>
+            <TableCell
+              sx={{
+                p: 1,
+                textAlign: "center",
+                color: "#000",
+                fontWeight: 700,
+                fontSize: "0.75rem",
+              }}
+            >
+              Def x0.5-
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {TYPES.map((attackType) => {
             const memberEffects = teamTypes.map((types) => {
               if (types.length === 0) return 1;
@@ -68,20 +135,33 @@ export default function TypeAnalysis({ run }: Props) {
             const resistCount = memberEffects.filter((e) => e < 1).length;
 
             return (
-              <tr
+              <TableRow
                 key={attackType}
-                className="border-b border-gray-200 hover:bg-blue-50"
+                sx={{
+                  borderBottom: "1px solid #e5e7eb",
+                  "&:hover": {
+                    background: "#eff6ff",
+                  },
+                }}
               >
-                <td className="p-2">
-                  <span
-                    className="px-3 py-1.5 rounded-lg text-white font-bold capitalize text-xs border border-black"
-                    style={{
-                      backgroundColor: typeColors[attackType] ?? "#888",
+                <TableCell sx={{ p: 1 }}>
+                  <Box
+                    sx={{
+                      px: 1.5,
+                      py: 0.75,
+                      borderRadius: "0.5rem",
+                      color: "#fff",
+                      fontWeight: 700,
+                      textTransform: "capitalize",
+                      fontSize: "0.75rem",
+                      border: "1px solid #000",
+                      background: typeColors[attackType] ?? "#888",
+                      textAlign: "center",
                     }}
                   >
                     {attackType}
-                  </span>
-                </td>
+                  </Box>
+                </TableCell>
                 {memberEffects.map((eff, i) => {
                   const bg =
                     eff === 0
@@ -111,35 +191,59 @@ export default function TypeAnalysis({ run }: Props) {
                                 : `${eff}`;
 
                   return (
-                    <td key={i} className="p-2 text-center">
-                      <span
-                        className="inline-block w-8 h-8 leading-8 rounded-lg text-center text-black font-bold border-2 border-black"
-                        style={{ backgroundColor: bg, fontSize: "11px" }}
+                    <TableCell key={i} sx={{ p: 1, textAlign: "center" }}>
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "0.5rem",
+                          textAlign: "center",
+                          color: "#000",
+                          fontWeight: 700,
+                          border: "2px solid #000",
+                          background: bg,
+                          fontSize: "11px",
+                        }}
                       >
                         {label}
-                      </span>
-                    </td>
+                      </Box>
+                    </TableCell>
                   );
                 })}
-                <td className="p-2 text-center">
+                <TableCell sx={{ p: 1, textAlign: "center" }}>
                   {weakCount > 0 && (
-                    <span className="text-red-900 font-bold text-lg">
+                    <Typography
+                      sx={{
+                        color: "#7f1d1d",
+                        fontWeight: 700,
+                        fontSize: "1.125rem",
+                      }}
+                    >
                       {weakCount}
-                    </span>
+                    </Typography>
                   )}
-                </td>
-                <td className="p-2 text-center">
+                </TableCell>
+                <TableCell sx={{ p: 1, textAlign: "center" }}>
                   {resistCount > 0 && (
-                    <span className="text-green-900 font-bold text-lg">
+                    <Typography
+                      sx={{
+                        color: "#166534",
+                        fontWeight: 700,
+                        fontSize: "1.125rem",
+                      }}
+                    >
                       {resistCount}
-                    </span>
+                    </Typography>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Zone } from '@/lib/types';
-import { useRunStore } from '@/store/runStore';
-import AddCaptureModal from './AddCaptureModal';
-import { getSpriteUrl } from '@/lib/pokemon-api';
+import { useState, useRef, useEffect } from "react";
+import { Box, Typography } from "@mui/material";
+import { Zone } from "@/lib/types";
+import { useRunStore } from "@/store/runStore";
+import AddCaptureModal from "./AddCaptureModal";
+import { getSpriteUrl } from "@/lib/pokemon-api";
 
 interface Props {
   zone: Zone;
@@ -12,29 +13,34 @@ interface Props {
   isSelected: boolean;
 }
 
-const statusConfig: Record<string, { bg: string; dot: string }> = {
-  'not-visited': {
-    bg: 'bg-transparent',
-    dot: 'bg-slate-600',
+const statusConfig: Record<
+  string,
+  { bgColor: string; dotColor: string; borderColor?: string }
+> = {
+  "not-visited": {
+    bgColor: "transparent",
+    dotColor: "#475569",
   },
   visited: {
-    bg: 'bg-blue-500/5',
-    dot: 'bg-blue-400',
+    bgColor: "rgba(59, 130, 246, 0.05)",
+    dotColor: "#60a5fa",
+    borderColor: "rgba(59, 130, 246, 0.4)",
   },
   captured: {
-    bg: 'bg-emerald-500/5',
-    dot: 'bg-emerald-500',
+    bgColor: "rgba(16, 185, 129, 0.05)",
+    dotColor: "#10b981",
+    borderColor: "rgba(16, 185, 129, 0.4)",
   },
   multiple: {
-    bg: 'bg-orange-500/5',
-    dot: 'bg-orange-400',
+    bgColor: "rgba(249, 115, 22, 0.05)",
+    dotColor: "#fb923c",
   },
 };
 
 const cycleLabel: Record<string, string> = {
-  'not-visited': '👁',
-  visited: '✓',
-  captured: '🔴',
+  "not-visited": "👁",
+  visited: "✓",
+  captured: "🔴",
 };
 
 export default function ZoneItem({ zone, runId, isSelected }: Props) {
@@ -44,16 +50,16 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
 
   useEffect(() => {
     if (isSelected && ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      ref.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [isSelected]);
 
-  const visualStatus = zone.captures.length >= 2 ? 'multiple' : zone.status;
-  const config = statusConfig[visualStatus] ?? statusConfig['not-visited'];
+  const visualStatus = zone.captures.length >= 2 ? "multiple" : zone.status;
+  const config = statusConfig[visualStatus] ?? statusConfig["not-visited"];
 
   function handleStatusCycle() {
-    if (zone.captures.length > 0 && zone.status === 'captured') return;
-    const order: Zone['status'][] = ['not-visited', 'visited', 'captured'];
+    if (zone.captures.length > 0 && zone.status === "captured") return;
+    const order: Zone["status"][] = ["not-visited", "visited", "captured"];
     const current = order.indexOf(zone.status);
     const next = order[(current + 1) % order.length];
     setZoneStatus(runId, zone.id, next);
@@ -61,93 +67,184 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
 
   return (
     <>
-      <div
+      <Box
         ref={ref}
         role="button"
         tabIndex={0}
-        className={`border-b border-slate-700/30 p-3 transition-all duration-150 ${config.bg} ${
-          isSelected ? 'ring-1 ring-inset ring-blue-500/40 bg-blue-500/10' : 'hover:bg-slate-800/40'
-        }`}
+        sx={{
+          borderBottom: "1px solid rgba(71, 85, 99, 0.3)",
+          p: 1.5,
+          transition: "all 150ms ease",
+          background: isSelected ? "rgba(59, 130, 246, 0.1)" : config.bgColor,
+          outline: isSelected ? "1px solid rgba(59, 130, 246, 0.4)" : "none",
+          cursor: "pointer",
+          "&:hover": {
+            background: !isSelected ? "rgba(30, 41, 59, 0.4)" : undefined,
+          },
+        }}
         onClick={() => setSelectedZone(isSelected ? null : zone.id)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             setSelectedZone(isSelected ? null : zone.id);
           }
         }}
       >
-        <div className="flex items-center gap-2">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {/* Status dot */}
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
+          <Box
+            sx={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              flexShrink: 0,
+              background: config.dotColor,
+            }}
+          />
 
-          <span className="text-sm font-medium flex-1 text-slate-200 truncate">
+          <Typography
+            sx={{
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              flex: 1,
+              color: "#e2e8f0",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             {zone.zoneName}
-          </span>
+          </Typography>
 
           {zone.captures.length > 0 && (
-            <span className="text-xs text-slate-500 shrink-0">{zone.captures.length}</span>
+            <Typography
+              sx={{ fontSize: "0.75rem", color: "#94a3b8", flexShrink: 0 }}
+            >
+              {zone.captures.length}
+            </Typography>
           )}
 
           {/* Cycle status */}
-          <button
+          <Box
+            component="button"
             onClick={(e) => {
               e.stopPropagation();
               handleStatusCycle();
             }}
-            className={`text-xs px-1.5 py-0.5 rounded transition-colors ${
-              zone.captures.length > 0 && zone.status === 'captured'
-                ? 'text-slate-700 cursor-not-allowed'
-                : 'text-slate-400 hover:text-white hover:bg-slate-700/60'
-            }`}
+            sx={{
+              fontSize: "0.75rem",
+              px: 0.75,
+              py: 0.25,
+              borderRadius: "0.25rem",
+              transition: "colors 200ms ease",
+              color:
+                zone.captures.length > 0 && zone.status === "captured"
+                  ? "#475569"
+                  : "#cbd5e1",
+              background:
+                zone.captures.length > 0 && zone.status === "captured"
+                  ? "transparent"
+                  : "transparent",
+              border: "none",
+              cursor:
+                zone.captures.length > 0 && zone.status === "captured"
+                  ? "not-allowed"
+                  : "pointer",
+              "&:hover": {
+                color:
+                  zone.captures.length > 0 && zone.status === "captured"
+                    ? undefined
+                    : "#fff",
+                background:
+                  zone.captures.length > 0 && zone.status === "captured"
+                    ? undefined
+                    : "rgba(51, 65, 85, 0.6)",
+              },
+            }}
             title={
-              zone.captures.length > 0 && zone.status === 'captured'
-                ? 'Supprimer les captures pour changer le statut'
-                : 'Changer le statut'
+              zone.captures.length > 0 && zone.status === "captured"
+                ? "Supprimer les captures pour changer le statut"
+                : "Changer le statut"
             }
             aria-label={
-              zone.captures.length > 0 && zone.status === 'captured'
-                ? 'Supprimer les captures pour changer le statut'
-                : 'Changer le statut'
+              zone.captures.length > 0 && zone.status === "captured"
+                ? "Supprimer les captures pour changer le statut"
+                : "Changer le statut"
             }
-            disabled={zone.captures.length > 0 && zone.status === 'captured'}
+            disabled={zone.captures.length > 0 && zone.status === "captured"}
           >
             {cycleLabel[zone.status]}
-          </button>
+          </Box>
 
           {/* Add capture */}
-          <button
+          <Box
+            component="button"
             onClick={(e) => {
               e.stopPropagation();
               setShowCapture(true);
             }}
-            className="text-xs text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded transition-colors font-medium"
+            sx={{
+              fontSize: "0.75rem",
+              color: "#60a5fa",
+              background: "rgba(59, 130, 246, 0.1)",
+              px: 1,
+              py: 0.25,
+              borderRadius: "0.25rem",
+              transition: "all 200ms ease",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 500,
+              "&:hover": {
+                color: "#93c5fd",
+                background: "rgba(59, 130, 246, 0.2)",
+              },
+            }}
           >
             + Capturer
-          </button>
-        </div>
+          </Box>
+        </Box>
 
         {/* Capture thumbnails */}
         {zone.captures.length > 0 && (
-          <div className="mt-2 flex gap-1.5 flex-wrap">
+          <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
             {zone.captures.map((c) => (
-              <div
+              <Box
                 key={c.id}
-                className="flex items-center gap-1 bg-slate-700/40 border border-slate-600/30 rounded-lg px-1.5 py-0.5"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  background: "rgba(51, 65, 85, 0.4)",
+                  border: "1px solid rgba(71, 85, 99, 0.3)",
+                  borderRadius: "0.5rem",
+                  px: 1,
+                  py: 0.25,
+                }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={getSpriteUrl(c.pokemonId, c.isShiny)}
                   alt={c.pokemonName}
-                  className="w-6 h-6 object-contain"
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    objectFit: "contain",
+                  }}
                 />
-                <span className="text-xs text-slate-300">{c.nickname || c.pokemonName}</span>
-                <span className="text-xs text-slate-500">Lv{c.level}</span>
-                {c.isShiny && <span className="text-xs">✨</span>}
-              </div>
+                <Typography sx={{ fontSize: "0.75rem", color: "#cbd5e1" }}>
+                  {c.nickname || c.pokemonName}
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                  Lv{c.level}
+                </Typography>
+                {c.isShiny && (
+                  <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
+                )}
+              </Box>
             ))}
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       {showCapture && (
         <AddCaptureModal

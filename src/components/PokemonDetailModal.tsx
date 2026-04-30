@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Box, Typography, Button, Grid, CircularProgress } from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
 import { fetchPokemon, getSpriteUrl } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
@@ -11,32 +12,70 @@ interface Props {
 }
 
 const statLabels: Record<string, string> = {
-  hp: 'HP',
-  attack: 'Atk',
-  defense: 'Def',
-  'special-attack': 'SpA',
-  'special-defense': 'SpD',
-  speed: 'Vit',
+  hp: "HP",
+  attack: "Atk",
+  defense: "Def",
+  "special-attack": "SpA",
+  "special-defense": "SpD",
+  speed: "Vit",
 };
 
-function StatBar({ name, value, max = 255 }: { name: string; value: number; max?: number }) {
+function StatBar({
+  name,
+  value,
+  max = 255,
+}: {
+  name: string;
+  value: number;
+  max?: number;
+}) {
   const pct = Math.min(100, (value / max) * 100);
-  const color =
-    pct >= 70 ? '#10b981' : pct >= 40 ? '#3b82f6' : '#ef4444';
+  const color = pct >= 70 ? "#10b981" : pct >= 40 ? "#3b82f6" : "#ef4444";
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-500 w-8 text-right shrink-0">
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <Typography
+        sx={{
+          fontSize: "0.75rem",
+          color: "#64748b",
+          width: "32px",
+          textAlign: "right",
+          flexShrink: 0,
+        }}
+      >
         {statLabels[name] ?? name}
-      </span>
-      <div className="flex-1 bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+      </Typography>
+      <Box
+        sx={{
+          flex: 1,
+          background: "rgba(71, 85, 105, 0.6)",
+          borderRadius: "999px",
+          height: "6px",
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          sx={{
+            height: "100%",
+            borderRadius: "999px",
+            transition: "width 500ms ease",
+            background: color,
+            width: `${pct}%`,
+          }}
         />
-      </div>
-      <span className="text-xs text-slate-400 w-7 text-right shrink-0">{value}</span>
-    </div>
+      </Box>
+      <Typography
+        sx={{
+          fontSize: "0.75rem",
+          color: "#94a3b8",
+          width: "28px",
+          textAlign: "right",
+          flexShrink: 0,
+        }}
+      >
+        {value}
+      </Typography>
+    </Box>
   );
 }
 
@@ -52,95 +91,239 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
 
   const genderSymbol =
     capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : null;
-  const genderColor =
-    capture.gender === "male" ? "text-blue-400" : "text-pink-400";
+  const genderColor = capture.gender === "male" ? "#60a5fa" : "#ec4899";
 
   return (
-    <div
-      className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+    <Box
+      sx={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(3, 7, 18, 0.8)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 50,
+        p: 2,
+        animation: "fadeIn 300ms ease",
+        "@keyframes fadeIn": {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
+      }}
       onClick={onClose}
     >
-      <div
-        className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-slate-700/60 shadow-xl max-h-[90vh] overflow-y-auto animate-slide-up"
+      <Box
+        sx={{
+          background: "#1e293b",
+          borderRadius: "1rem",
+          p: 3,
+          width: "100%",
+          maxWidth: "448px",
+          border: "1px solid rgba(71, 85, 105, 0.6)",
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+          maxHeight: "90vh",
+          overflowY: "auto",
+          animation: "slideUp 300ms ease",
+          "@keyframes slideUp": {
+            "0%": { opacity: 0, transform: "translateY(20px)" },
+            "100%": { opacity: 1, transform: "translateY(0)" },
+          },
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {loading ? (
-          <div className="text-center py-12 text-slate-500">Chargement...</div>
+          <Box sx={{ textAlign: "center", py: 6, color: "#64748b" }}>
+            Chargement...
+          </Box>
         ) : data ? (
           <>
             {/* Header */}
-            <div className="flex items-center gap-4 mb-5">
+            <Box sx={{ display: "flex", gap: 2, mb: 2.5 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
                 alt={data.name}
-                className="w-24 h-24 object-contain drop-shadow-lg shrink-0"
+                style={{
+                  width: "96px",
+                  height: "96px",
+                  objectFit: "contain",
+                  filter: "drop-shadow(0 10px 15px -3px rgba(0, 0, 0, 0.1))",
+                  flexShrink: 0,
+                }}
               />
-              <div className="min-w-0">
-                <h2 className="text-xl font-bold capitalize leading-tight flex items-center gap-2 flex-wrap">
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.25rem",
+                    fontWeight: 700,
+                    textTransform: "capitalize",
+                    lineHeight: 1.25,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    flexWrap: "wrap",
+                    color: "#fff",
+                  }}
+                >
                   {capture.nickname || capture.pokemonName}
-                  {capture.isShiny && <span className="text-base">✨</span>}
+                  {capture.isShiny && (
+                    <span style={{ fontSize: "1rem" }}>✨</span>
+                  )}
                   {genderSymbol && (
-                    <span className={`text-sm font-normal ${genderColor}`}>
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 400,
+                        color: genderColor,
+                      }}
+                    >
                       {genderSymbol}
                     </span>
                   )}
-                </h2>
-                <p className="text-slate-400 text-xs capitalize mt-0.5">
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "#94a3b8",
+                    fontSize: "0.75rem",
+                    textTransform: "capitalize",
+                    mt: 0.25,
+                  }}
+                >
                   {data.name} #{data.id.toString().padStart(3, "0")}
-                </p>
-                <div className="flex gap-1 mt-2 flex-wrap">
+                </Typography>
+                <Box
+                  sx={{ display: "flex", gap: 0.5, mt: 1, flexWrap: "wrap" }}
+                >
                   {data.types.map(({ type }) => (
-                    <span
+                    <Box
                       key={type.name}
-                      className="px-2 py-0.5 rounded-full text-xs font-semibold text-white capitalize"
-                      style={{ backgroundColor: typeColors[type.name] ?? "#888" }}
+                      sx={{
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        color: "#fff",
+                        textTransform: "capitalize",
+                        background: typeColors[type.name] ?? "#888",
+                      }}
                     >
                       {type.name}
-                    </span>
+                    </Box>
                   ))}
-                </div>
-                <div className="text-xs text-slate-400 mt-1.5">
+                </Box>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: "#94a3b8", mt: 0.75 }}
+                >
                   Lv. {capture.level}
-                </div>
-              </div>
-            </div>
+                </Typography>
+              </Box>
+            </Box>
 
             {/* Base Stats */}
-            <div className="space-y-2 mb-4">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "#64748b",
+                  mb: 1,
+                }}
+              >
                 Statistiques de base
-              </h3>
+              </Typography>
               {data.stats.map((s) => (
-                <StatBar key={s.stat.name} name={s.stat.name} value={s.base_stat} />
+                <StatBar
+                  key={s.stat.name}
+                  name={s.stat.name}
+                  value={s.base_stat}
+                />
               ))}
-            </div>
+            </Box>
 
             {/* Physical info */}
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
-                <div className="text-xs text-slate-500 mb-0.5">Taille</div>
-                <div className="font-semibold">{(data.height / 10).toFixed(1)} m</div>
-              </div>
-              <div className="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
-                <div className="text-xs text-slate-500 mb-0.5">Poids</div>
-                <div className="font-semibold">{(data.weight / 10).toFixed(1)} kg</div>
-              </div>
-            </div>
+            <Grid container spacing={1}>
+              <Grid item xs={6}>
+                <Box
+                  sx={{
+                    background: "rgba(15, 23, 42, 0.6)",
+                    border: "1px solid rgba(71, 85, 105, 0.25)",
+                    borderRadius: "0.5rem",
+                    p: 1.5,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: "#64748b",
+                      mb: 0.25,
+                    }}
+                  >
+                    Taille
+                  </Typography>
+                  <Typography sx={{ fontWeight: 600 }}>
+                    {(data.height / 10).toFixed(1)} m
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Box
+                  sx={{
+                    background: "rgba(15, 23, 42, 0.6)",
+                    border: "1px solid rgba(71, 85, 105, 0.25)",
+                    borderRadius: "0.5rem",
+                    p: 1.5,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: "#64748b",
+                      mb: 0.25,
+                    }}
+                  >
+                    Poids
+                  </Typography>
+                  <Typography sx={{ fontWeight: 600 }}>
+                    {(data.weight / 10).toFixed(1)} kg
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
           </>
         ) : (
-          <div className="text-center py-12 text-red-400">
+          <Box sx={{ textAlign: "center", py: 6, color: "#f87171" }}>
             Impossible de charger les données
-          </div>
+          </Box>
         )}
 
-        <button
+        <Button
           onClick={onClose}
-          className="mt-5 w-full bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-slate-300 hover:text-white text-sm font-medium transition-colors"
+          sx={{
+            mt: 2.5,
+            width: "100%",
+            background: "#475569",
+            color: "#cbd5e1",
+            py: 1.5,
+            borderRadius: "0.5rem",
+            fontSize: "0.875rem",
+            fontWeight: 500,
+            textTransform: "none",
+            transition: "all 200ms",
+            "&:hover": {
+              background: "#64748b",
+              color: "#fff",
+            },
+          }}
         >
           Fermer
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Box>
+    </Box>
   );
 }

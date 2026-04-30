@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getRun } from "@/lib/storage";
 import StatsBar from "@/components/StatsBar";
@@ -39,10 +40,37 @@ function RunPageContent() {
 
   if (!run) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center p-4">
-        <div className="text-center bg-white border-4 border-black rounded-3xl p-8 shadow-lg">
-          <div className="text-6xl mb-4">😿</div>
-          <p className="text-black text-lg font-bold mb-6">Run introuvable</p>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background: "linear-gradient(to bottom right, #FFFEF0, #FEF3C7)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
+      >
+        <Box
+          sx={{
+            textAlign: "center",
+            background: "#fff",
+            border: "4px solid #000",
+            borderRadius: "1.875rem",
+            p: 4,
+            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <Typography sx={{ fontSize: "3rem", mb: 2 }}>😿</Typography>
+          <Typography
+            sx={{
+              color: "#000",
+              fontSize: "1.125rem",
+              fontWeight: 700,
+              mb: 3,
+            }}
+          >
+            Run introuvable
+          </Typography>
           <StyledButton
             onClick={() => router.push("/")}
             variant="secondary"
@@ -50,8 +78,8 @@ function RunPageContent() {
           >
             ← Retour à l&apos;accueil
           </StyledButton>
-        </div>
-      </div>
+        </Box>
+      </Box>
     );
   }
 
@@ -73,8 +101,8 @@ function RunPageContent() {
       </>
     ) : (
       <>
-        <div
-          style={{
+        <Box
+          sx={{
             display: "inline-block",
             background: run.status === "completed" ? "#d1fae5" : "#fee2e2",
             color: run.status === "completed" ? "#065f46" : "#7f1d1d",
@@ -86,7 +114,7 @@ function RunPageContent() {
           }}
         >
           {run.status === "completed" ? "✓ Terminé" : "✗ Abandonné"}
-        </div>
+        </Box>
         <StyledButton
           onClick={() => updateRun({ ...run, status: "in-progress" })}
           variant="secondary"
@@ -116,7 +144,15 @@ function RunPageContent() {
     .join(" • ");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-blue-50 to-purple-50 flex flex-col">
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(to bottom right, #FFFEF0, #FEF3C7, #E0D5FF)",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Header
         showBack
         title={run.gameName}
@@ -127,55 +163,109 @@ function RunPageContent() {
 
       <StatsBar run={run} />
 
-      <div className="flex flex-1 overflow-hidden gap-4 p-4">
+      <Box
+        sx={{
+          display: "flex",
+          flex: 1,
+          overflow: "hidden",
+          gap: 2,
+          p: 2,
+        }}
+      >
         {/* Left: Tabs */}
-        <div className="w-1/2 flex flex-col bg-white border-3 border-black rounded-2xl overflow-hidden shadow-lg">
-          <div className="flex border-b-2 border-black bg-gradient-to-r from-blue-100 to-purple-100">
+        <Box
+          sx={{
+            width: "50%",
+            display: "flex",
+            flexDirection: "column",
+            background: "#fff",
+            border: "3px solid #000",
+            borderRadius: "1rem",
+            overflow: "hidden",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              borderBottom: "2px solid #000",
+              background: "linear-gradient(to right, #DBEAFE, #E9D5FF)",
+            }}
+          >
             {(["zones", "team", "types"] as Tab[]).map((t) => (
-              <button
+              <Box
+                component="button"
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 py-3 text-sm font-bold transition-all border-b-4 ${
-                  tab === t
-                    ? "text-black bg-blue-200 border-black"
-                    : "text-slate-600 hover:text-black border-transparent"
-                }`}
+                sx={{
+                  flex: 1,
+                  py: 1.5,
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  transition: "all 0.3s ease",
+                  borderBottom: "4px solid",
+                  borderBottomColor: tab === t ? "#000" : "transparent",
+                  backgroundColor: tab === t ? "#BFDBFE" : "transparent",
+                  color: tab === t ? "#000" : "#475569",
+                  "&:hover": {
+                    color: "#000",
+                  },
+                  border: "none",
+                  cursor: "pointer",
+                }}
               >
                 {t === "zones"
                   ? "🗺 Zones"
                   : t === "team"
                     ? "⚔️ Équipe"
                     : "🔬 Types"}
-              </button>
+              </Box>
             ))}
-          </div>
+          </Box>
 
-          <div className="flex-1 overflow-y-auto">
+          <Box sx={{ flex: 1, overflowY: "auto" }}>
             {tab === "zones" && <ZoneList run={run} />}
             {tab === "team" && (
-              <div className="p-4">
+              <Box sx={{ p: 2 }}>
                 <TeamView run={run} id="team-export-target" />
-              </div>
+              </Box>
             )}
             {tab === "types" && (
-              <div className="p-4">
+              <Box sx={{ p: 2 }}>
                 <TypeAnalysis run={run} />
-              </div>
+              </Box>
             )}
-          </div>
-        </div>
+          </Box>
+        </Box>
 
         {/* Right: Map */}
-        <div className="w-1/2 bg-white border-3 border-black rounded-2xl overflow-hidden shadow-lg flex flex-col">
-          <div className="flex-1 overflow-y-auto p-4">
+        <Box
+          sx={{
+            width: "50%",
+            background: "#fff",
+            border: "3px solid #000",
+            borderRadius: "1rem",
+            overflow: "hidden",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
             <MapView run={run} />
-          </div>
-          <div className="border-t-2 border-black p-4 bg-yellow-50">
+          </Box>
+          <Box
+            sx={{
+              borderTop: "2px solid #000",
+              p: 2,
+              background: "#FFFEF0",
+            }}
+          >
             <ExportPanel run={run} teamViewId="team-export-target" />
-          </div>
-        </div>
-      </div>
-    </div>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
@@ -183,9 +273,18 @@ export default function RunPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+        <Box
+          sx={{
+            minHeight: "100vh",
+            background: "#0f172a",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#94a3b8",
+          }}
+        >
           Chargement...
-        </div>
+        </Box>
       }
     >
       <RunPageContent />

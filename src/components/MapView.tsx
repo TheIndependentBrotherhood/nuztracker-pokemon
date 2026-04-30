@@ -1,6 +1,7 @@
 "use client";
 
 import { Run } from "@/lib/types";
+import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import KantoMap from "./KantoMap";
 
@@ -23,38 +24,95 @@ export default function MapView({ run }: Props) {
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden border-3 border-black bg-white">
-      <div className="p-4 bg-gradient-to-r from-blue-100 to-purple-100 border-b-3 border-black flex items-center justify-between">
-        <h3 className="font-bold text-black text-lg capitalize">
+    <Box
+      sx={{
+        borderRadius: "1rem",
+        overflow: "hidden",
+        border: "3px solid #000",
+        background: "#fff",
+      }}
+    >
+      <Box
+        sx={{
+          p: 2,
+          background: "linear-gradient(to right, #DBEAFE, #E9D5FF)",
+          borderBottom: "3px solid #000",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography
+          sx={{
+            fontWeight: 700,
+            color: "#000",
+            fontSize: "1.125rem",
+            textTransform: "capitalize",
+          }}
+        >
           {run.region} Region Map
-        </h3>
-        <div className="flex gap-4 text-xs font-bold">
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-gray-400 border-2 border-black"></span>{" "}
+        </Typography>
+        <Box
+          sx={{ display: "flex", gap: 2, fontSize: "0.75rem", fontWeight: 700 }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#9ca3af",
+                border: "2px solid #000",
+              }}
+            />
             Not Visited
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-blue-400 border-2 border-black"></span>{" "}
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#60a5fa",
+                border: "2px solid #000",
+              }}
+            />
             Visited
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-green-500 border-2 border-black"></span>{" "}
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#22c55e",
+                border: "2px solid #000",
+              }}
+            />
             Captured
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-orange-400 border-2 border-black"></span>{" "}
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              sx={{
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#fb923c",
+                border: "2px solid #000",
+              }}
+            />
             Multiple
-          </span>
-        </div>
-      </div>
-      <div className="p-4 bg-white">
+          </Box>
+        </Box>
+      </Box>
+      <Box sx={{ p: 2, background: "#fff" }}>
         <KantoMap
           zones={run.zones}
           selectedZoneId={selectedZoneId}
           onZoneClick={handleZoneClick}
           getZoneStatus={getZoneStatus}
         />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

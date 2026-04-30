@@ -2,6 +2,7 @@
 
 import { Run } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
+import { Box, TextField, Button, Typography } from "@mui/material";
 import ZoneItem from "./ZoneItem";
 import { useState } from "react";
 
@@ -31,31 +32,82 @@ export default function ZoneList({ run }: Props) {
   });
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b-2 border-black space-y-3 bg-gradient-to-r from-blue-50 to-purple-50">
-        <input
-          className="w-full bg-white border-2 border-black rounded-2xl px-4 py-2.5 text-sm text-black font-bold placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <Box
+        sx={{
+          p: 2,
+          borderBottom: "2px solid #000",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1.5,
+          background: "linear-gradient(to right, #EFF6FF, #F3E8FF)",
+        }}
+      >
+        <TextField
+          fullWidth
           placeholder="Rechercher une zone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              background: "#fff",
+              border: "2px solid #000",
+              borderRadius: "1rem",
+              fontSize: "0.875rem",
+              fontWeight: 700,
+              color: "#000",
+              "& fieldset": {
+                border: "none",
+              },
+              "&:hover fieldset": {
+                border: "none",
+              },
+              "&.Mui-focused fieldset": {
+                border: "none",
+              },
+              "&.Mui-focused": {
+                outline: "2px solid #3b82f6",
+                outlineOffset: "0px",
+              },
+            },
+            "& .MuiOutlinedInput-input::placeholder": {
+              color: "#9ca3af",
+              opacity: 1,
+            },
+          }}
         />
-        <div className="flex gap-2">
+        <Box sx={{ display: "flex", gap: 1 }}>
           {FILTERS.map((f) => (
-            <button
+            <Box
+              component="button"
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`flex-1 text-xs font-bold py-2 rounded-lg border-2 transition-all ${
-                filter === f.key
-                  ? "bg-blue-500 text-white border-black shadow-md"
-                  : "bg-white text-black border-black hover:bg-blue-50"
-              }`}
+              sx={{
+                flex: 1,
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                py: 1,
+                borderRadius: "0.5rem",
+                border: "2px solid #000",
+                transition: "all 300ms ease",
+                background: filter === f.key ? "#3b82f6" : "#fff",
+                color: filter === f.key ? "#fff" : "#000",
+                cursor: "pointer",
+                "&:hover": {
+                  background: filter === f.key ? "#2563eb" : "#dbeafe",
+                },
+                boxShadow:
+                  filter === f.key
+                    ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                    : "none",
+              }}
             >
               {f.label}
-            </button>
+            </Box>
           ))}
-        </div>
-      </div>
-      <div className="overflow-y-auto flex-1 bg-white">
+        </Box>
+      </Box>
+      <Box sx={{ overflowY: "auto", flex: 1, background: "#fff" }}>
         {filtered.map((zone) => (
           <ZoneItem
             key={zone.id}
@@ -65,11 +117,19 @@ export default function ZoneList({ run }: Props) {
           />
         ))}
         {filtered.length === 0 && (
-          <div className="text-center text-black font-bold py-10 text-sm">
+          <Box
+            sx={{
+              textAlign: "center",
+              color: "#000",
+              fontWeight: 700,
+              py: 5,
+              fontSize: "0.875rem",
+            }}
+          >
             Aucune zone trouvée
-          </div>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

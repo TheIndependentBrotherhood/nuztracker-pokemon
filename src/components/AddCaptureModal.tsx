@@ -1,6 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  Button,
+  Typography,
+  Switch,
+  FormControlLabel,
+} from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import {
   searchPokemon,
@@ -88,27 +98,72 @@ export default function AddCaptureModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+    <Box
+      sx={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(3, 7, 18, 0.8)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 50,
+        p: 2,
+        animation: "fadeIn 300ms ease",
+        "@keyframes fadeIn": {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
+      }}
       onClick={onClose}
     >
-      <div
-        className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-slate-700/60 shadow-xl animate-slide-up"
+      <Box
+        sx={{
+          background: "#1e293b",
+          borderRadius: "1rem",
+          p: 3,
+          width: "100%",
+          maxWidth: "448px",
+          border: "1px solid rgba(71, 85, 105, 0.6)",
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+          animation: "slideUp 300ms ease",
+          "@keyframes slideUp": {
+            "0%": { opacity: 0, transform: "translateY(20px)" },
+            "100%": { opacity: 1, transform: "translateY(0)" },
+          },
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-5">
-          <h2 className="text-xl font-bold text-white">Ajouter une capture</h2>
-          <p className="text-slate-400 text-sm mt-0.5">📍 {zoneName}</p>
-        </div>
+        <Box sx={{ mb: 2.5 }}>
+          <Typography
+            sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff" }}
+          >
+            Ajouter une capture
+          </Typography>
+          <Typography sx={{ color: "#94a3b8", fontSize: "0.875rem", mt: 0.25 }}>
+            📍 {zoneName}
+          </Typography>
+        </Box>
 
         {/* Pokemon search */}
-        <div className="relative mb-4">
-          <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+        <Box sx={{ position: "relative", mb: 2 }}>
+          <Typography
+            component="label"
+            sx={{
+              display: "block",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "#94a3b8",
+              mb: 1.5,
+            }}
+          >
             Pokémon
-          </label>
-          <div className="flex gap-2 items-center">
-            <input
-              className="flex-1 bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <TextField
+              fullWidth
               placeholder="Rechercher un Pokémon..."
               value={query}
               onChange={(e) => {
@@ -116,122 +171,313 @@ export default function AddCaptureModal({
                 setSelected(null);
               }}
               autoFocus
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  background: "rgba(15, 23, 42, 0.6)",
+                  color: "#fff",
+                  fontSize: "0.875rem",
+                  "& fieldset": {
+                    borderColor: "#475569",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#475569",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#3b82f6",
+                    boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                  },
+                },
+                "& .MuiOutlinedInput-input::placeholder": {
+                  color: "#64748b",
+                  opacity: 1,
+                },
+              }}
             />
             {selected && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getSpriteUrl(selected.id, isShiny)}
                 alt={`${isShiny ? "Shiny " : ""}${selected.name} sprite`}
-                className="w-12 h-12 object-contain shrink-0 drop-shadow"
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  objectFit: "contain",
+                  flexShrink: 0,
+                  filter: "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))",
+                }}
               />
             )}
-          </div>
+          </Box>
           {results.length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-slate-800 border border-slate-600 rounded-xl mt-1 max-h-48 overflow-y-auto z-10 shadow-xl">
+            <Box
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                background: "#1e293b",
+                border: "1px solid #475569",
+                borderRadius: "0.75rem",
+                mt: 0.5,
+                maxHeight: "192px",
+                overflowY: "auto",
+                zIndex: 10,
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              }}
+            >
               {results.map((r) => (
-                <button
+                <Box
                   key={r.url}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-700/60 text-sm capitalize text-slate-200 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                  component="button"
                   onClick={() => handleSelect(r)}
+                  sx={{
+                    width: "100%",
+                    textAlign: "left",
+                    px: 1.5,
+                    py: 1,
+                    background: "transparent",
+                    border: "none",
+                    fontSize: "0.875rem",
+                    textTransform: "capitalize",
+                    color: "#cbd5e1",
+                    cursor: "pointer",
+                    transition: "background-color 200ms",
+                    "&:hover": {
+                      background: "rgba(71, 85, 105, 0.6)",
+                    },
+                    "&:first-of-type": {
+                      borderTopLeftRadius: "0.75rem",
+                      borderTopRightRadius: "0.75rem",
+                    },
+                    "&:last-of-type": {
+                      borderBottomLeftRadius: "0.75rem",
+                      borderBottomRightRadius: "0.75rem",
+                    },
+                  }}
                 >
                   {r.name}
-                </button>
+                </Box>
               ))}
-            </div>
+            </Box>
           )}
           {searching && (
-            <div className="text-xs text-slate-500 mt-1">Recherche...</div>
+            <Typography sx={{ fontSize: "0.75rem", color: "#64748b", mt: 0.5 }}>
+              Recherche...
+            </Typography>
           )}
-        </div>
+        </Box>
 
         {/* Nickname */}
-        <div className="mb-3">
-          <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+        <Box sx={{ mb: 1.5 }}>
+          <Typography
+            component="label"
+            sx={{
+              display: "block",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              color: "#94a3b8",
+              mb: 1.5,
+            }}
+          >
             Surnom (optionnel)
-          </label>
-          <input
-            className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+          </Typography>
+          <TextField
+            fullWidth
             placeholder="Entrez un surnom..."
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                background: "rgba(15, 23, 42, 0.6)",
+                color: "#fff",
+                fontSize: "0.875rem",
+                "& fieldset": {
+                  borderColor: "#475569",
+                },
+                "&:hover fieldset": {
+                  borderColor: "#475569",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#3b82f6",
+                  boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                },
+              },
+              "& .MuiOutlinedInput-input::placeholder": {
+                color: "#64748b",
+                opacity: 1,
+              },
+            }}
           />
-        </div>
+        </Box>
 
         {/* Level & Gender */}
-        <div className="flex gap-3 mb-4">
-          <div className="flex-1">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+        <Box sx={{ display: "flex", gap: 1.5, mb: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#94a3b8",
+                mb: 1.5,
+              }}
+            >
               Niveau
-            </label>
-            <input
+            </Typography>
+            <TextField
+              fullWidth
               type="number"
-              min={1}
-              max={100}
-              className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+              inputProps={{ min: 1, max: 100 }}
               value={level}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
                 setLevel(isNaN(val) ? 1 : Math.min(100, Math.max(1, val)));
               }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  background: "rgba(15, 23, 42, 0.6)",
+                  color: "#fff",
+                  fontSize: "0.875rem",
+                  "& fieldset": {
+                    borderColor: "#475569",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#475569",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#3b82f6",
+                    boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                  },
+                },
+              }}
             />
-          </div>
-          <div className="flex-1">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Typography
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#94a3b8",
+                mb: 1.5,
+              }}
+            >
               Genre
-            </label>
-            <select
-              className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all appearance-none"
+            </Typography>
+            <Select
+              fullWidth
               value={gender}
               onChange={(e) => setGender(e.target.value as Capture["gender"])}
+              sx={{
+                background: "rgba(15, 23, 42, 0.6)",
+                color: "#fff",
+                fontSize: "0.875rem",
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#475569",
+                },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#475569",
+                },
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#3b82f6",
+                  boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.2)",
+                },
+                "& .MuiSvgIcon-root": {
+                  color: "#cbd5e1",
+                },
+              }}
             >
-              <option value="unknown">Inconnu</option>
-              <option value="male">Mâle ♂</option>
-              <option value="female">Femelle ♀</option>
-            </select>
-          </div>
-        </div>
+              <MenuItem value="unknown">Inconnu</MenuItem>
+              <MenuItem value="male">Mâle ♂</MenuItem>
+              <MenuItem value="female">Femelle ♀</MenuItem>
+            </Select>
+          </Box>
+        </Box>
 
         {/* Shiny toggle */}
-        <label className="flex items-center gap-3 mb-5 cursor-pointer group">
-          <div className="relative">
-            <input
-              type="checkbox"
+        <FormControlLabel
+          control={
+            <Switch
               checked={isShiny}
               onChange={(e) => setIsShiny(e.target.checked)}
-              className="sr-only"
+              sx={{
+                "& .MuiSwitch-switchBase": {
+                  color: "#475569",
+                  "&.Mui-checked": {
+                    color: "#3b82f6",
+                  },
+                },
+                "& .MuiSwitch-track": {
+                  background: "#475569",
+                },
+              }}
             />
-            <div
-              className={`w-9 h-5 rounded-full transition-colors duration-200 ${
-                isShiny ? 'bg-blue-500' : 'bg-slate-600'
-              }`}
-            />
-            <div
-              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-                isShiny ? 'translate-x-4' : 'translate-x-0'
-              }`}
-            />
-          </div>
-          <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
-            ✨ Est Shiny ?
-          </span>
-        </label>
+          }
+          label={
+            <Typography sx={{ fontSize: "0.875rem", color: "#cbd5e1" }}>
+              ✨ Est Shiny ?
+            </Typography>
+          }
+          sx={{ mb: 2.5, ml: 0 }}
+        />
 
-        <div className="flex gap-3">
-          <button
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <Button
             onClick={onClose}
-            className="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            sx={{
+              flex: 1,
+              background: "#475569",
+              color: "#cbd5e1",
+              py: 1.5,
+              borderRadius: "0.5rem",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              textTransform: "none",
+              transition: "all 200ms",
+              "&:hover": {
+                background: "#64748b",
+                color: "#fff",
+              },
+            }}
           >
             Annuler
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleAdd}
             disabled={!selected}
-            className="flex-1 btn-gradient py-2.5 rounded-lg text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+            sx={{
+              flex: 1,
+              background: "linear-gradient(to right, #3b82f6, #1d4ed8)",
+              color: "#fff",
+              py: 1.5,
+              borderRadius: "0.5rem",
+              fontSize: "0.875rem",
+              fontWeight: 700,
+              textTransform: "none",
+              transition: "all 200ms",
+              boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.2)",
+              "&:hover": {
+                boxShadow: "0 15px 25px -5px rgba(59, 130, 246, 0.3)",
+              },
+              "&:disabled": {
+                opacity: 0.4,
+                cursor: "not-allowed",
+                boxShadow: "none",
+              },
+            }}
           >
             Ajouter
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Box>
+      </Box>
+    </Box>
   );
 }

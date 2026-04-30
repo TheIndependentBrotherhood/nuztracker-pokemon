@@ -1,6 +1,7 @@
 "use client";
 
 import { Run } from "@/lib/types";
+import { Box, Grid, Typography } from "@mui/material";
 import PokemonCard from "./PokemonCard";
 
 interface Props {
@@ -12,21 +13,52 @@ export default function TeamView({ run, id }: Props) {
   const teamSlots = Array.from({ length: 6 }, (_, i) => run.team[i] ?? null);
 
   return (
-    <div
+    <Box
       id={id}
-      className="bg-gradient-to-b from-blue-50 to-purple-50 border-2 border-black rounded-2xl p-4"
+      sx={{
+        background: "linear-gradient(to bottom, #EFF6FF, #F3E8FF)",
+        border: "2px solid #000",
+        borderRadius: "1rem",
+        p: 2,
+      }}
     >
-      <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-black">
-        <h3 className="text-lg font-bold text-black">Équipe</h3>
-        <span className="text-sm font-bold bg-blue-500 text-white px-3 py-1 rounded-lg border-2 border-black">
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+          pb: 1.5,
+          borderBottom: "2px solid #000",
+        }}
+      >
+        <Typography
+          sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
+        >
+          Équipe
+        </Typography>
+        <Box
+          sx={{
+            fontSize: "0.875rem",
+            fontWeight: 700,
+            background: "#3b82f6",
+            color: "#fff",
+            px: 1.5,
+            py: 0.5,
+            borderRadius: "0.5rem",
+            border: "2px solid #000",
+          }}
+        >
           {run.team.length}/6
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        </Box>
+      </Box>
+      <Grid container spacing={1.5}>
         {teamSlots.map((capture, i) => (
-          <PokemonCard key={i} capture={capture} slotIndex={i} runId={run.id} />
+          <Grid item xs={6} sm={4} key={i}>
+            <PokemonCard capture={capture} slotIndex={i} runId={run.id} />
+          </Grid>
         ))}
-      </div>
-    </div>
+      </Grid>
+    </Box>
   );
 }

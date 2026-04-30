@@ -198,14 +198,25 @@ export default function StatsBar({ run }: Props) {
       </Stack>
 
       {/* Global progress bar */}
-      <div className="h-3 bg-white border-2 border-black rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-blue-500 to-purple-500"
-          style={{
+      <Box
+        sx={{
+          height: "12px",
+          background: "#fff",
+          border: "2px solid #000",
+          borderRadius: "999px",
+          overflow: "hidden",
+        }}
+      >
+        <Box
+          sx={{
+            height: "100%",
+            borderRadius: "999px",
+            transition: "width 700ms ease",
+            background: "linear-gradient(to right, #3b82f6, #a855f7)",
             width: `${progress}%`,
           }}
         />
-      </div>
+      </Box>
     </Box>
   );
 }
