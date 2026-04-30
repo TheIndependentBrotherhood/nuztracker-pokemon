@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Capture, PokemonApiData } from '@/lib/types';
-import { fetchPokemon, getSpriteUrl } from '@/lib/pokemon-api';
-import { typeColors } from '@/lib/type-chart';
+import { useEffect, useState } from "react";
+import { Capture, PokemonApiData } from "@/lib/types";
+import { fetchPokemon, getSpriteUrl } from "@/lib/pokemon-api";
+import { typeColors } from "@/lib/type-chart";
 
 interface Props {
   capture: Capture;
@@ -23,7 +23,10 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
   const maxStat = 255;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
       <div
         className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-600 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -42,15 +45,21 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
               <div>
                 <h2 className="text-2xl font-bold capitalize">
                   {capture.nickname || capture.pokemonName}
-                  {capture.isShiny && <span className="ml-2 text-yellow-400">✨</span>}
+                  {capture.isShiny && (
+                    <span className="ml-2 text-yellow-400">✨</span>
+                  )}
                 </h2>
-                <p className="text-gray-400 capitalize text-sm">{data.name} #{data.id.toString().padStart(3, '0')}</p>
+                <p className="text-gray-400 capitalize text-sm">
+                  {data.name} #{data.id.toString().padStart(3, "0")}
+                </p>
                 <div className="flex gap-1 mt-1">
                   {data.types.map(({ type }) => (
                     <span
                       key={type.name}
                       className="px-2 py-0.5 rounded text-xs font-bold text-white capitalize"
-                      style={{ backgroundColor: typeColors[type.name] ?? '#888' }}
+                      style={{
+                        backgroundColor: typeColors[type.name] ?? "#888",
+                      }}
                     >
                       {type.name}
                     </span>
@@ -58,23 +67,28 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                 </div>
                 <div className="text-sm text-gray-300 mt-1">
                   Lv.{capture.level}
-                  {capture.nature && <span className="ml-2 text-purple-400">{capture.nature}</span>}
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide">Base Stats</h3>
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide">
+                Base Stats
+              </h3>
               {data.stats.map((s) => (
                 <div key={s.stat.name} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-20 capitalize">{s.stat.name.replace('-', ' ')}</span>
+                  <span className="text-xs text-gray-400 w-20 capitalize">
+                    {s.stat.name.replace("-", " ")}
+                  </span>
                   <div className="flex-1 bg-gray-700 rounded-full h-2">
                     <div
                       className="h-2 rounded-full bg-blue-500"
                       style={{ width: `${(s.base_stat / maxStat) * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-gray-300 w-8 text-right">{s.base_stat}</span>
+                  <span className="text-xs text-gray-300 w-8 text-right">
+                    {s.base_stat}
+                  </span>
                 </div>
               ))}
             </div>
@@ -91,7 +105,9 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
             </div>
           </>
         ) : (
-          <div className="text-center py-8 text-red-400">Failed to load data</div>
+          <div className="text-center py-8 text-red-400">
+            Failed to load data
+          </div>
         )}
 
         <button

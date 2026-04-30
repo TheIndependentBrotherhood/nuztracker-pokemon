@@ -4,9 +4,8 @@ export interface Capture {
   pokemonName: string;
   nickname?: string;
   level: number;
-  gender: 'male' | 'female' | 'unknown';
+  gender: "male" | "female" | "unknown";
   isShiny: boolean;
-  nature?: string;
   createdAt: number;
 }
 
@@ -14,7 +13,7 @@ export interface Zone {
   id: string;
   zoneName: string;
   regionArea: string;
-  status: 'not-visited' | 'visited' | 'captured';
+  status: "not-visited" | "visited" | "captured";
   captures: Capture[];
   updatedAt: number;
 }
@@ -23,17 +22,17 @@ export interface Run {
   id: string;
   gameName: string;
   region: string;
-  difficulty: 'easy' | 'normal' | 'hard';
+  difficulty: "easy" | "normal" | "hard";
   isShinyHuntMode: boolean;
   isRandomMode: boolean;
-  status: 'in-progress' | 'completed' | 'abandoned';
+  status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];
   createdAt: number;
   updatedAt: number;
 }
 
-export type ZoneStatus = 'not-visited' | 'visited' | 'captured';
+export type ZoneStatus = "not-visited" | "visited" | "captured";
 
 export interface PokemonType {
   name: string;

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Capture } from '@/lib/types';
-import { getSpriteUrl } from '@/lib/pokemon-api';
-import { useRunStore } from '@/store/runStore';
-import PokemonDetailModal from './PokemonDetailModal';
+import { useState } from "react";
+import { Capture } from "@/lib/types";
+import { getSpriteUrl } from "@/lib/pokemon-api";
+import { useRunStore } from "@/store/runStore";
+import PokemonDetailModal from "./PokemonDetailModal";
 
 interface Props {
   capture: Capture | null;
@@ -20,18 +20,24 @@ export default function PokemonCard({ capture, slotIndex, runId }: Props) {
     e.stopPropagation();
     const run = runs.find((r) => r.id === runId);
     if (!run || !capture) return;
-    updateTeam(runId, run.team.filter((c) => c.id !== capture.id));
+    updateTeam(
+      runId,
+      run.team.filter((c) => c.id !== capture.id),
+    );
   }
 
   if (!capture) {
     return (
       <div className="bg-gray-700/30 border border-dashed border-gray-600 rounded-xl p-4 flex items-center justify-center min-h-[100px]">
-        <span className="text-gray-600 text-sm">Empty Slot {slotIndex + 1}</span>
+        <span className="text-gray-600 text-sm">
+          Empty Slot {slotIndex + 1}
+        </span>
       </div>
     );
   }
 
-  const genderSymbol = capture.gender === 'male' ? '♂' : capture.gender === 'female' ? '♀' : '';
+  const genderSymbol =
+    capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : "";
 
   return (
     <>
@@ -60,9 +66,10 @@ export default function PokemonCard({ capture, slotIndex, runId }: Props) {
             {capture.nickname || capture.pokemonName}
             <span className="text-gray-400 ml-1 text-xs">{genderSymbol}</span>
           </div>
-          <div className="text-xs text-gray-400 capitalize">{capture.pokemonName}</div>
+          <div className="text-xs text-gray-400 capitalize">
+            {capture.pokemonName}
+          </div>
           <div className="text-xs text-gray-400">Lv.{capture.level}</div>
-          {capture.nature && <div className="text-xs text-purple-400">{capture.nature}</div>}
         </div>
       </div>
 

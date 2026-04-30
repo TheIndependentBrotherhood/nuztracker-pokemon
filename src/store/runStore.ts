@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { Run, Zone, Capture } from '@/lib/types';
-import { getRuns, saveRun, deleteRun as deleteRunStorage } from '@/lib/storage';
-import { getZonesForRegion } from '@/lib/zones';
+import { create } from "zustand";
+import { Run, Zone, Capture } from "@/lib/types";
+import { getRuns, saveRun, deleteRun as deleteRunStorage } from "@/lib/storage";
+import { getZonesForRegion } from "@/lib/zones";
 
 interface RunStore {
   runs: Run[];
@@ -9,18 +9,31 @@ interface RunStore {
   selectedZoneId: string | null;
   loadRuns: () => void;
   setCurrentRun: (run: Run | null) => void;
-  createRun: (data: { gameName: string; region: string; difficulty: Run['difficulty']; isShinyHuntMode: boolean; isRandomMode: boolean }) => Run;
+  createRun: (data: {
+    gameName: string;
+    region: string;
+    isShinyHuntMode: boolean;
+    isRandomMode: boolean;
+  }) => Run;
   updateRun: (run: Run) => void;
   deleteRun: (id: string) => void;
-  setZoneStatus: (runId: string, zoneId: string, status: Zone['status']) => void;
-  addCapture: (runId: string, zoneId: string, capture: Omit<Capture, 'id' | 'createdAt'>) => void;
+  setZoneStatus: (
+    runId: string,
+    zoneId: string,
+    status: Zone["status"],
+  ) => void;
+  addCapture: (
+    runId: string,
+    zoneId: string,
+    capture: Omit<Capture, "id" | "createdAt">,
+  ) => void;
   removeCapture: (runId: string, zoneId: string, captureId: string) => void;
   setSelectedZone: (zoneId: string | null) => void;
   updateTeam: (runId: string, team: Capture[]) => void;
 }
 
 function newId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
   }
   // Fallback: timestamp + two random segments for collision resistance
@@ -45,7 +58,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
       id: zt.id,
       zoneName: zt.zoneName,
       regionArea: zt.regionArea,
-      status: 'not-visited' as const,
+      status: "not-visited" as const,
       captures: [],
       updatedAt: Date.now(),
     }));
@@ -53,7 +66,8 @@ export const useRunStore = create<RunStore>((set, get) => ({
     const run: Run = {
       id: newId(),
       ...data,
-      status: 'in-progress',
+      difficulty: "normal",
+      status: "in-progress",
       zones,
       team: [],
       createdAt: Date.now(),
@@ -70,7 +84,8 @@ export const useRunStore = create<RunStore>((set, get) => ({
     saveRun(updated);
     set((state) => ({
       runs: state.runs.map((r) => (r.id === updated.id ? updated : r)),
-      currentRun: state.currentRun?.id === updated.id ? updated : state.currentRun,
+      currentRun:
+        state.currentRun?.id === updated.id ? updated : state.currentRun,
     }));
   },
 
@@ -88,7 +103,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
     const updatedRun = {
       ...run,
       zones: run.zones.map((z) =>
-        z.id === zoneId ? { ...z, status, updatedAt: Date.now() } : z
+        z.id === zoneId ? { ...z, status, updatedAt: Date.now() } : z,
       ),
     };
     get().updateRun(updatedRun);
@@ -97,13 +112,22 @@ export const useRunStore = create<RunStore>((set, get) => ({
   addCapture: (runId, zoneId, captureData) => {
     const run = get().runs.find((r) => r.id === runId);
     if (!run) return;
-    const capture: Capture = { ...captureData, id: newId(), createdAt: Date.now() };
+    const capture: Capture = {
+      ...captureData,
+      id: newId(),
+      createdAt: Date.now(),
+    };
     const updatedRun = {
       ...run,
       zones: run.zones.map((z) =>
         z.id === zoneId
-          ? { ...z, status: 'captured' as const, captures: [...z.captures, capture], updatedAt: Date.now() }
-          : z
+          ? {
+              ...z,
+              status: "captured" as const,
+              captures: [...z.captures, capture],
+              updatedAt: Date.now(),
+            }
+          : z,
       ),
     };
     if (updatedRun.team.length < 6) {
@@ -123,7 +147,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
         return {
           ...z,
           captures: remaining,
-          status: remaining.length === 0 ? ('visited' as const) : z.status,
+          status: remaining.length === 0 ? ("visited" as const) : z.status,
           updatedAt: Date.now(),
         };
       }),
