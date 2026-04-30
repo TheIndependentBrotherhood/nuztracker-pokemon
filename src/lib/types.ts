@@ -14,7 +14,6 @@ export interface RandomizerOptions {
   randomizeAbilities: boolean;
   randomizeEncounters: boolean;
   randomizeEvolvedForms: boolean;
-  allowDuplicates: boolean;
 }
 
 export interface Zone {

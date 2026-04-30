@@ -40,7 +40,6 @@ export default function CreateRunModal({ onClose }: Props) {
       randomizeAbilities: false,
       randomizeEncounters: false,
       randomizeEvolvedForms: false,
-      allowDuplicates: false,
     },
   );
 
@@ -125,11 +124,26 @@ export default function CreateRunModal({ onClose }: Props) {
               "& .MuiOutlinedInput-input": {
                 color: "#000",
                 fontWeight: 500,
-                padding: "12px 16px",
+                padding: "16.5px 14px",
               },
               "& .MuiInputBase-input::placeholder": {
                 color: "#aaa",
                 opacity: 1,
+                paddingLeft: "2px",
+                marginY: "2px",
+              },
+              "& .MuiInputLabel-root": {
+                color: "#666",
+                fontWeight: 600,
+                paddingLeft: "2px",
+                marginY: "2px",
+                "&.Mui-focused": {
+                  color: "#000",
+                  transform: "translate(14px, -17px) scale(0.75)",
+                },
+                "&.MuiInputLabel-shrink": {
+                  transform: "translate(14px, -17px) scale(0.75)",
+                },
               },
             }}
           />
@@ -148,6 +162,13 @@ export default function CreateRunModal({ onClose }: Props) {
               fontWeight: 600,
               "& .MuiOutlinedInput-notchedOutline": { border: "none" },
               "& svg": { color: "#000" },
+              "& .MuiInputLabel-root": {
+                color: "#666",
+                fontWeight: 600,
+                "&.Mui-focused": {
+                  color: "#000",
+                },
+              },
             }}
           >
             {regions.map((r) => (
@@ -243,7 +264,6 @@ export default function CreateRunModal({ onClose }: Props) {
                     key: "randomizeEvolvedForms",
                     label: "Évolutions aléatoires",
                   },
-                  { key: "allowDuplicates", label: "Autoriser les doublons" },
                 ].map(({ key, label }) => (
                   <FormControlLabel
                     key={key}
