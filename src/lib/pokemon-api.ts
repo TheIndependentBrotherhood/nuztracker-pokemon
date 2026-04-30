@@ -44,6 +44,7 @@ export async function searchPokemon(query: string): Promise<Array<{ name: string
   try {
     if (!pokemonListFallbackCache) {
       const res = await fetch(`${BASE_URL}/pokemon?limit=1302`);
+      if (!res.ok) throw new Error(`Failed to fetch Pokemon list: ${res.status}`);
       const data = await res.json();
       pokemonListFallbackCache = data.results as Array<{ name: string; url: string }>;
     }
