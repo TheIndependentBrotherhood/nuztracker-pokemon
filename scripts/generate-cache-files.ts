@@ -270,8 +270,23 @@ async function generateTypeSprites() {
 
     const sprites: Record<string, Record<string, unknown>> = {};
 
+    // Normalize PokeAPI generation keys (e.g. "generation-i" → "gen1") so they
+    // match the keys used in the hook at runtime.
+    const POKEAPI_GEN_KEY_MAP: Record<string, string> = {
+      "generation-i": "gen1",
+      "generation-ii": "gen2",
+      "generation-iii": "gen3",
+      "generation-iv": "gen4",
+      "generation-v": "gen5",
+      "generation-vi": "gen6",
+      "generation-vii": "gen7",
+      "generation-viii": "gen8",
+      "generation-ix": "gen9",
+    };
+
     if (typeData.sprites) {
-      for (const [genKey, genSprites] of Object.entries(typeData.sprites)) {
+      for (const [rawGenKey, genSprites] of Object.entries(typeData.sprites)) {
+        const genKey = POKEAPI_GEN_KEY_MAP[rawGenKey] ?? rawGenKey;
         if (typeof genSprites === "object" && genSprites !== null) {
           sprites[genKey] = {};
           for (const [gameName, gameSprites] of Object.entries(

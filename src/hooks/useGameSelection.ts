@@ -61,6 +61,33 @@ function typeGenToConfigKey(typeGen: TypeGeneration): string {
   return 'gen6';
 }
 
+/**
+ * Maps each game ID to its actual PokeAPI sprite generation key.
+ * This is distinct from the type-chart generation group (TypeGeneration) because
+ * e.g. FireRed/LeafGreen is a Gen-3 game but uses the Gen 2-5 type chart.
+ */
+const GAME_TO_SPRITE_GEN: Record<string, string> = {
+  'red-blue': 'gen1',
+  'yellow': 'gen1',
+  'gold-silver': 'gen2',
+  'crystal': 'gen2',
+  'ruby-sapphire': 'gen3',
+  'firered-leafgreen': 'gen3',
+  'emerald': 'gen3',
+  'diamond-pearl': 'gen4',
+  'platinum': 'gen4',
+  'heartgold-soulsilver': 'gen4',
+  'black-white': 'gen5',
+  'black-2-white-2': 'gen5',
+  'x-y': 'gen6',
+  'omega-ruby-alpha-sapphire': 'gen6',
+  'sun-moon': 'gen7',
+  'ultra-sun-ultra-moon': 'gen7',
+  'sword-shield': 'gen8',
+  'legends-arceus': 'gen8',
+  'scarlet-violet': 'gen9',
+};
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useGameSelection() {
@@ -100,21 +127,36 @@ export function useGameSelection() {
     const type = typeSprites.types.find((t) => t.name === typeName);
     if (!type) return null;
 
-    const spriteGenKey = typeGenToConfigKey(typeGen);
+    // Use the game's actual sprite generation, not the type-chart generation group.
+    const spriteGenKey = GAME_TO_SPRITE_GEN[gameId];
+    if (!spriteGenKey) return null;
     const sprites = type.sprites[spriteGenKey]?.[gameId];
     if (!sprites) return null;
 
     return sprites.name_icon ?? sprites.symbol_icon ?? null;
   };
 
-  /** Returns all available sprites for a type within a generation (keyed by game). */
+  /** Returns all available sprites for a type within a type-generation group, keyed by game ID. */
   const getTypeSpritesForGeneration = (
     typeName: string,
     typeGen: TypeGeneration,
   ): Record<string, Record<string, string>> => {
     const type = typeSprites.types.find((t) => t.name === typeName);
     if (!type) return {};
-    return type.sprites[typeGenToConfigKey(typeGen)] ?? {};
+
+    const games = getGamesForGeneration(typeGen);
+    const result: Record<string, Record<string, string>> = {};
+
+    for (const game of games) {
+      const spriteGenKey = GAME_TO_SPRITE_GEN[game.id];
+      if (!spriteGenKey) continue;
+      const gameSprites = type.sprites[spriteGenKey]?.[game.id];
+      if (gameSprites && typeof gameSprites === 'object') {
+        result[game.id] = gameSprites as Record<string, string>;
+      }
+    }
+
+    return result;
   };
 
   return {
