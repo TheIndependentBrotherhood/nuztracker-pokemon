@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { Box, Container, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
-import RunList from "@/components/RunList";
-import CreateRunModal from "@/components/CreateRunModal";
-import Header from "@/components/Header";
-import HeroSection from "@/components/HeroSection";
-import FeatureCard from "@/components/FeatureCard";
+import RunList from "@/components/home/RunList";
+import CreateRunModal from "@/components/ui/CreateRunModal";
+import Header from "@/components/layout/Header";
+import HeroSection from "@/components/home/HeroSection";
+import FeatureCard from "@/components/home/FeatureCard";
 
 const FEATURES = [
   {

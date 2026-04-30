@@ -74,13 +74,13 @@ export default function RunList({ runs }: RunListProps) {
 
   return (
     <Grid container spacing={2}>
-      {runs.map((run) => {
+      {runs.map((run: Run) => {
         const captureCount = run.zones.reduce(
-          (acc, z) => acc + z.captures.length,
+          (acc: number, z: any) => acc + z.captures.length,
           0,
         );
         const visitedCount = run.zones.filter(
-          (z) => z.status !== "not-visited",
+          (z: any) => z.status !== "not-visited",
         ).length;
         const progress =
           run.zones.length > 0 ? (visitedCount / run.zones.length) * 100 : 0;
@@ -146,7 +146,9 @@ export default function RunList({ runs }: RunListProps) {
                         fontWeight: 700,
                         color: "#000",
                         transition: "color 300ms ease",
-                        truncate: true,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                         lineHeight: 1.2,
                       }}
                     >

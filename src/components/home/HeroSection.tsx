@@ -1,8 +1,8 @@
 "use client";
 
 import { Box, Container, Stack, Typography } from "@mui/material";
-import StyledButton from "./StyledButton";
-import StatCard from "./StatCard";
+import StyledButton from "@/components/ui/StyledButton";
+import StatCard from "@/components/ui/StatCard";
 
 interface Props {
   runsCount: number;

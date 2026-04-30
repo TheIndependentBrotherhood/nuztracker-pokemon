@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import { Capture } from "@/lib/types";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { useRunStore } from "@/store/runStore";
-import PokemonDetailModal from "./PokemonDetailModal";
+import PokemonDetailModal from "./modals/PokemonDetailModal";
 
 interface Props {
   capture: Capture | null;

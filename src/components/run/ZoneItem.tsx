@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import { Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
-import AddCaptureModal from "./AddCaptureModal";
+import AddCaptureModal from "./modals/AddCaptureModal";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 
 interface Props {

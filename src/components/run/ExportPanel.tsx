@@ -258,7 +258,7 @@ export default function ExportPanel({ run, teamViewId }: Props) {
           <TextField
             fullWidth
             value={shareUrl}
-            inputProps={{ readOnly: true }}
+            slotProps={{ input: { readOnly: true } }}
             sx={{
               "& .MuiOutlinedInput-root": {
                 background: "#fff",

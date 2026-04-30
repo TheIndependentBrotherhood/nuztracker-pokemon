@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CacheProvider } from "@/context/CacheContext";
-import { MuiProvider } from "@/components/MuiProvider";
+import { MuiProvider } from "@/components/layout/MuiProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {

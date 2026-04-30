@@ -17,9 +17,9 @@ import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
 import { regions } from "@/lib/zones";
 import { RandomizerOptions } from "@/lib/types";
-import StyledButton from "./StyledButton";
-import StyledTextField from "./StyledTextField";
-import StyledSelect from "./StyledSelect";
+import StyledButton from "@/components/ui/StyledButton";
+import StyledTextField from "@/components/ui/StyledTextField";
+import StyledSelect from "@/components/ui/StyledSelect";
 
 interface Props {
   onClose: () => void;
@@ -44,7 +44,7 @@ export default function CreateRunModal({ onClose }: Props) {
   );
 
   function toggleRandomizerOption<K extends keyof RandomizerOptions>(key: K) {
-    setRandomizerOptions((prev) => ({
+    setRandomizerOptions((prev: RandomizerOptions) => ({
       ...prev,
       [key]: !prev[key],
     }));
@@ -107,18 +107,22 @@ export default function CreateRunModal({ onClose }: Props) {
             placeholder="ex. FireRed Nuzlocke"
             fullWidth
             value={gameName}
-            onChange={(e) => setGameName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setGameName(e.target.value)
+            }
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              e.key === "Enter" && handleCreate()
+            }
           />
 
           {/* Region Select */}
           <StyledSelect
             label="Région"
             value={region}
-            onChange={(e) => setRegion(e.target.value)}
+            onChange={(e: any) => setRegion(e.target.value)}
             fullWidth
           >
-            {regions.map((r) => (
+            {regions.map((r: any) => (
               <MenuItem key={r.id} value={r.id}>
                 {r.name} — {r.game}
               </MenuItem>

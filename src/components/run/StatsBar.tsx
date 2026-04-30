@@ -2,7 +2,7 @@
 
 import { Stack, Typography, Box } from "@mui/material";
 import { Run } from "@/lib/types";
-import StatCard from "./StatCard";
+import StatCard from "@/components/ui/StatCard";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 
 interface Props {
@@ -11,12 +11,15 @@ interface Props {
 
 export default function StatsBar({ run }: Props) {
   const total = run.zones.length;
-  const visited = run.zones.filter((z) => z.status !== "not-visited").length;
-  const captured = run.zones.filter((z) => z.status === "captured").length;
+  const visited = run.zones.filter(
+    (z: any) => z.status !== "not-visited",
+  ).length;
+  const captured = run.zones.filter((z: any) => z.status === "captured").length;
   const missed = visited - captured;
   const captureRate = visited > 0 ? Math.round((captured / visited) * 100) : 0;
   const shinyCount = run.zones.reduce(
-    (acc, z) => acc + z.captures.filter((c) => c.isShiny).length,
+    (acc: number, z: any) =>
+      acc + z.captures.filter((c: any) => c.isShiny).length,
     0,
   );
   const progress = total > 0 ? (visited / total) * 100 : 0;
@@ -105,7 +108,7 @@ export default function StatsBar({ run }: Props) {
     <Box
       sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1 }}
     >
-      {run.team.map((pokemon) => (
+      {run.team.map((pokemon: any) => (
         <Box
           key={pokemon.id}
           sx={{

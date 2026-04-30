@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useLayoutEffect, useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getRun } from "@/lib/storage";
-import StatsBar from "@/components/StatsBar";
-import MapView from "@/components/MapView";
-import ZoneList from "@/components/ZoneList";
-import TeamView from "@/components/TeamView";
-import TypeAnalysis from "@/components/TypeAnalysis";
-import ExportPanel from "@/components/ExportPanel";
-import Header from "@/components/Header";
-import StyledButton from "@/components/StyledButton";
+import StatsBar from "@/components/run/StatsBar";
+import MapView from "@/components/run/MapView";
+import ZoneList from "@/components/run/ZoneList";
+import TeamView from "@/components/run/TeamView";
+import TypeAnalysis from "@/components/run/TypeAnalysis";
+import ExportPanel from "@/components/run/ExportPanel";
+import Header from "@/components/layout/Header";
+import StyledButton from "@/components/ui/StyledButton";
 
 type Tab = "zones" | "team" | "types";
 
@@ -25,8 +25,11 @@ function RunPageContent() {
 
   const id = searchParams.get("id") ?? "";
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
     loadRuns();
   }, [loadRuns]);
 
