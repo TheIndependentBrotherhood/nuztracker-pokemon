@@ -31,7 +31,18 @@ export default function StatCard({ value, label, color, hoverContent }: Props) {
         px: 2,
       }}
     >
-      <CardContent sx={{ textAlign: "center", p: { xs: 1.5, sm: 3 } }}>
+      <CardContent
+        sx={{
+          textAlign: "center",
+          p: { xs: 1.5, sm: 3 },
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1,
+          minHeight: "160px",
+        }}
+      >
         {!isHovered || !hoverContent ? (
           <>
             <Typography
@@ -40,7 +51,6 @@ export default function StatCard({ value, label, color, hoverContent }: Props) {
                 fontWeight: 900,
                 fontSize: { xs: "2rem", sm: "3rem" },
                 color: "#000",
-                mb: 1,
               }}
             >
               {value}

@@ -24,36 +24,75 @@ export default function StatsBar({ run }: Props) {
   );
   const progress = total > 0 ? (visited / total) * 100 : 0;
 
+  // Zones with regular captures
+  const zonesWithRegularCaptures = run.zones.filter((z: any) =>
+    z.captures.some((c: any) => !c.isShiny),
+  ).length;
+
+  // Zones with shiny captures
+  const zonesWithShinyCaptures = run.zones.filter((z: any) =>
+    z.captures.some((c: any) => c.isShiny),
+  ).length;
+
+  // Display values (x2 if shiny hunt mode)
+  const displayVisited = run.isShinyHuntMode ? visited * 2 : visited;
+  const displayTotal = run.isShinyHuntMode ? total * 2 : total;
+
   // Zones hover content (shiny mode)
-  const zonesHoverContent = run.isShinyHuntMode && (
-    <>
-      <Typography
-        sx={{
-          fontWeight: 900,
-          fontSize: { xs: "2rem", sm: "3rem" },
-          color: "#000",
-          mb: 1,
-        }}
-      >
-        {shinyCount}
-      </Typography>
-      <Typography
-        sx={{
-          fontSize: { xs: "0.75rem", sm: "0.875rem" },
-          fontWeight: 700,
-          color: "#000",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-        }}
-      >
-        Shinies
-      </Typography>
-    </>
+  const zonesHoverContent = (
+    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6 }}>
+      <Box sx={{ textAlign: "center" }}>
+        <Typography
+          sx={{
+            fontWeight: 900,
+            fontSize: { xs: "2rem", sm: "3rem" },
+            color: "#000",
+            mb: 1,
+          }}
+        >
+          {zonesWithRegularCaptures}/{total}
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            fontWeight: 700,
+            color: "#000",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          Zones Pokémons
+        </Typography>
+      </Box>
+      <Box sx={{ textAlign: "center" }}>
+        <Typography
+          sx={{
+            fontWeight: 900,
+            fontSize: { xs: "2rem", sm: "3rem" },
+            color: "#000",
+            mb: 1,
+          }}
+        >
+          {zonesWithShinyCaptures}/{total}
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            fontWeight: 700,
+            color: "#000",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          Zones Shinies
+        </Typography>
+      </Box>
+    </Box>
   );
 
   // Capturées hover content (taux et loupés)
   const captureesHoverContent = (
-    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6 }}>
       <Box sx={{ textAlign: "center" }}>
         <Typography
           sx={{
@@ -106,7 +145,11 @@ export default function StatsBar({ run }: Props) {
   // Équipe hover content (team sprites)
   const equipeHoverContent = (
     <Box
-      sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1 }}
+      sx={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        columnGap: 12,
+      }}
     >
       {run.team.map((pokemon: any) => (
         <Box
@@ -181,7 +224,7 @@ export default function StatsBar({ run }: Props) {
         sx={{ mb: 3, pt: 2 }}
       >
         <StatCard
-          value={`${visited}/${total}`}
+          value={`${displayVisited}/${displayTotal}`}
           label="Zones"
           color="#E3F2FD"
           hoverContent={zonesHoverContent}

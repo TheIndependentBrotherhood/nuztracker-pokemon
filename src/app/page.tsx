@@ -5,7 +5,6 @@ import { Box, Container, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import RunList from "@/components/home/RunList";
 import CreateRunModal from "@/components/ui/CreateRunModal";
-import Header from "@/components/layout/Header";
 import HeroSection from "@/components/home/HeroSection";
 import FeatureCard from "@/components/home/FeatureCard";
 
@@ -46,8 +45,6 @@ export default function HomePage() {
 
   return (
     <Box sx={{ minHeight: "100vh" }}>
-      <Header />
-
       <Container maxWidth="lg" sx={{ py: 6, pb: 10 }}>
         {/* Hero Section */}
         <HeroSection

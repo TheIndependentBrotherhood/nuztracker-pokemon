@@ -28,7 +28,7 @@ export default function Header({
         zIndex: 100,
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth={false} sx={{ px: 0, mx: 0 }}>
         <Toolbar
           sx={{ display: "flex", justifyContent: "space-between", p: 1 }}
         >
@@ -38,7 +38,7 @@ export default function Header({
           )}
 
           {/* Center: Logo or Title */}
-          {title ? (
+          {title && (
             <Box sx={{ flex: 1, minWidth: 0, textAlign: "center" }}>
               <Typography
                 variant="h6"
@@ -65,20 +65,6 @@ export default function Header({
                 </Typography>
               )}
             </Box>
-          ) : (
-            <Link href="/" style={{ textDecoration: "none" }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 900,
-                  color: "#000",
-                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
-                  cursor: "pointer",
-                }}
-              >
-                🎮 NuzTracker
-              </Typography>
-            </Link>
           )}
 
           {/* Right: Actions */}

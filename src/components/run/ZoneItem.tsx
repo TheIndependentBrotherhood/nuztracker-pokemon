@@ -107,7 +107,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
               fontSize: "0.875rem",
               fontWeight: 500,
               flex: 1,
-              color: "#e2e8f0",
+              color: "#1e293b",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -118,7 +118,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
 
           {zone.captures.length > 0 && (
             <Typography
-              sx={{ fontSize: "0.75rem", color: "#94a3b8", flexShrink: 0 }}
+              sx={{ fontSize: "0.75rem", color: "#475569", flexShrink: 0 }}
             >
               {zone.captures.length}
             </Typography>
@@ -231,10 +231,10 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
                     objectFit: "contain",
                   }}
                 />
-                <Typography sx={{ fontSize: "0.75rem", color: "#cbd5e1" }}>
+                <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
                   {c.nickname || c.pokemonName}
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
                   Lv{c.level}
                 </Typography>
                 {c.isShiny && (
