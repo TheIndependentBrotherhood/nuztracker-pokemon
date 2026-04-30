@@ -1,14 +1,28 @@
-import { Card, CardContent, Typography } from "@mui/material";
+import { Card, CardContent, Typography, IconButton, Box } from "@mui/material";
 import { useState } from "react";
+
+interface Action {
+  icon: string;
+  title: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
 
 interface Props {
   value: number | string;
   label: string;
   color: string;
   hoverContent?: React.ReactNode;
+  actions?: Action[];
 }
 
-export default function StatCard({ value, label, color, hoverContent }: Props) {
+export default function StatCard({
+  value,
+  label,
+  color,
+  hoverContent,
+  actions,
+}: Props) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -29,8 +43,49 @@ export default function StatCard({ value, label, color, hoverContent }: Props) {
           boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.3)",
         },
         px: 2,
+        position: "relative",
       }}
     >
+      {/* Action buttons - top right corner */}
+      {actions && actions.length > 0 && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0.5,
+            right: 0.5,
+            display: "flex",
+            gap: 0.25,
+          }}
+        >
+          {actions.map((action, index) => (
+            <IconButton
+              key={index}
+              onClick={action.onClick}
+              disabled={action.disabled}
+              title={action.title}
+              sx={{
+                color: "#000",
+                background: "rgba(255, 255, 255, 0.8)",
+                border: "2px solid #000",
+                borderRadius: "0.5rem",
+                padding: "0.375rem",
+                fontSize: "1rem",
+                transition: "all 200ms ease",
+                "&:hover": {
+                  background: "rgba(255, 255, 255, 1)",
+                  transform: "translateY(-2px)",
+                },
+                "&:disabled": {
+                  opacity: 0.5,
+                },
+              }}
+            >
+              {action.icon}
+            </IconButton>
+          ))}
+        </Box>
+      )}
+
       <CardContent
         sx={{
           textAlign: "center",

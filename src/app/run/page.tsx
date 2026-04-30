@@ -10,7 +10,6 @@ import MapView from "@/components/run/MapView";
 import ZoneList from "@/components/run/ZoneList";
 import TeamView from "@/components/run/TeamView";
 import TypeAnalysis from "@/components/run/TypeAnalysis";
-import ExportPanel from "@/components/run/ExportPanel";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
 
@@ -271,15 +270,6 @@ function RunPageContent() {
           >
             <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
               <MapView run={run} />
-            </Box>
-            <Box
-              sx={{
-                borderTop: "2px solid #000",
-                p: 2,
-                background: "#FFFEF0",
-              }}
-            >
-              <ExportPanel run={run} teamViewId="team-export-target" />
             </Box>
           </Box>
 

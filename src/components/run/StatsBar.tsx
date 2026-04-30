@@ -1,15 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { Stack, Typography, Box } from "@mui/material";
 import { Run, Zone, Capture } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
 import { getSpriteUrl } from "@/lib/pokemon-api";
+import { encodeTeam, buildShareUrl } from "@/lib/share";
 
 interface Props {
   run: Run;
 }
 
 export default function StatsBar({ run }: Props) {
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+
   const total = run.zones.length;
   const visited = run.zones.filter(
     (z: Zone) => z.status !== "not-visited",
@@ -26,6 +31,69 @@ export default function StatsBar({ run }: Props) {
   );
   const progress = total > 0 ? (visited / total) * 100 : 0;
 
+  // Export handlers for team stats card
+  async function handleExportPng() {
+    setExporting(true);
+    setExportError("");
+
+    try {
+      const element = document.getElementById("team-export-target");
+      if (!element) {
+        setExportError("Team view element not found");
+        return;
+      }
+
+      const { default: html2canvas } = await import("html2canvas");
+
+      const canvas = await html2canvas(element, {
+        width: 1280,
+        height: 720,
+        scale: 2,
+        backgroundColor: "#FFFEF0",
+        logging: false,
+      });
+
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `team-${new Date().getTime()}.png`;
+      link.click();
+    } catch (error) {
+      console.error("PNG export error:", error);
+      setExportError("Failed to export PNG. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleGenerateUrl() {
+    try {
+      const encoded = await encodeTeam(run.team);
+      const shareUrl = buildShareUrl(encoded);
+      const link = document.createElement("a");
+      link.href = shareUrl;
+      link.target = "_blank";
+      link.click();
+    } catch (error) {
+      console.error("URL generation error:", error);
+      setExportError("Failed to generate share URL");
+    }
+  }
+
+  const teamActions = [
+    {
+      icon: "🖼",
+      title: "Export team as PNG (1280x720)",
+      onClick: handleExportPng,
+      disabled: exporting || run.team.length === 0,
+    },
+    {
+      icon: "🔗",
+      title: "Generate shareable URL",
+      onClick: handleGenerateUrl,
+      disabled: run.team.length === 0,
+    },
+  ];
+
   // Zones with regular captures
   const zonesWithRegularCaptures = run.zones.filter((z: Zone) =>
     z.captures.some((c: Capture) => !c.isShiny),
@@ -36,11 +104,11 @@ export default function StatsBar({ run }: Props) {
     z.captures.some((c: Capture) => c.isShiny),
   ).length;
 
-  // Display values (x2 if shiny hunt mode)
-  const displayVisited = run.isShinyHuntMode ? visited * 2 : visited;
+  // Display values (x2 total if shiny hunt mode)
+  const displayVisited = visited;
   const displayTotal = run.isShinyHuntMode ? total * 2 : total;
 
-  // Zones hover content (shiny mode)
+  // Zones hover content (regular and shiny)
   const zonesHoverContent = (
     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6 }}>
       <Box sx={{ textAlign: "center" }}>
@@ -92,7 +160,7 @@ export default function StatsBar({ run }: Props) {
     </Box>
   );
 
-  // Capturées hover content (taux et loupés)
+  // Caught hover content (rate and missed)
   const captureesHoverContent = (
     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6 }}>
       <Box sx={{ textAlign: "center" }}>
@@ -244,15 +312,16 @@ export default function StatsBar({ run }: Props) {
         />
         <StatCard
           value={captured}
-          label="Capturées"
+          label="Caught"
           color="#E8F5E9"
           hoverContent={captureesHoverContent}
         />
         <StatCard
           value={`${run.team.length}/6`}
-          label="Équipe"
+          label="Team"
           color="#FFE8E8"
           hoverContent={equipeHoverContent}
+          actions={teamActions}
         />
       </Stack>
 
