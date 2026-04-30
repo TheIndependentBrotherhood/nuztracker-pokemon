@@ -2,19 +2,19 @@
   "gen1": {
     "types": [
       "normal",
-      "fire",
-      "water",
-      "electric",
-      "grass",
-      "ice",
       "fighting",
+      "flying",
       "poison",
       "ground",
-      "flying",
-      "psychic",
-      "bug",
       "rock",
+      "bug",
       "ghost",
+      "fire",
+      "water",
+      "grass",
+      "electric",
+      "psychic",
+      "ice",
       "dragon"
     ],
     "effectiveness": {
@@ -28,124 +28,62 @@
         ],
         "strongAgainst": []
       },
-      "fire": {
-        "weakTo": [
-          "water",
-          "ground",
-          "rock"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "grass",
-          "bug"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
-          "ice",
-          "bug"
-        ]
-      },
-      "water": {
-        "weakTo": [
-          "electric",
-          "grass"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "water",
-          "ice"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fire",
-          "ground",
-          "rock"
-        ]
-      },
-      "electric": {
-        "weakTo": [
-          "ground"
-        ],
-        "resistsAgainst": [
-          "electric",
-          "flying"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "water",
-          "flying"
-        ]
-      },
-      "grass": {
-        "weakTo": [
-          "fire",
-          "ice",
-          "poison",
-          "flying",
-          "bug"
-        ],
-        "resistsAgainst": [
-          "water",
-          "electric",
-          "grass",
-          "ground"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "water",
-          "ground",
-          "rock"
-        ]
-      },
-      "ice": {
-        "weakTo": [
-          "fire",
-          "fighting",
-          "rock"
-        ],
-        "resistsAgainst": [
-          "ice"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
-          "ground",
-          "flying",
-          "dragon"
-        ]
-      },
       "fighting": {
         "weakTo": [
           "flying",
-          "psychic"
+          "psychic",
+          "fairy"
         ],
         "resistsAgainst": [
+          "rock",
           "bug",
-          "rock"
+          "dark"
         ],
         "immuneTo": [],
         "strongAgainst": [
           "normal",
+          "rock",
+          "steel",
           "ice",
-          "rock"
+          "dark"
+        ]
+      },
+      "flying": {
+        "weakTo": [
+          "rock",
+          "electric",
+          "ice"
+        ],
+        "resistsAgainst": [
+          "fighting",
+          "bug",
+          "grass"
+        ],
+        "immuneTo": [
+          "ground"
+        ],
+        "strongAgainst": [
+          "fighting",
+          "bug",
+          "grass"
         ]
       },
       "poison": {
         "weakTo": [
           "ground",
-          "psychic",
-          "bug"
+          "psychic"
         ],
         "resistsAgainst": [
-          "grass",
           "fighting",
-          "poison"
+          "poison",
+          "bug",
+          "grass",
+          "fairy"
         ],
         "immuneTo": [],
         "strongAgainst": [
           "grass",
-          "bug"
+          "fairy"
         ]
       },
       "ground": {
@@ -162,115 +100,192 @@
           "electric"
         ],
         "strongAgainst": [
-          "fire",
-          "electric",
           "poison",
-          "rock"
+          "rock",
+          "steel",
+          "fire",
+          "electric"
         ]
       },
-      "flying": {
+      "rock": {
         "weakTo": [
-          "electric",
-          "ice",
-          "rock"
+          "fighting",
+          "ground",
+          "steel",
+          "water",
+          "grass"
         ],
         "resistsAgainst": [
-          "grass",
+          "normal",
+          "flying",
+          "poison",
+          "fire"
+        ],
+        "immuneTo": [],
+        "strongAgainst": [
+          "flying",
+          "bug",
+          "fire",
+          "ice"
+        ]
+      },
+      "bug": {
+        "weakTo": [
+          "flying",
+          "rock",
+          "fire"
+        ],
+        "resistsAgainst": [
           "fighting",
+          "ground",
+          "grass"
+        ],
+        "immuneTo": [],
+        "strongAgainst": [
+          "grass",
+          "psychic",
+          "dark"
+        ]
+      },
+      "ghost": {
+        "weakTo": [
+          "ghost",
+          "dark"
+        ],
+        "resistsAgainst": [
+          "poison",
           "bug"
         ],
         "immuneTo": [
-          "ground"
+          "normal",
+          "fighting"
         ],
         "strongAgainst": [
+          "ghost",
+          "psychic"
+        ]
+      },
+      "fire": {
+        "weakTo": [
+          "ground",
+          "rock",
+          "water"
+        ],
+        "resistsAgainst": [
+          "bug",
+          "steel",
+          "fire",
           "grass",
-          "fighting",
-          "bug"
+          "ice",
+          "fairy"
+        ],
+        "immuneTo": [],
+        "strongAgainst": [
+          "bug",
+          "steel",
+          "grass",
+          "ice"
+        ]
+      },
+      "water": {
+        "weakTo": [
+          "grass",
+          "electric"
+        ],
+        "resistsAgainst": [
+          "steel",
+          "fire",
+          "water",
+          "ice"
+        ],
+        "immuneTo": [],
+        "strongAgainst": [
+          "ground",
+          "rock",
+          "fire"
+        ]
+      },
+      "grass": {
+        "weakTo": [
+          "flying",
+          "poison",
+          "bug",
+          "fire",
+          "ice"
+        ],
+        "resistsAgainst": [
+          "ground",
+          "water",
+          "grass",
+          "electric"
+        ],
+        "immuneTo": [],
+        "strongAgainst": [
+          "ground",
+          "rock",
+          "water"
+        ]
+      },
+      "electric": {
+        "weakTo": [
+          "ground"
+        ],
+        "resistsAgainst": [
+          "flying",
+          "steel",
+          "electric"
+        ],
+        "immuneTo": [],
+        "strongAgainst": [
+          "flying",
+          "water"
         ]
       },
       "psychic": {
         "weakTo": [
-          "bug"
+          "bug",
+          "ghost",
+          "dark"
         ],
         "resistsAgainst": [
           "fighting",
           "psychic"
         ],
-        "immuneTo": [
-          "ghost"
-        ],
+        "immuneTo": [],
         "strongAgainst": [
           "fighting",
           "poison"
         ]
       },
-      "bug": {
+      "ice": {
         "weakTo": [
-          "fire",
-          "poison",
-          "flying",
-          "rock"
+          "fighting",
+          "rock",
+          "steel",
+          "fire"
         ],
         "resistsAgainst": [
-          "grass",
-          "fighting",
-          "ground"
+          "ice"
         ],
         "immuneTo": [],
         "strongAgainst": [
-          "grass",
-          "poison",
-          "psychic"
-        ]
-      },
-      "rock": {
-        "weakTo": [
-          "water",
-          "grass",
-          "fighting",
-          "ground"
-        ],
-        "resistsAgainst": [
-          "normal",
-          "fire",
-          "poison",
-          "flying"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fire",
-          "ice",
           "flying",
-          "bug"
-        ]
-      },
-      "ghost": {
-        "weakTo": [
-          "ghost"
-        ],
-        "resistsAgainst": [
-          "poison",
-          "bug"
-        ],
-        "immuneTo": [
-          "normal",
-          "fighting",
-          "psychic"
-        ],
-        "strongAgainst": [
-          "ghost"
+          "ground",
+          "grass",
+          "dragon"
         ]
       },
       "dragon": {
         "weakTo": [
           "ice",
-          "dragon"
+          "dragon",
+          "fairy"
         ],
         "resistsAgainst": [
           "fire",
           "water",
-          "electric",
-          "grass"
+          "grass",
+          "electric"
         ],
         "immuneTo": [],
         "strongAgainst": [
@@ -281,297 +296,43 @@
   },
   "gen2-5": {
     "types": [
-      "normal",
-      "fire",
-      "water",
-      "electric",
-      "grass",
-      "ice",
-      "fighting",
-      "poison",
-      "ground",
-      "flying",
-      "psychic",
-      "bug",
-      "rock",
-      "ghost",
-      "dragon",
+      "steel",
       "dark",
-      "steel"
+      "unknown"
     ],
     "effectiveness": {
-      "normal": {
+      "steel": {
         "weakTo": [
-          "fighting"
-        ],
-        "resistsAgainst": [],
-        "immuneTo": [
-          "ghost"
-        ],
-        "strongAgainst": []
-      },
-      "fire": {
-        "weakTo": [
-          "water",
-          "ground",
-          "rock"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "grass",
-          "bug",
-          "steel"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
-          "ice",
-          "bug",
-          "steel"
-        ]
-      },
-      "water": {
-        "weakTo": [
-          "electric",
-          "grass"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "water",
-          "ice",
-          "steel"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fire",
-          "ground",
-          "rock"
-        ]
-      },
-      "electric": {
-        "weakTo": [
-          "ground"
-        ],
-        "resistsAgainst": [
-          "electric",
-          "flying",
-          "steel"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "water",
-          "flying"
-        ]
-      },
-      "grass": {
-        "weakTo": [
-          "fire",
-          "ice",
-          "poison",
-          "flying",
-          "bug"
-        ],
-        "resistsAgainst": [
-          "water",
-          "electric",
-          "grass",
-          "ground"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "water",
-          "ground",
-          "rock"
-        ]
-      },
-      "ice": {
-        "weakTo": [
-          "fire",
           "fighting",
-          "rock",
-          "steel"
-        ],
-        "resistsAgainst": [
-          "ice"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
           "ground",
-          "flying",
-          "dragon"
-        ]
-      },
-      "fighting": {
-        "weakTo": [
-          "flying",
-          "psychic"
+          "fire"
         ],
         "resistsAgainst": [
-          "bug",
-          "rock",
-          "dark"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
           "normal",
-          "ice",
+          "flying",
           "rock",
-          "dark",
-          "steel"
-        ]
-      },
-      "poison": {
-        "weakTo": [
-          "ground",
-          "psychic"
-        ],
-        "resistsAgainst": [
-          "grass",
-          "fighting",
-          "poison",
-          "bug"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass"
-        ]
-      },
-      "ground": {
-        "weakTo": [
-          "water",
-          "grass",
-          "ice"
-        ],
-        "resistsAgainst": [
-          "poison",
-          "rock"
-        ],
-        "immuneTo": [
-          "electric"
-        ],
-        "strongAgainst": [
-          "fire",
-          "electric",
-          "poison",
-          "rock",
-          "steel"
-        ]
-      },
-      "flying": {
-        "weakTo": [
-          "electric",
-          "ice",
-          "rock"
-        ],
-        "resistsAgainst": [
-          "grass",
-          "fighting",
-          "bug"
-        ],
-        "immuneTo": [
-          "ground"
-        ],
-        "strongAgainst": [
-          "grass",
-          "fighting",
-          "bug"
-        ]
-      },
-      "psychic": {
-        "weakTo": [
           "bug",
-          "ghost",
-          "dark"
+          "steel",
+          "grass",
+          "psychic",
+          "ice",
+          "dragon",
+          "fairy"
         ],
-        "resistsAgainst": [
-          "fighting",
-          "psychic"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fighting",
+        "immuneTo": [
           "poison"
-        ]
-      },
-      "bug": {
-        "weakTo": [
-          "fire",
-          "flying",
-          "rock"
         ],
-        "resistsAgainst": [
-          "grass",
-          "fighting",
-          "ground"
-        ],
-        "immuneTo": [],
         "strongAgainst": [
-          "grass",
-          "psychic",
-          "dark"
-        ]
-      },
-      "rock": {
-        "weakTo": [
-          "water",
-          "grass",
-          "fighting",
-          "ground",
-          "steel"
-        ],
-        "resistsAgainst": [
-          "normal",
-          "fire",
-          "poison",
-          "flying"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fire",
+          "rock",
           "ice",
-          "flying",
-          "bug"
-        ]
-      },
-      "ghost": {
-        "weakTo": [
-          "ghost",
-          "dark"
-        ],
-        "resistsAgainst": [
-          "poison",
-          "bug"
-        ],
-        "immuneTo": [
-          "normal",
-          "fighting"
-        ],
-        "strongAgainst": [
-          "psychic",
-          "ghost"
-        ]
-      },
-      "dragon": {
-        "weakTo": [
-          "ice",
-          "dragon"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "water",
-          "electric",
-          "grass"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "dragon"
+          "fairy"
         ]
       },
       "dark": {
         "weakTo": [
           "fighting",
-          "bug"
+          "bug",
+          "fairy"
         ],
         "resistsAgainst": [
           "ghost",
@@ -581,378 +342,23 @@
           "psychic"
         ],
         "strongAgainst": [
-          "psychic",
-          "ghost"
+          "ghost",
+          "psychic"
         ]
       },
-      "steel": {
-        "weakTo": [
-          "fire",
-          "fighting",
-          "ground"
-        ],
-        "resistsAgainst": [
-          "normal",
-          "grass",
-          "ice",
-          "flying",
-          "psychic",
-          "bug",
-          "rock",
-          "dragon",
-          "dark",
-          "steel"
-        ],
-        "immuneTo": [
-          "poison"
-        ],
-        "strongAgainst": [
-          "ice",
-          "rock"
-        ]
+      "unknown": {
+        "weakTo": [],
+        "resistsAgainst": [],
+        "immuneTo": [],
+        "strongAgainst": []
       }
     }
   },
   "gen6+": {
     "types": [
-      "normal",
-      "fire",
-      "water",
-      "electric",
-      "grass",
-      "ice",
-      "fighting",
-      "poison",
-      "ground",
-      "flying",
-      "psychic",
-      "bug",
-      "rock",
-      "ghost",
-      "dragon",
-      "dark",
-      "steel",
       "fairy"
     ],
     "effectiveness": {
-      "normal": {
-        "weakTo": [
-          "fighting"
-        ],
-        "resistsAgainst": [],
-        "immuneTo": [
-          "ghost"
-        ],
-        "strongAgainst": []
-      },
-      "fire": {
-        "weakTo": [
-          "water",
-          "ground",
-          "rock"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "grass",
-          "bug",
-          "steel",
-          "fairy"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
-          "ice",
-          "bug",
-          "steel"
-        ]
-      },
-      "water": {
-        "weakTo": [
-          "electric",
-          "grass"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "water",
-          "ice",
-          "steel"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fire",
-          "ground",
-          "rock"
-        ]
-      },
-      "electric": {
-        "weakTo": [
-          "ground"
-        ],
-        "resistsAgainst": [
-          "electric",
-          "flying",
-          "steel"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "water",
-          "flying"
-        ]
-      },
-      "grass": {
-        "weakTo": [
-          "fire",
-          "ice",
-          "poison",
-          "flying",
-          "bug"
-        ],
-        "resistsAgainst": [
-          "water",
-          "electric",
-          "grass",
-          "ground"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "water",
-          "ground",
-          "rock"
-        ]
-      },
-      "ice": {
-        "weakTo": [
-          "fire",
-          "fighting",
-          "rock",
-          "steel"
-        ],
-        "resistsAgainst": [
-          "ice"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
-          "ground",
-          "flying",
-          "dragon"
-        ]
-      },
-      "fighting": {
-        "weakTo": [
-          "flying",
-          "psychic",
-          "fairy"
-        ],
-        "resistsAgainst": [
-          "bug",
-          "rock",
-          "dark"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "normal",
-          "ice",
-          "rock",
-          "dark",
-          "steel"
-        ]
-      },
-      "poison": {
-        "weakTo": [
-          "ground",
-          "psychic"
-        ],
-        "resistsAgainst": [
-          "grass",
-          "fighting",
-          "poison",
-          "bug",
-          "fairy"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
-          "fairy"
-        ]
-      },
-      "ground": {
-        "weakTo": [
-          "water",
-          "grass",
-          "ice"
-        ],
-        "resistsAgainst": [
-          "poison",
-          "rock"
-        ],
-        "immuneTo": [
-          "electric"
-        ],
-        "strongAgainst": [
-          "fire",
-          "electric",
-          "poison",
-          "rock",
-          "steel"
-        ]
-      },
-      "flying": {
-        "weakTo": [
-          "electric",
-          "ice",
-          "rock"
-        ],
-        "resistsAgainst": [
-          "grass",
-          "fighting",
-          "bug"
-        ],
-        "immuneTo": [
-          "ground"
-        ],
-        "strongAgainst": [
-          "grass",
-          "fighting",
-          "bug"
-        ]
-      },
-      "psychic": {
-        "weakTo": [
-          "bug",
-          "ghost",
-          "dark"
-        ],
-        "resistsAgainst": [
-          "fighting",
-          "psychic"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fighting",
-          "poison"
-        ]
-      },
-      "bug": {
-        "weakTo": [
-          "fire",
-          "flying",
-          "rock"
-        ],
-        "resistsAgainst": [
-          "grass",
-          "fighting",
-          "ground"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "grass",
-          "psychic",
-          "dark"
-        ]
-      },
-      "rock": {
-        "weakTo": [
-          "water",
-          "grass",
-          "fighting",
-          "ground",
-          "steel"
-        ],
-        "resistsAgainst": [
-          "normal",
-          "fire",
-          "poison",
-          "flying"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "fire",
-          "ice",
-          "flying",
-          "bug"
-        ]
-      },
-      "ghost": {
-        "weakTo": [
-          "ghost",
-          "dark"
-        ],
-        "resistsAgainst": [
-          "poison",
-          "bug"
-        ],
-        "immuneTo": [
-          "normal",
-          "fighting"
-        ],
-        "strongAgainst": [
-          "psychic",
-          "ghost"
-        ]
-      },
-      "dragon": {
-        "weakTo": [
-          "ice",
-          "dragon",
-          "fairy"
-        ],
-        "resistsAgainst": [
-          "fire",
-          "water",
-          "electric",
-          "grass"
-        ],
-        "immuneTo": [],
-        "strongAgainst": [
-          "dragon"
-        ]
-      },
-      "dark": {
-        "weakTo": [
-          "fighting",
-          "bug",
-          "fairy"
-        ],
-        "resistsAgainst": [
-          "ghost",
-          "dark"
-        ],
-        "immuneTo": [
-          "psychic"
-        ],
-        "strongAgainst": [
-          "psychic",
-          "ghost"
-        ]
-      },
-      "steel": {
-        "weakTo": [
-          "fire",
-          "fighting",
-          "ground"
-        ],
-        "resistsAgainst": [
-          "normal",
-          "grass",
-          "ice",
-          "flying",
-          "psychic",
-          "bug",
-          "rock",
-          "dragon",
-          "steel",
-          "fairy"
-        ],
-        "immuneTo": [
-          "poison"
-        ],
-        "strongAgainst": [
-          "ice",
-          "rock",
-          "fairy"
-        ]
-      },
       "fairy": {
         "weakTo": [
           "poison",
@@ -974,5 +380,5 @@
       }
     }
   },
-  "generatedAt": "2026-04-30T01:00:00Z"
+  "generatedAt": "2026-04-30T01:59:21.194Z"
 }

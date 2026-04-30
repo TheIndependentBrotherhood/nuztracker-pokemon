@@ -68,12 +68,33 @@ export default function RunList({ runs }: RunListProps) {
               </span>
             </div>
 
-            <div className="mt-3 flex gap-4 text-sm text-gray-300">
+            <div className="mt-3 flex gap-4 text-sm text-gray-300 flex-wrap">
               <span>
                 🗺 {visitedCount}/{run.zones.length} zones
               </span>
               <span>🔴 {captureCount} captures</span>
               {run.isShinyHuntMode && <span>✨ Shiny Hunt</span>}
+              {run.isRandomMode && (
+                <span className="text-blue-400">
+                  🎲 Randomizer
+                  {run.randomizerOptions && (
+                    <span className="text-gray-400 ml-1">
+                      (
+                      {[
+                        run.randomizerOptions.randomizeTypes && "types",
+                        run.randomizerOptions.randomizeAbilities && "abilities",
+                        run.randomizerOptions.randomizeEncounters &&
+                          "encounters",
+                        run.randomizerOptions.randomizeEvolvedForms &&
+                          "evolutions",
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                      )
+                    </span>
+                  )}
+                </span>
+              )}
             </div>
 
             <div className="mt-3 flex justify-between items-center">

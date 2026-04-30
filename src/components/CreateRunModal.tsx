@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
 import { regions } from "@/lib/zones";
-import { Run } from "@/lib/types";
+import { RandomizerOptions } from "@/lib/types";
 
 interface Props {
   onClose: () => void;
@@ -19,6 +19,23 @@ export default function CreateRunModal({ onClose }: Props) {
   const [isShinyHuntMode, setIsShinyHuntMode] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
 
+  const [randomizerOptions, setRandomizerOptions] = useState<RandomizerOptions>(
+    {
+      randomizeTypes: true,
+      randomizeAbilities: false,
+      randomizeEncounters: false,
+      randomizeEvolvedForms: false,
+      allowDuplicates: false,
+    },
+  );
+
+  function toggleRandomizerOption<K extends keyof RandomizerOptions>(key: K) {
+    setRandomizerOptions((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }
+
   function handleCreate() {
     if (!gameName.trim()) return;
     const run = createRun({
@@ -26,6 +43,7 @@ export default function CreateRunModal({ onClose }: Props) {
       region,
       isShinyHuntMode,
       isRandomMode,
+      randomizerOptions: isRandomMode ? randomizerOptions : undefined,
     });
     onClose();
     router.push(`/run/?id=${run.id}`);
@@ -33,7 +51,7 @@ export default function CreateRunModal({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-600">
+      <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-600 max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4 text-yellow-400">
           Start New Run
         </h2>
@@ -86,6 +104,76 @@ export default function CreateRunModal({ onClose }: Props) {
               <span className="text-sm text-gray-300">🎲 Randomizer</span>
             </label>
           </div>
+
+          {/* Randomizer Options */}
+          {isRandomMode && (
+            <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+              <h3 className="text-sm font-bold text-yellow-400 mb-3">
+                Randomizer Options
+              </h3>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeTypes}
+                    onChange={() => toggleRandomizerOption("randomizeTypes")}
+                    className="w-4 h-4 accent-yellow-400"
+                  />
+                  <span className="text-xs text-gray-300">Randomize Types</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeAbilities}
+                    onChange={() =>
+                      toggleRandomizerOption("randomizeAbilities")
+                    }
+                    className="w-4 h-4 accent-yellow-400"
+                  />
+                  <span className="text-xs text-gray-300">
+                    Randomize Abilities
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeEncounters}
+                    onChange={() =>
+                      toggleRandomizerOption("randomizeEncounters")
+                    }
+                    className="w-4 h-4 accent-yellow-400"
+                  />
+                  <span className="text-xs text-gray-300">
+                    Randomize Encounters
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.randomizeEvolvedForms}
+                    onChange={() =>
+                      toggleRandomizerOption("randomizeEvolvedForms")
+                    }
+                    className="w-4 h-4 accent-yellow-400"
+                  />
+                  <span className="text-xs text-gray-300">
+                    Randomize Evolved Forms
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={randomizerOptions.allowDuplicates}
+                    onChange={() => toggleRandomizerOption("allowDuplicates")}
+                    className="w-4 h-4 accent-yellow-400"
+                  />
+                  <span className="text-xs text-gray-300">
+                    Allow Duplicate Types
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 mt-6">

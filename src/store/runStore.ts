@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Run, Zone, Capture } from "@/lib/types";
+import { Run, Zone, Capture, RandomizerOptions } from "@/lib/types";
 import { getRuns, saveRun, deleteRun as deleteRunStorage } from "@/lib/storage";
 import { getZonesForRegion } from "@/lib/zones";
 
@@ -14,6 +14,7 @@ interface RunStore {
     region: string;
     isShinyHuntMode: boolean;
     isRandomMode: boolean;
+    randomizerOptions?: RandomizerOptions;
   }) => Run;
   updateRun: (run: Run) => void;
   deleteRun: (id: string) => void;

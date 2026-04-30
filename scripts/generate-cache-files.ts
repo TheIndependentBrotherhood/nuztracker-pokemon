@@ -8,31 +8,48 @@ const OUTPUT_DIR = path.join(process.cwd(), "public/data");
 async function fetchWithRetry(url: string, retries = 3): Promise<unknown> {
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sec timeout
+
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (!res.ok) throw new Error(`HTTP ${res.status} – ${url}`);
       return res.json();
     } catch (e) {
       if (i === retries - 1) throw e;
-      await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
+      const backoffMs = 1000 * Math.pow(2, i);
+      console.warn(
+        `    WARNING: Retry ${i + 1}/${retries} after ${backoffMs}ms: ${url}`,
+      );
+      await new Promise((r) => setTimeout(r, backoffMs));
     }
   }
   throw new Error("unreachable");
 }
 
-// ─── Generator 1: pokemon-list.json ────────────────────────────────────────
+// Generator 1: pokemon-list.json
 
 async function generatePokemonList() {
-  console.log("📦 Generating pokemon-list.json…");
+  console.log("PACKAGE: Generating pokemon-list.json...");
   const pokemon: unknown[] = [];
   let offset = 0;
   const limit = 100;
+  let totalBatches = 0;
 
   while (true) {
+    console.log(
+      `  FETCH: Batch ${totalBatches + 1} (offset: ${offset}, limit: ${limit})...`,
+    );
+
     const data = (await fetchWithRetry(
       `${POKEAPI_BASE}/pokemon?offset=${offset}&limit=${limit}`,
     )) as { results: { name: string }[]; next: string | null };
 
-    for (const p of data.results) {
+    console.log(`    -> Received ${data.results.length} Pokemon in this batch`);
+
+    for (let i = 0; i < data.results.length; i++) {
+      const p = data.results[i];
       const details = (await fetchWithRetry(
         `${POKEAPI_BASE}/pokemon/${p.name}`,
       )) as {
@@ -49,22 +66,44 @@ async function generatePokemonList() {
         is_mythical: boolean;
         generation: { name: string };
       };
-      const genMatch = species.generation.name.match(/generation-([ivxlcdm]+)/i);
+      const genMatch = species.generation.name.match(
+        /generation-([ivxlcdm]+)/i,
+      );
       const genMap: Record<string, number> = {
-        i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9,
+        i: 1,
+        ii: 2,
+        iii: 3,
+        iv: 4,
+        v: 5,
+        vi: 6,
+        vii: 7,
+        viii: 8,
+        ix: 9,
       };
-      const generation = genMatch ? (genMap[genMatch[1].toLowerCase()] ?? 0) : 0;
+      const generation = genMatch
+        ? (genMap[genMatch[1].toLowerCase()] ?? 0)
+        : 0;
 
       pokemon.push({
         id: details.id,
         name: details.name,
         types: details.types.map((t) => t.type.name),
-        sprite: details.sprites.front_default ??
+        sprite:
+          details.sprites.front_default ??
           `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${details.id}.png`,
         isLegendary: species.is_legendary || species.is_mythical,
         generation,
       });
+
+      if ((i + 1) % 20 === 0) {
+        console.log(`      OK: Processed ${i + 1}/${data.results.length}`);
+      }
     }
+
+    totalBatches++;
+    console.log(
+      `    OK: Batch complete (${pokemon.length} total Pokemon so far)\n`,
+    );
 
     if (!data.next) break;
     offset += limit;
@@ -77,17 +116,26 @@ async function generatePokemonList() {
   };
 }
 
-// ─── Generator 2: regions.json ──────────────────────────────────────────────
+// Generator 2: regions.json
 
 async function generateRegions() {
-  console.log("🗺️  Generating regions.json…");
+  console.log("MAP: Generating regions.json...");
   const regions: unknown[] = [];
 
   const regionsList = (await fetchWithRetry(`${POKEAPI_BASE}/region`)) as {
     results: { name: string }[];
   };
 
-  for (const r of regionsList.results) {
+  console.log(
+    `LOCATION: Found ${regionsList.results.length} regions to process`,
+  );
+
+  for (let rIdx = 0; rIdx < regionsList.results.length; rIdx++) {
+    const r = regionsList.results[rIdx];
+    console.log(
+      `  [${rIdx + 1}/${regionsList.results.length}] Processing region: ${r.name}...`,
+    );
+
     const regionData = (await fetchWithRetry(
       `${POKEAPI_BASE}/region/${r.name}`,
     )) as {
@@ -97,9 +145,16 @@ async function generateRegions() {
       locations: { name: string }[];
     };
 
+    console.log(`    -> Region has ${regionData.locations.length} locations`);
+
     const locations: unknown[] = [];
 
-    for (const loc of regionData.locations) {
+    for (let locIdx = 0; locIdx < regionData.locations.length; locIdx++) {
+      const loc = regionData.locations[locIdx];
+      console.log(
+        `      [${locIdx + 1}/${regionData.locations.length}] Fetching location: ${loc.name}...`,
+      );
+
       const locData = (await fetchWithRetry(
         `${POKEAPI_BASE}/location/${loc.name}`,
       )) as {
@@ -108,18 +163,31 @@ async function generateRegions() {
         areas?: { name: string }[];
       };
 
+      console.log(
+        `        -> Location has ${locData.areas?.length ?? 0} areas`,
+      );
+
       const pokemonIds = new Set<number>();
 
-      for (const area of locData.areas ?? []) {
+      for (let areaIdx = 0; areaIdx < (locData.areas?.length ?? 0); areaIdx++) {
+        const area = locData.areas![areaIdx];
+        console.log(
+          `          [${areaIdx + 1}/${locData.areas?.length}] Fetching area: ${area.name}...`,
+        );
+
         const areaData = (await fetchWithRetry(
           `${POKEAPI_BASE}/location-area/${area.name}`,
         )) as {
           pokemon_encounters?: { pokemon: { url: string } }[];
         };
+
+        const encounterCount = areaData.pokemon_encounters?.length ?? 0;
+        console.log(
+          `            -> Found ${encounterCount} Pokemon encounters`,
+        );
+
         for (const enc of areaData.pokemon_encounters ?? []) {
-          // Parse the id directly from the URL (e.g. ".../pokemon/25/") to
-          // avoid one extra HTTP request per encounter.
-          const parts = enc.pokemon.url.replace(/\/$/, '').split('/');
+          const parts = enc.pokemon.url.replace(/\/$/, "").split("/");
           const pokemonId = parseInt(parts[parts.length - 1], 10);
           if (!isNaN(pokemonId)) pokemonIds.add(pokemonId);
         }
@@ -130,6 +198,9 @@ async function generateRegions() {
         name: locData.name,
         pokemonEncounters: Array.from(pokemonIds),
       });
+      console.log(
+        `        OK: Location complete (${pokemonIds.size} unique Pokemon)`,
+      );
     }
 
     regions.push({
@@ -138,6 +209,7 @@ async function generateRegions() {
       generationId: regionData.generation?.name ?? null,
       locations,
     });
+    console.log(`  OK: Region ${r.name} complete\n`);
   }
 
   return {
@@ -146,10 +218,10 @@ async function generateRegions() {
   };
 }
 
-// ─── Generator 3: type-charts.json ──────────────────────────────────────────
+// Generator 3: type-charts.json
 
 async function generateTypeCharts() {
-  console.log("📊 Generating type-charts.json…");
+  console.log("CHART: Generating type-charts.json...");
   const charts: Record<string, unknown> = {};
 
   for (const genId of [1, 2, 6]) {
@@ -194,7 +266,7 @@ async function generateTypeCharts() {
   };
 }
 
-// ─── Generator 4: abilities-immunity.json ───────────────────────────────────
+// Generator 4: abilities-immunity.json
 
 const IMMUNITY_MAP: Record<string, string[]> = {
   "water-absorb": ["water"],
@@ -210,7 +282,7 @@ const IMMUNITY_MAP: Record<string, string[]> = {
 };
 
 async function generateAbilitiesImmunity() {
-  console.log("⚡ Generating abilities-immunity.json…");
+  console.log("ABILITY: Generating abilities-immunity.json...");
 
   const abilityNames = Object.keys(IMMUNITY_MAP);
   const abilities: unknown[] = [];
@@ -241,7 +313,7 @@ async function generateAbilitiesImmunity() {
         ...(name === "dry-skin" ? { weakness: "fire" } : {}),
       });
     } catch {
-      console.warn(`⚠️  Ability ${name} not found`);
+      console.warn(`WARNING: Ability ${name} not found`);
     }
   }
 
@@ -251,10 +323,10 @@ async function generateAbilitiesImmunity() {
   };
 }
 
-// ─── Generator 5: type-sprites.json ─────────────────────────────────────────
+// Generator 5: type-sprites.json
 
 async function generateTypeSprites() {
-  console.log("🎨 Generating type-sprites.json…");
+  console.log("SPRITE: Generating type-sprites.json...");
 
   const typesList = (await fetchWithRetry(`${POKEAPI_BASE}/type`)) as {
     results: { name: string }[];
@@ -272,8 +344,6 @@ async function generateTypeSprites() {
 
     const sprites: Record<string, Record<string, unknown>> = {};
 
-    // Normalize PokeAPI generation keys (e.g. "generation-i" → "gen1") so they
-    // match the keys used in the hook at runtime.
     const POKEAPI_GEN_KEY_MAP: Record<string, string> = {
       "generation-i": "gen1",
       "generation-ii": "gen2",
@@ -315,7 +385,7 @@ async function generateTypeSprites() {
   };
 }
 
-// ─── Main ────────────────────────────────────────────────────────────────────
+// Main
 
 interface CacheFile {
   name: string;
@@ -335,18 +405,32 @@ async function main() {
     { name: "abilities-immunity.json", generator: generateAbilitiesImmunity },
   ];
 
+  console.log(`\nSTART: Cache generation at ${new Date().toISOString()}\n`);
+
   for (const file of files) {
+    const startTime = Date.now();
     try {
+      const separator = "=".repeat(60);
+      console.log(`\n${separator}`);
+      console.log(`Starting: ${file.name}`);
+      console.log(`${separator}\n`);
+
       const data = await file.generator();
+
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
       const outputPath = path.join(OUTPUT_DIR, file.name);
       fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
-      console.log(`✅ ${file.name} generated successfully`);
+      console.log(`\nSUCCESS: ${file.name} generated (${elapsed}s)\n`);
     } catch (e) {
-      console.error(`❌ Error generating ${file.name}:`, e);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+      console.error(`\nERROR: Generating ${file.name} (after ${elapsed}s):`, e);
+      console.error(`\n`);
     }
   }
 
-  console.log("✨ All cache files generated!");
+  console.log(
+    `\nFINISH: All cache files generated! Completed at ${new Date().toISOString()}`,
+  );
 }
 
 main();
