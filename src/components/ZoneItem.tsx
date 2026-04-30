@@ -12,18 +12,33 @@ interface Props {
   isSelected: boolean;
 }
 
-const statusColors: Record<string, string> = {
-  'not-visited': 'border-gray-600 bg-gray-800/50',
-  visited: 'border-blue-500 bg-blue-900/20',
-  captured: 'border-green-500 bg-green-900/20',
-  multiple: 'border-orange-400 bg-orange-900/20',
+const statusConfig: Record<string, { border: string; bg: string; dot: string }> = {
+  'not-visited': {
+    border: 'border-slate-700/40',
+    bg: 'bg-transparent',
+    dot: 'bg-slate-600',
+  },
+  visited: {
+    border: 'border-blue-500/40',
+    bg: 'bg-blue-500/5',
+    dot: 'bg-blue-400',
+  },
+  captured: {
+    border: 'border-emerald-500/40',
+    bg: 'bg-emerald-500/5',
+    dot: 'bg-emerald-500',
+  },
+  multiple: {
+    border: 'border-orange-400/40',
+    bg: 'bg-orange-500/5',
+    dot: 'bg-orange-400',
+  },
 };
 
-const statusDots: Record<string, string> = {
-  'not-visited': 'bg-gray-500',
-  visited: 'bg-blue-400',
-  captured: 'bg-green-500',
-  multiple: 'bg-orange-400',
+const cycleLabel: Record<string, string> = {
+  'not-visited': '👁',
+  visited: '✓',
+  captured: '🔴',
 };
 
 export default function ZoneItem({ zone, runId, isSelected }: Props) {
@@ -31,18 +46,16 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
   const [showCapture, setShowCapture] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll into view when this zone becomes selected
   useEffect(() => {
     if (isSelected && ref.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [isSelected]);
 
-  // Visual status: orange when multiple captures
   const visualStatus = zone.captures.length >= 2 ? 'multiple' : zone.status;
+  const config = statusConfig[visualStatus] ?? statusConfig['not-visited'];
 
   function handleStatusCycle() {
-    // Prevent cycling away from 'captured' while captures still exist
     if (zone.captures.length > 0 && zone.status === 'captured') return;
     const order: Zone['status'][] = ['not-visited', 'visited', 'captured'];
     const current = order.indexOf(zone.status);
@@ -56,8 +69,8 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
         ref={ref}
         role="button"
         tabIndex={0}
-        className={`border-b border-gray-700/50 p-3 transition-all ${statusColors[visualStatus] ?? statusColors['not-visited']} ${
-          isSelected ? 'ring-2 ring-yellow-400/50' : ''
+        className={`border-b border-slate-700/30 p-3 transition-all duration-150 ${config.bg} ${
+          isSelected ? 'ring-1 ring-inset ring-blue-500/40 bg-blue-500/10' : 'hover:bg-slate-800/40'
         }`}
         onClick={() => setSelectedZone(isSelected ? null : zone.id)}
         onKeyDown={(e) => {
@@ -68,46 +81,66 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
         }}
       >
         <div className="flex items-center gap-2">
-          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusDots[visualStatus] ?? statusDots['not-visited']}`} />
-          <span className="text-sm font-medium flex-1 cursor-pointer">{zone.zoneName}</span>
+          {/* Status dot */}
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
+
+          <span className="text-sm font-medium flex-1 text-slate-200 truncate">
+            {zone.zoneName}
+          </span>
+
+          {zone.captures.length > 0 && (
+            <span className="text-xs text-slate-500 shrink-0">{zone.captures.length}</span>
+          )}
+
+          {/* Cycle status */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleStatusCycle();
             }}
-            className={`text-xs bg-gray-700 px-2 py-0.5 rounded transition-colors ${
+            className={`text-xs px-1.5 py-0.5 rounded transition-colors ${
               zone.captures.length > 0 && zone.status === 'captured'
-                ? 'text-gray-600 cursor-not-allowed'
-                : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                ? 'text-slate-700 cursor-not-allowed'
+                : 'text-slate-400 hover:text-white hover:bg-slate-700/60'
             }`}
-            title={zone.captures.length > 0 && zone.status === 'captured' ? 'Remove captures first to change status' : 'Cycle status'}
+            title={
+              zone.captures.length > 0 && zone.status === 'captured'
+                ? 'Supprimer les captures pour changer le statut'
+                : 'Changer le statut'
+            }
             disabled={zone.captures.length > 0 && zone.status === 'captured'}
           >
-            {zone.status === 'not-visited' ? '👁' : zone.status === 'visited' ? '✓' : '🔴'}
+            {cycleLabel[zone.status]}
           </button>
+
+          {/* Add capture */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               setShowCapture(true);
             }}
-            className="text-xs text-yellow-400 hover:text-yellow-300 bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded transition-colors"
+            className="text-xs text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded transition-colors font-medium"
           >
-            + Catch
+            + Capturer
           </button>
         </div>
 
+        {/* Capture thumbnails */}
         {zone.captures.length > 0 && (
-          <div className="mt-2 flex gap-1 flex-wrap">
+          <div className="mt-2 flex gap-1.5 flex-wrap">
             {zone.captures.map((c) => (
-              <div key={c.id} className="flex items-center gap-1 bg-gray-700/60 rounded px-1.5 py-0.5">
+              <div
+                key={c.id}
+                className="flex items-center gap-1 bg-slate-700/40 border border-slate-600/30 rounded-lg px-1.5 py-0.5"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={getSpriteUrl(c.pokemonId, c.isShiny)}
                   alt={c.pokemonName}
                   className="w-6 h-6 object-contain"
                 />
-                <span className="text-xs text-gray-300">{c.nickname || c.pokemonName}</span>
-                <span className="text-xs text-gray-500">Lv{c.level}</span>
+                <span className="text-xs text-slate-300">{c.nickname || c.pokemonName}</span>
+                <span className="text-xs text-slate-500">Lv{c.level}</span>
                 {c.isShiny && <span className="text-xs">✨</span>}
               </div>
             ))}

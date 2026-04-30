@@ -10,6 +10,36 @@ interface Props {
   onClose: () => void;
 }
 
+const statLabels: Record<string, string> = {
+  hp: 'HP',
+  attack: 'Atk',
+  defense: 'Def',
+  'special-attack': 'SpA',
+  'special-defense': 'SpD',
+  speed: 'Vit',
+};
+
+function StatBar({ name, value, max = 255 }: { name: string; value: number; max?: number }) {
+  const pct = Math.min(100, (value / max) * 100);
+  const color =
+    pct >= 70 ? '#10b981' : pct >= 40 ? '#3b82f6' : '#ef4444';
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-slate-500 w-8 text-right shrink-0">
+        {statLabels[name] ?? name}
+      </span>
+      <div className="flex-1 bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+      <span className="text-xs text-slate-400 w-7 text-right shrink-0">{value}</span>
+    </div>
+  );
+}
+
 export default function PokemonDetailModal({ capture, onClose }: Props) {
   const [data, setData] = useState<PokemonApiData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,101 +50,95 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
       .finally(() => setLoading(false));
   }, [capture.pokemonId]);
 
-  const maxStat = 255;
+  const genderSymbol =
+    capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : null;
+  const genderColor =
+    capture.gender === "male" ? "text-blue-400" : "text-pink-400";
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-600 max-h-[90vh] overflow-y-auto"
+        className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-slate-700/60 shadow-xl max-h-[90vh] overflow-y-auto animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {loading ? (
-          <div className="text-center py-8 text-gray-400">Loading...</div>
+          <div className="text-center py-12 text-slate-500">Chargement...</div>
         ) : data ? (
           <>
-            <div className="flex items-center gap-4 mb-4">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
                 alt={data.name}
-                className="w-24 h-24 object-contain"
+                className="w-24 h-24 object-contain drop-shadow-lg shrink-0"
               />
-              <div>
-                <h2 className="text-2xl font-bold capitalize">
+              <div className="min-w-0">
+                <h2 className="text-xl font-bold capitalize leading-tight flex items-center gap-2 flex-wrap">
                   {capture.nickname || capture.pokemonName}
-                  {capture.isShiny && (
-                    <span className="ml-2 text-yellow-400">✨</span>
+                  {capture.isShiny && <span className="text-base">✨</span>}
+                  {genderSymbol && (
+                    <span className={`text-sm font-normal ${genderColor}`}>
+                      {genderSymbol}
+                    </span>
                   )}
                 </h2>
-                <p className="text-gray-400 capitalize text-sm">
+                <p className="text-slate-400 text-xs capitalize mt-0.5">
                   {data.name} #{data.id.toString().padStart(3, "0")}
                 </p>
-                <div className="flex gap-1 mt-1">
+                <div className="flex gap-1 mt-2 flex-wrap">
                   {data.types.map(({ type }) => (
                     <span
                       key={type.name}
-                      className="px-2 py-0.5 rounded text-xs font-bold text-white capitalize"
-                      style={{
-                        backgroundColor: typeColors[type.name] ?? "#888",
-                      }}
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold text-white capitalize"
+                      style={{ backgroundColor: typeColors[type.name] ?? "#888" }}
                     >
                       {type.name}
                     </span>
                   ))}
                 </div>
-                <div className="text-sm text-gray-300 mt-1">
-                  Lv.{capture.level}
+                <div className="text-xs text-slate-400 mt-1.5">
+                  Lv. {capture.level}
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide">
-                Base Stats
+            {/* Base Stats */}
+            <div className="space-y-2 mb-4">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">
+                Statistiques de base
               </h3>
               {data.stats.map((s) => (
-                <div key={s.stat.name} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-20 capitalize">
-                    {s.stat.name.replace("-", " ")}
-                  </span>
-                  <div className="flex-1 bg-gray-700 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full bg-blue-500"
-                      style={{ width: `${(s.base_stat / maxStat) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-300 w-8 text-right">
-                    {s.base_stat}
-                  </span>
-                </div>
+                <StatBar key={s.stat.name} name={s.stat.name} value={s.base_stat} />
               ))}
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-              <div className="bg-gray-700 rounded p-2">
-                <span className="text-gray-400">Height: </span>
-                <span>{(data.height / 10).toFixed(1)}m</span>
+            {/* Physical info */}
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
+                <div className="text-xs text-slate-500 mb-0.5">Taille</div>
+                <div className="font-semibold">{(data.height / 10).toFixed(1)} m</div>
               </div>
-              <div className="bg-gray-700 rounded p-2">
-                <span className="text-gray-400">Weight: </span>
-                <span>{(data.weight / 10).toFixed(1)}kg</span>
+              <div className="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
+                <div className="text-xs text-slate-500 mb-0.5">Poids</div>
+                <div className="font-semibold">{(data.weight / 10).toFixed(1)} kg</div>
               </div>
             </div>
           </>
         ) : (
-          <div className="text-center py-8 text-red-400">
-            Failed to load data
+          <div className="text-center py-12 text-red-400">
+            Impossible de charger les données
           </div>
         )}
 
         <button
           onClick={onClose}
-          className="mt-4 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-gray-300"
+          className="mt-5 w-full bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-slate-300 hover:text-white text-sm font-medium transition-colors"
         >
-          Close
+          Fermer
         </button>
       </div>
     </div>

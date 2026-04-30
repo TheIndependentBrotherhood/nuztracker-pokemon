@@ -4,6 +4,32 @@ import { useEffect, useState } from 'react';
 import { useRunStore } from '@/store/runStore';
 import RunList from '@/components/RunList';
 import CreateRunModal from '@/components/CreateRunModal';
+import Header from '@/components/Header';
+import HeroSection from '@/components/HeroSection';
+import FeatureCard from '@/components/FeatureCard';
+
+const FEATURES = [
+  {
+    icon: '🗺️',
+    title: 'Cartes Interactives',
+    description: 'Visualisez vos zones sur des cartes interactives pour chaque région Pokémon.',
+  },
+  {
+    icon: '⚔️',
+    title: 'Gestion d\'Équipe',
+    description: 'Gérez votre équipe de 6 Pokémon avec sprites, types et statistiques.',
+  },
+  {
+    icon: '📊',
+    title: 'Analyse de Types',
+    description: 'Analysez les forces et faiblesses de votre équipe en temps réel.',
+  },
+  {
+    icon: '✨',
+    title: 'Mode Shiny Hunt',
+    description: 'Activez le mode Shiny Hunt pour vos runs à la recherche des raretés.',
+  },
+];
 
 export default function HomePage() {
   const { runs, loadRuns } = useRunStore();
@@ -14,52 +40,42 @@ export default function HomePage() {
   }, [loadRuns]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-black tracking-wider text-yellow-400 drop-shadow-lg mb-2">
-            NuzTracker
-          </h1>
-          <p className="text-blue-300 text-lg">Your Nuzlocke Run Companion</p>
-          <div className="flex gap-2 justify-center mt-2">
-            <span className="text-2xl">🎮</span>
-            <span className="text-2xl">⚔️</span>
-            <span className="text-2xl">🏆</span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-950">
+      <Header />
 
-        <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
-          <div className="bg-gray-800 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-yellow-400">{runs.length}</div>
-            <div className="text-xs text-gray-400">Total Runs</div>
-          </div>
-          <div className="bg-gray-800 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-green-400">
-              {runs.filter((r) => r.status === 'in-progress').length}
-            </div>
-            <div className="text-xs text-gray-400">Active</div>
-          </div>
-          <div className="bg-gray-800 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-blue-400">
-              {runs.reduce((acc, r) => acc + r.team.length, 0)}
-            </div>
-            <div className="text-xs text-gray-400">Captures</div>
-          </div>
-        </div>
+      <main className="max-w-4xl mx-auto px-4 pb-16">
+        <HeroSection
+          runsCount={runs.length}
+          activeCount={runs.filter((r) => r.status === 'in-progress').length}
+          capturesCount={runs.reduce((acc, r) => acc + r.team.length, 0)}
+          onNewRun={() => setShowCreate(true)}
+        />
 
-        <div className="flex justify-center mb-8">
-          <button
-            onClick={() => setShowCreate(true)}
-            className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold py-3 px-8 rounded-full text-lg transition-all transform hover:scale-105 shadow-lg"
-          >
-            + New Run
-          </button>
-        </div>
+        {/* Features */}
+        <section className="mb-12 animate-fade-slide-in" style={{ animationDelay: '100ms' }}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4 text-center">
+            Fonctionnalités
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {FEATURES.map((f) => (
+              <FeatureCard key={f.title} {...f} />
+            ))}
+          </div>
+        </section>
 
-        <RunList runs={runs} />
+        {/* Recent runs */}
+        {runs.length > 0 && (
+          <section className="animate-fade-slide-in" style={{ animationDelay: '200ms' }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">
+              Vos Runs
+            </h2>
+            <RunList runs={runs} />
+          </section>
+        )}
+      </main>
 
-        {showCreate && <CreateRunModal onClose={() => setShowCreate(false)} />}
-      </div>
-    </main>
+      {showCreate && <CreateRunModal onClose={() => setShowCreate(false)} />}
+    </div>
   );
 }
+

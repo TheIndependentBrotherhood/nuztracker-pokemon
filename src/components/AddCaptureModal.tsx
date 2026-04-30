@@ -89,44 +89,49 @@ export default function AddCaptureModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-600"
+        className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-slate-700/60 shadow-xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold mb-4 text-yellow-400">
-          Add Capture — {zoneName}
-        </h2>
+        <div className="mb-5">
+          <h2 className="text-xl font-bold text-white">Ajouter une capture</h2>
+          <p className="text-slate-400 text-sm mt-0.5">📍 {zoneName}</p>
+        </div>
 
+        {/* Pokemon search */}
         <div className="relative mb-4">
-          <label className="block text-sm text-gray-300 mb-1">Pokémon</label>
-          <div className="flex gap-2">
+          <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+            Pokémon
+          </label>
+          <div className="flex gap-2 items-center">
             <input
-              className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
-              placeholder="Search Pokémon name..."
+              className="flex-1 bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+              placeholder="Rechercher un Pokémon..."
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
                 setSelected(null);
               }}
+              autoFocus
             />
             {selected && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getSpriteUrl(selected.id, isShiny)}
                 alt={`${isShiny ? "Shiny " : ""}${selected.name} sprite`}
-                className="w-10 h-10 object-contain"
+                className="w-12 h-12 object-contain shrink-0 drop-shadow"
               />
             )}
           </div>
           {results.length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-gray-700 border border-gray-600 rounded-lg mt-1 max-h-48 overflow-y-auto z-10">
+            <div className="absolute top-full left-0 right-0 bg-slate-800 border border-slate-600 rounded-xl mt-1 max-h-48 overflow-y-auto z-10 shadow-xl">
               {results.map((r) => (
                 <button
                   key={r.url}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-600 text-sm capitalize"
+                  className="w-full text-left px-3 py-2 hover:bg-slate-700/60 text-sm capitalize text-slate-200 transition-colors first:rounded-t-xl last:rounded-b-xl"
                   onClick={() => handleSelect(r)}
                 >
                   {r.name}
@@ -135,30 +140,34 @@ export default function AddCaptureModal({
             </div>
           )}
           {searching && (
-            <div className="text-xs text-gray-400 mt-1">Searching...</div>
+            <div className="text-xs text-slate-500 mt-1">Recherche...</div>
           )}
         </div>
 
+        {/* Nickname */}
         <div className="mb-3">
-          <label className="block text-sm text-gray-300 mb-1">
-            Nickname (optional)
+          <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+            Surnom (optionnel)
           </label>
           <input
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
-            placeholder="Enter nickname..."
+            className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+            placeholder="Entrez un surnom..."
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
           />
         </div>
 
-        <div className="flex gap-3 mb-3">
+        {/* Level & Gender */}
+        <div className="flex gap-3 mb-4">
           <div className="flex-1">
-            <label className="block text-sm text-gray-300 mb-1">Level</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+              Niveau
+            </label>
             <input
               type="number"
               min={1}
               max={100}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
+              className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
               value={level}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
@@ -167,42 +176,59 @@ export default function AddCaptureModal({
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm text-gray-300 mb-1">Gender</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+              Genre
+            </label>
             <select
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-yellow-400"
+              className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all appearance-none"
               value={gender}
               onChange={(e) => setGender(e.target.value as Capture["gender"])}
             >
-              <option value="unknown">Unknown</option>
-              <option value="male">Male ♂</option>
-              <option value="female">Female ♀</option>
+              <option value="unknown">Inconnu</option>
+              <option value="male">Mâle ♂</option>
+              <option value="female">Femelle ♀</option>
             </select>
           </div>
         </div>
 
-        <label className="flex items-center gap-2 mb-4 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isShiny}
-            onChange={(e) => setIsShiny(e.target.checked)}
-            className="w-4 h-4 accent-yellow-400"
-          />
-          <span className="text-sm text-gray-300">✨ Is Shiny?</span>
+        {/* Shiny toggle */}
+        <label className="flex items-center gap-3 mb-5 cursor-pointer group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={isShiny}
+              onChange={(e) => setIsShiny(e.target.checked)}
+              className="sr-only"
+            />
+            <div
+              className={`w-9 h-5 rounded-full transition-colors duration-200 ${
+                isShiny ? 'bg-blue-500' : 'bg-slate-600'
+              }`}
+            />
+            <div
+              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+                isShiny ? 'translate-x-4' : 'translate-x-0'
+              }`}
+            />
+          </div>
+          <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
+            ✨ Est Shiny ?
+          </span>
         </label>
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-gray-300 transition-colors"
+            className="flex-1 bg-slate-700 hover:bg-slate-600 py-2.5 rounded-lg text-slate-300 hover:text-white text-sm font-medium transition-colors"
           >
-            Cancel
+            Annuler
           </button>
           <button
             onClick={handleAdd}
             disabled={!selected}
-            className="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 btn-gradient py-2.5 rounded-lg text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
           >
-            Add Capture
+            Ajouter
           </button>
         </div>
       </div>
