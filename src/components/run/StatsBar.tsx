@@ -1,7 +1,7 @@
 "use client";
 
 import { Stack, Typography, Box } from "@mui/material";
-import { Run } from "@/lib/types";
+import { Run, Zone, Capture } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 
@@ -12,26 +12,28 @@ interface Props {
 export default function StatsBar({ run }: Props) {
   const total = run.zones.length;
   const visited = run.zones.filter(
-    (z: any) => z.status !== "not-visited",
+    (z: Zone) => z.status !== "not-visited",
   ).length;
-  const captured = run.zones.filter((z: any) => z.status === "captured").length;
+  const captured = run.zones.filter(
+    (z: Zone) => z.status === "captured",
+  ).length;
   const missed = visited - captured;
   const captureRate = visited > 0 ? Math.round((captured / visited) * 100) : 0;
   const shinyCount = run.zones.reduce(
-    (acc: number, z: any) =>
-      acc + z.captures.filter((c: any) => c.isShiny).length,
+    (acc: number, z: Zone) =>
+      acc + z.captures.filter((c: Capture) => c.isShiny).length,
     0,
   );
   const progress = total > 0 ? (visited / total) * 100 : 0;
 
   // Zones with regular captures
-  const zonesWithRegularCaptures = run.zones.filter((z: any) =>
-    z.captures.some((c: any) => !c.isShiny),
+  const zonesWithRegularCaptures = run.zones.filter((z: Zone) =>
+    z.captures.some((c: Capture) => !c.isShiny),
   ).length;
 
   // Zones with shiny captures
-  const zonesWithShinyCaptures = run.zones.filter((z: any) =>
-    z.captures.some((c: any) => c.isShiny),
+  const zonesWithShinyCaptures = run.zones.filter((z: Zone) =>
+    z.captures.some((c: Capture) => c.isShiny),
   ).length;
 
   // Display values (x2 if shiny hunt mode)
@@ -151,14 +153,15 @@ export default function StatsBar({ run }: Props) {
         columnGap: 12,
       }}
     >
-      {run.team.map((pokemon: any) => (
+      {run.team.map((pokemon: Capture) => (
         <Box
           key={pokemon.id}
           sx={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: 0.5,
+            columnGap: 0.5,
+            position: "relative",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -166,22 +169,32 @@ export default function StatsBar({ run }: Props) {
             src={getSpriteUrl(pokemon.pokemonId, pokemon.isShiny)}
             alt={pokemon.pokemonName}
             style={{
-              width: "40px",
-              height: "40px",
+              width: "80px",
+              height: "80px",
               imageRendering: "pixelated",
             }}
           />
-          <Typography
+          {/* Badge with nickname/name */}
+          <Box
             sx={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: "rgba(0, 0, 0, 0.7)",
+              color: "#fff",
+              padding: "4px 6px",
+              borderRadius: "0 0 4px 4px",
               fontSize: "0.65rem",
               fontWeight: 700,
-              color: "#000",
               textAlign: "center",
-              wordBreak: "break-word",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
             {pokemon.nickname || pokemon.pokemonName}
-          </Typography>
+          </Box>
         </Box>
       ))}
       {run.team.length < 6 &&

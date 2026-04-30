@@ -21,7 +21,7 @@ export default function StatCard({ value, label, color, hoverContent }: Props) {
         borderRadius: "1.5rem",
         boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.2)",
         flex: 1,
-        minWidth: 0,
+        minWidth: "208px",
         transition: "all 0.3s ease-in-out",
         cursor: hoverContent ? "pointer" : "default",
         "&:hover": {
@@ -40,7 +40,7 @@ export default function StatCard({ value, label, color, hoverContent }: Props) {
           alignItems: "center",
           justifyContent: "center",
           gap: 1,
-          minHeight: "160px",
+          minHeight: "208px",
         }}
       >
         {!isHovered || !hoverContent ? (
