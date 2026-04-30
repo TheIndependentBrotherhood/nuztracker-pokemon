@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Box, Typography, Drawer } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getRun } from "@/lib/storage";
 import StatsBar from "@/components/run/StatsBar";
@@ -187,6 +187,8 @@ function RunPageContent() {
             borderRadius: "1rem",
             overflow: "hidden",
             boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+            zIndex: 10,
+            position: "relative",
           }}
         >
           <Box
@@ -231,114 +233,127 @@ function RunPageContent() {
                 <TeamView
                   run={run}
                   id="team-export-target"
-                  onOpenTypes={() => setShowTypesDrawer(true)}
+                  onToggleAnalysis={() => setShowTypesDrawer(!showTypesDrawer)}
                 />
               </Box>
             )}
           </Box>
         </Box>
 
-        {/* Right: Map */}
+        {/* Right: Map or Analysis with simultaneous transitions */}
         <Box
           sx={{
+            position: "relative",
             width: "50%",
-            background: "#fff",
-            border: "3px solid #000",
-            borderRadius: "1rem",
             overflow: "hidden",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-            display: "flex",
-            flexDirection: "column",
           }}
         >
-          <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
-            <MapView run={run} />
-          </Box>
+          {/* Map Panel */}
           <Box
             sx={{
-              borderTop: "2px solid #000",
-              p: 2,
-              background: "#FFFEF0",
-            }}
-          >
-            <ExportPanel run={run} teamViewId="team-export-target" />
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Types Drawer */}
-      <Drawer
-        anchor="right"
-        open={showTypesDrawer}
-        onClose={() => setShowTypesDrawer(false)}
-        sx={{
-          "& .MuiDrawer-paper": {
-            width: {
-              xs: "90%",
-              sm: "500px",
-            },
-            background: "#FEF3E2",
-            border: "3px solid #000",
-            borderLeft: "3px solid #000",
-            borderRadius: 0,
-            boxShadow: "-10px 0 25px rgba(0, 0, 0, 0.1)",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {/* Drawer Header */}
-          <Box
-            sx={{
-              p: 2,
-              borderBottom: "2px solid #000",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              background: "#fff",
+              border: "3px solid #000",
+              borderRadius: "1rem",
+              overflow: "hidden",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              flexDirection: "column",
+              transform: showTypesDrawer ? "translateX(100%)" : "translateX(0)",
+              opacity: showTypesDrawer ? 0 : 1,
+              transition: "all 500ms ease-out",
             }}
           >
-            <Typography
-              sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
-            >
-              🔬 Analyse
-            </Typography>
+            <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
+              <MapView run={run} />
+            </Box>
             <Box
-              component="button"
-              onClick={() => setShowTypesDrawer(false)}
               sx={{
-                color: "#000",
-                fontSize: "1.5rem",
-                p: 0.5,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                "&:hover": {
-                  opacity: 0.7,
-                },
+                borderTop: "2px solid #000",
+                p: 2,
+                background: "#FFFEF0",
               }}
-              title="Fermer"
             >
-              ✕
+              <ExportPanel run={run} teamViewId="team-export-target" />
             </Box>
           </Box>
 
-          {/* Drawer Content */}
+          {/* Analysis Panel */}
           <Box
             sx={{
-              flex: 1,
-              overflowY: "auto",
-              p: 2,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              background: "#FEF3E2",
+              border: "3px solid #000",
+              borderRadius: "1rem",
+              overflow: "hidden",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+              display: "flex",
+              flexDirection: "column",
+              transform: showTypesDrawer
+                ? "translateX(0)"
+                : "translateX(-100%)",
+              opacity: showTypesDrawer ? 1 : 0,
+              transition: "all 500ms ease-out",
             }}
           >
-            <TypeAnalysis run={run} />
+            {/* Drawer Header */}
+            <Box
+              sx={{
+                p: 2,
+                borderBottom: "2px solid #000",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography
+                sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
+              >
+                🔬 Analyse
+              </Typography>
+              <Box
+                component="button"
+                onClick={() => setShowTypesDrawer(false)}
+                sx={{
+                  color: "#000",
+                  fontSize: "1.5rem",
+                  p: 0.5,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  "&:hover": {
+                    opacity: 0.7,
+                  },
+                }}
+                title="Fermer"
+              >
+                ✕
+              </Box>
+            </Box>
+
+            {/* Analysis Content */}
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                p: 2,
+              }}
+            >
+              <TypeAnalysis run={run} />
+            </Box>
           </Box>
         </Box>
-      </Drawer>
+      </Box>
     </Box>
   );
 }

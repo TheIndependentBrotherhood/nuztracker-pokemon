@@ -10,10 +10,10 @@ import { useRunStore } from "@/store/runStore";
 interface Props {
   run: Run;
   id?: string;
-  onOpenTypes?: () => void;
+  onToggleAnalysis?: () => void;
 }
 
-export default function TeamView({ run, id, onOpenTypes }: Props) {
+export default function TeamView({ run, id, onToggleAnalysis }: Props) {
   const teamSlots = Array.from({ length: 6 }, (_, i) => run.team[i] ?? null);
   const { updateTeam } = useRunStore();
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
@@ -157,7 +157,7 @@ export default function TeamView({ run, id, onOpenTypes }: Props) {
               alignItems: "center",
               gap: 0.5,
             }}
-            onClick={onOpenTypes}
+            onClick={onToggleAnalysis}
             role="button"
             tabIndex={0}
           >
