@@ -65,6 +65,7 @@ async function generatePokemonList() {
         is_legendary: boolean;
         is_mythical: boolean;
         generation: { name: string };
+        names?: { language: { name: string }; name: string }[];
       };
       const genMatch = species.generation.name.match(
         /generation-([ivxlcdm]+)/i,
@@ -84,9 +85,19 @@ async function generatePokemonList() {
         ? (genMap[genMatch[1].toLowerCase()] ?? 0)
         : 0;
 
+      // Extract French and English names
+      const names: { fr?: string; en?: string } = {};
+      if (species.names) {
+        for (const nameObj of species.names) {
+          if (nameObj.language.name === "fr") names.fr = nameObj.name;
+          if (nameObj.language.name === "en") names.en = nameObj.name;
+        }
+      }
+
       pokemon.push({
         id: details.id,
         name: details.name,
+        names,
         types: details.types.map((t) => t.type.name),
         sprite:
           details.sprites.front_default ??
@@ -143,9 +154,19 @@ async function generateRegions() {
       name: string;
       generation?: { name: string };
       locations: { name: string }[];
+      names?: { language: { name: string }; name: string }[];
     };
 
     console.log(`    -> Region has ${regionData.locations.length} locations`);
+
+    // Extract French and English names for region
+    const regionNames: { fr?: string; en?: string } = {};
+    if (regionData.names) {
+      for (const nameObj of regionData.names) {
+        if (nameObj.language.name === "fr") regionNames.fr = nameObj.name;
+        if (nameObj.language.name === "en") regionNames.en = nameObj.name;
+      }
+    }
 
     const locations: unknown[] = [];
 
@@ -161,52 +182,34 @@ async function generateRegions() {
         id: number;
         name: string;
         areas?: { name: string }[];
+        names?: { language: { name: string }; name: string }[];
       };
 
       console.log(
         `        -> Location has ${locData.areas?.length ?? 0} areas`,
       );
 
-      const pokemonIds = new Set<number>();
-
-      for (let areaIdx = 0; areaIdx < (locData.areas?.length ?? 0); areaIdx++) {
-        const area = locData.areas![areaIdx];
-        console.log(
-          `          [${areaIdx + 1}/${locData.areas?.length}] Fetching area: ${area.name}...`,
-        );
-
-        const areaData = (await fetchWithRetry(
-          `${POKEAPI_BASE}/location-area/${area.name}`,
-        )) as {
-          pokemon_encounters?: { pokemon: { url: string } }[];
-        };
-
-        const encounterCount = areaData.pokemon_encounters?.length ?? 0;
-        console.log(
-          `            -> Found ${encounterCount} Pokemon encounters`,
-        );
-
-        for (const enc of areaData.pokemon_encounters ?? []) {
-          const parts = enc.pokemon.url.replace(/\/$/, "").split("/");
-          const pokemonId = parseInt(parts[parts.length - 1], 10);
-          if (!isNaN(pokemonId)) pokemonIds.add(pokemonId);
+      // Extract French and English names
+      const names: { fr?: string; en?: string } = {};
+      if (locData.names) {
+        for (const nameObj of locData.names) {
+          if (nameObj.language.name === "fr") names.fr = nameObj.name;
+          if (nameObj.language.name === "en") names.en = nameObj.name;
         }
       }
 
       locations.push({
         id: locData.id,
         name: locData.name,
-        pokemonEncounters: Array.from(pokemonIds),
+        names,
       });
-      console.log(
-        `        OK: Location complete (${pokemonIds.size} unique Pokemon)`,
-      );
+      console.log(`        OK: Location fetched`);
     }
 
     regions.push({
       id: regionData.id,
       name: regionData.name,
-      generationId: regionData.generation?.name ?? null,
+      names: regionNames,
       locations,
     });
     console.log(`  OK: Region ${r.name} complete\n`);
@@ -242,9 +245,20 @@ async function generateTypeCharts() {
           no_damage_from: { name: string }[];
           double_damage_to: { name: string }[];
         };
+        names?: { language: { name: string }; name: string }[];
       };
 
+      // Extract French and English names
+      const names: { fr?: string; en?: string } = {};
+      if (typeData.names) {
+        for (const nameObj of typeData.names) {
+          if (nameObj.language.name === "fr") names.fr = nameObj.name;
+          if (nameObj.language.name === "en") names.en = nameObj.name;
+        }
+      }
+
       effectiveness[typeName] = {
+        names,
         weakTo: typeData.damage_relations.double_damage_from.map((t) => t.name),
         resistsAgainst: typeData.damage_relations.half_damage_from.map(
           (t) => t.name,
@@ -295,18 +309,39 @@ async function generateAbilitiesImmunity() {
         id: number;
         name: string;
         generation: { name: string };
-        effect_entries?: { effect: string; language: { name: string } }[];
+        names?: { language: { name: string }; name: string }[];
+        effect_entries?: {
+          effect: string;
+          language: { name: string };
+          short_effect?: string;
+        }[];
       };
 
-      const englishEffect = abilityData.effect_entries?.find(
-        (e) => e.language.name === "en",
-      );
+      // Extract French and English names
+      const abilityNames: { fr?: string; en?: string } = {};
+      if (abilityData.names) {
+        for (const nameObj of abilityData.names) {
+          if (nameObj.language.name === "fr") abilityNames.fr = nameObj.name;
+          if (nameObj.language.name === "en") abilityNames.en = nameObj.name;
+        }
+      }
+
+      // Extract French and English effects
+      const effects: { fr?: string; en?: string } = {};
+      if (abilityData.effect_entries) {
+        for (const entry of abilityData.effect_entries) {
+          if (entry.language.name === "fr") effects.fr = entry.effect;
+          if (entry.language.name === "en") effects.en = entry.effect;
+        }
+      }
 
       abilities.push({
         id: abilityData.id,
         name: abilityData.name,
+        names: abilityNames,
         generation: abilityData.generation.name,
-        effect: englishEffect?.effect ?? "Unknown",
+        effect: effects.en ?? "Unknown",
+        effects,
         immuneTypes: IMMUNITY_MAP[name],
         isImmunity: name !== "wonder-guard",
         ...(name === "wonder-guard" ? { special: true } : {}),

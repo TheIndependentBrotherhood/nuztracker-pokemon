@@ -22,6 +22,10 @@ export const TYPES = [
 export type TypeName = (typeof TYPES)[number];
 
 export interface TypeData {
+  names?: {
+    fr?: string;
+    en?: string;
+  };
   weakTo: string[];
   resistsAgainst: string[];
   immuneTo: string[];

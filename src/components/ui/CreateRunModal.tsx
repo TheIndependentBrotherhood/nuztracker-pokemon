@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
-import { regions } from "@/lib/zones";
+import { regions, loadRegions, type Region } from "@/lib/zones";
 import { RandomizerOptions } from "@/lib/types";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledTextField from "@/components/ui/StyledTextField";
@@ -36,6 +36,13 @@ export default function CreateRunModal({ onClose }: Props) {
   >("gen6+");
   const [isShinyHuntMode, setIsShinyHuntMode] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
+  const [loadedRegions, setLoadedRegions] = useState<Region[]>(regions);
+
+  useEffect(() => {
+    loadRegions().then((r) => {
+      setLoadedRegions(r);
+    });
+  }, []);
 
   const [randomizerOptions, setRandomizerOptions] = useState<RandomizerOptions>(
     {
@@ -52,6 +59,26 @@ export default function CreateRunModal({ onClose }: Props) {
       [key]: !prev[key],
     }));
   }
+
+  const handleRegionChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | (Event & { target: { value: unknown; name: string } }),
+  ): void => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (e.target as any).value;
+    setRegion(value as string);
+  };
+
+  const handleTypeChartGenerationChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | (Event & { target: { value: unknown; name: string } }),
+  ): void => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (e.target as any).value;
+    setTypeChartGeneration(value as "gen1" | "gen2-5" | "gen6+");
+  };
 
   function handleCreate() {
     if (!gameName.trim()) return;
@@ -123,12 +150,12 @@ export default function CreateRunModal({ onClose }: Props) {
           <StyledSelect
             label="Région"
             value={region}
-            onChange={(e: any) => setRegion(e.target.value)}
+            onChange={handleRegionChange}
             fullWidth
           >
-            {regions.map((r: any) => (
+            {loadedRegions.map((r: Region) => (
               <MenuItem key={r.id} value={r.id}>
-                {r.name} — {r.game}
+                {r.name}
               </MenuItem>
             ))}
           </StyledSelect>
@@ -137,7 +164,7 @@ export default function CreateRunModal({ onClose }: Props) {
           <StyledSelect
             label="Table des Types"
             value={typeChartGeneration}
-            onChange={(e: any) => setTypeChartGeneration(e.target.value)}
+            onChange={handleTypeChartGenerationChange}
             fullWidth
           >
             <MenuItem value="gen1">Génération 1</MenuItem>

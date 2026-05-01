@@ -19,6 +19,10 @@
     ],
     "effectiveness": {
       "normal": {
+        "names": {
+          "fr": "Normal",
+          "en": "Normal"
+        },
         "weakTo": [
           "fighting"
         ],
@@ -29,6 +33,10 @@
         "strongAgainst": []
       },
       "fighting": {
+        "names": {
+          "fr": "Combat",
+          "en": "Fighting"
+        },
         "weakTo": [
           "flying",
           "psychic",
@@ -49,6 +57,10 @@
         ]
       },
       "flying": {
+        "names": {
+          "fr": "Vol",
+          "en": "Flying"
+        },
         "weakTo": [
           "rock",
           "electric",
@@ -69,6 +81,10 @@
         ]
       },
       "poison": {
+        "names": {
+          "fr": "Poison",
+          "en": "Poison"
+        },
         "weakTo": [
           "ground",
           "psychic"
@@ -87,6 +103,10 @@
         ]
       },
       "ground": {
+        "names": {
+          "fr": "Sol",
+          "en": "Ground"
+        },
         "weakTo": [
           "water",
           "grass",
@@ -108,6 +128,10 @@
         ]
       },
       "rock": {
+        "names": {
+          "fr": "Roche",
+          "en": "Rock"
+        },
         "weakTo": [
           "fighting",
           "ground",
@@ -130,6 +154,10 @@
         ]
       },
       "bug": {
+        "names": {
+          "fr": "Insecte",
+          "en": "Bug"
+        },
         "weakTo": [
           "flying",
           "rock",
@@ -148,6 +176,10 @@
         ]
       },
       "ghost": {
+        "names": {
+          "fr": "Spectre",
+          "en": "Ghost"
+        },
         "weakTo": [
           "ghost",
           "dark"
@@ -166,6 +198,10 @@
         ]
       },
       "fire": {
+        "names": {
+          "fr": "Feu",
+          "en": "Fire"
+        },
         "weakTo": [
           "ground",
           "rock",
@@ -188,6 +224,10 @@
         ]
       },
       "water": {
+        "names": {
+          "fr": "Eau",
+          "en": "Water"
+        },
         "weakTo": [
           "grass",
           "electric"
@@ -206,6 +246,10 @@
         ]
       },
       "grass": {
+        "names": {
+          "fr": "Plante",
+          "en": "Grass"
+        },
         "weakTo": [
           "flying",
           "poison",
@@ -227,6 +271,10 @@
         ]
       },
       "electric": {
+        "names": {
+          "fr": "Électrik",
+          "en": "Electric"
+        },
         "weakTo": [
           "ground"
         ],
@@ -242,6 +290,10 @@
         ]
       },
       "psychic": {
+        "names": {
+          "fr": "Psy",
+          "en": "Psychic"
+        },
         "weakTo": [
           "bug",
           "ghost",
@@ -258,6 +310,10 @@
         ]
       },
       "ice": {
+        "names": {
+          "fr": "Glace",
+          "en": "Ice"
+        },
         "weakTo": [
           "fighting",
           "rock",
@@ -276,6 +332,10 @@
         ]
       },
       "dragon": {
+        "names": {
+          "fr": "Dragon",
+          "en": "Dragon"
+        },
         "weakTo": [
           "ice",
           "dragon",
@@ -302,6 +362,10 @@
     ],
     "effectiveness": {
       "steel": {
+        "names": {
+          "fr": "Acier",
+          "en": "Steel"
+        },
         "weakTo": [
           "fighting",
           "ground",
@@ -329,6 +393,10 @@
         ]
       },
       "dark": {
+        "names": {
+          "fr": "Ténèbres",
+          "en": "Dark"
+        },
         "weakTo": [
           "fighting",
           "bug",
@@ -347,6 +415,10 @@
         ]
       },
       "unknown": {
+        "names": {
+          "fr": "???",
+          "en": "???"
+        },
         "weakTo": [],
         "resistsAgainst": [],
         "immuneTo": [],
@@ -360,6 +432,10 @@
     ],
     "effectiveness": {
       "fairy": {
+        "names": {
+          "fr": "Fée",
+          "en": "Fairy"
+        },
         "weakTo": [
           "poison",
           "steel"
@@ -380,5 +456,5 @@
       }
     }
   },
-  "generatedAt": "2026-04-30T01:59:21.194Z"
+  "generatedAt": "2026-05-01T16:01:41.202Z"
 }
