@@ -18,6 +18,8 @@ import {
   getSpriteUrl,
 } from "@/lib/pokemon-api";
 import { Capture } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   runId: string;
@@ -33,8 +35,11 @@ export default function AddCaptureModal({
   onClose,
 }: Props) {
   const { addCapture } = useRunStore();
+  const { lang } = useLanguage();
+  const tr = translations;
+
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Array<{ name: string; url: string }>>(
+  const [results, setResults] = useState<Array<{ name: string; displayName: string; url: string }>>(
     [],
   );
   const [selected, setSelected] = useState<{ name: string; id: number } | null>(
@@ -62,7 +67,7 @@ export default function AddCaptureModal({
         setSearching(true);
       }
 
-      const r = await searchPokemon(query);
+      const r = await searchPokemon(query, lang);
 
       if (cancelled) return;
 
@@ -75,12 +80,12 @@ export default function AddCaptureModal({
       clearTimeout(timer);
       setSearching(false);
     };
-  }, [query]);
+  }, [query, lang]);
 
-  async function handleSelect(item: { name: string; url: string }) {
+  async function handleSelect(item: { name: string; displayName: string; url: string }) {
     const id = getPokemonIdFromUrl(item.url);
     setSelected({ name: item.name, id });
-    setQuery(item.name);
+    setQuery(item.displayName);
     setResults([]);
   }
 
@@ -139,7 +144,7 @@ export default function AddCaptureModal({
           <Typography
             sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#000" }}
           >
-            Ajouter une capture
+            {t(tr.addCapture.title, lang)}
           </Typography>
           <Typography sx={{ color: "#666", fontSize: "0.875rem", mt: 0.25 }}>
             📍 {zoneName}
@@ -160,12 +165,12 @@ export default function AddCaptureModal({
               mb: 1.5,
             }}
           >
-            Pokémon
+            {t(tr.addCapture.pokemonLabel, lang)}
           </Typography>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <TextField
               fullWidth
-              placeholder="Rechercher un Pokémon..."
+              placeholder={t(tr.addCapture.searchPlaceholder, lang)}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -256,14 +261,14 @@ export default function AddCaptureModal({
                     },
                   }}
                 >
-                  {r.name}
+                  {r.displayName}
                 </Box>
               ))}
             </Box>
           )}
           {searching && (
             <Typography sx={{ fontSize: "0.75rem", color: "#666", mt: 0.5 }}>
-              Recherche...
+              {t(tr.addCapture.searching, lang)}
             </Typography>
           )}
         </Box>
@@ -282,11 +287,11 @@ export default function AddCaptureModal({
               mb: 1.5,
             }}
           >
-            Surnom (optionnel)
+            {t(tr.addCapture.nickname, lang)}
           </Typography>
           <TextField
             fullWidth
-            placeholder="Entrez un surnom..."
+            placeholder={t(tr.addCapture.nicknamePlaceholder, lang)}
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             sx={{
@@ -328,7 +333,7 @@ export default function AddCaptureModal({
                 mb: 1.5,
               }}
             >
-              Niveau
+              {t(tr.addCapture.level, lang)}
             </Typography>
             <TextField
               fullWidth
@@ -370,7 +375,7 @@ export default function AddCaptureModal({
                 mb: 1.5,
               }}
             >
-              Genre
+              {t(tr.addCapture.gender, lang)}
             </Typography>
             <Select
               fullWidth
@@ -395,9 +400,9 @@ export default function AddCaptureModal({
                 },
               }}
             >
-              <MenuItem value="unknown">Inconnu</MenuItem>
-              <MenuItem value="male">Mâle ♂</MenuItem>
-              <MenuItem value="female">Femelle ♀</MenuItem>
+              <MenuItem value="unknown">{t(tr.addCapture.genderUnknown, lang)}</MenuItem>
+              <MenuItem value="male">{t(tr.addCapture.genderMale, lang)}</MenuItem>
+              <MenuItem value="female">{t(tr.addCapture.genderFemale, lang)}</MenuItem>
             </Select>
           </Box>
         </Box>
@@ -423,7 +428,7 @@ export default function AddCaptureModal({
           }
           label={
             <Typography sx={{ fontSize: "0.875rem", color: "#000" }}>
-              ✨ Est Shiny ?
+              {t(tr.addCapture.isShiny, lang)}
             </Typography>
           }
           sx={{ mb: 2.5, ml: 0 }}
@@ -448,7 +453,7 @@ export default function AddCaptureModal({
               },
             }}
           >
-            Annuler
+            {t(tr.addCapture.cancel, lang)}
           </Button>
           <Button
             onClick={handleAdd}
@@ -475,7 +480,7 @@ export default function AddCaptureModal({
               },
             }}
           >
-            Ajouter
+            {t(tr.addCapture.add, lang)}
           </Button>
         </Box>
       </Box>

@@ -6,6 +6,8 @@ import { Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "./modals/AddCaptureModal";
 import { getSpriteUrl } from "@/lib/pokemon-api";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   zone: Zone;
@@ -47,6 +49,10 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
   const { setZoneStatus, setSelectedZone } = useRunStore();
   const [showCapture, setShowCapture] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { lang } = useLanguage();
+  const tr = translations;
+  const deleteCapturesToChange = t(tr.zoneItem.deleteCapturesToChange, lang);
+  const changeStatus = t(tr.zoneItem.changeStatus, lang);
 
   useEffect(() => {
     if (isSelected && ref.current) {
@@ -163,13 +169,13 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
             }}
             title={
               zone.captures.length > 0 && zone.status === "captured"
-                ? "Supprimer les captures pour changer le statut"
-                : "Changer le statut"
+                ? deleteCapturesToChange
+                : changeStatus
             }
             aria-label={
               zone.captures.length > 0 && zone.status === "captured"
-                ? "Supprimer les captures pour changer le statut"
-                : "Changer le statut"
+                ? deleteCapturesToChange
+                : changeStatus
             }
             disabled={zone.captures.length > 0 && zone.status === "captured"}
           >
@@ -200,7 +206,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
               },
             }}
           >
-            + Capturer
+            {t(tr.zoneItem.capture, lang)}
           </Box>
         </Box>
 

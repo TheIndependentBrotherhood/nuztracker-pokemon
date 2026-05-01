@@ -3,6 +3,8 @@
 import { Box, Container, Stack, Typography } from "@mui/material";
 import StyledButton from "@/components/ui/StyledButton";
 import StatCard from "@/components/ui/StatCard";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   runsCount: number;
@@ -19,6 +21,9 @@ export default function HeroSection({
   deadCount,
   onNewRun,
 }: Props) {
+  const { lang } = useLanguage();
+  const tr = translations;
+
   return (
     <Box component="section" sx={{ py: { xs: 4, md: 6 }, px: 2 }}>
       <Container maxWidth="md">
@@ -48,7 +53,7 @@ export default function HeroSection({
                 textAlign: "center",
               }}
             >
-              Votre tracker ultime pour les runs Nuzlocke
+              {t(tr.hero.subtitle, lang)}
             </Typography>
             <Typography
               sx={{
@@ -58,8 +63,7 @@ export default function HeroSection({
                 fontWeight: 500,
               }}
             >
-              Suivi en temps réel, gestion d&apos;équipe avancée et statistiques
-              détaillées pour vos aventures Pokémon les plus difficiles
+              {t(tr.hero.description, lang)}
             </Typography>
           </Stack>
 
@@ -70,14 +74,14 @@ export default function HeroSection({
             sx={{ width: "100%", maxWidth: "600px" }}
           >
             <StatCard value={runsCount} label="Runs" color="#E3F2FD" />
-            <StatCard value={activeCount} label="Actifs" color="#E8F5E9" />
-            <StatCard value={capturesCount} label="Captures" color="#F3E5F5" />
+            <StatCard value={activeCount} label={t(tr.hero.statActive, lang)} color="#E8F5E9" />
+            <StatCard value={capturesCount} label={t(tr.hero.statCaptures, lang)} color="#F3E5F5" />
             <StatCard value={deadCount} label="RIP" color="#FEE2E2" />
           </Stack>
 
           {/* CTA Button */}
           <StyledButton onClick={onNewRun} variant="primary" shape="pill">
-            🚀 Démarrer mon Run
+            {t(tr.hero.startRun, lang)}
           </StyledButton>
         </Stack>
       </Container>

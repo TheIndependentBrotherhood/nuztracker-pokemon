@@ -6,6 +6,8 @@ import { Capture } from "@/lib/types";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { useRunStore } from "@/store/runStore";
 import PokemonDetailModal from "./modals/PokemonDetailModal";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   capture: Capture | null;
@@ -22,6 +24,8 @@ export default function TeamPokemonCard({
 }: Props) {
   const [showDetail, setShowDetail] = useState(false);
   const { runs, updateTeam } = useRunStore();
+  const { lang } = useLanguage();
+  const tr = translations;
 
   function handleRemove(e: React.MouseEvent) {
     e.stopPropagation();
@@ -56,7 +60,7 @@ export default function TeamPokemonCard({
         <Typography
           sx={{ color: "#64748b", fontSize: "0.75rem", fontWeight: 600 }}
         >
-          Slot {slotIndex + 1}
+          {`Slot ${slotIndex + 1}`}
         </Typography>
       </Box>
     );
@@ -138,7 +142,7 @@ export default function TeamPokemonCard({
                 background: "#fca5a5",
               },
             }}
-            title="Retirer de l'équipe"
+            title={t(tr.pokemonCard.removeFromTeam, lang)}
           >
             ✕
           </Box>

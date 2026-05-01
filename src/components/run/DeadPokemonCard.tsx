@@ -5,6 +5,8 @@ import { Capture } from "@/lib/types";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { useState } from "react";
 import PokemonDetailModal from "./modals/PokemonDetailModal";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   capture: Capture;
@@ -14,6 +16,8 @@ interface Props {
 
 export default function DeadPokemonCard({ capture, onResurrect, zone }: Props) {
   const [showDetail, setShowDetail] = useState(false);
+  const { lang } = useLanguage();
+  const tr = translations;
 
   const tooltipTitle = `${capture.pokemonName}${capture.nickname ? ` (${capture.nickname})` : ""}${zone ? ` - ${zone}` : ""}`;
 
@@ -130,7 +134,7 @@ export default function DeadPokemonCard({ capture, onResurrect, zone }: Props) {
                 background: "#059669",
               },
             }}
-            title="Ressusciter"
+            title={t(tr.deadPokemonCard.resurrect, lang)}
           >
             ↻
           </Box>

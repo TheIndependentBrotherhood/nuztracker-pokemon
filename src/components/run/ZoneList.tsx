@@ -2,27 +2,31 @@
 
 import { Run } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
-import { Box, TextField, Button, Typography } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import ZoneItem from "./ZoneItem";
 import { useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   run: Run;
 }
 
-const FILTERS = [
-  { key: "all", label: "Toutes" },
-  { key: "not-visited", label: "Non visitées" },
-  { key: "visited", label: "Visitées" },
-  { key: "captured", label: "Capturées" },
-] as const;
-
-type FilterKey = (typeof FILTERS)[number]["key"];
+type FilterKey = "all" | "not-visited" | "visited" | "captured";
 
 export default function ZoneList({ run }: Props) {
   const { selectedZoneId } = useRunStore();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
+  const { lang } = useLanguage();
+  const tr = translations;
+
+  const FILTERS: { key: FilterKey; label: string }[] = [
+    { key: "all", label: t(tr.zoneList.filterAll, lang) },
+    { key: "not-visited", label: t(tr.zoneList.filterNotVisited, lang) },
+    { key: "visited", label: t(tr.zoneList.filterVisited, lang) },
+    { key: "captured", label: t(tr.zoneList.filterCaptured, lang) },
+  ];
 
   const filtered = run.zones.filter((z) => {
     if (filter !== "all" && z.status !== filter) return false;
@@ -45,7 +49,7 @@ export default function ZoneList({ run }: Props) {
       >
         <TextField
           fullWidth
-          placeholder="Rechercher une zone..."
+          placeholder={t(tr.zoneList.searchPlaceholder, lang)}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{
@@ -126,7 +130,7 @@ export default function ZoneList({ run }: Props) {
               fontSize: "0.875rem",
             }}
           >
-            Aucune zone trouvée
+            {t(tr.zoneList.noZoneFound, lang)}
           </Box>
         )}
       </Box>

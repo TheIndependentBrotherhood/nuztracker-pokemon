@@ -26,6 +26,8 @@ import {
   type TypeChartData,
 } from "@/lib/type-chart";
 import { fetchPokemon } from "@/lib/pokemon-api";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   run: Run;
@@ -36,6 +38,8 @@ export default function TypeAnalysis({ run }: Props) {
   const [tabValue, setTabValue] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [typeChartData, setTypeChartData] = useState<TypeChartData>({});
+  const { lang } = useLanguage();
+  const tr = translations;
 
   useEffect(() => {
     // Load type chart data for the selected generation
@@ -87,7 +91,7 @@ export default function TypeAnalysis({ run }: Props) {
           fontSize: "0.875rem",
         }}
       >
-        Ajoute des Pokémon à ton équipe pour voir l&apos;analyse des types
+        {t(tr.typeAnalysis.addPokemonToSeeAnalysis, lang)}
       </Box>
     );
   }
@@ -106,10 +110,10 @@ export default function TypeAnalysis({ run }: Props) {
           onChange={(_, val) => setTabValue(val)}
           sx={{ borderBottom: "none" }}
         >
-          <Tab label="Défense" sx={{ fontWeight: 700, color: "#000" }} />
-          <Tab label="Attaque" sx={{ fontWeight: 700, color: "#000" }} />
-          <Tab label="Combinaison" sx={{ fontWeight: 700, color: "#000" }} />
-          <Tab label="Types" sx={{ fontWeight: 700, color: "#000" }} />
+          <Tab label={t(tr.typeAnalysis.tabDefense, lang)} sx={{ fontWeight: 700, color: "#000" }} />
+          <Tab label={t(tr.typeAnalysis.tabAttack, lang)} sx={{ fontWeight: 700, color: "#000" }} />
+          <Tab label={t(tr.typeAnalysis.tabCombination, lang)} sx={{ fontWeight: 700, color: "#000" }} />
+          <Tab label={t(tr.typeAnalysis.tabTypes, lang)} sx={{ fontWeight: 700, color: "#000" }} />
         </Tabs>
       </Box>
 
@@ -149,7 +153,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Attack Type
+                {t(tr.typeAnalysis.attackType, lang)}
               </TableCell>
               {run.team.map((c) => (
                 <TableCell
@@ -176,7 +180,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Def x2+
+                {t(tr.typeAnalysis.defX2, lang)}
               </TableCell>
               <TableCell
                 sx={{
@@ -187,7 +191,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Def x0.5-
+                {t(tr.typeAnalysis.defX05, lang)}
               </TableCell>
               <TableCell
                 sx={{
@@ -198,7 +202,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Différence
+                {t(tr.typeAnalysis.difference, lang)}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -426,7 +430,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Defense Type
+                {t(tr.typeAnalysis.defenseType, lang)}
               </TableCell>
               {run.team.map((c) => (
                 <TableCell
@@ -453,7 +457,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Atk x2+
+                {t(tr.typeAnalysis.atkX2, lang)}
               </TableCell>
               <TableCell
                 sx={{
@@ -464,7 +468,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Atk x0.5-
+                {t(tr.typeAnalysis.atkX05, lang)}
               </TableCell>
               <TableCell
                 sx={{
@@ -475,7 +479,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Différence
+                {t(tr.typeAnalysis.difference, lang)}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -707,7 +711,7 @@ export default function TypeAnalysis({ run }: Props) {
               marginBottom: 2,
             }}
           >
-            Clique sur les types pour sélectionner une combinaison (max 2)
+            {t(tr.typeAnalysis.clickToSelectCombination, lang)}
           </Typography>
           <Box
             sx={{
@@ -793,7 +797,7 @@ export default function TypeAnalysis({ run }: Props) {
             ))}
             {selectedTypes.length < 2 && (
               <Typography sx={{ fontSize: "0.875rem", color: "#666", fontWeight: 600 }}>
-                +1 type
+                {t(tr.typeAnalysis.plusOneType, lang)}
               </Typography>
             )}
           </Box>
@@ -801,7 +805,7 @@ export default function TypeAnalysis({ run }: Props) {
           {selectedTypes.length < 2 && (
             <Box sx={{ marginBottom: 2 }}>
               <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: "#666", marginBottom: 1 }}>
-                Types disponibles :
+                {t(tr.typeAnalysis.availableTypes, lang)}
               </Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 {TYPES.filter((t) => !selectedTypes.includes(t)).map((type) => (
@@ -852,13 +856,13 @@ export default function TypeAnalysis({ run }: Props) {
                 color: "#000",
               }}
             >
-              Défense
+              {t(tr.typeAnalysis.defenseSection, lang)}
             </Typography>
             {[4, 2, 0.5, 0.25, 0].map((multiplier) => {
               const types = TYPES.filter((t) => combinationDefenses[t] === multiplier);
               if (types.length === 0) return null;
 
-              const { label, color } = getEffectivenessLabel(multiplier, "defense");
+              const { label, color } = getEffectivenessLabel(multiplier, "defense", lang);
               const bgColor = multiplier >= 2 ? "#fee2e2" : multiplier >= 0.5 ? "#dcfce7" : "#cffafe";
               const borderColor = multiplier >= 2 ? "#fca5a5" : multiplier >= 0.5 ? "#86efac" : "#60a5fa";
 
@@ -903,13 +907,13 @@ export default function TypeAnalysis({ run }: Props) {
                 color: "#000",
               }}
             >
-              Attaque
+              {t(tr.typeAnalysis.attackSection, lang)}
             </Typography>
             {[4, 2, 0.5, 0.25, 0].map((multiplier) => {
               const types = TYPES.filter((t) => combinationOffenses[t] === multiplier);
               if (types.length === 0) return null;
 
-              const { label, color } = getEffectivenessLabel(multiplier, "attack");
+              const { label, color } = getEffectivenessLabel(multiplier, "attack", lang);
               const bgColor = multiplier >= 2 ? "#dcfce7" : multiplier >= 0.5 ? "#fee2e2" : "#ffe8e8";
               const borderColor = multiplier >= 2 ? "#86efac" : multiplier >= 0.5 ? "#fca5a5" : "#ffcccc";
 
@@ -962,7 +966,7 @@ export default function TypeAnalysis({ run }: Props) {
               },
             }}
           >
-            Réinitialiser la sélection
+            {t(tr.typeAnalysis.resetSelection, lang)}
           </Typography>
         </Box>
         </Box>
@@ -1009,7 +1013,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Efficace contre
+                {t(tr.typeAnalysis.effectiveAgainst, lang)}
               </TableCell>
               <TableCell
                 sx={{
@@ -1020,7 +1024,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Faible contre
+                {t(tr.typeAnalysis.weakAgainst, lang)}
               </TableCell>
               <TableCell
                 sx={{
@@ -1031,7 +1035,7 @@ export default function TypeAnalysis({ run }: Props) {
                   fontSize: "0.75rem",
                 }}
               >
-                Résistant à
+                {t(tr.typeAnalysis.resistantTo, lang)}
               </TableCell>
             </TableRow>
           </TableHead>

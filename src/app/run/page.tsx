@@ -15,6 +15,8 @@ import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
 import { fetchPokemon } from "@/lib/pokemon-api";
 import { PokemonApiData } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 type Tab = "zones" | "team";
 
@@ -28,6 +30,8 @@ function RunPageContent() {
   const [pokemonData, setPokemonData] = useState<
     Record<number, PokemonApiData>
   >({});
+  const { lang } = useLanguage();
+  const tr = translations;
 
   const id = searchParams.get("id") ?? "";
 
@@ -105,14 +109,14 @@ function RunPageContent() {
               mb: 3,
             }}
           >
-            Run introuvable
+            {t(tr.runPage.runNotFound, lang)}
           </Typography>
           <StyledButton
             onClick={() => router.push("/")}
             variant="secondary"
             sx={{ px: 6, py: 1 }}
           >
-            ← Retour à l&apos;accueil
+            {t(tr.runPage.backHome, lang)}
           </StyledButton>
         </Box>
       </Box>
@@ -126,13 +130,13 @@ function RunPageContent() {
           onClick={() => updateRun({ ...run, status: "completed" })}
           variant="primary"
         >
-          ✓ Terminer
+          {t(tr.runPage.finish, lang)}
         </StyledButton>
         <StyledButton
           onClick={() => updateRun({ ...run, status: "abandoned" })}
           variant="danger"
         >
-          ✗ Abandonner
+          {t(tr.runPage.abandon, lang)}
         </StyledButton>
       </>
     ) : (
@@ -149,13 +153,13 @@ function RunPageContent() {
             fontSize: "1rem",
           }}
         >
-          {run.status === "completed" ? "✓ Terminé" : "✗ Abandonné"}
+          {run.status === "completed" ? t(tr.runPage.completed, lang) : t(tr.runPage.abandoned, lang)}
         </Box>
         <StyledButton
           onClick={() => updateRun({ ...run, status: "in-progress" })}
           variant="secondary"
         >
-          ↩ Reprendre
+          {t(tr.runPage.resume, lang)}
         </StyledButton>
       </>
     );
@@ -166,7 +170,7 @@ function RunPageContent() {
       variant="secondary"
       sx={{ px: 3 }}
     >
-      ← Accueil
+      {t(tr.runPage.home, lang)}
     </StyledButton>
   );
 
@@ -230,11 +234,11 @@ function RunPageContent() {
               background: "linear-gradient(to right, #DBEAFE, #E9D5FF)",
             }}
           >
-            {(["zones", "team"] as Tab[]).map((t) => (
+            {(["zones", "team"] as Tab[]).map((tabKey) => (
               <Box
                 component="button"
-                key={t}
-                onClick={() => setTab(t)}
+                key={tabKey}
+                onClick={() => setTab(tabKey)}
                 sx={{
                   flex: 1,
                   py: 1.5,
@@ -242,18 +246,18 @@ function RunPageContent() {
                   fontWeight: 700,
                   transition: "all 0.3s ease",
                   borderBottom: "4px solid",
-                  borderBottomColor: tab === t ? "#000" : "transparent",
-                  backgroundColor: tab === t ? "#7dd3fc" : "transparent",
-                  color: tab === t ? "#000" : "#64748b",
+                  borderBottomColor: tab === tabKey ? "#000" : "transparent",
+                  backgroundColor: tab === tabKey ? "#7dd3fc" : "transparent",
+                  color: tab === tabKey ? "#000" : "#64748b",
                   "&:hover": {
                     color: "#000",
-                    backgroundColor: tab === t ? "#7dd3fc" : "#f0f4f8",
+                    backgroundColor: tab === tabKey ? "#7dd3fc" : "#f0f4f8",
                   },
                   border: "none",
                   cursor: "pointer",
                 }}
               >
-                {t === "zones" ? "🗺 Zones" : "📦 Pokémons"}
+                {tabKey === "zones" ? t(tr.runPage.tabZones, lang) : t(tr.runPage.tabTeam, lang)}
               </Box>
             ))}
           </Box>
@@ -346,7 +350,7 @@ function RunPageContent() {
               <Typography
                 sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
               >
-                🔬 Analyse
+                {t(tr.runPage.analysis, lang)}
               </Typography>
               <Box
                 component="button"
@@ -362,7 +366,7 @@ function RunPageContent() {
                     opacity: 0.7,
                   },
                 }}
-                title="Fermer"
+                title={t(tr.runPage.close, lang)}
               >
                 ✕
               </Box>

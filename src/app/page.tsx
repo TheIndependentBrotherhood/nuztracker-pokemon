@@ -7,44 +7,46 @@ import RunList from "@/components/home/RunList";
 import CreateRunModal from "@/components/ui/CreateRunModal";
 import HeroSection from "@/components/home/HeroSection";
 import FeatureCard from "@/components/home/FeatureCard";
-
-const FEATURES = [
-  {
-    icon: "🗺️",
-    title: "Cartes Interactives",
-    description:
-      "Visualisez vos zones sur des cartes interactives pour chaque région Pokémon.",
-  },
-  {
-    icon: "⚔️",
-    title: "Gestion d'Équipe",
-    description:
-      "Gérez votre équipe de 6 Pokémon avec sprites, types et statistiques.",
-  },
-  {
-    icon: "📊",
-    title: "Analyse de Types",
-    description:
-      "Analysez les forces et faiblesses de votre équipe en temps réel.",
-  },
-  {
-    icon: "✨",
-    title: "Mode Shiny Hunt",
-    description:
-      "Activez le mode Shiny Hunt pour vos runs à la recherche des raretés.",
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
+import Header from "@/components/layout/Header";
 
 export default function HomePage() {
   const { runs, loadRuns } = useRunStore();
   const [showCreate, setShowCreate] = useState(false);
+  const { lang } = useLanguage();
+  const tr = translations;
 
   useEffect(() => {
     loadRuns();
   }, [loadRuns]);
 
+  const FEATURES = [
+    {
+      icon: "🗺️",
+      title: t(tr.home.features.interactiveMaps.title, lang),
+      description: t(tr.home.features.interactiveMaps.description, lang),
+    },
+    {
+      icon: "⚔️",
+      title: t(tr.home.features.teamManagement.title, lang),
+      description: t(tr.home.features.teamManagement.description, lang),
+    },
+    {
+      icon: "📊",
+      title: t(tr.home.features.typeAnalysis.title, lang),
+      description: t(tr.home.features.typeAnalysis.description, lang),
+    },
+    {
+      icon: "✨",
+      title: t(tr.home.features.shinyHunt.title, lang),
+      description: t(tr.home.features.shinyHunt.description, lang),
+    },
+  ];
+
   return (
     <Box sx={{ minHeight: "100vh" }}>
+      <Header />
       <Container maxWidth="lg" sx={{ py: 6, pb: 10 }}>
         {/* Hero Section */}
         <HeroSection
@@ -76,7 +78,7 @@ export default function HomePage() {
                   fontSize: { xs: "1.75rem", sm: "2.25rem" },
                 }}
               >
-                Prêt à commencer ?
+                {t(tr.home.readyToStart, lang)}
               </Typography>
               <Typography
                 sx={{
@@ -85,7 +87,7 @@ export default function HomePage() {
                   fontWeight: 500,
                 }}
               >
-                Découvrez ce que NuzTracker peut faire pour vous
+                {t(tr.home.discoverFeatures, lang)}
               </Typography>
             </Box>
             <Box
@@ -118,7 +120,7 @@ export default function HomePage() {
                   mb: 0.5,
                 }}
               >
-                Vos Runs
+                {t(tr.home.yourRuns, lang)}
               </Typography>
               <Typography
                 sx={{
@@ -127,8 +129,7 @@ export default function HomePage() {
                   fontWeight: 500,
                 }}
               >
-                {runs.length} run{runs.length > 1 ? "s" : ""} en cours ou
-                complétés
+                {t(tr.home.runsInProgress, lang)(runs.length)}
               </Typography>
             </Box>
             <RunList runs={runs} />

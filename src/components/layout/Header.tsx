@@ -1,7 +1,7 @@
 "use client";
 
 import { AppBar, Box, Container, Toolbar, Typography } from "@mui/material";
-import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Props {
   showBack?: boolean;
@@ -17,6 +17,8 @@ export default function Header({
   backAction,
   actions,
 }: Props) {
+  const { lang, toggleLang } = useLanguage();
+
   return (
     <AppBar
       position="sticky"
@@ -74,14 +76,36 @@ export default function Header({
             </Box>
           )}
 
-          {/* Right: Actions */}
-          {actions && (
+          {/* Right: Actions + Language toggle */}
+          <Box
+            sx={{ display: "flex", gap: 1, position: "absolute", right: 16, alignItems: "center" }}
+          >
+            {actions}
+            {/* Language flag button */}
             <Box
-              sx={{ display: "flex", gap: 2, position: "absolute", right: 16 }}
+              component="button"
+              onClick={toggleLang}
+              title={lang === "fr" ? "Switch to English" : "Passer en français"}
+              aria-label={lang === "fr" ? "Switch to English (current: Français)" : "Passer en français (actuel: English)"}
+              sx={{
+                fontSize: "1.4rem",
+                lineHeight: 1,
+                background: "rgba(255,255,255,0.6)",
+                border: "2px solid #000",
+                borderRadius: "0.5rem",
+                px: 0.75,
+                py: 0.25,
+                cursor: "pointer",
+                transition: "all 200ms ease",
+                "&:hover": {
+                  background: "rgba(255,255,255,0.9)",
+                  transform: "scale(1.05)",
+                },
+              }}
             >
-              {actions}
+              {lang === "fr" ? "🇬🇧" : "🇫🇷"}
             </Box>
-          )}
+          </Box>
         </Toolbar>
       </Container>
     </AppBar>

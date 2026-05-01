@@ -7,6 +7,8 @@ import TeamPokemonCard from "./TeamPokemonCard";
 import CapturedPokemonCard from "./CapturedPokemonCard";
 import DeadPokemonCard from "./DeadPokemonCard";
 import { useRunStore } from "@/store/runStore";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   run: Run;
@@ -22,6 +24,8 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
   const [dragOverDead, setDragOverDead] = useState(false);
   const [expandedCaptured, setExpandedCaptured] = useState(true);
   const [expandedDead, setExpandedDead] = useState(true);
+  const { lang } = useLanguage();
+  const tr = translations;
 
   // Get all captured pokémons not in team (excluding dead)
   const capturedNotInTeam = run.zones
@@ -261,7 +265,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
           >
-            ⚔️ Équipe
+            {t(tr.teamView.team, lang)}
           </Typography>
           <Box
             sx={{
@@ -287,7 +291,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             role="button"
             tabIndex={0}
           >
-            🔬 Analyse
+            {t(tr.teamView.analysis, lang)}
           </Box>
         </Box>
         <Grid container spacing={1.5}>
@@ -313,7 +317,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                   slotIndex={i}
                   runId={run.id}
                   zone={
-                    capture ? getZoneForCapture(capture.id) || "Inconnue" : ""
+                    capture ? getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang) : ""
                   }
                 />
               </Box>
@@ -357,7 +361,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
           >
-            📦 Pokémons capturés ({capturedNotInTeam.length})
+            {t(tr.teamView.capturedPokemon, lang)(capturedNotInTeam.length)}
           </Typography>
           <Typography sx={{ fontSize: "1.25rem", color: "#000" }}>
             {expandedCaptured ? "▼" : "▶"}
@@ -376,8 +380,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                 }}
               >
                 <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                  Zone de réserve (glisse les pokémons ici pour les retirer de
-                  l&apos;équipe)
+                  {t(tr.teamView.reserveArea, lang)}
                 </Typography>
               </Box>
             ) : (
@@ -388,7 +391,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                       capture={capture}
                       onAddToTeam={handleAddCapturedToTeam}
                       onToggleDead={handleToggleDeadStatus}
-                      zone={getZoneForCapture(capture.id) || "Inconnue"}
+                      zone={getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)}
                     />
                   </Grid>
                 ))}
@@ -430,7 +433,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}
           >
-            ⚰️ Pokémons RIP ({deadPokemon.length})
+            {t(tr.teamView.deadPokemon, lang)(deadPokemon.length)}
           </Typography>
           <Typography sx={{ fontSize: "1.25rem", color: "#dc2626" }}>
             {expandedDead ? "▼" : "▶"}
@@ -449,8 +452,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                 }}
               >
                 <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                  Aucun pokémon décédé pour le moment. Longue vie à votre équipe
-                  ! 🍀
+                  {t(tr.teamView.noDeadPokemon, lang)}
                 </Typography>
               </Box>
             ) : (
@@ -460,7 +462,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                     <DeadPokemonCard
                       capture={capture}
                       onResurrect={handleToggleDeadStatus}
-                      zone={getZoneForCapture(capture.id)}
+                      zone={getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)}
                     />
                   </Grid>
                 ))}
