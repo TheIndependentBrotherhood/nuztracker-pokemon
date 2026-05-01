@@ -20,6 +20,8 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const [dragOverCaptured, setDragOverCaptured] = useState(false);
   const [dragOverDead, setDragOverDead] = useState(false);
+  const [expandedCaptured, setExpandedCaptured] = useState(true);
+  const [expandedDead, setExpandedDead] = useState(true);
 
   // Get all captured pokémons not in team (excluding dead)
   const capturedNotInTeam = run.zones
@@ -320,7 +322,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
         </Grid>
       </Box>
 
-      {/* Captured Pokémons Section - Always visible */}
+      {/* Captured Pokémons Section */}
       <Box
         sx={{
           background: "#fff",
@@ -336,6 +338,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           sx={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
             mb: 2,
             pb: 1.5,
             borderBottom: "2px solid #000",
@@ -345,42 +348,53 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             transition: "all 200ms ease",
             mx: -2,
             px: 2,
+            cursor: "pointer",
           }}
+          onClick={() => setExpandedCaptured(!expandedCaptured)}
+          role="button"
+          tabIndex={0}
         >
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
           >
             📦 Pokémons capturés ({capturedNotInTeam.length})
           </Typography>
+          <Typography sx={{ fontSize: "1.25rem", color: "#000" }}>
+            {expandedCaptured ? "▼" : "▶"}
+          </Typography>
         </Box>
-        {capturedNotInTeam.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "120px",
-              color: "#999",
-            }}
-          >
-            <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-              Zone de réserve (glisse les pokémons ici pour les retirer de
-              l&apos;équipe)
-            </Typography>
-          </Box>
-        ) : (
-          <Grid container spacing={1.5}>
-            {capturedNotInTeam.map((capture) => (
-              <Grid item xs={6} sm={4} key={capture.id}>
-                <CapturedPokemonCard
-                  capture={capture}
-                  onAddToTeam={handleAddCapturedToTeam}
-                  onToggleDead={handleToggleDeadStatus}
-                  zone={getZoneForCapture(capture.id) || "Inconnue"}
-                />
+        {expandedCaptured && (
+          <>
+            {capturedNotInTeam.length === 0 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "120px",
+                  color: "#999",
+                }}
+              >
+                <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                  Zone de réserve (glisse les pokémons ici pour les retirer de
+                  l&apos;équipe)
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={1.5}>
+                {capturedNotInTeam.map((capture) => (
+                  <Grid item xs={6} sm={4} key={capture.id}>
+                    <CapturedPokemonCard
+                      capture={capture}
+                      onAddToTeam={handleAddCapturedToTeam}
+                      onToggleDead={handleToggleDeadStatus}
+                      zone={getZoneForCapture(capture.id) || "Inconnue"}
+                    />
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
+            )}
+          </>
         )}
       </Box>
 
@@ -401,46 +415,58 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           sx={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
             mb: 2,
             pb: 1.5,
             borderBottom: "2px solid #dc2626",
             mx: -2,
             px: 2,
+            cursor: "pointer",
           }}
+          onClick={() => setExpandedDead(!expandedDead)}
+          role="button"
+          tabIndex={0}
         >
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}
           >
             ⚰️ Pokémons RIP ({deadPokemon.length})
           </Typography>
+          <Typography sx={{ fontSize: "1.25rem", color: "#dc2626" }}>
+            {expandedDead ? "▼" : "▶"}
+          </Typography>
         </Box>
-        {deadPokemon.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "120px",
-              color: "#999",
-            }}
-          >
-            <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-              Aucun pokémon décédé pour le moment. Longue vie à votre équipe !
-              🍀
-            </Typography>
-          </Box>
-        ) : (
-          <Grid container spacing={1.5}>
-            {deadPokemon.map((capture) => (
-              <Grid item xs={6} sm={4} key={capture.id}>
-                <DeadPokemonCard
-                  capture={capture}
-                  onResurrect={handleToggleDeadStatus}
-                  zone={getZoneForCapture(capture.id)}
-                />
+        {expandedDead && (
+          <>
+            {deadPokemon.length === 0 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "120px",
+                  color: "#999",
+                }}
+              >
+                <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                  Aucun pokémon décédé pour le moment. Longue vie à votre équipe
+                  ! 🍀
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={1.5}>
+                {deadPokemon.map((capture) => (
+                  <Grid item xs={6} sm={4} key={capture.id}>
+                    <DeadPokemonCard
+                      capture={capture}
+                      onResurrect={handleToggleDeadStatus}
+                      zone={getZoneForCapture(capture.id)}
+                    />
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
+            )}
+          </>
         )}
       </Box>
     </Box>
