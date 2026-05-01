@@ -302,27 +302,12 @@ function RunPageContent() {
           {/* Map Panel */}
           <Box
             sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              width: "100%",
-              background: "#fff",
-              border: "3px solid #000",
-              borderRadius: "1rem",
-              overflow: "hidden",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-              display: "flex",
-              flexDirection: "column",
               transform: showTypesDrawer ? "translateX(100%)" : "translateX(0)",
               opacity: showTypesDrawer ? 0 : 1,
               transition: "all 500ms ease-out",
             }}
           >
-            <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
-              <MapView run={run} />
-            </Box>
+            <MapView run={run} />
           </Box>
 
           {/* Analysis Panel */}
