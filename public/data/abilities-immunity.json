@@ -8,7 +8,6 @@
         "en": "Water Absorb"
       },
       "generation": "generation-iii",
-      "effect": "Whenever a Water-type move hits this Pokémon, it heals for 1/4 of its maximum HP, negating any other effect on it.\n\nWater moves will ignore this Pokémon's Substitute.",
       "effects": {
         "fr": "Lorsqu'une capacité de type Eau touche ce Pokémon, elle lui soigne 1/4 de ses PV max, annulant tous les autres effets. \n\nLes capacités Eau ignorent le Clonage de ce Pokémon.",
         "en": "Whenever a Water-type move hits this Pokémon, it heals for 1/4 of its maximum HP, negating any other effect on it.\n\nWater moves will ignore this Pokémon's Substitute."
@@ -26,7 +25,6 @@
         "en": "Flash Fire"
       },
       "generation": "generation-iii",
-      "effect": "This Pokémon is immune to Fire-type moves.  Once this Pokémon has been hit by a Fire move, its own Fire moves will inflict 1.5× as much damage until it leaves battle.\n\nThis ability has no effect while the Pokémon is frozen.  The Fire damage bonus is retained even if the Pokémon is frozen and thawed or the ability is lost or disabled.  Fire moves will ignore this Pokémon's Substitute.  This ability takes effect even on non-damaging moves, i.e. Will-O-Wisp.",
       "effects": {
         "fr": "Ce Pokémon est immunisé aux capacités de type Feu.  Une fois que ce Pokémon a été touché par une capacité Feu, ses propres capacités Feu infligent 50% de dommages supplémentaires jusqu'à ce qu'il quitte le combat.\n\nCe talent n'a pas d'effet tant que le Pokémon est gelé.  Le bonus de dommages Feu est retenu même si le Pokémon est gelé et degelé ou si le talent est perdu ou désactivé.  Les capacités Feu ignorent le Clonage de ce Pokémon.  Ce talent prend s'active aussi sur les capacités non-offensives, i.e. Feu Follet.",
         "en": "This Pokémon is immune to Fire-type moves.  Once this Pokémon has been hit by a Fire move, its own Fire moves will inflict 1.5× as much damage until it leaves battle.\n\nThis ability has no effect while the Pokémon is frozen.  The Fire damage bonus is retained even if the Pokémon is frozen and thawed or the ability is lost or disabled.  Fire moves will ignore this Pokémon's Substitute.  This ability takes effect even on non-damaging moves, i.e. Will-O-Wisp."
@@ -44,7 +42,6 @@
         "en": "Levitate"
       },
       "generation": "generation-iii",
-      "effect": "This Pokémon is immune to Ground-type moves, Spikes, Toxic Spikes, and Arena Trap.\n\nThis ability is disabled during Gravity or Ingrain, or while holding an Iron Ball.  This ability is not disabled during Roost.",
       "effects": {
         "en": "This Pokémon is immune to Ground-type moves, Spikes, Toxic Spikes, and Arena Trap.\n\nThis ability is disabled during Gravity or Ingrain, or while holding an Iron Ball.  This ability is not disabled during Roost.",
         "fr": "Ce Pokémon est immunisé aux capacités de type Sol, Picots, Pics Toxik, et Piège Sable.\n\nCe talent est désactivé sous Gravité ou Racines, ou en tenant une Balle Fer.  Ce talent n'est pas désactivé sous Atterrissage."
@@ -62,7 +59,6 @@
         "en": "Sap Sipper"
       },
       "generation": "generation-v",
-      "effect": "Whenever a Grass-type move hits this Pokémon, its Attack rises one stage, negating any other effect on it.",
       "effects": {
         "fr": "Quand une capacité de type Plante frappe ce Pokémon, son Attaque augmente d'un niveau, annulant n'importe quel autre effet sur lui.",
         "en": "Whenever a Grass-type move hits this Pokémon, its Attack rises one stage, negating any other effect on it."
@@ -80,7 +76,6 @@
         "en": "Lightning Rod"
       },
       "generation": "generation-iii",
-      "effect": "All other Pokémon's single-target Electric-type moves are redirected to this Pokémon if it is an eligible target.  Other Pokémon's Electric moves raise this Pokémon's Special Attack one stage, negating any other effect on it, and cannot miss it.\n\nIf the move's intended target also has this ability, the move is not redirected.  When multiple Pokémon with this ability are possible targets for redirection, the move is redirected to the one with the highest Speed stat, or, in the case of a tie, to a random tied Pokémon.  Follow Me takes precedence over this ability.\n\nIf the Pokémon is a Ground-type and thus immune to Electric moves, its immunity prevents the Special Attack boost.",
       "effects": {
         "fr": "Toutes les capacités de type Électrik à cible unique des autres Pokémon sont redirigées sur ce Pokémon s'il est une cible éligible.  Les capacités Électrik des autres Pokémon augmentent l'Attaque Spéciale de ce Pokémon d'un niveau, annulant n'importe quel autre effet sur lui, et ne peut pas manquer sa cible.\n\nSi la cible attendue de la capacité a aussi ce talent, la capacité n'est pas redirigée.  Quand plusieurs Pokémon avec ce talent sont des cibles possibles pour la redirection, la capacité est redirigée sur celui avec la plus grande stat de Vitesse, ou, en cas d'égalité, vers un Pokémon aléatoire de l'égalité.  Par Ici prend la priorité sur ce talent.\n\nSi le Pokémon est un type Sol et ainsi immunisé aux capacités Électrik, son immunité empêche le boost d'Attaque Spéciale.",
         "en": "All other Pokémon's single-target Electric-type moves are redirected to this Pokémon if it is an eligible target.  Other Pokémon's Electric moves raise this Pokémon's Special Attack one stage, negating any other effect on it, and cannot miss it.\n\nIf the move's intended target also has this ability, the move is not redirected.  When multiple Pokémon with this ability are possible targets for redirection, the move is redirected to the one with the highest Speed stat, or, in the case of a tie, to a random tied Pokémon.  Follow Me takes precedence over this ability.\n\nIf the Pokémon is a Ground-type and thus immune to Electric moves, its immunity prevents the Special Attack boost."
@@ -98,7 +93,6 @@
         "en": "Wonder Guard"
       },
       "generation": "generation-iii",
-      "effect": "This Pokémon is immune to damaging moves that are not super effective against it.\n\nMoves that inflict fixed damage, such as Night Shade or Seismic Toss, are considered super effective if their types are.  Damage not directly dealt by moves, such as damage from weather, a status ailment, or Spikes, is not prevented.\n\nThis ability cannot be copied with Role Play or traded away with Skill Swap, but it can be copied with Trace, disabled with Gastro Acid, or changed with Worry Seed.  This Pokémon can still use Role Play itself to lose this ability, but not Skill Swap.\n\nIf this Pokémon has a Substitute, this ability will block moves as usual and any moves not blocked will react to the Substitute as usual.",
       "effects": {
         "fr": "Ce Pokémon est immunisé aux capacités offensives qui ne sont pas super efficaces contre lui.\n\nLes capacités qui infligent des dégâts fixes, telles que Ombre Nocturne ou Frappe Atlas, sont considérées comme super efficaces si leurs types le sont.  Les dégâts non directement infligés par des capacités, tels que les dégâts de la météo, une altération de statut, ou Picots, ne sont pas empêchés.\n\nCe talent ne peut pas être copié avec Imitation ou échangé avec Échange, mais il peut être copié avec Calque, désactivé avec Suc Digestif, ou changé avec Soucigraine.  Ce Pokémon peut toujours utiliser Imitation lui-même pour perdre ce talent, mais pas Échange.\n\nSi ce Pokémon a un Clonage, ce talent bloquera les capacités normalement et n'importe quelle capacité non bloquée réagira au Clonage normalement.",
         "en": "This Pokémon is immune to damaging moves that are not super effective against it.\n\nMoves that inflict fixed damage, such as Night Shade or Seismic Toss, are considered super effective if their types are.  Damage not directly dealt by moves, such as damage from weather, a status ailment, or Spikes, is not prevented.\n\nThis ability cannot be copied with Role Play or traded away with Skill Swap, but it can be copied with Trace, disabled with Gastro Acid, or changed with Worry Seed.  This Pokémon can still use Role Play itself to lose this ability, but not Skill Swap.\n\nIf this Pokémon has a Substitute, this ability will block moves as usual and any moves not blocked will react to the Substitute as usual."
@@ -117,7 +111,6 @@
         "en": "Volt Absorb"
       },
       "generation": "generation-iii",
-      "effect": "Whenever an Electric-type move hits this Pokémon, it heals for 1/4 of its maximum HP, negating any other effect on it.\n\nThis ability will not take effect if this Pokémon is Ground-type and thus immune to Electric moves.  Electric moves will ignore this Pokémon's Substitute.\n\nThis effect includes non-damaging moves, i.e. Thunder Wave.",
       "effects": {
         "fr": "Lorsqu'une capacité de type Électrik touche ce Pokémon, elle lui soigne 1/4 de ses PV max, annulant tous les autres effets.\n\nCe talent ne s'activera pas si ce Pokémon est de type Sol et est ainsi immunisé aux capacités Électrik.  Les capacités Électrik ignorent le Clonage de ce Pokémon.\n\nCet effet inclut les capacités non-offensives, i.e. Cage Éclair.",
         "en": "Whenever an Electric-type move hits this Pokémon, it heals for 1/4 of its maximum HP, negating any other effect on it.\n\nThis ability will not take effect if this Pokémon is Ground-type and thus immune to Electric moves.  Electric moves will ignore this Pokémon's Substitute.\n\nThis effect includes non-damaging moves, i.e. Thunder Wave."
@@ -135,7 +128,6 @@
         "en": "Dry Skin"
       },
       "generation": "generation-iv",
-      "effect": "This Pokémon takes 1/8 of its maximum HP in damage after each turn during strong sunlight, but it heals for 1/8 of its HP each turn during rain.  This Pokémon takes 1.25× as much damage from Fire-type moves, but whenever a Water move hits it, it heals for 1/4 its maximum HP instead.",
       "effects": {
         "fr": "Ce Pokémon subit 1/8 de ses PV maximum en dégâts après chaque tour sous soleil intense, mais il se soigne d'1/8 de ses PV à chaque tour sous pluie.  Ce Pokémon subit 1.25× dégâts des capacités de type Feu, mais quand une capacité Eau le frappe, il se soigne d'1/4 de ses PV maximum à la place.",
         "en": "This Pokémon takes 1/8 of its maximum HP in damage after each turn during strong sunlight, but it heals for 1/8 of its HP each turn during rain.  This Pokémon takes 1.25× as much damage from Fire-type moves, but whenever a Water move hits it, it heals for 1/4 its maximum HP instead."
@@ -154,7 +146,6 @@
         "en": "Storm Drain"
       },
       "generation": "generation-iv",
-      "effect": "All other Pokémon's single-target Water-type moves are redirected to this Pokémon, if it is an eligible target.  Other Pokémon's Water moves raise this Pokémon's Special Attack one stage, negating any other effect on it, and cannot miss it.\n\nIf the move's intended target also has this ability, the move is not redirected.  When multiple Pokémon with this ability are possible targets for redirection, the move is redirected to the one with the highest Speed stat, or, in the case of a tie, to a random tied Pokémon.  Follow Me takes precedence over this ability.",
       "effects": {
         "fr": "Toutes les capacités à cible unique de type Eau des autres Pokémon sont redirigées sur ce Pokémon, s’il est une cible éligible.  Les capacités Eau des autres Pokémon augmentent l’Attaque Spéciale de ce Pokémon d’un niveau, annulant n’importe quel autre effet sur lui, et ne peut pas le manquer.\n\nSi la cible prévue de la capacité a aussi ce talent, la capacité n’est pas redirigée.  Quand plusieurs Pokémon avec ce talent sont des cibles possibles pour la redirection, la capacité est redirigée vers celle avec la plus grande stat de Vitesse, ou, en cas d’égalité, vers un Pokémon aléatoire de l’égalité.  Par Ici prend la priorité sur ce talent.",
         "en": "All other Pokémon's single-target Water-type moves are redirected to this Pokémon, if it is an eligible target.  Other Pokémon's Water moves raise this Pokémon's Special Attack one stage, negating any other effect on it, and cannot miss it.\n\nIf the move's intended target also has this ability, the move is not redirected.  When multiple Pokémon with this ability are possible targets for redirection, the move is redirected to the one with the highest Speed stat, or, in the case of a tie, to a random tied Pokémon.  Follow Me takes precedence over this ability."
@@ -172,7 +163,6 @@
         "en": "Earth Eater"
       },
       "generation": "generation-ix",
-      "effect": "If hit by a Ground-type move, the Pokémon has its HP restored instead of taking damage.",
       "effects": {
         "fr": "Si frappé par une capacité de type Sol, le Pokémon a ses PV restaurés au lieu de subir des dégâts.",
         "en": "If hit by a Ground-type move, the Pokémon has its HP restored instead of taking damage."
@@ -183,5 +173,5 @@
       "isImmunity": true
     }
   ],
-  "generatedAt": "2026-05-01T16:01:41.912Z"
+  "generatedAt": "2026-05-01T16:14:43.669Z"
 }

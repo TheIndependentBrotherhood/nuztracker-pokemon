@@ -340,7 +340,6 @@ async function generateAbilitiesImmunity() {
         name: abilityData.name,
         names: abilityNames,
         generation: abilityData.generation.name,
-        effect: effects.en ?? "Unknown",
         effects,
         immuneTypes: IMMUNITY_MAP[name],
         isImmunity: name !== "wonder-guard",
