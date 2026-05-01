@@ -60,7 +60,7 @@ export default function PokemonCard({
         <Typography
           sx={{ color: "#64748b", fontSize: "0.75rem", fontWeight: 600 }}
         >
-          {lang === "fr" ? `Slot ${slotIndex + 1}` : `Slot ${slotIndex + 1}`}
+          {`Slot ${slotIndex + 1}`}
         </Typography>
       </Box>
     );

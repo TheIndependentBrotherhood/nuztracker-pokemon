@@ -248,11 +248,11 @@ const translations = {
     weakAgainst: { fr: "Faible contre", en: "Weak against" },
     resistantTo: { fr: "Résistant à", en: "Resistant to" },
     // effectiveness labels
-    hyperEffective: { fr: "Hyper efficace", en: "Super-duper effective" },
+    hyperEffective: { fr: "Hyper efficace", en: "Super effective (x4)" },
     superEffective: { fr: "Super efficace", en: "Super effective" },
     neutral: { fr: "Neutre", en: "Neutral" },
     notVeryEffective: { fr: "Peu efficace", en: "Not very effective" },
-    veryNotEffective: { fr: "Très peu efficace", en: "Very not effective" },
+    veryNotEffective: { fr: "Très peu efficace", en: "Not very effective (x0.25)" },
     noEffect: { fr: "Aucun effet", en: "No effect" },
     unknown: { fr: "Inconnu", en: "Unknown" },
     veryWeak: { fr: "Très faible", en: "Very weak" },

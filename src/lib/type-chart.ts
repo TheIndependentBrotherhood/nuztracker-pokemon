@@ -293,7 +293,7 @@ export function getEffectivenessLabel(
   if (context === "attack") {
     switch (multiplier) {
       case 4:
-        return { label: lang === "fr" ? "Hyper efficace" : "Super-duper effective", color: "#166534" };
+        return { label: lang === "fr" ? "Hyper efficace" : "Super effective (x4)", color: "#166534" };
       case 2:
         return { label: lang === "fr" ? "Super efficace" : "Super effective", color: "#16a34a" };
       case 1:
@@ -301,7 +301,7 @@ export function getEffectivenessLabel(
       case 0.5:
         return { label: lang === "fr" ? "Peu efficace" : "Not very effective", color: "#ea580c" };
       case 0.25:
-        return { label: lang === "fr" ? "Très peu efficace" : "Very not effective", color: "#7f1d1d" };
+        return { label: lang === "fr" ? "Très peu efficace" : "Not very effective (x0.25)", color: "#7f1d1d" };
       case 0:
         return { label: lang === "fr" ? "Aucun effet" : "No effect", color: "#374151" };
       default:

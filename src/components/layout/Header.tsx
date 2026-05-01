@@ -86,7 +86,7 @@ export default function Header({
               component="button"
               onClick={toggleLang}
               title={lang === "fr" ? "Switch to English" : "Passer en français"}
-              aria-label={lang === "fr" ? "Switch to English" : "Passer en français"}
+              aria-label={lang === "fr" ? "Switch to English (current: Français)" : "Passer en français (actuel: English)"}
               sx={{
                 fontSize: "1.4rem",
                 lineHeight: 1,
