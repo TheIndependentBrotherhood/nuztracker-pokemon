@@ -31,6 +31,9 @@ export default function CreateRunModal({ onClose }: Props) {
 
   const [gameName, setGameName] = useState("");
   const [region, setRegion] = useState("kanto");
+  const [typeChartGeneration, setTypeChartGeneration] = useState<
+    "gen1" | "gen2-5" | "gen6+"
+  >("gen6+");
   const [isShinyHuntMode, setIsShinyHuntMode] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
 
@@ -55,6 +58,7 @@ export default function CreateRunModal({ onClose }: Props) {
     const run = createRun({
       gameName: gameName.trim(),
       region,
+      typeChartGeneration,
       isShinyHuntMode,
       isRandomMode,
       randomizerOptions: isRandomMode ? randomizerOptions : undefined,
@@ -127,6 +131,18 @@ export default function CreateRunModal({ onClose }: Props) {
                 {r.name} — {r.game}
               </MenuItem>
             ))}
+          </StyledSelect>
+
+          {/* Type Chart Generation Select */}
+          <StyledSelect
+            label="Table des Types"
+            value={typeChartGeneration}
+            onChange={(e: any) => setTypeChartGeneration(e.target.value)}
+            fullWidth
+          >
+            <MenuItem value="gen1">Génération 1</MenuItem>
+            <MenuItem value="gen2-5">Générations 2-5</MenuItem>
+            <MenuItem value="gen6+">Générations 6+</MenuItem>
           </StyledSelect>
 
           {/* Toggles */}

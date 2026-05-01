@@ -36,6 +36,7 @@ export interface Run {
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];
+  typeChartGeneration: "gen1" | "gen2-5" | "gen6+";
   createdAt: number;
   updatedAt: number;
 }

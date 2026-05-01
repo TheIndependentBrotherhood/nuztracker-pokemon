@@ -1,18 +1,18 @@
 export const TYPES = [
   "normal",
-  "fire",
-  "water",
-  "electric",
-  "grass",
-  "ice",
   "fighting",
+  "flying",
   "poison",
   "ground",
-  "flying",
-  "psychic",
-  "bug",
   "rock",
+  "bug",
   "ghost",
+  "fire",
+  "water",
+  "grass",
+  "electric",
+  "psychic",
+  "ice",
   "dragon",
   "dark",
   "steel",
@@ -20,6 +20,33 @@ export const TYPES = [
 ] as const;
 
 export type TypeName = (typeof TYPES)[number];
+
+export interface TypeData {
+  weakTo: string[];
+  resistsAgainst: string[];
+  immuneTo: string[];
+  strongAgainst: string[];
+}
+
+export interface TypeChartData {
+  [key: string]: TypeData;
+}
+
+export async function loadTypeData(
+  generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
+): Promise<TypeChartData> {
+  try {
+    const response = await fetch("/data/type-charts.json");
+    const data = await response.json();
+
+    const generationData = data[generation]?.effectiveness ?? {};
+
+    return generationData;
+  } catch (error) {
+    console.error("Failed to load type data:", error);
+    return {};
+  }
+}
 
 export const typeChart: Record<string, Record<string, number>> = {
   normal: { rock: 0.5, ghost: 0, steel: 0.5 },
@@ -151,6 +178,64 @@ export function getEffectiveness(attacking: string, defending: string): number {
   return typeChart[attacking]?.[defending] ?? 1;
 }
 
+export function buildTypeDefensesFromJson(
+  types: string[],
+  typeData: TypeChartData,
+): Record<string, number> {
+  const defenses: Record<string, number> = {};
+
+  // For each attacking type, calculate how much damage the defending types take
+  for (const attackType of TYPES) {
+    let mult = 1;
+
+    // For each defending type, check effectiveness and multiply
+    for (const defType of types) {
+      const defenderData = typeData[defType];
+      if (!defenderData) continue;
+
+      // Check the defender's properties against this attacking type
+      if (defenderData.immuneTo?.includes(attackType)) {
+        mult *= 0; // Defender is immune to this attack
+      } else if (defenderData.weakTo?.includes(attackType)) {
+        mult *= 2; // Defender is weak to this attack
+      } else if (defenderData.resistsAgainst?.includes(attackType)) {
+        mult *= 0.5; // Defender resists this attack
+      }
+    }
+
+    defenses[attackType] = mult;
+  }
+
+  return defenses;
+}
+
+export function buildTypeOffensesFromJson(
+  types: string[],
+  typeData: TypeChartData,
+): Record<string, number> {
+  const offenses: Record<string, number> = {};
+
+  // For each defending type, calculate how much damage our attacking types do
+  for (const defendType of TYPES) {
+    let maxMult = 1;
+
+    // For each attacking type, check effectiveness
+    for (const atkType of types) {
+      const attackerData = typeData[atkType];
+      if (!attackerData) continue;
+
+      // Check the attacker's strong points against this defender
+      if (attackerData.strongAgainst?.includes(defendType)) {
+        maxMult = Math.max(maxMult, 2);
+      }
+    }
+
+    offenses[defendType] = maxMult;
+  }
+
+  return offenses;
+}
+
 export function getTypeDefenses(types: string[]): Record<string, number> {
   const defenses: Record<string, number> = {};
   for (const attackType of TYPES) {
@@ -195,3 +280,45 @@ export const typeColors: Record<string, string> = {
   steel: "#B8B8D0",
   fairy: "#EE99AC",
 };
+
+export function getEffectivenessLabel(
+  multiplier: number,
+  context: "attack" | "defense",
+): { label: string; color: string } {
+  if (context === "attack") {
+    switch (multiplier) {
+      case 4:
+        return { label: "Hyper efficace", color: "#166534" };
+      case 2:
+        return { label: "Super efficace", color: "#16a34a" };
+      case 1:
+        return { label: "Neutre", color: "#666666" };
+      case 0.5:
+        return { label: "Peu efficace", color: "#ea580c" };
+      case 0.25:
+        return { label: "Très peu efficace", color: "#7f1d1d" };
+      case 0:
+        return { label: "Aucun effet", color: "#374151" };
+      default:
+        return { label: "Inconnu", color: "#000000" };
+    }
+  } else {
+    // defense
+    switch (multiplier) {
+      case 4:
+        return { label: "Très faible", color: "#7f1d1d" };
+      case 2:
+        return { label: "Faible", color: "#dc2626" };
+      case 1:
+        return { label: "Neutre", color: "#666666" };
+      case 0.5:
+        return { label: "Résistant", color: "#16a34a" };
+      case 0.25:
+        return { label: "Très résistant", color: "#166534" };
+      case 0:
+        return { label: "Immunisé", color: "#60a5fa" };
+      default:
+        return { label: "Inconnu", color: "#000000" };
+    }
+  }
+}

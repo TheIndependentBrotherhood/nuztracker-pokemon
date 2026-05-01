@@ -14,6 +14,7 @@ interface RunStore {
     region: string;
     isShinyHuntMode: boolean;
     isRandomMode: boolean;
+    typeChartGeneration: "gen1" | "gen2-5" | "gen6+";
     randomizerOptions?: RandomizerOptions;
   }) => Run;
   updateRun: (run: Run) => void;
