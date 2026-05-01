@@ -261,7 +261,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
 
             {/* Physical info */}
             <Grid container spacing={1}>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <Box
                   sx={{
                     background: "#f0f4f8",
@@ -284,7 +284,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 6 }}>
                 <Box
                   sx={{
                     background: "#f0f4f8",

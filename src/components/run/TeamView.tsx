@@ -296,7 +296,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
         </Box>
         <Grid container spacing={1.5}>
           {teamSlots.map((capture, i) => (
-            <Grid item xs={6} sm={4} key={i}>
+            <Grid key={i}>
               <Box
                 onDragOver={(e) => handleDragOverSlot(e, i)}
                 onDragLeave={handleDragLeaveSlot}
@@ -317,7 +317,10 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                   slotIndex={i}
                   runId={run.id}
                   zone={
-                    capture ? getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang) : ""
+                    capture
+                      ? (getZoneForCapture(capture.id) ??
+                        t(tr.teamView.unknown, lang))
+                      : ""
                   }
                 />
               </Box>
@@ -386,12 +389,15 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             ) : (
               <Grid container spacing={1.5}>
                 {capturedNotInTeam.map((capture) => (
-                  <Grid item xs={6} sm={4} key={capture.id}>
+                  <Grid key={capture.id}>
                     <CapturedPokemonCard
                       capture={capture}
                       onAddToTeam={handleAddCapturedToTeam}
                       onToggleDead={handleToggleDeadStatus}
-                      zone={getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)}
+                      zone={
+                        getZoneForCapture(capture.id) ??
+                        t(tr.teamView.unknown, lang)
+                      }
                     />
                   </Grid>
                 ))}
@@ -458,11 +464,14 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             ) : (
               <Grid container spacing={1.5}>
                 {deadPokemon.map((capture) => (
-                  <Grid item xs={6} sm={4} key={capture.id}>
+                  <Grid key={capture.id}>
                     <DeadPokemonCard
                       capture={capture}
                       onResurrect={handleToggleDeadStatus}
-                      zone={getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)}
+                      zone={
+                        getZoneForCapture(capture.id) ??
+                        t(tr.teamView.unknown, lang)
+                      }
                     />
                   </Grid>
                 ))}

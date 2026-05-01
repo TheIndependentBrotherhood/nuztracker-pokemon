@@ -82,7 +82,7 @@ export async function loadRegions(): Promise<Region[]> {
     const data = await response.json();
 
     // Map JSON regions to our Region interface
-    cachedRegions = data.regions.map((r: any) => ({
+    const mappedRegions: Region[] = data.regions.map((r: any) => ({
       id: r.name, // Use the name as id (e.g., "kanto")
       name: r.name.charAt(0).toUpperCase() + r.name.slice(1), // Capitalize first letter
       names: r.names,
@@ -93,7 +93,9 @@ export async function loadRegions(): Promise<Region[]> {
       })),
     }));
 
-    return cachedRegions;
+    cachedRegions = mappedRegions;
+
+    return mappedRegions;
   } catch (error) {
     console.error("Failed to load regions:", error);
     return regions; // Fallback to hardcoded regions

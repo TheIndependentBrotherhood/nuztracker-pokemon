@@ -41,11 +41,6 @@ export default function StatsBar({ run }: Props) {
   ).length;
   const missed = visited - captured;
   const captureRate = visited > 0 ? Math.round((captured / visited) * 100) : 0;
-  const shinyCount = run.zones.reduce(
-    (acc: number, z: Zone) =>
-      acc + z.captures.filter((c: Capture) => c.isShiny).length,
-    0,
-  );
   const progress = total > 0 ? (visited / total) * 100 : 0;
 
   // Count dead pokémons
@@ -395,12 +390,14 @@ export default function StatsBar({ run }: Props) {
       <Dialog
         open={showExportDialog}
         onClose={() => setShowExportDialog(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: "1.5rem",
-            border: "3px solid #000",
-            boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.3)",
-            backgroundColor: "#fff",
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: "1.5rem",
+              border: "3px solid #000",
+              boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.3)",
+              backgroundColor: "#fff",
+            },
           },
         }}
       >
@@ -448,6 +445,13 @@ export default function StatsBar({ run }: Props) {
           <Typography sx={{ fontSize: "0.875rem", color: "#666" }}>
             408x720px à 1920x1080px
           </Typography>
+          {exportError && (
+            <Typography
+              sx={{ fontSize: "0.875rem", color: "#dc2626", fontWeight: 700 }}
+            >
+              {exportError}
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions sx={{ borderTop: "2px solid #000", pt: 2, gap: 2 }}>
           <Button
@@ -508,7 +512,9 @@ export default function StatsBar({ run }: Props) {
               },
             }}
           >
-            {exporting ? t(tr.statsBar.exporting, lang) : t(tr.statsBar.export, lang)}
+            {exporting
+              ? t(tr.statsBar.exporting, lang)
+              : t(tr.statsBar.export, lang)}
           </Button>
         </DialogActions>
       </Dialog>

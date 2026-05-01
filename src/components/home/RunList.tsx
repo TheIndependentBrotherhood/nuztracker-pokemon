@@ -91,7 +91,7 @@ export default function RunList({ runs }: RunListProps) {
         const status = statusConfig[run.status] ?? statusConfig["in-progress"];
 
         return (
-          <Grid item xs={12} md={6} key={run.id}>
+          <Grid key={run.id}>
             <Box
               sx={{
                 position: "relative",
@@ -198,7 +198,7 @@ export default function RunList({ runs }: RunListProps) {
 
                 {/* Stats */}
                 <Grid container spacing={1.5}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Box
                       sx={{
                         background: "#E8F5E9",
@@ -228,7 +228,7 @@ export default function RunList({ runs }: RunListProps) {
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Box
                       sx={{
                         background: "#F3E5F5",
@@ -353,7 +353,8 @@ export default function RunList({ runs }: RunListProps) {
                   className="delete-btn"
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
-                    if (confirm(t(tr.runList.deleteConfirm, lang))) deleteRun(run.id);
+                    if (confirm(t(tr.runList.deleteConfirm, lang)))
+                      deleteRun(run.id);
                   }}
                   sx={{
                     width: "100%",
