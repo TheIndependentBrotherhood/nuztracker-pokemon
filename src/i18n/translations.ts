@@ -146,6 +146,7 @@ const translations = {
   pokemonDetail: {
     loading: { fr: "Chargement...", en: "Loading..." },
     baseStats: { fr: "Statistiques de base", en: "Base Stats" },
+    baseStatTotal: { fr: "BST", en: "BST" },
     height: { fr: "Taille", en: "Height" },
     weight: { fr: "Poids", en: "Weight" },
     failedToLoad: {

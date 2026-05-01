@@ -7,6 +7,10 @@ import { fetchPokemon, getSpriteUrl } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import {
+  useCaptureDisplayLabel,
+  useCaptureDisplayName,
+} from "@/lib/pokemon-display";
 
 interface Props {
   capture: Capture;
@@ -88,6 +92,11 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const { lang } = useLanguage();
   const tr = translations;
+  const pokemonDisplayName = useCaptureDisplayName(capture, lang);
+  const pokemonDisplayLabel = useCaptureDisplayLabel(capture, lang);
+  const baseStatTotal = data
+    ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
+    : 0;
 
   useEffect(() => {
     fetchPokemon(capture.pokemonId)
@@ -149,7 +158,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
-                alt={data.name}
+                alt={pokemonDisplayName}
                 style={{
                   width: "96px",
                   height: "96px",
@@ -172,7 +181,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                     color: "#000",
                   }}
                 >
-                  {capture.nickname || capture.pokemonName}
+                  {pokemonDisplayLabel}
                   {capture.isShiny && (
                     <span style={{ fontSize: "1rem" }}>✨</span>
                   )}
@@ -196,7 +205,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                     mt: 0.25,
                   }}
                 >
-                  {data.name} #{data.id.toString().padStart(3, "0")}
+                  {pokemonDisplayName} #{data.id.toString().padStart(3, "0")}
                 </Typography>
                 <Box
                   sx={{ display: "flex", gap: 0.5, mt: 1, flexWrap: "wrap" }}
@@ -257,6 +266,33 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                   speedLabel={t(tr.pokemonDetail.statSpeed, lang)}
                 />
               ))}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mt: 0.75,
+                  pt: 0.75,
+                  borderTop: "2px dashed #cbd5e1",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: "#666",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {t(tr.pokemonDetail.baseStatTotal, lang)}
+                </Typography>
+                <Typography
+                  sx={{ fontSize: "0.875rem", fontWeight: 800, color: "#000" }}
+                >
+                  {baseStatTotal}
+                </Typography>
+              </Box>
             </Box>
 
             {/* Physical info */}
