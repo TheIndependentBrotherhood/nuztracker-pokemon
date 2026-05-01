@@ -16,7 +16,7 @@ interface Props {
   zone: string;
 }
 
-export default function PokemonCard({
+export default function TeamPokemonCard({
   capture,
   slotIndex,
   runId,
@@ -178,7 +178,9 @@ export default function PokemonCard({
                 fontSize: "0.875rem",
                 fontWeight: 600,
                 color: "#000",
-                truncate: true,
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
                 lineHeight: 1.2,
               }}
             >
@@ -197,18 +199,6 @@ export default function PokemonCard({
                 </Typography>
               )}
             </Box>
-            {capture.nickname && (
-              <Typography
-                sx={{
-                  fontSize: "0.75rem",
-                  color: "#666",
-                  textTransform: "capitalize",
-                  truncate: true,
-                }}
-              >
-                {capture.pokemonName}
-              </Typography>
-            )}
             <Typography
               sx={{
                 fontSize: "0.75rem",

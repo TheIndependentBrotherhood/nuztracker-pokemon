@@ -150,11 +150,12 @@ export default function CreateRunModal({ onClose }: Props) {
             fullWidth
             value={gameName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setGameName(e.target.value)
+              setGameName(e.target.value.substring(0, 64))
             }
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
               e.key === "Enter" && handleCreate()
             }
+            helperText={`${gameName.length}/64 caractères`}
           />
 
           {/* Region Select */}

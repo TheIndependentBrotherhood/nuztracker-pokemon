@@ -6,6 +6,7 @@ export interface Capture {
   level: number;
   gender: "male" | "female" | "unknown";
   isShiny: boolean;
+  isDead: boolean;
   createdAt: number;
 }
 

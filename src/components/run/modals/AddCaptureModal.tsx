@@ -98,6 +98,7 @@ export default function AddCaptureModal({
       level,
       gender,
       isShiny,
+      isDead: false,
     });
     onClose();
   }
