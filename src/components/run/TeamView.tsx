@@ -6,6 +6,7 @@ import { useState } from "react";
 import PokemonCard from "./PokemonCard";
 import CapturedPokemonCard from "./CapturedPokemonCard";
 import { useRunStore } from "@/store/runStore";
+import { getSpriteUrl } from "@/lib/pokemon-api";
 
 interface Props {
   run: Run;
@@ -111,6 +112,28 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
       updateTeam(run.id, [...run.team, capture]);
     }
   };
+
+  const handleToggleDeadStatus = (captureId: string) => {
+    const updatedRun = {
+      ...run,
+      zones: run.zones.map((zone) => ({
+        ...zone,
+        captures: zone.captures.map((capture) =>
+          capture.id === captureId
+            ? { ...capture, isDead: !capture.isDead }
+            : capture,
+        ),
+      })),
+    };
+    // Use the updateRun from store to persist changes
+    const { updateRun } = useRunStore.getState();
+    updateRun(updatedRun);
+  };
+
+  // Get all dead pokémons
+  const deadPokemon = run.zones
+    .flatMap((z) => z.captures)
+    .filter((c) => c.isDead);
 
   return (
     <Box
@@ -259,8 +282,179 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                 <CapturedPokemonCard
                   capture={capture}
                   onAddToTeam={handleAddCapturedToTeam}
+                  onToggleDead={handleToggleDeadStatus}
                   zone={getZoneForCapture(capture.id)}
                 />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Box>
+
+      {/* Dead Pokémons Section */}
+      <Box
+        sx={{
+          background: "#fef2f2",
+          border: "2px solid #dc2626",
+          borderRadius: "1rem",
+          p: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+            pb: 1.5,
+            borderBottom: "2px solid #dc2626",
+            mx: -2,
+            px: 2,
+          }}
+        >
+          <Typography
+            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}
+          >
+            ⚰️ Pokémons RIP ({deadPokemon.length})
+          </Typography>
+        </Box>
+        {deadPokemon.length === 0 ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "120px",
+              color: "#999",
+            }}
+          >
+            <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
+              Aucun pokémon décédé pour le moment. Longue vie à votre équipe !
+              🍀
+            </Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={1.5}>
+            {deadPokemon.map((capture) => (
+              <Grid item xs={6} sm={4} key={capture.id}>
+                <Box
+                  sx={{
+                    background: "#fff",
+                    border: "2px solid #ef4444",
+                    borderRadius: "0.75rem",
+                    p: 1,
+                    transition: "all 200ms ease",
+                    position: "relative",
+                    maxWidth: "220px",
+                    minWidth: "220px",
+                    minHeight: "108px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    opacity: 0.7,
+                    "&:hover": {
+                      borderColor: "#dc2626",
+                      background: "#fecaca",
+                      opacity: 1,
+                    },
+                    "&:hover .resurrect-btn": {
+                      opacity: 1,
+                    },
+                  }}
+                >
+                  {/* Image with dead effect */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      width: "88px",
+                      height: "88px",
+                      filter: "grayscale(100%) contrast(0.8)",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
+                      alt={capture.pokemonName}
+                      style={{
+                        width: "80px",
+                        height: "80px",
+                        objectFit: "contain",
+                        filter: "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))",
+                      }}
+                    />
+                  </Box>
+
+                  {/* Info */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      sx={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        color: "#000",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {capture.nickname || capture.pokemonName}
+                    </Typography>
+                    {capture.nickname && (
+                      <Typography
+                        sx={{
+                          fontSize: "0.7rem",
+                          color: "#666",
+                          textTransform: "capitalize",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {capture.pokemonName}
+                      </Typography>
+                    )}
+                    <Typography
+                      sx={{
+                        fontSize: "0.7rem",
+                        color: "#f59e0b",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Lv.{capture.level}
+                    </Typography>
+                  </Box>
+
+                  {/* Resurrect button */}
+                  <Box
+                    component="button"
+                    className="resurrect-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleDeadStatus(capture.id);
+                    }}
+                    sx={{
+                      flexShrink: 0,
+                      fontSize: "0.875rem",
+                      color: "#fff",
+                      background: "#10b981",
+                      borderRadius: "0.25rem",
+                      px: 1,
+                      py: 0.5,
+                      opacity: 0,
+                      transition: "opacity 200ms ease",
+                      border: "none",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      "&:hover": {
+                        background: "#059669",
+                      },
+                    }}
+                    title="Ressusciter"
+                  >
+                    ↻
+                  </Box>
+                </Box>
               </Grid>
             ))}
           </Grid>

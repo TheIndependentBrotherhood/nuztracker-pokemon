@@ -44,6 +44,13 @@ export default function StatsBar({ run }: Props) {
   );
   const progress = total > 0 ? (visited / total) * 100 : 0;
 
+  // Count dead pokémons
+  const deadCount = run.zones.reduce(
+    (acc: number, z: Zone) =>
+      acc + z.captures.filter((c: Capture) => c.isDead).length,
+    0,
+  );
+
   // Export handlers for team stats card
   async function handleExportPng() {
     setShowExportDialog(true);
@@ -114,7 +121,7 @@ export default function StatsBar({ run }: Props) {
 
   const teamActions = [
     {
-      icon: "🖼",
+      icon: "🖼️",
       title: "Export team as PNG",
       onClick: handleExportPng,
       disabled: exporting || run.team.length === 0,
@@ -349,10 +356,11 @@ export default function StatsBar({ run }: Props) {
           color="#E8F5E9"
           hoverContent={captureesHoverContent}
         />
+        <StatCard value={deadCount} label="RIP" color="#FEE2E2" />
         <StatCard
           value={`${run.team.length}/6`}
           label="Team"
-          color="#FFE8E8"
+          color="#fff7e8"
           hoverContent={equipeHoverContent}
           actions={teamActions}
         />

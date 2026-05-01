@@ -51,6 +51,15 @@ export default function HomePage() {
           runsCount={runs.length}
           activeCount={runs.filter((r) => r.status === "in-progress").length}
           capturesCount={runs.reduce((acc, r) => acc + r.team.length, 0)}
+          deadCount={runs.reduce(
+            (acc, r) =>
+              acc +
+              r.zones.reduce(
+                (zAcc, z) => zAcc + z.captures.filter((c) => c.isDead).length,
+                0,
+              ),
+            0,
+          )}
           onNewRun={() => setShowCreate(true)}
         />
 

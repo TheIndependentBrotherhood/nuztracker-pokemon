@@ -9,12 +9,14 @@ import PokemonDetailModal from "./modals/PokemonDetailModal";
 interface Props {
   capture: Capture;
   onAddToTeam: (capture: Capture) => void;
+  onToggleDead?: (captureId: string) => void;
   zone: string;
 }
 
 export default function CapturedPokemonCard({
   capture,
   onAddToTeam,
+  onToggleDead,
   zone,
 }: Props) {
   const [showDetail, setShowDetail] = useState(false);
@@ -57,7 +59,7 @@ export default function CapturedPokemonCard({
               background: "#e0f2fe",
               boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.2)",
             },
-            "&:hover .add-btn": {
+            "&:hover .action-btn": {
               opacity: 1,
             },
           }}
@@ -152,34 +154,71 @@ export default function CapturedPokemonCard({
             </Typography>
           </Box>
 
-          {/* Add button */}
+          {/* Buttons */}
           <Box
-            component="button"
-            className="add-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToTeam(capture);
-            }}
             sx={{
               flexShrink: 0,
-              fontSize: "0.875rem",
-              color: "#fff",
-              background: "#3b82f6",
-              borderRadius: "0.25rem",
-              px: 1,
-              py: 0.5,
-              opacity: 0,
-              transition: "opacity 200ms ease",
-              border: "none",
-              cursor: "pointer",
-              fontWeight: 600,
-              "&:hover": {
-                background: "#2563eb",
-              },
+              display: "flex",
+              gap: 0.5,
             }}
-            title="Ajouter à l'équipe"
           >
-            +
+            {onToggleDead && (
+              <Box
+                component="button"
+                className="action-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleDead(capture.id);
+                }}
+                sx={{
+                  fontSize: "0.875rem",
+                  color: "#fff",
+                  background: "#ef4444",
+                  borderRadius: "0.25rem",
+                  px: 0.75,
+                  py: 0.5,
+                  opacity: 0,
+                  transition: "opacity 200ms ease",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  "&:hover": {
+                    background: "#dc2626",
+                  },
+                }}
+                title="Marquer comme décédé"
+              >
+                ⚰️
+              </Box>
+            )}
+            <Box
+              component="button"
+              className="action-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToTeam(capture);
+              }}
+              sx={{
+                flexShrink: 0,
+                fontSize: "0.875rem",
+                color: "#fff",
+                background: "#3b82f6",
+                borderRadius: "0.25rem",
+                px: 0.75,
+                py: 0.5,
+                opacity: 0,
+                transition: "opacity 200ms ease",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: 600,
+                "&:hover": {
+                  background: "#2563eb",
+                },
+              }}
+              title="Ajouter à l'équipe"
+            >
+              +
+            </Box>
           </Box>
         </Box>
       </Tooltip>

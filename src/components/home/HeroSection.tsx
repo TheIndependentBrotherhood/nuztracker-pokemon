@@ -8,6 +8,7 @@ interface Props {
   runsCount: number;
   activeCount: number;
   capturesCount: number;
+  deadCount: number;
   onNewRun: () => void;
 }
 
@@ -15,6 +16,7 @@ export default function HeroSection({
   runsCount,
   activeCount,
   capturesCount,
+  deadCount,
   onNewRun,
 }: Props) {
   return (
@@ -70,6 +72,7 @@ export default function HeroSection({
             <StatCard value={runsCount} label="Runs" color="#E3F2FD" />
             <StatCard value={activeCount} label="Actifs" color="#E8F5E9" />
             <StatCard value={capturesCount} label="Captures" color="#F3E5F5" />
+            <StatCard value={deadCount} label="RIP" color="#FEE2E2" />
           </Stack>
 
           {/* CTA Button */}
