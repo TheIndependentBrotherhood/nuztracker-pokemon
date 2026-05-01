@@ -3,7 +3,7 @@
 import { Run } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useRunStore } from "@/store/runStore";
-import { Box, Typography, Grid } from "@mui/material";
+import { Box, Typography, Grid, Tooltip } from "@mui/material";
 
 interface RunListProps {
   runs: Run[];
@@ -97,6 +97,7 @@ export default function RunList({ runs }: RunListProps) {
                 p: 3,
                 cursor: "pointer",
                 transition: "all 300ms ease",
+                width: "345px",
                 "&:hover": {
                   boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
                   transform: "scale(1.05)",
@@ -140,20 +141,22 @@ export default function RunList({ runs }: RunListProps) {
                   }}
                 >
                   <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography
-                      sx={{
-                        fontSize: "1.125rem",
-                        fontWeight: 700,
-                        color: "#000",
-                        transition: "color 300ms ease",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {run.gameName}
-                    </Typography>
+                    <Tooltip title={run.gameName} arrow>
+                      <Typography
+                        sx={{
+                          fontSize: "1.125rem",
+                          fontWeight: 700,
+                          color: "#000",
+                          transition: "color 300ms ease",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {run.gameName}
+                      </Typography>
+                    </Tooltip>
                     <Typography
                       sx={{
                         color: "#374151",
