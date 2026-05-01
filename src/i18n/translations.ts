@@ -128,7 +128,10 @@ const translations = {
     },
     searching: { fr: "Recherche...", en: "Searching..." },
     nickname: { fr: "Surnom (optionnel)", en: "Nickname (optional)" },
-    nicknamePlaceholder: { fr: "Entrez un surnom...", en: "Enter a nickname..." },
+    nicknamePlaceholder: {
+      fr: "Entrez un surnom...",
+      en: "Enter a nickname...",
+    },
     level: { fr: "Niveau", en: "Level" },
     gender: { fr: "Genre", en: "Gender" },
     genderUnknown: { fr: "Inconnu", en: "Unknown" },
@@ -180,6 +183,10 @@ const translations = {
   teamView: {
     team: { fr: "⚔️ Équipe", en: "⚔️ Team" },
     analysis: { fr: "🔬 Analyse", en: "🔬 Analysis" },
+    slot: {
+      fr: (n: number) => `Emplacement ${n}`,
+      en: (n: number) => `Slot ${n}`,
+    },
     capturedPokemon: {
       fr: (n: number) => `📦 Pokémons capturés (${n})`,
       en: (n: number) => `📦 Captured Pokémon (${n})`,
@@ -207,6 +214,7 @@ const translations = {
   // ── Captured Pokemon Card ──────────────────────────────────────────────────
   capturedPokemonCard: {
     addToTeam: { fr: "Ajouter à l'équipe", en: "Add to team" },
+    markAsDead: { fr: "Marquer comme décédé", en: "Mark as dead" },
   },
 
   // ── Dead Pokemon Card ──────────────────────────────────────────────────────
@@ -265,7 +273,10 @@ const translations = {
     superEffective: { fr: "Super efficace", en: "Super effective" },
     neutral: { fr: "Neutre", en: "Neutral" },
     notVeryEffective: { fr: "Peu efficace", en: "Not very effective" },
-    veryNotEffective: { fr: "Très peu efficace", en: "Not very effective (x0.25)" },
+    veryNotEffective: {
+      fr: "Très peu efficace",
+      en: "Not very effective (x0.25)",
+    },
     noEffect: { fr: "Aucun effet", en: "No effect" },
     unknown: { fr: "Inconnu", en: "Unknown" },
     veryWeak: { fr: "Très faible", en: "Very weak" },

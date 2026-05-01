@@ -60,7 +60,7 @@ export default function TeamPokemonCard({
         <Typography
           sx={{ color: "#64748b", fontSize: "0.75rem", fontWeight: 600 }}
         >
-          {`Slot ${slotIndex + 1}`}
+          {t(tr.teamView.slot, lang)(slotIndex + 1)}
         </Typography>
       </Box>
     );

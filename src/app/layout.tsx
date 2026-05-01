@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CacheProvider } from "@/context/CacheContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import HtmlLangSync from "@/components/layout/HtmlLangSync";
 import { MuiProvider } from "@/components/layout/MuiProvider";
 import "./globals.css";
 
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body>
         <MuiProvider>
           <LanguageProvider>
+            <HtmlLangSync />
             <CacheProvider>{children}</CacheProvider>
           </LanguageProvider>
         </MuiProvider>

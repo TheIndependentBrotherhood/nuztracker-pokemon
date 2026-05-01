@@ -23,6 +23,7 @@ import {
   loadTypeData,
   buildTypeDefensesFromJson,
   buildTypeOffensesFromJson,
+  type EffectivenessLabelKey,
   type TypeChartData,
 } from "@/lib/type-chart";
 import { fetchPokemon } from "@/lib/pokemon-api";
@@ -110,10 +111,22 @@ export default function TypeAnalysis({ run }: Props) {
           onChange={(_, val) => setTabValue(val)}
           sx={{ borderBottom: "none" }}
         >
-          <Tab label={t(tr.typeAnalysis.tabDefense, lang)} sx={{ fontWeight: 700, color: "#000" }} />
-          <Tab label={t(tr.typeAnalysis.tabAttack, lang)} sx={{ fontWeight: 700, color: "#000" }} />
-          <Tab label={t(tr.typeAnalysis.tabCombination, lang)} sx={{ fontWeight: 700, color: "#000" }} />
-          <Tab label={t(tr.typeAnalysis.tabTypes, lang)} sx={{ fontWeight: 700, color: "#000" }} />
+          <Tab
+            label={t(tr.typeAnalysis.tabDefense, lang)}
+            sx={{ fontWeight: 700, color: "#000" }}
+          />
+          <Tab
+            label={t(tr.typeAnalysis.tabAttack, lang)}
+            sx={{ fontWeight: 700, color: "#000" }}
+          />
+          <Tab
+            label={t(tr.typeAnalysis.tabCombination, lang)}
+            sx={{ fontWeight: 700, color: "#000" }}
+          />
+          <Tab
+            label={t(tr.typeAnalysis.tabTypes, lang)}
+            sx={{ fontWeight: 700, color: "#000" }}
+          />
         </Tabs>
       </Box>
 
@@ -486,8 +499,7 @@ export default function TypeAnalysis({ run }: Props) {
           <TableBody>
             {TYPES.map((defendType) => {
               const teamOffenses = teamTypes.map((types) => {
-                if (types.length === 0)
-                  return getOffenses([])[defendType] ?? 1;
+                if (types.length === 0) return getOffenses([])[defendType] ?? 1;
                 return getOffenses(types)[defendType] ?? 1;
               });
 
@@ -765,7 +777,16 @@ export default function TypeAnalysis({ run }: Props) {
         }}
       >
         <Box sx={{ p: 2 }}>
-          <Box sx={{ display: "flex", gap: 1, marginBottom: 2, justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              marginBottom: 2,
+              justifyContent: "center",
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
             {selectedTypes.map((type) => (
               <Box
                 key={type}
@@ -796,7 +817,9 @@ export default function TypeAnalysis({ run }: Props) {
               </Box>
             ))}
             {selectedTypes.length < 2 && (
-              <Typography sx={{ fontSize: "0.875rem", color: "#666", fontWeight: 600 }}>
+              <Typography
+                sx={{ fontSize: "0.875rem", color: "#666", fontWeight: 600 }}
+              >
                 {t(tr.typeAnalysis.plusOneType, lang)}
               </Typography>
             )}
@@ -804,7 +827,14 @@ export default function TypeAnalysis({ run }: Props) {
 
           {selectedTypes.length < 2 && (
             <Box sx={{ marginBottom: 2 }}>
-              <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: "#666", marginBottom: 1 }}>
+              <Typography
+                sx={{
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: "#666",
+                  marginBottom: 1,
+                }}
+              >
                 {t(tr.typeAnalysis.availableTypes, lang)}
               </Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -838,137 +868,189 @@ export default function TypeAnalysis({ run }: Props) {
             </Box>
           )}
 
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 2,
-            marginBottom: 2,
-          }}
-        >
-          {/* Défense */}
-          <Box>
-            <Typography
-              sx={{
-                fontWeight: 700,
-                fontSize: "1rem",
-                marginBottom: 1,
-                color: "#000",
-              }}
-            >
-              {t(tr.typeAnalysis.defenseSection, lang)}
-            </Typography>
-            {[4, 2, 0.5, 0.25, 0].map((multiplier) => {
-              const types = TYPES.filter((t) => combinationDefenses[t] === multiplier);
-              if (types.length === 0) return null;
-
-              const { label, color } = getEffectivenessLabel(multiplier, "defense", lang);
-              const bgColor = multiplier >= 2 ? "#fee2e2" : multiplier >= 0.5 ? "#dcfce7" : "#cffafe";
-              const borderColor = multiplier >= 2 ? "#fca5a5" : multiplier >= 0.5 ? "#86efac" : "#60a5fa";
-
-              return (
-                <Box key={multiplier} sx={{ marginBottom: 1.5 }}>
-                  <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color, marginBottom: 0.5 }}>
-                    {label} ({types.length})
-                  </Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {types.map((type) => (
-                      <Box
-                        key={type}
-                        sx={{
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: "0.25rem",
-                          background: bgColor,
-                          color: color,
-                          fontWeight: 600,
-                          fontSize: "0.75rem",
-                          textTransform: "capitalize",
-                          border: `1px solid ${borderColor}`,
-                        }}
-                      >
-                        {type}
-                        {multiplier === 0 && " 🔒"}
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              );
-            })}
-          </Box>
-
-          {/* Attaque */}
-          <Box>
-            <Typography
-              sx={{
-                fontWeight: 700,
-                fontSize: "1rem",
-                marginBottom: 1,
-                color: "#000",
-              }}
-            >
-              {t(tr.typeAnalysis.attackSection, lang)}
-            </Typography>
-            {[4, 2, 0.5, 0.25, 0].map((multiplier) => {
-              const types = TYPES.filter((t) => combinationOffenses[t] === multiplier);
-              if (types.length === 0) return null;
-
-              const { label, color } = getEffectivenessLabel(multiplier, "attack", lang);
-              const bgColor = multiplier >= 2 ? "#dcfce7" : multiplier >= 0.5 ? "#fee2e2" : "#ffe8e8";
-              const borderColor = multiplier >= 2 ? "#86efac" : multiplier >= 0.5 ? "#fca5a5" : "#ffcccc";
-
-              return (
-                <Box key={multiplier} sx={{ marginBottom: 1.5 }}>
-                  <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color, marginBottom: 0.5 }}>
-                    {label} ({types.length})
-                  </Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {types.map((type) => (
-                      <Box
-                        key={type}
-                        sx={{
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: "0.25rem",
-                          background: bgColor,
-                          color: color,
-                          fontWeight: 600,
-                          fontSize: "0.75rem",
-                          textTransform: "capitalize",
-                          border: `1px solid ${borderColor}`,
-                        }}
-                      >
-                        {type}
-                      </Box>
-                    ))}
-                  </Box>
-                </Box>
-              );
-            })}
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            textAlign: "center",
-            marginTop: 2,
-          }}
-        >
-          <Typography
-            onClick={() => setSelectedTypes([])}
+          <Box
             sx={{
-              fontSize: "0.875rem",
-              color: "#0066cc",
-              cursor: "pointer",
-              fontWeight: 600,
-              "&:hover": {
-                textDecoration: "underline",
-              },
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 2,
+              marginBottom: 2,
             }}
           >
-            {t(tr.typeAnalysis.resetSelection, lang)}
-          </Typography>
-        </Box>
+            {/* Défense */}
+            <Box>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: "1rem",
+                  marginBottom: 1,
+                  color: "#000",
+                }}
+              >
+                {t(tr.typeAnalysis.defenseSection, lang)}
+              </Typography>
+              {[4, 2, 0.5, 0.25, 0].map((multiplier) => {
+                const types = TYPES.filter(
+                  (t) => combinationDefenses[t] === multiplier,
+                );
+                if (types.length === 0) return null;
+
+                const { labelKey, color } = getEffectivenessLabel(
+                  multiplier,
+                  "defense",
+                );
+                const bgColor =
+                  multiplier >= 2
+                    ? "#fee2e2"
+                    : multiplier >= 0.5
+                      ? "#dcfce7"
+                      : "#cffafe";
+                const borderColor =
+                  multiplier >= 2
+                    ? "#fca5a5"
+                    : multiplier >= 0.5
+                      ? "#86efac"
+                      : "#60a5fa";
+
+                return (
+                  <Box key={multiplier} sx={{ marginBottom: 1.5 }}>
+                    <Typography
+                      sx={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        color,
+                        marginBottom: 0.5,
+                      }}
+                    >
+                      {t(
+                        tr.typeAnalysis[labelKey as EffectivenessLabelKey],
+                        lang,
+                      )}{" "}
+                      ({types.length})
+                    </Typography>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {types.map((type) => (
+                        <Box
+                          key={type}
+                          sx={{
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: "0.25rem",
+                            background: bgColor,
+                            color: color,
+                            fontWeight: 600,
+                            fontSize: "0.75rem",
+                            textTransform: "capitalize",
+                            border: `1px solid ${borderColor}`,
+                          }}
+                        >
+                          {type}
+                          {multiplier === 0 && " 🔒"}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+
+            {/* Attaque */}
+            <Box>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: "1rem",
+                  marginBottom: 1,
+                  color: "#000",
+                }}
+              >
+                {t(tr.typeAnalysis.attackSection, lang)}
+              </Typography>
+              {[4, 2, 0.5, 0.25, 0].map((multiplier) => {
+                const types = TYPES.filter(
+                  (t) => combinationOffenses[t] === multiplier,
+                );
+                if (types.length === 0) return null;
+
+                const { labelKey, color } = getEffectivenessLabel(
+                  multiplier,
+                  "attack",
+                );
+                const bgColor =
+                  multiplier >= 2
+                    ? "#dcfce7"
+                    : multiplier >= 0.5
+                      ? "#fee2e2"
+                      : "#ffe8e8";
+                const borderColor =
+                  multiplier >= 2
+                    ? "#86efac"
+                    : multiplier >= 0.5
+                      ? "#fca5a5"
+                      : "#ffcccc";
+
+                return (
+                  <Box key={multiplier} sx={{ marginBottom: 1.5 }}>
+                    <Typography
+                      sx={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        color,
+                        marginBottom: 0.5,
+                      }}
+                    >
+                      {t(
+                        tr.typeAnalysis[labelKey as EffectivenessLabelKey],
+                        lang,
+                      )}{" "}
+                      ({types.length})
+                    </Typography>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {types.map((type) => (
+                        <Box
+                          key={type}
+                          sx={{
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: "0.25rem",
+                            background: bgColor,
+                            color: color,
+                            fontWeight: 600,
+                            fontSize: "0.75rem",
+                            textTransform: "capitalize",
+                            border: `1px solid ${borderColor}`,
+                          }}
+                        >
+                          {type}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              textAlign: "center",
+              marginTop: 2,
+            }}
+          >
+            <Typography
+              onClick={() => setSelectedTypes([])}
+              sx={{
+                fontSize: "0.875rem",
+                color: "#0066cc",
+                cursor: "pointer",
+                fontWeight: 600,
+                "&:hover": {
+                  textDecoration: "underline",
+                },
+              }}
+            >
+              {t(tr.typeAnalysis.resetSelection, lang)}
+            </Typography>
+          </Box>
         </Box>
       </TableContainer>
     );
@@ -1044,12 +1126,12 @@ export default function TypeAnalysis({ run }: Props) {
               const defenses = getDefenses([type]);
               const offenses = getOffenses([type]);
 
-              const efficaceTo = TYPES.filter(
-                (t) => offenses[t] > 1,
-              ).sort((a, b) => offenses[b] - offenses[a]);
-              const weakTo = TYPES.filter(
-                (t) => defenses[t] > 1,
-              ).sort((a, b) => defenses[b] - defenses[a]);
+              const efficaceTo = TYPES.filter((t) => offenses[t] > 1).sort(
+                (a, b) => offenses[b] - offenses[a],
+              );
+              const weakTo = TYPES.filter((t) => defenses[t] > 1).sort(
+                (a, b) => defenses[b] - defenses[a],
+              );
               const resistantTo = TYPES.filter(
                 (t) => defenses[t] < 1 && defenses[t] !== 0,
               ).sort((a, b) => defenses[a] - defenses[b]);

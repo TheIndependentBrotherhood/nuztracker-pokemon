@@ -177,7 +177,8 @@ export default function CapturedPokemonCard({
                     background: "#dc2626",
                   },
                 }}
-                title="Marquer comme décédé"
+                title={t(tr.capturedPokemonCard.markAsDead, lang)}
+                aria-label={t(tr.capturedPokemonCard.markAsDead, lang)}
               >
                 ⚰️
               </Box>
@@ -206,7 +207,8 @@ export default function CapturedPokemonCard({
                   background: "#2563eb",
                 },
               }}
-              title="Ajouter à l'équipe"
+              title={t(tr.capturedPokemonCard.addToTeam, lang)}
+              aria-label={t(tr.capturedPokemonCard.addToTeam, lang)}
             >
               +
             </Box>

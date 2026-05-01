@@ -2,6 +2,7 @@
 
 import { AppBar, Box, Container, Toolbar, Typography } from "@mui/material";
 import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   showBack?: boolean;
@@ -18,6 +19,11 @@ export default function Header({
   actions,
 }: Props) {
   const { lang, toggleLang } = useLanguage();
+  const tr = translations;
+  const switchLabel =
+    lang === "fr"
+      ? t(tr.language.switchToEnglish, lang)
+      : t(tr.language.switchToFrench, lang);
 
   return (
     <AppBar
@@ -78,15 +84,21 @@ export default function Header({
 
           {/* Right: Actions + Language toggle */}
           <Box
-            sx={{ display: "flex", gap: 1, position: "absolute", right: 16, alignItems: "center" }}
+            sx={{
+              display: "flex",
+              gap: 1,
+              position: "absolute",
+              right: 16,
+              alignItems: "center",
+            }}
           >
             {actions}
             {/* Language flag button */}
             <Box
               component="button"
               onClick={toggleLang}
-              title={lang === "fr" ? "Switch to English" : "Passer en français"}
-              aria-label={lang === "fr" ? "Switch to English (current: Français)" : "Passer en français (actuel: English)"}
+              title={switchLabel}
+              aria-label={switchLabel}
               sx={{
                 fontSize: "1.4rem",
                 lineHeight: 1,

@@ -285,45 +285,58 @@ export const typeColors: Record<string, string> = {
   fairy: "#EE99AC",
 };
 
+export type EffectivenessLabelKey =
+  | "hyperEffective"
+  | "superEffective"
+  | "neutral"
+  | "notVeryEffective"
+  | "veryNotEffective"
+  | "noEffect"
+  | "unknown"
+  | "veryWeak"
+  | "weak"
+  | "resistant"
+  | "veryResistant"
+  | "immune";
+
 export function getEffectivenessLabel(
   multiplier: number,
   context: "attack" | "defense",
-  lang: "fr" | "en" = "fr",
-): { label: string; color: string } {
+): { labelKey: EffectivenessLabelKey; color: string } {
   if (context === "attack") {
     switch (multiplier) {
       case 4:
-        return { label: lang === "fr" ? "Hyper efficace" : "Super effective (x4)", color: "#166534" };
+        return { labelKey: "hyperEffective", color: "#166534" };
       case 2:
-        return { label: lang === "fr" ? "Super efficace" : "Super effective", color: "#16a34a" };
+        return { labelKey: "superEffective", color: "#16a34a" };
       case 1:
-        return { label: lang === "fr" ? "Neutre" : "Neutral", color: "#666666" };
+        return { labelKey: "neutral", color: "#666666" };
       case 0.5:
-        return { label: lang === "fr" ? "Peu efficace" : "Not very effective", color: "#ea580c" };
+        return { labelKey: "notVeryEffective", color: "#ea580c" };
       case 0.25:
-        return { label: lang === "fr" ? "Très peu efficace" : "Not very effective (x0.25)", color: "#7f1d1d" };
+        return { labelKey: "veryNotEffective", color: "#7f1d1d" };
       case 0:
-        return { label: lang === "fr" ? "Aucun effet" : "No effect", color: "#374151" };
+        return { labelKey: "noEffect", color: "#374151" };
       default:
-        return { label: lang === "fr" ? "Inconnu" : "Unknown", color: "#000000" };
+        return { labelKey: "unknown", color: "#000000" };
     }
   } else {
     // defense
     switch (multiplier) {
       case 4:
-        return { label: lang === "fr" ? "Très faible" : "Very weak", color: "#7f1d1d" };
+        return { labelKey: "veryWeak", color: "#7f1d1d" };
       case 2:
-        return { label: lang === "fr" ? "Faible" : "Weak", color: "#dc2626" };
+        return { labelKey: "weak", color: "#dc2626" };
       case 1:
-        return { label: lang === "fr" ? "Neutre" : "Neutral", color: "#666666" };
+        return { labelKey: "neutral", color: "#666666" };
       case 0.5:
-        return { label: lang === "fr" ? "Résistant" : "Resistant", color: "#16a34a" };
+        return { labelKey: "resistant", color: "#16a34a" };
       case 0.25:
-        return { label: lang === "fr" ? "Très résistant" : "Very resistant", color: "#166534" };
+        return { labelKey: "veryResistant", color: "#166534" };
       case 0:
-        return { label: lang === "fr" ? "Immunisé" : "Immune", color: "#60a5fa" };
+        return { labelKey: "immune", color: "#60a5fa" };
       default:
-        return { label: lang === "fr" ? "Inconnu" : "Unknown", color: "#000000" };
+        return { labelKey: "unknown", color: "#000000" };
     }
   }
 }
