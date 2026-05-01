@@ -115,7 +115,7 @@ export default function Header({
                 },
               }}
             >
-              {lang === "fr" ? "🇬🇧" : "🇫🇷"}
+              {lang === "fr" ? "🇫🇷" : "🇬🇧"}
             </Box>
           </Box>
         </Toolbar>

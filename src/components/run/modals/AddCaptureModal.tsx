@@ -16,6 +16,7 @@ import {
   searchPokemon,
   getPokemonIdFromUrl,
   getSpriteUrl,
+  type PokemonSearchResult,
 } from "@/lib/pokemon-api";
 import { Capture } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -39,12 +40,12 @@ export default function AddCaptureModal({
   const tr = translations;
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Array<{ name: string; displayName: string; url: string }>>(
-    [],
-  );
-  const [selected, setSelected] = useState<{ name: string; id: number } | null>(
-    null,
-  );
+  const [results, setResults] = useState<PokemonSearchResult[]>([]);
+  const [selected, setSelected] = useState<{
+    name: string;
+    id: number;
+    names?: { fr?: string; en?: string };
+  } | null>(null);
   const [nickname, setNickname] = useState("");
   const [level, setLevel] = useState(5);
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
@@ -82,9 +83,9 @@ export default function AddCaptureModal({
     };
   }, [query, lang]);
 
-  async function handleSelect(item: { name: string; displayName: string; url: string }) {
+  async function handleSelect(item: PokemonSearchResult) {
     const id = getPokemonIdFromUrl(item.url);
-    setSelected({ name: item.name, id });
+    setSelected({ name: item.name, id, names: item.names });
     setQuery(item.displayName);
     setResults([]);
   }
@@ -94,6 +95,7 @@ export default function AddCaptureModal({
     addCapture(runId, zoneId, {
       pokemonId: selected.id,
       pokemonName: selected.name,
+      pokemonNames: selected.names,
       nickname: nickname || undefined,
       level,
       gender,
@@ -400,9 +402,15 @@ export default function AddCaptureModal({
                 },
               }}
             >
-              <MenuItem value="unknown">{t(tr.addCapture.genderUnknown, lang)}</MenuItem>
-              <MenuItem value="male">{t(tr.addCapture.genderMale, lang)}</MenuItem>
-              <MenuItem value="female">{t(tr.addCapture.genderFemale, lang)}</MenuItem>
+              <MenuItem value="unknown">
+                {t(tr.addCapture.genderUnknown, lang)}
+              </MenuItem>
+              <MenuItem value="male">
+                {t(tr.addCapture.genderMale, lang)}
+              </MenuItem>
+              <MenuItem value="female">
+                {t(tr.addCapture.genderFemale, lang)}
+              </MenuItem>
             </Select>
           </Box>
         </Box>

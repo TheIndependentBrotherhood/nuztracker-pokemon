@@ -224,10 +224,37 @@ const translations = {
 
   // ── Stats Bar ──────────────────────────────────────────────────────────────
   statsBar: {
+    caught: { fr: "Capturés", en: "Caught" },
+    dead: { fr: "RIP", en: "RIP" },
+    exportDimensionsHint: {
+      fr: "De 408x720px à 1920x1080px",
+      en: "From 408x720px to 1920x1080px",
+    },
+    exportTeamAsPng: {
+      fr: "Exporter l'équipe en PNG",
+      en: "Export team as PNG",
+    },
+    generateShareableUrl: {
+      fr: "Générer une URL de partage",
+      en: "Generate shareable URL",
+    },
     regularZones: { fr: "Zones Pokémons", en: "Regular Zones" },
     shinyZones: { fr: "Zones Shinies", en: "Shiny Zones" },
     rate: { fr: "Taux", en: "Rate" },
     missed: { fr: "Loupés", en: "Missed" },
+    team: { fr: "Équipe", en: "Team" },
+    teamViewElementNotFound: {
+      fr: "Élément de l'équipe introuvable",
+      en: "Team view element not found",
+    },
+    failedToExportPng: {
+      fr: "Impossible d'exporter le PNG. Réessaie.",
+      en: "Failed to export PNG. Please try again.",
+    },
+    failedToGenerateShareUrl: {
+      fr: "Impossible de générer l'URL de partage",
+      en: "Failed to generate share URL",
+    },
     exportPngTitle: {
       fr: "Exporter l'image PNG",
       en: "Export PNG image",
@@ -237,6 +264,7 @@ const translations = {
     cancel: { fr: "Annuler", en: "Cancel" },
     exporting: { fr: "Export...", en: "Exporting..." },
     export: { fr: "Exporter", en: "Export" },
+    zones: { fr: "Zones", en: "Zones" },
   },
 
   // ── Type Analysis ──────────────────────────────────────────────────────────

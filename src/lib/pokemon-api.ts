@@ -1,14 +1,34 @@
-import { PokemonApiData } from './types';
+import { PokemonApiData } from "./types";
+import { Lang } from "@/i18n/translations";
 
-const BASE_URL = 'https://pokeapi.co/api/v2';
+const BASE_URL = "https://pokeapi.co/api/v2";
 
 // In-memory fallback for environments where the cache file hasn't been generated yet
-let pokemonListFallbackCache: Array<{ name: string; url: string }> | null = null;
+let pokemonListFallbackCache: Array<{ name: string; url: string }> | null =
+  null;
 
 // Module-level cache for the static JSON file so it is only downloaded once
-let pokemonListJsonCache: Array<{ name: string; id: number; names?: { fr?: string; en?: string } }> | null = null;
+let pokemonListJsonCache: Array<{
+  name: string;
+  id: number;
+  names?: { fr?: string; en?: string };
+}> | null = null;
 
-export async function fetchPokemon(nameOrId: string | number): Promise<PokemonApiData> {
+export interface PokemonNames {
+  fr?: string;
+  en?: string;
+}
+
+export interface PokemonSearchResult {
+  name: string;
+  displayName: string;
+  url: string;
+  names?: PokemonNames;
+}
+
+export async function fetchPokemon(
+  nameOrId: string | number,
+): Promise<PokemonApiData> {
   const res = await fetch(`${BASE_URL}/pokemon/${nameOrId}`);
   if (!res.ok) throw new Error(`Pokemon not found: ${nameOrId}`);
   return res.json();
@@ -27,7 +47,7 @@ export async function fetchPokemon(nameOrId: string | number): Promise<PokemonAp
 export async function searchPokemon(
   query: string,
   lang: "fr" | "en" = "fr",
-): Promise<Array<{ name: string; displayName: string; url: string }>> {
+): Promise<PokemonSearchResult[]> {
   if (!query || query.length < 2) return [];
 
   const lower = query.toLowerCase();
@@ -35,9 +55,15 @@ export async function searchPokemon(
   // Attempt to use the pre-generated static cache
   try {
     if (!pokemonListJsonCache) {
-      const res = await fetch('/data/pokemon-list.json');
+      const res = await fetch("/data/pokemon-list.json");
       if (res.ok) {
-        const data = (await res.json()) as { pokemon?: { name: string; id: number; names?: { fr?: string; en?: string } }[] };
+        const data = (await res.json()) as {
+          pokemon?: {
+            name: string;
+            id: number;
+            names?: { fr?: string; en?: string };
+          }[];
+        };
         if (data.pokemon && data.pokemon.length > 0) {
           pokemonListJsonCache = data.pokemon;
         }
@@ -48,7 +74,11 @@ export async function searchPokemon(
         .filter((p) => {
           const nameFr = p.names?.fr?.toLowerCase() ?? "";
           const nameEn = p.names?.en?.toLowerCase() ?? p.name.toLowerCase();
-          return nameFr.includes(lower) || nameEn.includes(lower) || p.name.includes(lower);
+          return (
+            nameFr.includes(lower) ||
+            nameEn.includes(lower) ||
+            p.name.includes(lower)
+          );
         })
         .slice(0, 10)
         .map((p) => {
@@ -60,6 +90,7 @@ export async function searchPokemon(
             name: p.name,
             displayName,
             url: `${BASE_URL}/pokemon/${p.id}`,
+            names: p.names,
           };
         });
     }
@@ -71,9 +102,13 @@ export async function searchPokemon(
   try {
     if (!pokemonListFallbackCache) {
       const res = await fetch(`${BASE_URL}/pokemon?limit=1302`);
-      if (!res.ok) throw new Error(`Failed to fetch Pokemon list: ${res.status}`);
+      if (!res.ok)
+        throw new Error(`Failed to fetch Pokemon list: ${res.status}`);
       const data = await res.json();
-      pokemonListFallbackCache = data.results as Array<{ name: string; url: string }>;
+      pokemonListFallbackCache = data.results as Array<{
+        name: string;
+        url: string;
+      }>;
     }
     return pokemonListFallbackCache
       .filter((p) => p.name.includes(lower))
@@ -84,12 +119,20 @@ export async function searchPokemon(
   }
 }
 
+export function getLocalizedPokemonName(
+  pokemon: { pokemonName: string; pokemonNames?: PokemonNames },
+  lang: Lang,
+): string {
+  return pokemon.pokemonNames?.[lang] ?? pokemon.pokemonName;
+}
+
 export function getPokemonIdFromUrl(url: string): number {
-  const parts = url.split('/').filter(Boolean);
+  const parts = url.split("/").filter(Boolean);
   return parseInt(parts[parts.length - 1]);
 }
 
 export function getSpriteUrl(id: number, shiny = false): string {
-  const base = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+  const base =
+    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
   return shiny ? `${base}/shiny/${id}.png` : `${base}/${id}.png`;
 }

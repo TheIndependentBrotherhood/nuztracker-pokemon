@@ -18,6 +18,10 @@ import { getSpriteUrl } from "@/lib/pokemon-api";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import {
+  getCaptureDisplayLabel,
+  getCaptureDisplayName,
+} from "@/lib/pokemon-display";
 
 interface Props {
   run: Run;
@@ -63,7 +67,7 @@ export default function StatsBar({ run }: Props) {
     try {
       const element = document.getElementById("team-export-target");
       if (!element) {
-        setExportError("Team view element not found");
+        setExportError(t(tr.statsBar.teamViewElementNotFound, lang));
         return;
       }
 
@@ -98,7 +102,7 @@ export default function StatsBar({ run }: Props) {
       link.click();
     } catch (error) {
       console.error("PNG export error:", error);
-      setExportError("Failed to export PNG. Please try again.");
+      setExportError(t(tr.statsBar.failedToExportPng, lang));
     } finally {
       setExporting(false);
     }
@@ -114,20 +118,20 @@ export default function StatsBar({ run }: Props) {
       link.click();
     } catch (error) {
       console.error("URL generation error:", error);
-      setExportError("Failed to generate share URL");
+      setExportError(t(tr.statsBar.failedToGenerateShareUrl, lang));
     }
   }
 
   const teamActions = [
     {
       icon: "🖼️",
-      title: "Export team as PNG",
+      title: t(tr.statsBar.exportTeamAsPng, lang),
       onClick: handleExportPng,
       disabled: exporting || run.team.length === 0,
     },
     {
       icon: "🔗",
-      title: "Generate shareable URL",
+      title: t(tr.statsBar.generateShareableUrl, lang),
       onClick: handleGenerateUrl,
       disabled: run.team.length === 0,
     },
@@ -274,7 +278,7 @@ export default function StatsBar({ run }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={getSpriteUrl(pokemon.pokemonId, pokemon.isShiny)}
-            alt={pokemon.pokemonName}
+            alt={getCaptureDisplayName(pokemon, lang)}
             style={{
               width: "80px",
               height: "80px",
@@ -300,7 +304,7 @@ export default function StatsBar({ run }: Props) {
               whiteSpace: "nowrap",
             }}
           >
-            {pokemon.nickname || pokemon.pokemonName}
+            {getCaptureDisplayLabel(pokemon, lang)}
           </Box>
         </Box>
       ))}
@@ -345,20 +349,24 @@ export default function StatsBar({ run }: Props) {
       >
         <StatCard
           value={`${displayVisited}/${displayTotal}`}
-          label="Zones"
+          label={t(tr.statsBar.zones, lang)}
           color="#E3F2FD"
           hoverContent={zonesHoverContent}
         />
         <StatCard
           value={captured}
-          label="Caught"
+          label={t(tr.statsBar.caught, lang)}
           color="#E8F5E9"
           hoverContent={captureesHoverContent}
         />
-        <StatCard value={deadCount} label="RIP" color="#FEE2E2" />
+        <StatCard
+          value={deadCount}
+          label={t(tr.statsBar.dead, lang)}
+          color="#FEE2E2"
+        />
         <StatCard
           value={`${run.team.length}/6`}
-          label="Team"
+          label={t(tr.statsBar.team, lang)}
           color="#fff7e8"
           hoverContent={equipeHoverContent}
           actions={teamActions}
@@ -443,7 +451,7 @@ export default function StatsBar({ run }: Props) {
             fullWidth
           />
           <Typography sx={{ fontSize: "0.875rem", color: "#666" }}>
-            408x720px à 1920x1080px
+            {t(tr.statsBar.exportDimensionsHint, lang)}
           </Typography>
           {exportError && (
             <Typography

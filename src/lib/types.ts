@@ -2,6 +2,10 @@ export interface Capture {
   id: string;
   pokemonId: number;
   pokemonName: string;
+  pokemonNames?: {
+    fr?: string;
+    en?: string;
+  };
   nickname?: string;
   level: number;
   gender: "male" | "female" | "unknown";
