@@ -189,6 +189,14 @@ const translations = {
       en: "Reserve area (drag Pokémon here to remove them from the team)",
     },
     unknown: { fr: "Inconnue", en: "Unknown" },
+    deadPokemon: {
+      fr: (n: number) => `⚰️ Pokémons RIP (${n})`,
+      en: (n: number) => `⚰️ Pokémon RIP (${n})`,
+    },
+    noDeadPokemon: {
+      fr: "Aucun pokémon décédé pour le moment. Longue vie à votre équipe ! 🍀",
+      en: "No deceased Pokémon so far. Long live your team! 🍀",
+    },
   },
 
   // ── Pokemon Card ───────────────────────────────────────────────────────────
@@ -199,6 +207,11 @@ const translations = {
   // ── Captured Pokemon Card ──────────────────────────────────────────────────
   capturedPokemonCard: {
     addToTeam: { fr: "Ajouter à l'équipe", en: "Add to team" },
+  },
+
+  // ── Dead Pokemon Card ──────────────────────────────────────────────────────
+  deadPokemonCard: {
+    resurrect: { fr: "Ressusciter", en: "Resurrect" },
   },
 
   // ── Stats Bar ──────────────────────────────────────────────────────────────
