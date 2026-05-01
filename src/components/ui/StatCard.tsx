@@ -51,8 +51,8 @@ export default function StatCard({
         <Box
           sx={{
             position: "absolute",
-            top: 0.5,
-            right: 0.5,
+            top: 6,
+            right: 6,
             display: "flex",
             gap: 0.25,
           }}
@@ -71,6 +71,8 @@ export default function StatCard({
                 padding: "0.375rem",
                 fontSize: "1rem",
                 transition: "all 200ms ease",
+                width: "38px",
+                height: "38px",
                 "&:hover": {
                   background: "rgba(255, 255, 255, 1)",
                   transform: "translateY(-2px)",
