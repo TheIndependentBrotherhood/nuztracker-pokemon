@@ -133,20 +133,6 @@ export default function CapturedPokemonCard({
                 </Typography>
               )}
             </Typography>
-            {capture.nickname && (
-              <Typography
-                sx={{
-                  fontSize: "0.7rem",
-                  color: "#666",
-                  textTransform: "capitalize",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {capture.pokemonName}
-              </Typography>
-            )}
             <Typography
               sx={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 600 }}
             >
