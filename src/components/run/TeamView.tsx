@@ -6,6 +6,8 @@ import { useState } from "react";
 import PokemonCard from "./PokemonCard";
 import CapturedPokemonCard from "./CapturedPokemonCard";
 import { useRunStore } from "@/store/runStore";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   run: Run;
@@ -18,6 +20,8 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
   const { updateTeam } = useRunStore();
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const [dragOverCaptured, setDragOverCaptured] = useState(false);
+  const { lang } = useLanguage();
+  const tr = translations;
 
   // Get all captured pokémons not in team
   const capturedNotInTeam = run.zones
@@ -143,7 +147,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
           >
-            ⚔️ Équipe
+            {t(tr.teamView.team, lang)}
           </Typography>
           <Box
             sx={{
@@ -169,7 +173,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             role="button"
             tabIndex={0}
           >
-            🔬 Analyse
+            {t(tr.teamView.analysis, lang)}
           </Box>
         </Box>
         <Grid container spacing={1.5}>
@@ -195,7 +199,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                   slotIndex={i}
                   runId={run.id}
                   zone={
-                    capture ? getZoneForCapture(capture.id) || "Inconnue" : ""
+                    capture ? getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang) : ""
                   }
                 />
               </Box>
@@ -234,7 +238,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
           >
-            📦 Pokémons capturés ({capturedNotInTeam.length})
+            {t(tr.teamView.capturedPokemon, lang)(capturedNotInTeam.length)}
           </Typography>
         </Box>
         {capturedNotInTeam.length === 0 ? (
@@ -248,8 +252,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             }}
           >
             <Typography sx={{ fontSize: "0.875rem", fontWeight: 500 }}>
-              Zone de réserve (glisse les pokémons ici pour les retirer de
-              l'équipe)
+              {t(tr.teamView.reserveArea, lang)}
             </Typography>
           </Box>
         ) : (
@@ -259,7 +262,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                 <CapturedPokemonCard
                   capture={capture}
                   onAddToTeam={handleAddCapturedToTeam}
-                  zone={getZoneForCapture(capture.id)}
+                  zone={getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)}
                 />
               </Grid>
             ))}

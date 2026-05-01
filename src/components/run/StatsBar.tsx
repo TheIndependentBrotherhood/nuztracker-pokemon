@@ -16,6 +16,8 @@ import StatCard from "@/components/ui/StatCard";
 import StyledTextField from "@/components/ui/StyledTextField";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   run: Run;
@@ -27,6 +29,8 @@ export default function StatsBar({ run }: Props) {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportWidth, setExportWidth] = useState(408);
   const [exportHeight, setExportHeight] = useState(720);
+  const { lang } = useLanguage();
+  const tr = translations;
 
   const total = run.zones.length;
   const visited = run.zones.filter(
@@ -164,7 +168,7 @@ export default function StatsBar({ run }: Props) {
             letterSpacing: "0.05em",
           }}
         >
-          Zones Pokémons
+          {t(tr.statsBar.regularZones, lang)}
         </Typography>
       </Box>
       <Box sx={{ textAlign: "center" }}>
@@ -187,7 +191,7 @@ export default function StatsBar({ run }: Props) {
             letterSpacing: "0.05em",
           }}
         >
-          Zones Shinies
+          {t(tr.statsBar.shinyZones, lang)}
         </Typography>
       </Box>
     </Box>
@@ -216,7 +220,7 @@ export default function StatsBar({ run }: Props) {
             letterSpacing: "0.05em",
           }}
         >
-          Taux
+          {t(tr.statsBar.rate, lang)}
         </Typography>
       </Box>
       <Box sx={{ textAlign: "center" }}>
@@ -239,7 +243,7 @@ export default function StatsBar({ run }: Props) {
             letterSpacing: "0.05em",
           }}
         >
-          Loupés
+          {t(tr.statsBar.missed, lang)}
         </Typography>
       </Box>
     </Box>
@@ -400,7 +404,7 @@ export default function StatsBar({ run }: Props) {
             borderBottom: "2px solid #000",
           }}
         >
-          Exporter l&apos;image PNG
+          {t(tr.statsBar.exportPngTitle, lang)}
         </DialogTitle>
         <DialogContent
           sx={{
@@ -414,7 +418,7 @@ export default function StatsBar({ run }: Props) {
           }}
         >
           <StyledTextField
-            label="Largeur (px)"
+            label={t(tr.statsBar.width, lang)}
             type="number"
             value={exportWidth}
             onChange={(e) => {
@@ -424,7 +428,7 @@ export default function StatsBar({ run }: Props) {
             fullWidth
           />
           <StyledTextField
-            label="Hauteur (px)"
+            label={t(tr.statsBar.height, lang)}
             type="number"
             value={exportHeight}
             onChange={(e) => {
@@ -462,7 +466,7 @@ export default function StatsBar({ run }: Props) {
               },
             }}
           >
-            Annuler
+            {t(tr.statsBar.cancel, lang)}
           </Button>
           <Button
             onClick={performExport}
@@ -496,7 +500,7 @@ export default function StatsBar({ run }: Props) {
               },
             }}
           >
-            {exporting ? "Export..." : "Exporter"}
+            {exporting ? t(tr.statsBar.exporting, lang) : t(tr.statsBar.export, lang)}
           </Button>
         </DialogActions>
       </Dialog>

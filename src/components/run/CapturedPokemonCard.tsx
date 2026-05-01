@@ -5,6 +5,8 @@ import { Capture } from "@/lib/types";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { useState } from "react";
 import PokemonDetailModal from "./modals/PokemonDetailModal";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   capture: Capture;
@@ -18,6 +20,8 @@ export default function CapturedPokemonCard({
   zone,
 }: Props) {
   const [showDetail, setShowDetail] = useState(false);
+  const { lang } = useLanguage();
+  const tr = translations;
 
   const genderSymbol =
     capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : "";
@@ -177,7 +181,7 @@ export default function CapturedPokemonCard({
                 background: "#2563eb",
               },
             }}
-            title="Ajouter à l'équipe"
+            title={t(tr.capturedPokemonCard.addToTeam, lang)}
           >
             +
           </Box>

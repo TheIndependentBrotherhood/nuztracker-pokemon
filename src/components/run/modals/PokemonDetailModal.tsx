@@ -1,34 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Typography, Button, Grid, CircularProgress } from "@mui/material";
+import { Box, Typography, Button, Grid } from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
 import { fetchPokemon, getSpriteUrl } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   capture: Capture;
   onClose: () => void;
 }
 
-const statLabels: Record<string, string> = {
-  hp: "HP",
-  attack: "Atk",
-  defense: "Def",
-  "special-attack": "SpA",
-  "special-defense": "SpD",
-  speed: "Vit",
-};
-
 function StatBar({
   name,
   value,
   max = 255,
+  speedLabel,
 }: {
   name: string;
   value: number;
   max?: number;
+  speedLabel: string;
 }) {
+  const statLabels: Record<string, string> = {
+    hp: "HP",
+    attack: "Atk",
+    defense: "Def",
+    "special-attack": "SpA",
+    "special-defense": "SpD",
+    speed: speedLabel,
+  };
+
   const pct = Math.min(100, (value / max) * 100);
   const color = pct >= 70 ? "#10b981" : pct >= 40 ? "#3b82f6" : "#ef4444";
 
@@ -82,6 +86,8 @@ function StatBar({
 export default function PokemonDetailModal({ capture, onClose }: Props) {
   const [data, setData] = useState<PokemonApiData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { lang } = useLanguage();
+  const tr = translations;
 
   useEffect(() => {
     fetchPokemon(capture.pokemonId)
@@ -134,7 +140,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
       >
         {loading ? (
           <Box sx={{ textAlign: "center", py: 6, color: "#64748b" }}>
-            Chargement...
+            {t(tr.pokemonDetail.loading, lang)}
           </Box>
         ) : data ? (
           <>
@@ -241,13 +247,14 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                   mb: 1,
                 }}
               >
-                Statistiques de base
+                {t(tr.pokemonDetail.baseStats, lang)}
               </Typography>
               {data.stats.map((s) => (
                 <StatBar
                   key={s.stat.name}
                   name={s.stat.name}
                   value={s.base_stat}
+                  speedLabel={t(tr.pokemonDetail.statSpeed, lang)}
                 />
               ))}
             </Box>
@@ -270,7 +277,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                       mb: 0.25,
                     }}
                   >
-                    Taille
+                    {t(tr.pokemonDetail.height, lang)}
                   </Typography>
                   <Typography sx={{ fontWeight: 600, color: "#000" }}>
                     {(data.height / 10).toFixed(1)} m
@@ -293,7 +300,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                       mb: 0.25,
                     }}
                   >
-                    Poids
+                    {t(tr.pokemonDetail.weight, lang)}
                   </Typography>
                   <Typography sx={{ fontWeight: 600, color: "#000" }}>
                     {(data.weight / 10).toFixed(1)} kg
@@ -304,7 +311,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
           </>
         ) : (
           <Box sx={{ textAlign: "center", py: 6, color: "#dc2626" }}>
-            Impossible de charger les données
+            {t(tr.pokemonDetail.failedToLoad, lang)}
           </Box>
         )}
 
@@ -328,7 +335,7 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
             },
           }}
         >
-          Fermer
+          {t(tr.pokemonDetail.close, lang)}
         </Button>
       </Box>
     </Box>

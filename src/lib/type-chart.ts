@@ -288,41 +288,42 @@ export const typeColors: Record<string, string> = {
 export function getEffectivenessLabel(
   multiplier: number,
   context: "attack" | "defense",
+  lang: "fr" | "en" = "fr",
 ): { label: string; color: string } {
   if (context === "attack") {
     switch (multiplier) {
       case 4:
-        return { label: "Hyper efficace", color: "#166534" };
+        return { label: lang === "fr" ? "Hyper efficace" : "Super-duper effective", color: "#166534" };
       case 2:
-        return { label: "Super efficace", color: "#16a34a" };
+        return { label: lang === "fr" ? "Super efficace" : "Super effective", color: "#16a34a" };
       case 1:
-        return { label: "Neutre", color: "#666666" };
+        return { label: lang === "fr" ? "Neutre" : "Neutral", color: "#666666" };
       case 0.5:
-        return { label: "Peu efficace", color: "#ea580c" };
+        return { label: lang === "fr" ? "Peu efficace" : "Not very effective", color: "#ea580c" };
       case 0.25:
-        return { label: "Très peu efficace", color: "#7f1d1d" };
+        return { label: lang === "fr" ? "Très peu efficace" : "Very not effective", color: "#7f1d1d" };
       case 0:
-        return { label: "Aucun effet", color: "#374151" };
+        return { label: lang === "fr" ? "Aucun effet" : "No effect", color: "#374151" };
       default:
-        return { label: "Inconnu", color: "#000000" };
+        return { label: lang === "fr" ? "Inconnu" : "Unknown", color: "#000000" };
     }
   } else {
     // defense
     switch (multiplier) {
       case 4:
-        return { label: "Très faible", color: "#7f1d1d" };
+        return { label: lang === "fr" ? "Très faible" : "Very weak", color: "#7f1d1d" };
       case 2:
-        return { label: "Faible", color: "#dc2626" };
+        return { label: lang === "fr" ? "Faible" : "Weak", color: "#dc2626" };
       case 1:
-        return { label: "Neutre", color: "#666666" };
+        return { label: lang === "fr" ? "Neutre" : "Neutral", color: "#666666" };
       case 0.5:
-        return { label: "Résistant", color: "#16a34a" };
+        return { label: lang === "fr" ? "Résistant" : "Resistant", color: "#16a34a" };
       case 0.25:
-        return { label: "Très résistant", color: "#166534" };
+        return { label: lang === "fr" ? "Très résistant" : "Very resistant", color: "#166534" };
       case 0:
-        return { label: "Immunisé", color: "#60a5fa" };
+        return { label: lang === "fr" ? "Immunisé" : "Immune", color: "#60a5fa" };
       default:
-        return { label: "Inconnu", color: "#000000" };
+        return { label: lang === "fr" ? "Inconnu" : "Unknown", color: "#000000" };
     }
   }
 }

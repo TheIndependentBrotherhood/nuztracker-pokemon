@@ -4,6 +4,8 @@ import { Run } from "@/lib/types";
 import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import KantoMap from "./KantoMap";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   run: Run;
@@ -11,6 +13,8 @@ interface Props {
 
 export default function MapView({ run }: Props) {
   const { setSelectedZone, selectedZoneId } = useRunStore();
+  const { lang } = useLanguage();
+  const tr = translations;
 
   function getZoneStatus(zoneId: string) {
     const zone = run.zones.find((z) => z.id === zoneId);
@@ -50,7 +54,7 @@ export default function MapView({ run }: Props) {
             textTransform: "capitalize",
           }}
         >
-          {run.region} Region Map
+          {run.region} {t(tr.mapView.regionMap, lang)}
         </Typography>
         <Box
           sx={{ display: "flex", gap: 2, fontSize: "0.75rem", fontWeight: 700 }}
@@ -65,7 +69,7 @@ export default function MapView({ run }: Props) {
                 border: "2px solid #000",
               }}
             />
-            Not Visited
+            {t(tr.mapView.notVisited, lang)}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
@@ -77,7 +81,7 @@ export default function MapView({ run }: Props) {
                 border: "2px solid #000",
               }}
             />
-            Visited
+            {t(tr.mapView.visited, lang)}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
@@ -89,7 +93,7 @@ export default function MapView({ run }: Props) {
                 border: "2px solid #000",
               }}
             />
-            Captured
+            {t(tr.mapView.captured, lang)}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box
@@ -101,7 +105,7 @@ export default function MapView({ run }: Props) {
                 border: "2px solid #000",
               }}
             />
-            Multiple
+            {t(tr.mapView.multiple, lang)}
           </Box>
         </Box>
       </Box>
@@ -116,3 +120,4 @@ export default function MapView({ run }: Props) {
     </Box>
   );
 }
+

@@ -20,6 +20,8 @@ import { RandomizerOptions } from "@/lib/types";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledTextField from "@/components/ui/StyledTextField";
 import StyledSelect from "@/components/ui/StyledSelect";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   onClose: () => void;
@@ -28,6 +30,8 @@ interface Props {
 export default function CreateRunModal({ onClose }: Props) {
   const { createRun } = useRunStore();
   const router = useRouter();
+  const { lang } = useLanguage();
+  const tr = translations;
 
   const [gameName, setGameName] = useState("");
   const [region, setRegion] = useState("kanto");
@@ -94,6 +98,13 @@ export default function CreateRunModal({ onClose }: Props) {
     router.push(`/run/?id=${run.id}`);
   }
 
+  const randomizerOptionsList = [
+    { key: "randomizeTypes", label: t(tr.createRun.randomizeTypes, lang) },
+    { key: "randomizeAbilities", label: t(tr.createRun.randomizeAbilities, lang) },
+    { key: "randomizeEncounters", label: t(tr.createRun.randomizeEncounters, lang) },
+    { key: "randomizeEvolvedForms", label: t(tr.createRun.randomizeEvolvedForms, lang) },
+  ];
+
   return (
     <Dialog
       open
@@ -119,7 +130,7 @@ export default function CreateRunModal({ onClose }: Props) {
           pb: 1,
         }}
       >
-        🎮 Nouveau Run
+        {t(tr.createRun.title, lang)}
       </DialogTitle>
 
       <DialogContent sx={{ pb: 3, pt: 2 }}>
@@ -128,14 +139,14 @@ export default function CreateRunModal({ onClose }: Props) {
           <Typography
             sx={{ color: "#666", fontSize: "0.95rem", fontWeight: 500 }}
           >
-            Créez votre aventure Nuzlocke et lancez le défi
+            {t(tr.createRun.subtitle, lang)}
           </Typography>
 
           {/* Game Name */}
           <StyledTextField
             autoFocus
-            label="Nom du Run"
-            placeholder="ex. FireRed Nuzlocke"
+            label={t(tr.createRun.runName, lang)}
+            placeholder={t(tr.createRun.runNamePlaceholder, lang)}
             fullWidth
             value={gameName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -148,28 +159,28 @@ export default function CreateRunModal({ onClose }: Props) {
 
           {/* Region Select */}
           <StyledSelect
-            label="Région"
+            label={t(tr.createRun.region, lang)}
             value={region}
             onChange={handleRegionChange}
             fullWidth
           >
             {loadedRegions.map((r: Region) => (
               <MenuItem key={r.id} value={r.id}>
-                {r.name}
+                {(lang === "fr" ? r.names?.fr : r.names?.en) ?? r.name}
               </MenuItem>
             ))}
           </StyledSelect>
 
           {/* Type Chart Generation Select */}
           <StyledSelect
-            label="Table des Types"
+            label={t(tr.createRun.typeChart, lang)}
             value={typeChartGeneration}
             onChange={handleTypeChartGenerationChange}
             fullWidth
           >
-            <MenuItem value="gen1">Génération 1</MenuItem>
-            <MenuItem value="gen2-5">Générations 2-5</MenuItem>
-            <MenuItem value="gen6+">Générations 6+</MenuItem>
+            <MenuItem value="gen1">{t(tr.createRun.gen1, lang)}</MenuItem>
+            <MenuItem value="gen2-5">{t(tr.createRun.gen25, lang)}</MenuItem>
+            <MenuItem value="gen6+">{t(tr.createRun.gen6, lang)}</MenuItem>
           </StyledSelect>
 
           {/* Toggles */}
@@ -183,7 +194,7 @@ export default function CreateRunModal({ onClose }: Props) {
                 letterSpacing: "0.05em",
               }}
             >
-              ⚙️ Modes de Jeu
+              {t(tr.createRun.gameModes, lang)}
             </Typography>
 
             <FormControlLabel
@@ -193,7 +204,7 @@ export default function CreateRunModal({ onClose }: Props) {
                   onChange={(e) => setIsShinyHuntMode(e.target.checked)}
                 />
               }
-              label="✨ Mode Shiny Hunt"
+              label={t(tr.createRun.shinyHuntMode, lang)}
               sx={{
                 color: "#000",
                 fontWeight: 600,
@@ -211,7 +222,7 @@ export default function CreateRunModal({ onClose }: Props) {
                   onChange={(e) => setIsRandomMode(e.target.checked)}
                 />
               }
-              label="🎲 Mode Randomizer"
+              label={t(tr.createRun.randomizerMode, lang)}
               sx={{
                 color: "#000",
                 fontWeight: 600,
@@ -243,22 +254,11 @@ export default function CreateRunModal({ onClose }: Props) {
                   mb: 2,
                 }}
               >
-                🎛️ Options Randomizer
+                {t(tr.createRun.randomizerOptions, lang)}
               </Typography>
 
               <Stack spacing={1}>
-                {[
-                  { key: "randomizeTypes", label: "Types aléatoires" },
-                  { key: "randomizeAbilities", label: "Talents aléatoires" },
-                  {
-                    key: "randomizeEncounters",
-                    label: "Rencontres aléatoires",
-                  },
-                  {
-                    key: "randomizeEvolvedForms",
-                    label: "Évolutions aléatoires",
-                  },
-                ].map(({ key, label }) => (
+                {randomizerOptionsList.map(({ key, label }) => (
                   <FormControlLabel
                     key={key}
                     control={
@@ -288,7 +288,7 @@ export default function CreateRunModal({ onClose }: Props) {
           variant="secondary"
           sx={{ flexGrow: 1 }}
         >
-          Annuler
+          {t(tr.createRun.cancel, lang)}
         </StyledButton>
         <StyledButton
           onClick={handleCreate}
@@ -297,7 +297,7 @@ export default function CreateRunModal({ onClose }: Props) {
           shape="pill"
           sx={{ flexGrow: 1 }}
         >
-          🚀 Créer le Run
+          {t(tr.createRun.createRun, lang)}
         </StyledButton>
       </DialogActions>
     </Dialog>

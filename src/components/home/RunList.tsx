@@ -4,6 +4,8 @@ import { Run } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useRunStore } from "@/store/runStore";
 import { Box, Typography, Grid } from "@mui/material";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface RunListProps {
   runs: Run[];
@@ -12,6 +14,8 @@ interface RunListProps {
 export default function RunList({ runs }: RunListProps) {
   const router = useRouter();
   const { deleteRun } = useRunStore();
+  const { lang } = useLanguage();
+  const tr = translations;
 
   if (runs.length === 0) {
     return (
@@ -24,12 +28,12 @@ export default function RunList({ runs }: RunListProps) {
         <Typography
           sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#000", mb: 1 }}
         >
-          Aucun run pour l&apos;instant
+          {t(tr.runList.noRuns, lang)}
         </Typography>
         <Typography
           sx={{ color: "#374151", fontSize: "1rem", fontWeight: 500 }}
         >
-          Lancez votre premier Nuzlocke et démarrez l&apos;aventure !
+          {t(tr.runList.noRunsHint, lang)}
         </Typography>
       </Box>
     );
@@ -47,7 +51,7 @@ export default function RunList({ runs }: RunListProps) {
     }
   > = {
     "in-progress": {
-      label: "Active",
+      label: t(tr.runList.statusActive, lang),
       icon: "▶️",
       bgColor: "rgba(16, 185, 129, 0.1)",
       borderColor: "#10b981",
@@ -55,7 +59,7 @@ export default function RunList({ runs }: RunListProps) {
       barColor: "linear-gradient(to right, #10b981, #06b6d4)",
     },
     completed: {
-      label: "Terminé",
+      label: t(tr.runList.statusCompleted, lang),
       icon: "✓",
       bgColor: "rgba(59, 130, 246, 0.1)",
       borderColor: "#3b82f6",
@@ -63,7 +67,7 @@ export default function RunList({ runs }: RunListProps) {
       barColor: "linear-gradient(to right, #3b82f6, #06b6d4)",
     },
     abandoned: {
-      label: "Abandonné",
+      label: t(tr.runList.statusAbandoned, lang),
       icon: "✕",
       bgColor: "rgba(239, 68, 68, 0.1)",
       borderColor: "#ef4444",
@@ -208,7 +212,7 @@ export default function RunList({ runs }: RunListProps) {
                           mb: 0.25,
                         }}
                       >
-                        Zones
+                        {t(tr.runList.zones, lang)}
                       </Typography>
                       <Typography
                         sx={{
@@ -238,7 +242,7 @@ export default function RunList({ runs }: RunListProps) {
                           mb: 0.25,
                         }}
                       >
-                        Captures
+                        {t(tr.runList.captures, lang)}
                       </Typography>
                       <Typography
                         sx={{
@@ -264,7 +268,7 @@ export default function RunList({ runs }: RunListProps) {
                     }}
                   >
                     <Typography sx={{ color: "#000", fontWeight: 700 }}>
-                      Progression
+                      {t(tr.runList.progression, lang)}
                     </Typography>
                     <Typography sx={{ fontWeight: 700, color: "#000" }}>
                       {Math.round(progress)}%
@@ -346,7 +350,7 @@ export default function RunList({ runs }: RunListProps) {
                   className="delete-btn"
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
-                    if (confirm("Supprimer ce run ?")) deleteRun(run.id);
+                    if (confirm(t(tr.runList.deleteConfirm, lang))) deleteRun(run.id);
                   }}
                   sx={{
                     width: "100%",
@@ -366,7 +370,7 @@ export default function RunList({ runs }: RunListProps) {
                     },
                   }}
                 >
-                  🗑️ Supprimer
+                  {t(tr.runList.delete, lang)}
                 </Box>
               </Box>
             </Box>
