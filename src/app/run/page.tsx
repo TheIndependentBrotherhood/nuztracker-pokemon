@@ -253,7 +253,7 @@ function RunPageContent() {
                   cursor: "pointer",
                 }}
               >
-                {t === "zones" ? "🗺 Zones" : "⚔️ Équipe"}
+                {t === "zones" ? "🗺 Zones" : "📦 Pokémons"}
               </Box>
             ))}
           </Box>
