@@ -242,8 +242,8 @@ const translations = {
     caught: { fr: "Capturés", en: "Caught" },
     dead: { fr: "RIP", en: "RIP" },
     exportDimensionsHint: {
-      fr: "De 408x720px à 1920x1080px",
-      en: "From 408x720px to 1920x1080px",
+      fr: "De 440x720px à 1920x1080px",
+      en: "From 440x720px to 1920x1080px",
     },
     exportTeamAsPng: {
       fr: "Exporter l'équipe en PNG",

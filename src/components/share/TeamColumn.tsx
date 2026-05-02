@@ -2,7 +2,7 @@
 
 import { Box } from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
-import { getSpriteUrl } from "@/lib/pokemon-api";
+import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
   pokemonData: Record<number, PokemonApiData>;
   mirror?: boolean;
   fullHeight?: boolean;
+  preferAnimated?: boolean;
 }
 
 export default function TeamColumn({
@@ -17,6 +18,7 @@ export default function TeamColumn({
   pokemonData,
   mirror = false,
   fullHeight = false,
+  preferAnimated = true,
 }: Props) {
   return (
     <Box
@@ -64,8 +66,21 @@ export default function TeamColumn({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
+                src={getSpriteUrl(
+                  capture.pokemonId,
+                  capture.isShiny,
+                  preferAnimated,
+                )}
                 alt={capture.pokemonName}
+                onError={(event) => {
+                  const fallbackUrl = getSpriteFallbackUrl(
+                    capture.pokemonId,
+                    capture.isShiny,
+                  );
+                  if (event.currentTarget.src !== fallbackUrl) {
+                    event.currentTarget.src = fallbackUrl;
+                  }
+                }}
                 style={{
                   width: "96px",
                   height: "96px",

@@ -3,6 +3,8 @@ import * as path from "path";
 
 const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 const OUTPUT_DIR = path.join(process.cwd(), "public/data");
+const POKEMON_DB_ANIM_BASE =
+  "https://img.pokemondb.net/sprites/black-white/anim";
 
 // Utility: fetch with exponential-backoff retry
 async function fetchWithRetry(url: string, retries = 3): Promise<unknown> {
@@ -26,6 +28,100 @@ async function fetchWithRetry(url: string, retries = 3): Promise<unknown> {
     }
   }
   throw new Error("unreachable");
+}
+
+async function checkUrlAvailable(url: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const headResponse = await fetch(url, {
+      method: "HEAD",
+      signal: controller.signal,
+    });
+
+    if (headResponse.ok) {
+      return true;
+    }
+
+    if (headResponse.status !== 405 && headResponse.status !== 403) {
+      return false;
+    }
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  const fallbackController = new AbortController();
+  const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 10000);
+
+  try {
+    const fallbackResponse = await fetch(url, {
+      method: "GET",
+      headers: {
+        Range: "bytes=0-0",
+      },
+      signal: fallbackController.signal,
+    });
+
+    return fallbackResponse.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(fallbackTimeoutId);
+  }
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let currentIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const itemIndex = currentIndex;
+      currentIndex += 1;
+
+      if (itemIndex >= items.length) {
+        return;
+      }
+
+      results[itemIndex] = await mapper(items[itemIndex], itemIndex);
+    }
+  }
+
+  const workerCount = Math.max(1, Math.min(concurrency, items.length));
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
+
+interface PokemonListEntry {
+  id: number;
+  name: string;
+  generation: number;
+}
+
+function readPokemonListFromCache(): PokemonListEntry[] {
+  const pokemonListPath = path.join(OUTPUT_DIR, "pokemon-list.json");
+
+  if (!fs.existsSync(pokemonListPath)) {
+    throw new Error(
+      "pokemon-list.json not found. Generate pokemon-list.json first.",
+    );
+  }
+
+  const raw = fs.readFileSync(pokemonListPath, "utf-8");
+  const data = JSON.parse(raw) as { pokemon?: PokemonListEntry[] };
+
+  if (!data.pokemon || !Array.isArray(data.pokemon)) {
+    throw new Error("pokemon-list.json has an invalid format.");
+  }
+
+  return data.pokemon;
 }
 
 // Generator 1: pokemon-list.json
@@ -419,6 +515,68 @@ async function generateTypeSprites() {
   };
 }
 
+// Generator 6: animated-sprites-bw.json
+
+async function generateAnimatedSpritesBw() {
+  console.log("ANIM: Generating animated-sprites-bw.json...");
+
+  const pokemon = readPokemonListFromCache();
+  const totalLinksToCheck = pokemon.length * 2;
+
+  console.log(
+    `LINK: Checking ${totalLinksToCheck} links (${pokemon.length} Pokemon x normal + shiny)...`,
+  );
+
+  const sprites = await mapWithConcurrency(
+    pokemon,
+    25,
+    async (entry, index) => {
+      const normalUrl = `${POKEMON_DB_ANIM_BASE}/normal/${entry.name}.gif`;
+      const shinyUrl = `${POKEMON_DB_ANIM_BASE}/shiny/${entry.name}.gif`;
+
+      const [normalAvailable, shinyAvailable] = await Promise.all([
+        checkUrlAvailable(normalUrl),
+        checkUrlAvailable(shinyUrl),
+      ]);
+
+      if ((index + 1) % 50 === 0 || index + 1 === pokemon.length) {
+        console.log(`  OK: Checked ${index + 1}/${pokemon.length} Pokemon`);
+      }
+
+      return {
+        id: entry.id,
+        name: entry.name,
+        generation: entry.generation,
+        normal: {
+          url: normalUrl,
+          available: normalAvailable,
+        },
+        shiny: {
+          url: shinyUrl,
+          available: shinyAvailable,
+        },
+      };
+    },
+  );
+
+  const normalWorking = sprites.filter((s) => s.normal.available).length;
+  const shinyWorking = sprites.filter((s) => s.shiny.available).length;
+  const linksWorking = normalWorking + shinyWorking;
+
+  return {
+    generatedAt: new Date().toISOString(),
+    summary: {
+      totalPokemon: pokemon.length,
+      totalLinksChecked: totalLinksToCheck,
+      linksWorking,
+      linksFailed: totalLinksToCheck - linksWorking,
+      normalWorking,
+      shinyWorking,
+    },
+    sprites,
+  };
+}
+
 // Main
 
 interface CacheFile {
@@ -437,11 +595,26 @@ async function main() {
     { name: "type-charts.json", generator: generateTypeCharts },
     { name: "type-sprites.json", generator: generateTypeSprites },
     { name: "abilities-immunity.json", generator: generateAbilitiesImmunity },
+    { name: "animated-sprites-bw.json", generator: generateAnimatedSpritesBw },
   ];
+
+  const selectedFileNames = process.argv.slice(2);
+  const filesToGenerate =
+    selectedFileNames.length === 0
+      ? files
+      : files.filter((f) => selectedFileNames.includes(f.name));
+
+  if (selectedFileNames.length > 0 && filesToGenerate.length === 0) {
+    console.error(
+      `No matching files for: ${selectedFileNames.join(", ")}. Available: ${files.map((f) => f.name).join(", ")}`,
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   console.log(`\nSTART: Cache generation at ${new Date().toISOString()}\n`);
 
-  for (const file of files) {
+  for (const file of filesToGenerate) {
     const startTime = Date.now();
     try {
       const separator = "=".repeat(60);

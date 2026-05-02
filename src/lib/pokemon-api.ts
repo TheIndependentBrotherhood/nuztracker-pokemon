@@ -131,8 +131,32 @@ export function getPokemonIdFromUrl(url: string): number {
   return parseInt(parts[parts.length - 1]);
 }
 
-export function getSpriteUrl(id: number, shiny = false): string {
-  const base =
+export function getStaticSpriteUrl(id: number, shiny = false): string {
+  const staticBase =
     "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
-  return shiny ? `${base}/shiny/${id}.png` : `${base}/${id}.png`;
+  return shiny ? `${staticBase}/shiny/${id}.png` : `${staticBase}/${id}.png`;
+}
+
+export function getAnimatedSpriteUrl(id: number, shiny = false): string {
+  const animatedBase =
+    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated";
+  return shiny
+    ? `${animatedBase}/shiny/${id}.gif`
+    : `${animatedBase}/${id}.gif`;
+}
+
+export function getSpriteUrl(
+  id: number,
+  shiny = false,
+  preferAnimated = true,
+): string {
+  if (preferAnimated) {
+    return getAnimatedSpriteUrl(id, shiny);
+  }
+
+  return getStaticSpriteUrl(id, shiny);
+}
+
+export function getSpriteFallbackUrl(id: number, shiny = false): string {
+  return getStaticSpriteUrl(id, shiny);
 }

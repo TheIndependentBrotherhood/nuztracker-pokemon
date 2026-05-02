@@ -14,7 +14,7 @@ import {
 import { Run, Zone, Capture } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
 import StyledTextField from "@/components/ui/StyledTextField";
-import { getSpriteUrl } from "@/lib/pokemon-api";
+import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -51,6 +51,15 @@ function TeamPreviewPokemonTile({
       <img
         src={getSpriteUrl(pokemon.pokemonId, pokemon.isShiny)}
         alt={displayName}
+        onError={(event) => {
+          const fallbackUrl = getSpriteFallbackUrl(
+            pokemon.pokemonId,
+            pokemon.isShiny,
+          );
+          if (event.currentTarget.src !== fallbackUrl) {
+            event.currentTarget.src = fallbackUrl;
+          }
+        }}
         style={{
           width: "80px",
           height: "80px",
@@ -86,7 +95,7 @@ export default function StatsBar({ run }: Props) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [exportWidth, setExportWidth] = useState(408);
+  const [exportWidth, setExportWidth] = useState(440);
   const [exportHeight, setExportHeight] = useState(720);
   const { lang } = useLanguage();
   const tr = translations;
@@ -454,8 +463,8 @@ export default function StatsBar({ run }: Props) {
             type="number"
             value={exportWidth}
             onChange={(e) => {
-              const value = parseInt(e.target.value) || 408;
-              setExportWidth(Math.max(408, Math.min(1920, value)));
+              const value = parseInt(e.target.value) || 440;
+              setExportWidth(Math.max(440, Math.min(1920, value)));
             }}
             fullWidth
           />

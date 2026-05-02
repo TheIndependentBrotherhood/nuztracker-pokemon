@@ -15,6 +15,7 @@ import { useRunStore } from "@/store/runStore";
 import {
   searchPokemon,
   getPokemonIdFromUrl,
+  getSpriteFallbackUrl,
   getSpriteUrl,
   type PokemonSearchResult,
 } from "@/lib/pokemon-api";
@@ -208,6 +209,15 @@ export default function AddCaptureModal({
               <img
                 src={getSpriteUrl(selected.id, isShiny)}
                 alt={`${isShiny ? "Shiny " : ""}${selected.name} sprite`}
+                onError={(event) => {
+                  const fallbackUrl = getSpriteFallbackUrl(
+                    selected.id,
+                    isShiny,
+                  );
+                  if (event.currentTarget.src !== fallbackUrl) {
+                    event.currentTarget.src = fallbackUrl;
+                  }
+                }}
                 style={{
                   width: "48px",
                   height: "48px",

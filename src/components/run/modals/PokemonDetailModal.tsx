@@ -10,7 +10,11 @@ import {
   IconButton,
 } from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
-import { fetchPokemon, getSpriteUrl } from "@/lib/pokemon-api";
+import {
+  fetchPokemon,
+  getSpriteFallbackUrl,
+  getSpriteUrl,
+} from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -206,6 +210,15 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
               <img
                 src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
                 alt={pokemonDisplayName}
+                onError={(event) => {
+                  const fallbackUrl = getSpriteFallbackUrl(
+                    capture.pokemonId,
+                    capture.isShiny,
+                  );
+                  if (event.currentTarget.src !== fallbackUrl) {
+                    event.currentTarget.src = fallbackUrl;
+                  }
+                }}
                 style={{
                   width: "96px",
                   height: "96px",

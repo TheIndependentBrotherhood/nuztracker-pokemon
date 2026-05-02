@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import { Capture, Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "./modals/AddCaptureModal";
-import { getSpriteUrl } from "@/lib/pokemon-api";
+import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import {
@@ -48,6 +48,15 @@ function CaptureThumbnail({
       <img
         src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
         alt={displayName}
+        onError={(event) => {
+          const fallbackUrl = getSpriteFallbackUrl(
+            capture.pokemonId,
+            capture.isShiny,
+          );
+          if (event.currentTarget.src !== fallbackUrl) {
+            event.currentTarget.src = fallbackUrl;
+          }
+        }}
         style={{
           width: "46px",
           height: "46px",

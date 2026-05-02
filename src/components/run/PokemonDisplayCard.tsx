@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
 import { Capture } from "@/lib/types";
-import { getSpriteUrl } from "@/lib/pokemon-api";
+import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
 import PokemonDetailModal from "./modals/PokemonDetailModal";
 import { Lang } from "@/i18n/translations";
 import {
@@ -152,6 +152,15 @@ export default function PokemonDisplayCard({
             <img
               src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
               alt={pokemonDisplayName}
+              onError={(event) => {
+                const fallbackUrl = getSpriteFallbackUrl(
+                  capture.pokemonId,
+                  capture.isShiny,
+                );
+                if (event.currentTarget.src !== fallbackUrl) {
+                  event.currentTarget.src = fallbackUrl;
+                }
+              }}
               style={{
                 width: "80px",
                 height: "80px",

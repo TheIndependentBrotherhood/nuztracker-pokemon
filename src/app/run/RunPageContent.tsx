@@ -294,8 +294,17 @@ export default function RunPageContent() {
               padding: "0",
             }}
           >
-            <TeamColumn team={run.team} pokemonData={pokemonData} />
-            <TeamColumn team={run.team} pokemonData={pokemonData} mirror />
+            <TeamColumn
+              team={run.team}
+              pokemonData={pokemonData}
+              preferAnimated={false}
+            />
+            <TeamColumn
+              team={run.team}
+              pokemonData={pokemonData}
+              mirror
+              preferAnimated={false}
+            />
           </Box>
         </Box>
 
