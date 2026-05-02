@@ -18,6 +18,7 @@ interface Props {
   zone: Zone;
   runId: string;
   isSelected: boolean;
+  isShinyHuntMode: boolean;
 }
 
 function CaptureThumbnail({
@@ -96,7 +97,12 @@ const cycleLabel: Record<string, string> = {
   captured: "🔴",
 };
 
-export default function ZoneItem({ zone, runId, isSelected }: Props) {
+export default function ZoneItem({
+  zone,
+  runId,
+  isSelected,
+  isShinyHuntMode,
+}: Props) {
   const { setZoneStatus, setSelectedZone } = useRunStore();
   const [showCapture, setShowCapture] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -104,6 +110,8 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
   const tr = translations;
   const deleteCapturesToChange = t(tr.zoneItem.deleteCapturesToChange, lang);
   const changeStatus = t(tr.zoneItem.changeStatus, lang);
+  const maxCaptures = isShinyHuntMode ? 2 : 1;
+  const capturesFull = zone.captures.length >= maxCaptures;
 
   useEffect(() => {
     if (isSelected && ref.current) {
@@ -263,31 +271,35 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
             </Box>
 
             {/* Add capture */}
-            <Box
-              component="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCapture(true);
-              }}
-              sx={{
-                fontSize: "0.75rem",
-                color: "#1d4ed8",
-                background: "rgba(59, 130, 246, 0.12)",
-                px: 1,
-                py: 0.35,
-                borderRadius: "0.5rem",
-                transition: "all 200ms ease",
-                border: "1px solid rgba(59, 130, 246, 0.35)",
-                cursor: "pointer",
-                fontWeight: 600,
-                "&:hover": {
-                  color: "#1e40af",
-                  background: "rgba(59, 130, 246, 0.2)",
-                },
-              }}
-            >
-              {t(tr.zoneItem.capture, lang)}
-            </Box>
+            {!capturesFull && (
+              <Box
+                component="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCapture(true);
+                }}
+                sx={{
+                  fontSize: "0.75rem",
+                  color: "#1d4ed8",
+                  background: "rgba(59, 130, 246, 0.12)",
+                  px: 1,
+                  py: 0.35,
+                  borderRadius: "0.5rem",
+                  transition: "all 200ms ease",
+                  border: "1px solid rgba(59, 130, 246, 0.35)",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  "&:hover": {
+                    color: "#1e40af",
+                    background: "rgba(59, 130, 246, 0.2)",
+                  },
+                }}
+                title={t(tr.zoneItem.capture, lang)}
+                aria-label={t(tr.zoneItem.capture, lang)}
+              >
+                {t(tr.zoneItem.capture, lang)}
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -306,6 +318,11 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
           runId={runId}
           zoneId={zone.id}
           zoneName={zone.zoneName}
+          forceShiny={
+            isShinyHuntMode &&
+            zone.captures.length === 1 &&
+            !zone.captures[0].isShiny
+          }
           onClose={() => setShowCapture(false)}
         />
       )}

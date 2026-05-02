@@ -115,6 +115,14 @@ export const useRunStore = create<RunStore>((set, get) => ({
   addCapture: (runId, zoneId, captureData) => {
     const run = get().runs.find((r) => r.id === runId);
     if (!run) return;
+    const zone = run.zones.find((z) => z.id === zoneId);
+    const maxCaptures = run.isShinyHuntMode ? 2 : 1;
+    if (zone && zone.captures.length >= maxCaptures) return;
+    // In shiny hunt mode, one of the two captures must be shiny
+    if (run.isShinyHuntMode && zone && zone.captures.length === 1) {
+      const existingIsShiny = zone.captures[0].isShiny;
+      if (!existingIsShiny && !captureData.isShiny) return;
+    }
     const capture: Capture = {
       ...captureData,
       id: newId(),

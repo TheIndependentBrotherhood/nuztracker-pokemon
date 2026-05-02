@@ -26,6 +26,7 @@ interface Props {
   runId: string;
   zoneId: string;
   zoneName: string;
+  forceShiny?: boolean;
   onClose: () => void;
 }
 
@@ -33,6 +34,7 @@ export default function AddCaptureModal({
   runId,
   zoneId,
   zoneName,
+  forceShiny = false,
   onClose,
 }: Props) {
   const { addCapture } = useRunStore();
@@ -49,7 +51,7 @@ export default function AddCaptureModal({
   const [nickname, setNickname] = useState("");
   const [level, setLevel] = useState(5);
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
-  const [isShiny, setIsShiny] = useState(false);
+  const [isShiny, setIsShiny] = useState(forceShiny);
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
@@ -420,7 +422,8 @@ export default function AddCaptureModal({
           control={
             <Switch
               checked={isShiny}
-              onChange={(e) => setIsShiny(e.target.checked)}
+              onChange={(e) => !forceShiny && setIsShiny(e.target.checked)}
+              disabled={forceShiny}
               sx={{
                 "& .MuiSwitch-switchBase": {
                   color: "#ccc",
@@ -437,6 +440,14 @@ export default function AddCaptureModal({
           label={
             <Typography sx={{ fontSize: "0.875rem", color: "#000" }}>
               {t(tr.addCapture.isShiny, lang)}
+              {forceShiny && (
+                <Typography
+                  component="span"
+                  sx={{ fontSize: "0.75rem", color: "#f59e0b", ml: 0.5 }}
+                >
+                  ✨
+                </Typography>
+              )}
             </Typography>
           }
           sx={{ mb: 2.5, ml: 0 }}

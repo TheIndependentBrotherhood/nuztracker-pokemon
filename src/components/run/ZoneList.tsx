@@ -175,6 +175,7 @@ export default function ZoneList({ run }: Props) {
             zone={zone}
             runId={run.id}
             isSelected={selectedZoneId === zone.id}
+            isShinyHuntMode={run.isShinyHuntMode}
           />
         ))}
         {filtered.length === 0 && (

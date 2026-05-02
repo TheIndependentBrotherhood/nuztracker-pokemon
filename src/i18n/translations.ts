@@ -182,12 +182,16 @@ const translations = {
 
   // ── Zone Item ──────────────────────────────────────────────────────────────
   zoneItem: {
+    capture: { fr: "+ Capturer", en: "+ Capture" },
+    captureLimit: {
+      fr: "Limite de captures atteinte pour cette zone",
+      en: "Capture limit reached for this zone",
+    },
+    changeStatus: { fr: "Changer le statut", en: "Change status" },
     deleteCapturesToChange: {
       fr: "Supprimer les captures pour changer le statut",
       en: "Delete captures to change status",
     },
-    changeStatus: { fr: "Changer le statut", en: "Change status" },
-    capture: { fr: "+ Capturer", en: "+ Capture" },
   },
 
   // ── Team View ──────────────────────────────────────────────────────────────
