@@ -30,7 +30,7 @@ export default function MapView({ run }: Props) {
   function getZoneStatus(zoneId: string) {
     const zone = run.zones.find((z) => z.id === zoneId);
     if (!zone) return "not-visited";
-    if (zone.captures.length >= 2) return "multiple";
+    if (run.isShinyHuntMode && zone.captures.length >= 2) return "multiple";
     return zone.status;
   }
 
@@ -114,18 +114,20 @@ export default function MapView({ run }: Props) {
             />
             {t(tr.mapView.captured, lang)}
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box
-              sx={{
-                width: "16px",
-                height: "16px",
-                borderRadius: "50%",
-                background: "#fb923c",
-                border: "2px solid #000",
-              }}
-            />
-            {t(tr.mapView.multiple, lang)}
-          </Box>
+          {run.isShinyHuntMode && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "50%",
+                  background: "#fb923c",
+                  border: "2px solid #000",
+                }}
+              />
+              {t(tr.mapView.multiple, lang)}
+            </Box>
+          )}
         </Box>
       </Box>
       <Box sx={{ p: 2, background: "#fff" }}>
