@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Typography, Button, Grid } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  TextField,
+  IconButton,
+} from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
 import { fetchPokemon, getSpriteUrl } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
@@ -11,9 +18,11 @@ import {
   useCaptureDisplayLabel,
   useCaptureDisplayName,
 } from "@/lib/pokemon-display";
+import { useRunStore } from "@/store/runStore";
 
 interface Props {
   capture: Capture;
+  runId?: string;
   onClose: () => void;
 }
 
@@ -87,16 +96,21 @@ function StatBar({
   );
 }
 
-export default function PokemonDetailModal({ capture, onClose }: Props) {
+export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
   const [data, setData] = useState<PokemonApiData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [nicknameDraft, setNicknameDraft] = useState("");
   const { lang } = useLanguage();
+  const { runs, updateRun } = useRunStore();
   const tr = translations;
   const pokemonDisplayName = useCaptureDisplayName(capture, lang);
   const pokemonDisplayLabel = useCaptureDisplayLabel(capture, lang);
   const baseStatTotal = data
     ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
     : 0;
+  const runToUpdate = runId ? runs.find((r) => r.id === runId) : null;
+  const currentNickname = capture.nickname ?? "";
 
   useEffect(() => {
     fetchPokemon(capture.pokemonId)
@@ -107,6 +121,39 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
   const genderSymbol =
     capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : null;
   const genderColor = capture.gender === "male" ? "#60a5fa" : "#ec4899";
+
+  function handleSaveNickname() {
+    if (!runToUpdate) return;
+
+    const normalizedNickname = nicknameDraft.trim();
+    const nextNickname =
+      normalizedNickname.length > 0 ? normalizedNickname : undefined;
+
+    if (nextNickname === capture.nickname) {
+      setIsEditingNickname(false);
+      return;
+    }
+
+    const updatedRun = {
+      ...runToUpdate,
+      team: runToUpdate.team.map((teamCapture) =>
+        teamCapture.id === capture.id
+          ? { ...teamCapture, nickname: nextNickname }
+          : teamCapture,
+      ),
+      zones: runToUpdate.zones.map((zone) => ({
+        ...zone,
+        captures: zone.captures.map((zoneCapture) =>
+          zoneCapture.id === capture.id
+            ? { ...zoneCapture, nickname: nextNickname }
+            : zoneCapture,
+        ),
+      })),
+    };
+
+    updateRun(updatedRun);
+    setIsEditingNickname(false);
+  }
 
   return (
     <Box
@@ -181,21 +228,132 @@ export default function PokemonDetailModal({ capture, onClose }: Props) {
                     color: "#000",
                   }}
                 >
-                  {pokemonDisplayLabel}
-                  {capture.isShiny && (
-                    <span style={{ fontSize: "1rem" }}>✨</span>
-                  )}
-                  {genderSymbol && (
-                    <span
-                      style={{
-                        fontSize: "0.875rem",
-                        fontWeight: 400,
-                        color: genderColor,
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.75,
+                        minHeight: "2rem",
+                        border: isEditingNickname
+                          ? "1px solid #cbd5e1"
+                          : "1px solid transparent",
+                        borderRadius: "0.5rem",
+                        px: 0.75,
+                        py: 0.5,
+                        background: isEditingNickname
+                          ? "rgba(255, 255, 255, 0.75)"
+                          : "transparent",
                       }}
                     >
-                      {genderSymbol}
-                    </span>
-                  )}
+                      {isEditingNickname ? (
+                        <>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            autoFocus
+                            value={nicknameDraft}
+                            onChange={(e) => setNicknameDraft(e.target.value)}
+                            placeholder={t(
+                              tr.pokemonDetail.nicknamePlaceholder,
+                              lang,
+                            )}
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                background: "#fff",
+                                fontSize: "0.95rem",
+                              },
+                            }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={handleSaveNickname}
+                            disabled={!runToUpdate}
+                            aria-label={t(tr.pokemonDetail.saveNickname, lang)}
+                            title={t(tr.pokemonDetail.saveNickname, lang)}
+                            sx={{
+                              color: "#1d4ed8",
+                            }}
+                          >
+                            ✓
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setNicknameDraft(currentNickname);
+                              setIsEditingNickname(false);
+                            }}
+                            aria-label={t(
+                              tr.pokemonDetail.cancelEditNickname,
+                              lang,
+                            )}
+                            title={t(tr.pokemonDetail.cancelEditNickname, lang)}
+                            sx={{
+                              color: "#475569",
+                            }}
+                          >
+                            ✕
+                          </IconButton>
+                        </>
+                      ) : (
+                        <>
+                          <Box
+                            component="span"
+                            sx={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              flex: 1,
+                            }}
+                          >
+                            {pokemonDisplayLabel}
+                          </Box>
+                          {runToUpdate && (
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setNicknameDraft(currentNickname);
+                                setIsEditingNickname(true);
+                              }}
+                              aria-label={t(
+                                tr.pokemonDetail.editNickname,
+                                lang,
+                              )}
+                              title={t(tr.pokemonDetail.editNickname, lang)}
+                              sx={{
+                                color: "#475569",
+                              }}
+                            >
+                              ✎
+                            </IconButton>
+                          )}
+                        </>
+                      )}
+                    </Box>
+                    {capture.isShiny && (
+                      <span style={{ fontSize: "1rem" }}>✨</span>
+                    )}
+                    {genderSymbol && (
+                      <span
+                        style={{
+                          fontSize: "0.875rem",
+                          fontWeight: 400,
+                          color: genderColor,
+                        }}
+                      >
+                        {genderSymbol}
+                      </span>
+                    )}
+                  </Box>
                 </Typography>
                 <Typography
                   sx={{

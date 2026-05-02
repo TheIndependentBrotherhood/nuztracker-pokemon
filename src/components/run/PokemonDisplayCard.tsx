@@ -22,6 +22,7 @@ interface CardAction {
 
 interface Props {
   capture: Capture;
+  runId?: string;
   zone?: string;
   lang: Lang;
   background: string;
@@ -39,6 +40,7 @@ interface Props {
 
 export default function PokemonDisplayCard({
   capture,
+  runId,
   zone,
   lang,
   background,
@@ -203,6 +205,7 @@ export default function PokemonDisplayCard({
       {showDetail && (
         <PokemonDetailModal
           capture={capture}
+          runId={runId}
           onClose={() => setShowDetail(false)}
         />
       )}

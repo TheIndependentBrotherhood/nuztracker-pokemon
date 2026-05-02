@@ -147,6 +147,15 @@ const translations = {
     loading: { fr: "Chargement...", en: "Loading..." },
     baseStats: { fr: "Statistiques de base", en: "Base Stats" },
     baseStatTotal: { fr: "BST", en: "BST" },
+    nickname: { fr: "Surnom", en: "Nickname" },
+    nicknamePlaceholder: {
+      fr: "Entrez un surnom...",
+      en: "Enter a nickname...",
+    },
+    noNickname: { fr: "Aucun surnom", en: "No nickname" },
+    editNickname: { fr: "Modifier", en: "Edit" },
+    saveNickname: { fr: "Sauvegarder", en: "Save" },
+    cancelEditNickname: { fr: "Annuler", en: "Cancel" },
     height: { fr: "Taille", en: "Height" },
     weight: { fr: "Poids", en: "Weight" },
     failedToLoad: {

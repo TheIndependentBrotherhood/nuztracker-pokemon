@@ -7,6 +7,7 @@ import PokemonDisplayCard from "./PokemonDisplayCard";
 
 interface Props {
   capture: Capture;
+  runId: string;
   onAddToTeam: (capture: Capture) => void;
   onToggleDead?: (captureId: string) => void;
   zone: string;
@@ -14,6 +15,7 @@ interface Props {
 
 export default function CapturedPokemonCard({
   capture,
+  runId,
   onAddToTeam,
   onToggleDead,
   zone,
@@ -77,6 +79,7 @@ export default function CapturedPokemonCard({
   return (
     <PokemonDisplayCard
       capture={capture}
+      runId={runId}
       zone={zone}
       lang={lang}
       background="#f0f4f8"

@@ -392,6 +392,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                   <Grid key={capture.id}>
                     <CapturedPokemonCard
                       capture={capture}
+                      runId={run.id}
                       onAddToTeam={handleAddCapturedToTeam}
                       onToggleDead={handleToggleDeadStatus}
                       zone={
@@ -467,6 +468,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                   <Grid key={capture.id}>
                     <DeadPokemonCard
                       capture={capture}
+                      runId={run.id}
                       onResurrect={handleToggleDeadStatus}
                       zone={
                         getZoneForCapture(capture.id) ??

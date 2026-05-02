@@ -7,16 +7,23 @@ import PokemonDisplayCard from "./PokemonDisplayCard";
 
 interface Props {
   capture: Capture;
+  runId: string;
   onResurrect: (captureId: string) => void;
   zone?: string;
 }
 
-export default function DeadPokemonCard({ capture, onResurrect, zone }: Props) {
+export default function DeadPokemonCard({
+  capture,
+  runId,
+  onResurrect,
+  zone,
+}: Props) {
   const { lang } = useLanguage();
   const tr = translations;
   return (
     <PokemonDisplayCard
       capture={capture}
+      runId={runId}
       zone={zone}
       lang={lang}
       background="#fff"

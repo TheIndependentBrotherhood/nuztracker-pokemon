@@ -66,6 +66,7 @@ export default function TeamPokemonCard({
   return (
     <PokemonDisplayCard
       capture={capture}
+      runId={runId}
       zone={zone}
       lang={lang}
       background="#fff3cd"
