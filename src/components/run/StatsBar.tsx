@@ -19,12 +19,67 @@ import { encodeTeam, buildShareUrl } from "@/lib/share";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import {
-  getCaptureDisplayLabel,
-  getCaptureDisplayName,
+  useCaptureDisplayLabel,
+  useCaptureDisplayName,
 } from "@/lib/pokemon-display";
 
 interface Props {
   run: Run;
+}
+
+function TeamPreviewPokemonTile({
+  pokemon,
+  lang,
+}: {
+  pokemon: Capture;
+  lang: "fr" | "en";
+}) {
+  const displayName = useCaptureDisplayName(pokemon, lang);
+  const displayLabel = useCaptureDisplayLabel(pokemon, lang);
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        columnGap: 0.5,
+        position: "relative",
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={getSpriteUrl(pokemon.pokemonId, pokemon.isShiny)}
+        alt={displayName}
+        style={{
+          width: "80px",
+          height: "80px",
+          imageRendering: "pixelated",
+        }}
+      />
+      {/* Badge with nickname/name */}
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "rgba(0, 0, 0, 0.7)",
+          color: "#fff",
+          padding: "4px 6px",
+          borderRadius: "0 0 4px 4px",
+          fontSize: "0.65rem",
+          fontWeight: 700,
+          textAlign: "center",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {displayLabel}
+      </Box>
+    </Box>
+  );
 }
 
 export default function StatsBar({ run }: Props) {
@@ -261,52 +316,16 @@ export default function StatsBar({ run }: Props) {
       sx={{
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
-        columnGap: 12,
+        columnGap: { xs: 1, sm: 2, md: 3 },
+        rowGap: 1.5,
       }}
     >
       {run.team.map((pokemon: Capture) => (
-        <Box
+        <TeamPreviewPokemonTile
           key={pokemon.id}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            columnGap: 0.5,
-            position: "relative",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={getSpriteUrl(pokemon.pokemonId, pokemon.isShiny)}
-            alt={getCaptureDisplayName(pokemon, lang)}
-            style={{
-              width: "80px",
-              height: "80px",
-              imageRendering: "pixelated",
-            }}
-          />
-          {/* Badge with nickname/name */}
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: "rgba(0, 0, 0, 0.7)",
-              color: "#fff",
-              padding: "4px 6px",
-              borderRadius: "0 0 4px 4px",
-              fontSize: "0.65rem",
-              fontWeight: 700,
-              textAlign: "center",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {getCaptureDisplayLabel(pokemon, lang)}
-          </Box>
-        </Box>
+          pokemon={pokemon}
+          lang={lang}
+        />
       ))}
       {run.team.length < 6 &&
         Array.from({ length: 6 - run.team.length }).map((_, i) => (

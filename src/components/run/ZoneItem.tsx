@@ -2,17 +2,67 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
-import { Zone } from "@/lib/types";
+import { Capture, Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "./modals/AddCaptureModal";
 import { getSpriteUrl } from "@/lib/pokemon-api";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import {
+  useCaptureDisplayLabel,
+  useCaptureDisplayName,
+} from "@/lib/pokemon-display";
 
 interface Props {
   zone: Zone;
   runId: string;
   isSelected: boolean;
+}
+
+function CaptureThumbnail({
+  capture,
+  lang,
+}: {
+  capture: Capture;
+  lang: "fr" | "en";
+}) {
+  const displayName = useCaptureDisplayName(capture, lang);
+  const displayLabel = useCaptureDisplayLabel(capture, lang);
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        background: "rgba(51, 65, 85, 0.4)",
+        border: "1px solid rgba(71, 85, 99, 0.3)",
+        borderRadius: "0.5rem",
+        px: 1,
+        py: 0.25,
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
+        alt={displayName}
+        style={{
+          width: "46px",
+          height: "46px",
+          objectFit: "contain",
+        }}
+      />
+      <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
+        {displayLabel}
+      </Typography>
+      <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
+        Lv{capture.level}
+      </Typography>
+      {capture.isShiny && (
+        <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
+      )}
+    </Box>
+  );
 }
 
 const statusConfig: Record<
@@ -85,7 +135,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
           outline: isSelected ? "1px solid rgba(59, 130, 246, 0.4)" : "none",
           cursor: "pointer",
           "&:hover": {
-            background: !isSelected ? "rgba(30, 41, 59, 0.4)" : undefined,
+            background: !isSelected ? "rgba(59, 130, 246, 0.08)" : undefined,
           },
         }}
         onClick={() => setSelectedZone(isSelected ? null : zone.id)}
@@ -96,7 +146,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
           }
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: "2rem" }}>
           {/* Status dot */}
           <Box
             sx={{
@@ -122,91 +172,107 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
             {zone.zoneName}
           </Typography>
 
-          {zone.captures.length > 0 && (
-            <Typography
-              sx={{ fontSize: "0.75rem", color: "#475569", flexShrink: 0 }}
-            >
-              {zone.captures.length}
-            </Typography>
-          )}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+            {zone.captures.length > 0 && (
+              <Typography
+                sx={{
+                  fontSize: "0.7rem",
+                  color: "#334155",
+                  px: 0.75,
+                  py: 0.2,
+                  borderRadius: "999px",
+                  border: "1px solid rgba(71, 85, 99, 0.35)",
+                  background: "rgba(255, 255, 255, 0.65)",
+                  fontWeight: 700,
+                  minWidth: "1.5rem",
+                  textAlign: "center",
+                }}
+              >
+                {zone.captures.length}
+              </Typography>
+            )}
 
-          {/* Cycle status */}
-          <Box
-            component="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleStatusCycle();
-            }}
-            sx={{
-              fontSize: "0.75rem",
-              px: 0.75,
-              py: 0.25,
-              borderRadius: "0.25rem",
-              transition: "colors 200ms ease",
-              color:
-                zone.captures.length > 0 && zone.status === "captured"
-                  ? "#475569"
-                  : "#cbd5e1",
-              background:
-                zone.captures.length > 0 && zone.status === "captured"
-                  ? "transparent"
-                  : "transparent",
-              border: "none",
-              cursor:
-                zone.captures.length > 0 && zone.status === "captured"
-                  ? "not-allowed"
-                  : "pointer",
-              "&:hover": {
+            {/* Cycle status */}
+            <Box
+              component="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStatusCycle();
+              }}
+              sx={{
+                fontSize: "0.75rem",
+                width: "1.75rem",
+                height: "1.75rem",
+                borderRadius: "0.5rem",
+                transition: "all 200ms ease",
                 color:
                   zone.captures.length > 0 && zone.status === "captured"
-                    ? undefined
-                    : "#fff",
+                    ? "#94a3b8"
+                    : "#334155",
                 background:
                   zone.captures.length > 0 && zone.status === "captured"
-                    ? undefined
-                    : "rgba(51, 65, 85, 0.6)",
-              },
-            }}
-            title={
-              zone.captures.length > 0 && zone.status === "captured"
-                ? deleteCapturesToChange
-                : changeStatus
-            }
-            aria-label={
-              zone.captures.length > 0 && zone.status === "captured"
-                ? deleteCapturesToChange
-                : changeStatus
-            }
-            disabled={zone.captures.length > 0 && zone.status === "captured"}
-          >
-            {cycleLabel[zone.status]}
-          </Box>
+                    ? "rgba(148, 163, 184, 0.1)"
+                    : "rgba(255, 255, 255, 0.8)",
+                border: "1px solid rgba(71, 85, 99, 0.35)",
+                cursor:
+                  zone.captures.length > 0 && zone.status === "captured"
+                    ? "not-allowed"
+                    : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                "&:hover": {
+                  color:
+                    zone.captures.length > 0 && zone.status === "captured"
+                      ? undefined
+                      : "#000",
+                  background:
+                    zone.captures.length > 0 && zone.status === "captured"
+                      ? undefined
+                      : "rgba(96, 165, 250, 0.2)",
+                },
+              }}
+              title={
+                zone.captures.length > 0 && zone.status === "captured"
+                  ? deleteCapturesToChange
+                  : changeStatus
+              }
+              aria-label={
+                zone.captures.length > 0 && zone.status === "captured"
+                  ? deleteCapturesToChange
+                  : changeStatus
+              }
+              disabled={zone.captures.length > 0 && zone.status === "captured"}
+            >
+              {cycleLabel[zone.status]}
+            </Box>
 
-          {/* Add capture */}
-          <Box
-            component="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowCapture(true);
-            }}
-            sx={{
-              fontSize: "0.75rem",
-              color: "#60a5fa",
-              background: "rgba(59, 130, 246, 0.1)",
-              px: 1,
-              py: 0.25,
-              borderRadius: "0.25rem",
-              transition: "all 200ms ease",
-              border: "none",
-              cursor: "pointer",
-              fontWeight: 500,
-              "&:hover": {
-                color: "#93c5fd",
-                background: "rgba(59, 130, 246, 0.2)",
-              },
-            }}
-          >
-            {t(tr.zoneItem.capture, lang)}
+            {/* Add capture */}
+            <Box
+              component="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowCapture(true);
+              }}
+              sx={{
+                fontSize: "0.75rem",
+                color: "#1d4ed8",
+                background: "rgba(59, 130, 246, 0.12)",
+                px: 1,
+                py: 0.35,
+                borderRadius: "0.5rem",
+                transition: "all 200ms ease",
+                border: "1px solid rgba(59, 130, 246, 0.35)",
+                cursor: "pointer",
+                fontWeight: 600,
+                "&:hover": {
+                  color: "#1e40af",
+                  background: "rgba(59, 130, 246, 0.2)",
+                },
+              }}
+            >
+              {t(tr.zoneItem.capture, lang)}
+            </Box>
           </Box>
         </Box>
 
@@ -214,39 +280,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
         {zone.captures.length > 0 && (
           <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
             {zone.captures.map((c) => (
-              <Box
-                key={c.id}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  background: "rgba(51, 65, 85, 0.4)",
-                  border: "1px solid rgba(71, 85, 99, 0.3)",
-                  borderRadius: "0.5rem",
-                  px: 1,
-                  py: 0.25,
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={getSpriteUrl(c.pokemonId, c.isShiny)}
-                  alt={c.pokemonName}
-                  style={{
-                    width: "46px",
-                    height: "46px",
-                    objectFit: "contain",
-                  }}
-                />
-                <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
-                  {c.nickname || c.pokemonName}
-                </Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
-                  Lv{c.level}
-                </Typography>
-                {c.isShiny && (
-                  <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
-                )}
-              </Box>
+              <CaptureThumbnail key={c.id} capture={c} lang={lang} />
             ))}
           </Box>
         )}
