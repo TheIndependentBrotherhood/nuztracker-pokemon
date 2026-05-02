@@ -1,6 +1,6 @@
 "use client";
 
-import { Run } from "@/lib/types";
+import { Run, Zone, Capture } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useRunStore } from "@/store/runStore";
 import { Box, Typography, Grid, Tooltip } from "@mui/material";
@@ -80,16 +80,16 @@ export default function RunList({ runs }: RunListProps) {
     <Grid container spacing={2}>
       {runs.map((run: Run) => {
         const captureCount = run.zones.reduce(
-          (acc: number, z: any) => acc + z.captures.length,
+          (acc: number, z: Zone) => acc + z.captures.length,
           0,
         );
         const deadCount = run.zones.reduce(
-          (acc: number, z: any) =>
-            acc + z.captures.filter((c: any) => c.isDead).length,
+          (acc: number, z: Zone) =>
+            acc + z.captures.filter((c: Capture) => c.isDead).length,
           0,
         );
         const visitedCount = run.zones.filter(
-          (z: any) => z.status !== "not-visited",
+          (z: Zone) => z.status !== "not-visited",
         ).length;
         const progress =
           run.zones.length > 0 ? (visitedCount / run.zones.length) * 100 : 0;
