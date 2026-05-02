@@ -83,6 +83,11 @@ export default function RunList({ runs }: RunListProps) {
           (acc: number, z: any) => acc + z.captures.length,
           0,
         );
+        const deadCount = run.zones.reduce(
+          (acc: number, z: any) =>
+            acc + z.captures.filter((c: any) => c.isDead).length,
+          0,
+        );
         const visitedCount = run.zones.filter(
           (z: any) => z.status !== "not-visited",
         ).length;
@@ -198,7 +203,7 @@ export default function RunList({ runs }: RunListProps) {
 
                 {/* Stats */}
                 <Grid container spacing={1.5}>
-                  <Grid size={{ xs: 6 }}>
+                  <Grid size={{ xs: 4 }}>
                     <Box
                       sx={{
                         background: "#E8F5E9",
@@ -228,7 +233,7 @@ export default function RunList({ runs }: RunListProps) {
                       </Typography>
                     </Box>
                   </Grid>
-                  <Grid size={{ xs: 6 }}>
+                  <Grid size={{ xs: 4 }}>
                     <Box
                       sx={{
                         background: "#F3E5F5",
@@ -255,6 +260,36 @@ export default function RunList({ runs }: RunListProps) {
                         }}
                       >
                         {captureCount}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ xs: 4 }}>
+                    <Box
+                      sx={{
+                        background: "#FEE2E2",
+                        borderRadius: "0.5rem",
+                        p: 1.5,
+                        border: "2px solid #000",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "0.75rem",
+                          color: "#000",
+                          fontWeight: 700,
+                          mb: 0.25,
+                        }}
+                      >
+                        {t(tr.runList.deaths, lang)}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "1.125rem",
+                          fontWeight: 700,
+                          color: "#ef4444",
+                        }}
+                      >
+                        {deadCount}
                       </Typography>
                     </Box>
                   </Grid>

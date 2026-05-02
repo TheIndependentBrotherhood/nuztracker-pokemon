@@ -70,9 +70,10 @@ const translations = {
     statusActive: { fr: "Active", en: "Active" },
     statusCompleted: { fr: "Terminé", en: "Completed" },
     statusAbandoned: { fr: "Abandonné", en: "Abandoned" },
-    zones: { fr: "Zones", en: "Zones" },
     captures: { fr: "Captures", en: "Captures" },
+    deaths: { fr: "RIP", en: "RIP" },
     progression: { fr: "Progression", en: "Progress" },
+    zones: { fr: "Zones", en: "Zones" },
     deleteConfirm: {
       fr: "Supprimer ce run ?",
       en: "Delete this run?",
