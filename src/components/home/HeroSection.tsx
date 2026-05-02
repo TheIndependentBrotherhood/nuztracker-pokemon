@@ -71,7 +71,6 @@ export default function HeroSection({
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={2}
-            sx={{ width: "100%", maxWidth: "600px" }}
           >
             <StatCard value={runsCount} label="Runs" color="#E3F2FD" />
             <StatCard value={activeCount} label={t(tr.hero.statActive, lang)} color="#E8F5E9" />
