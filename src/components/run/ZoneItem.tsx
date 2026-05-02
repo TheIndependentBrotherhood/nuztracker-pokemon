@@ -146,7 +146,14 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
           }
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: "2rem" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            minHeight: "2rem",
+          }}
+        >
           {/* Status dot */}
           <Box
             sx={{
@@ -172,7 +179,14 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
             {zone.zoneName}
           </Typography>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              flexShrink: 0,
+            }}
+          >
             {zone.captures.length > 0 && (
               <Typography
                 sx={{

@@ -4,9 +4,10 @@ import { Run } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import { Box, TextField } from "@mui/material";
 import ZoneItem from "./ZoneItem";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { getZonesForRegionAsync } from "@/lib/zones";
 
 interface Props {
   run: Run;
@@ -15,11 +16,50 @@ interface Props {
 type FilterKey = "all" | "not-visited" | "visited" | "captured";
 
 export default function ZoneList({ run }: Props) {
-  const { selectedZoneId } = useRunStore();
+  const { selectedZoneId, updateRun } = useRunStore();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
+  const [zonesToDisplay, setZonesToDisplay] = useState(run.zones);
   const { lang } = useLanguage();
   const tr = translations;
+
+  // Load correct zones for the region and sync if needed
+  useEffect(() => {
+    const loadAndSync = async () => {
+      // Try to get zones for the current region
+      const correctZones = await getZonesForRegionAsync(run.region);
+      
+      // Check if zones match the region
+      const expectedZoneIds = new Set(correctZones.map((z) => z.id));
+      const currentZoneIds = new Set(run.zones.map((z) => z.id));
+
+      // If zones don't match, we need to sync
+      if (expectedZoneIds.size !== currentZoneIds.size ||
+          ![...expectedZoneIds].every((id) => currentZoneIds.has(id))) {
+        // Merge existing zone data with new zone structure
+        const syncedZones = correctZones.map((expectedZone) => {
+          const currentZone = run.zones.find((z) => z.id === expectedZone.id);
+          return currentZone ?? {
+            id: expectedZone.id,
+            zoneName: expectedZone.zoneName,
+            regionArea: expectedZone.regionArea,
+            status: "not-visited" as const,
+            captures: [],
+            updatedAt: 0,
+          };
+        });
+
+        // Update both display and storage
+        setZonesToDisplay(syncedZones);
+        updateRun({ ...run, zones: syncedZones });
+      } else {
+        // Zones match, just use them
+        setZonesToDisplay(run.zones);
+      }
+    };
+
+    loadAndSync();
+  }, [run, updateRun]);
 
   const FILTERS: { key: FilterKey; label: string }[] = [
     { key: "all", label: t(tr.zoneList.filterAll, lang) },
@@ -28,7 +68,7 @@ export default function ZoneList({ run }: Props) {
     { key: "captured", label: t(tr.zoneList.filterCaptured, lang) },
   ];
 
-  const filtered = run.zones.filter((z) => {
+  const filtered = zonesToDisplay.filter((z) => {
     if (filter !== "all" && z.status !== filter) return false;
     if (search && !z.zoneName.toLowerCase().includes(search.toLowerCase()))
       return false;

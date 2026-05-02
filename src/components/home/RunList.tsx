@@ -101,7 +101,7 @@ export default function RunList({ runs }: RunListProps) {
                 p: 3,
                 cursor: "pointer",
                 transition: "all 300ms ease",
-                width: "345px",
+                width: "350px",
                 "&:hover": {
                   boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
                   transform: "scale(1.05)",

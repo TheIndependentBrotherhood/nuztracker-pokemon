@@ -73,6 +73,7 @@ export const regions = [
 ];
 
 let cachedRegions: Region[] | null = null;
+let regionsInitialized = false;
 
 export async function loadRegions(): Promise<Region[]> {
   if (cachedRegions) return cachedRegions;
@@ -93,13 +94,54 @@ export async function loadRegions(): Promise<Region[]> {
       })),
     }));
 
+    // Populate regionZones from the loaded regions
+    mappedRegions.forEach((region) => {
+      if (region.locations && !regionZones[region.id]) {
+        regionZones[region.id] = region.locations.map((loc) => ({
+          id: loc.name,
+          zoneName: loc.names?.en || loc.name,
+          regionArea: "", // We don't have region area info in the JSON
+        }));
+      }
+    });
+
     cachedRegions = mappedRegions;
+    regionsInitialized = true;
 
     return mappedRegions;
   } catch (error) {
     console.error("Failed to load regions:", error);
     return regions; // Fallback to hardcoded regions
   }
+}
+
+// Initialize regions on module load (important for SSR/hydration)
+if (typeof window !== "undefined") {
+  loadRegions().catch((err) =>
+    console.error("Failed to initialize regions:", err),
+  );
+}
+
+export async function getZonesForRegionAsync(region: string): Promise<ZoneTemplate[]> {
+  // If we have it hardcoded, return immediately
+  if (regionZones[region]) {
+    return regionZones[region];
+  }
+
+  // Otherwise, load from regions.json and generate zones
+  const loadedRegions = await loadRegions();
+  const foundRegion = loadedRegions.find((r) => r.id === region);
+
+  if (!foundRegion || !foundRegion.locations) {
+    return kantoZones; // Fallback to Kanto
+  }
+
+  // Convert locations to ZoneTemplate
+  return foundRegion.locations.map((loc) => ({
+    id: loc.name, // Use location name as zone id
+    zoneName: loc.names?.en || loc.name,
+    regionArea: "", // We don't have region area info in the JSON
+  }));
 }
 
 export function getZonesForRegion(region: string): ZoneTemplate[] {
