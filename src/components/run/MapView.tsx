@@ -4,8 +4,19 @@ import { Run } from "@/lib/types";
 import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import KantoMap from "./KantoMap";
+import JohtoMap from "./JohtoMap";
+import HoennMap from "./HoennMap";
+import SinnohMap from "./SinnohMap";
+import UnovaMap from "./UnovaMap";
+import KalosMap from "./KalosMap";
+import AlolaMap from "./AlolaMap";
+import GalarMap from "./GalarMap";
+import PaldeaMap from "./PaldeaMap";
+import HisuiMap from "./HisuiMap";
+import OrreMap from "./OrreMap";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { regionZones } from "@/lib/zones";
 
 interface Props {
   run: Run;
@@ -21,6 +32,14 @@ export default function MapView({ run }: Props) {
     if (!zone) return "not-visited";
     if (zone.captures.length >= 2) return "multiple";
     return zone.status;
+  }
+
+  function getZoneLabel(zoneId: string): string | null {
+    const zones = regionZones[run.region];
+    if (!zones) return null;
+    const template = zones.find((z) => z.id === zoneId);
+    if (!template) return null;
+    return template.zoneNames?.[lang] ?? template.zoneName ?? null;
   }
 
   function handleZoneClick(zoneId: string) {
@@ -110,14 +129,123 @@ export default function MapView({ run }: Props) {
         </Box>
       </Box>
       <Box sx={{ p: 2, background: "#fff" }}>
-        <KantoMap
-          zones={run.zones}
-          selectedZoneId={selectedZoneId}
-          onZoneClick={handleZoneClick}
-          getZoneStatus={getZoneStatus}
-        />
+        {run.region === "kanto" && (
+          <KantoMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "johto" && (
+          <JohtoMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "hoenn" && (
+          <HoennMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "sinnoh" && (
+          <SinnohMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "unova" && (
+          <UnovaMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "kalos" && (
+          <KalosMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "alola" && (
+          <AlolaMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "galar" && (
+          <GalarMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "paldea" && (
+          <PaldeaMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "hisui" && (
+          <HisuiMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {run.region === "orre" && (
+          <OrreMap
+            selectedZoneId={selectedZoneId}
+            onZoneClick={handleZoneClick}
+            getZoneStatus={getZoneStatus}
+            getZoneLabel={getZoneLabel}
+          />
+        )}
+        {![
+          "kanto",
+          "johto",
+          "hoenn",
+          "sinnoh",
+          "unova",
+          "kalos",
+          "alola",
+          "galar",
+          "paldea",
+          "hisui",
+          "orre",
+        ].includes(run.region) && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              py: 8,
+              color: "#6B7280",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              textAlign: "center",
+            }}
+          >
+            {t(tr.mapView.noMapAvailable, lang)}
+          </Box>
+        )}
       </Box>
     </Box>
   );
 }
-

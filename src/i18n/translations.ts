@@ -327,11 +327,15 @@ const translations = {
 
   // ── Map View ───────────────────────────────────────────────────────────────
   mapView: {
-    regionMap: { fr: "Carte Région", en: "Region Map" },
-    notVisited: { fr: "Non visité", en: "Not Visited" },
-    visited: { fr: "Visité", en: "Visited" },
-    captured: { fr: "Capturé", en: "Captured" },
     multiple: { fr: "Multiple", en: "Multiple" },
+    noMapAvailable: {
+      fr: "Carte interactive non disponible pour cette région",
+      en: "Interactive map not available for this region",
+    },
+    notVisited: { fr: "Non visité", en: "Not Visited" },
+    captured: { fr: "Capturé", en: "Captured" },
+    regionMap: { fr: "Carte Région", en: "Region Map" },
+    visited: { fr: "Visité", en: "Visited" },
   },
 
   // ── Run Page ───────────────────────────────────────────────────────────────

@@ -1,13 +1,12 @@
 "use client";
 
 import { Box } from "@mui/material";
-import { Zone } from "@/lib/types";
 
 interface Props {
-  zones: Zone[];
   selectedZoneId: string | null;
   onZoneClick: (zoneId: string) => void;
   getZoneStatus: (zoneId: string) => string;
+  getZoneLabel: (zoneId: string) => string | null;
 }
 
 const statusColor: Record<string, string> = {
@@ -22,50 +21,60 @@ const zoneLayout: Record<
   { x: number; y: number; w: number; h: number; label: string }
 > = {
   "pallet-town": { x: 120, y: 480, w: 70, h: 40, label: "Pallet" },
-  "route-1": { x: 140, y: 430, w: 30, h: 45, label: "R.1" },
-  "viridian-city": { x: 100, y: 380, w: 80, h: 40, label: "Viridian" },
-  "route-22": { x: 20, y: 380, w: 75, h: 30, label: "R.22" },
-  "route-2": { x: 140, y: 310, w: 30, h: 65, label: "R.2" },
+  "kanto-route-1": { x: 143, y: 430, w: 25, h: 45, label: "R.1" },
+  "viridian-city": { x: 100, y: 378, w: 80, h: 40, label: "Viridian" },
+  "kanto-route-22": { x: 20, y: 378, w: 75, h: 30, label: "R.22" },
+  "kanto-route-2": { x: 143, y: 350, w: 25, h: 25, label: "R.2" },
+  "viridian-forest": { x: 116, y: 322, w: 58, h: 28, label: "Forêt Jade" },
   "pewter-city": { x: 100, y: 260, w: 80, h: 40, label: "Pewter" },
-  "route-3": { x: 185, y: 270, w: 90, h: 30, label: "R.3" },
+  "kanto-route-3": { x: 185, y: 270, w: 90, h: 30, label: "R.3" },
   "mt-moon": { x: 280, y: 255, w: 60, h: 40, label: "Mt.Moon" },
-  "route-4": { x: 345, y: 265, w: 80, h: 30, label: "R.4" },
+  "kanto-route-4": { x: 345, y: 265, w: 80, h: 30, label: "R.4" },
   "cerulean-city": { x: 340, y: 195, w: 90, h: 40, label: "Cerulean" },
-  "route-9": { x: 435, y: 200, w: 80, h: 25, label: "R.9" },
-  "route-10": { x: 435, y: 228, w: 25, h: 60, label: "R.10" },
-  "route-5": { x: 355, y: 250, w: 30, h: 50, label: "R.5" },
-  "route-6": { x: 355, y: 305, w: 30, h: 50, label: "R.6" },
+  "cerulean-cave": { x: 287, y: 193, w: 50, h: 28, label: "Grotte Az." },
+  "kanto-route-24": { x: 375, y: 152, w: 25, h: 38, label: "R.24" },
+  "kanto-route-25": { x: 403, y: 147, w: 75, h: 24, label: "R.25" },
+  "kanto-route-9": { x: 435, y: 200, w: 80, h: 25, label: "R.9" },
+  "kanto-route-10": { x: 435, y: 228, w: 25, h: 55, label: "R.10" },
+  "rock-tunnel": { x: 463, y: 228, w: 52, h: 28, label: "Grotte" },
+  "kanto-power-plant": { x: 465, y: 258, w: 58, h: 25, label: "Centrale" },
+  "kanto-route-5": { x: 355, y: 250, w: 30, h: 50, label: "R.5" },
+  "kanto-route-6": { x: 355, y: 305, w: 30, h: 50, label: "R.6" },
   "saffron-city": { x: 320, y: 305, w: 90, h: 45, label: "Saffron" },
-  "route-7": { x: 265, y: 315, w: 50, h: 25, label: "R.7" },
+  "kanto-route-7": { x: 265, y: 315, w: 50, h: 25, label: "R.7" },
   "celadon-city": { x: 175, y: 305, w: 85, h: 45, label: "Celadon" },
-  "route-16": { x: 100, y: 310, w: 70, h: 25, label: "R.16" },
-  "route-17": { x: 110, y: 340, w: 25, h: 80, label: "R.17" },
-  "route-18": { x: 110, y: 425, w: 70, h: 25, label: "R.18" },
-  "route-8": { x: 265, y: 260, w: 70, h: 25, label: "R.8" },
+  "kanto-route-16": { x: 100, y: 310, w: 70, h: 25, label: "R.16" },
+  "kanto-route-17": { x: 110, y: 340, w: 25, h: 80, label: "R.17" },
+  "kanto-route-18": { x: 110, y: 425, w: 70, h: 25, label: "R.18" },
+  "kanto-route-8": { x: 265, y: 260, w: 70, h: 25, label: "R.8" },
   "lavender-town": { x: 460, y: 265, w: 80, h: 40, label: "Lavender" },
-  "route-11": { x: 460, y: 310, w: 80, h: 25, label: "R.11" },
-  "route-12": { x: 510, y: 340, w: 25, h: 80, label: "R.12" },
+  "pokemon-tower": { x: 545, y: 265, w: 58, h: 28, label: "Tour Pkm" },
+  "kanto-route-11": { x: 460, y: 310, w: 80, h: 25, label: "R.11" },
+  "kanto-route-12": { x: 510, y: 340, w: 25, h: 80, label: "R.12" },
   "vermilion-city": { x: 340, y: 360, w: 90, h: 40, label: "Vermilion" },
-  "route-13": { x: 460, y: 420, w: 80, h: 25, label: "R.13" },
-  "route-14": { x: 545, y: 340, w: 25, h: 80, label: "R.14" },
-  "route-15": { x: 460, y: 450, w: 80, h: 25, label: "R.15" },
+  "ss-anne": { x: 340, y: 403, w: 80, h: 22, label: "L'Océane" },
+  "digletts-cave": { x: 248, y: 360, w: 68, h: 22, label: "Cave Taupiq." },
+  "kanto-route-13": { x: 460, y: 420, w: 80, h: 25, label: "R.13" },
+  "kanto-route-14": { x: 545, y: 340, w: 25, h: 80, label: "R.14" },
+  "kanto-route-15": { x: 460, y: 450, w: 80, h: 25, label: "R.15" },
   "fuchsia-city": { x: 340, y: 410, w: 90, h: 40, label: "Fuchsia" },
-  "safari-zone": { x: 245, y: 400, w: 90, h: 45, label: "Safari Zone" },
-  "route-19": { x: 370, y: 455, w: 25, h: 50, label: "R.19" },
-  "route-20": { x: 200, y: 490, w: 165, h: 25, label: "R.20" },
+  "kanto-safari-zone": { x: 245, y: 400, w: 90, h: 45, label: "Safari Zone" },
+  "kanto-sea-route-19": { x: 370, y: 455, w: 25, h: 50, label: "Ch.19" },
+  "kanto-sea-route-20": { x: 200, y: 490, w: 165, h: 25, label: "Ch.20" },
   "seafoam-islands": { x: 185, y: 475, w: 45, h: 45, label: "Seafoam" },
   "cinnabar-island": { x: 185, y: 525, w: 80, h: 40, label: "Cinnabar" },
-  "route-21": { x: 155, y: 455, w: 25, h: 70, label: "R.21" },
-  "route-23": { x: 20, y: 290, w: 25, h: 85, label: "R.23" },
-  "victory-road": { x: 20, y: 220, w: 60, h: 65, label: "Victory Rd" },
-  "pokemon-league": { x: 20, y: 170, w: 80, h: 45, label: "Pokémon League" },
+  "pokemon-mansion": { x: 270, y: 523, w: 65, h: 27, label: "Manoir Pkm" },
+  "kanto-sea-route-21": { x: 155, y: 455, w: 25, h: 70, label: "Ch.21" },
+  "kanto-route-23": { x: 20, y: 290, w: 25, h: 85, label: "R.23" },
+  "kanto-victory-road-1": { x: 20, y: 220, w: 60, h: 65, label: "Victory Rd" },
+  "indigo-plateau": { x: 20, y: 170, w: 80, h: 45, label: "Plateau Indigo" },
 };
 
 export default function KantoMap({
-  zones,
   selectedZoneId,
   onZoneClick,
   getZoneStatus,
+  getZoneLabel,
 }: Props) {
   return (
     <Box
@@ -136,7 +145,7 @@ export default function KantoMap({
                 fill="#fff"
                 style={{ pointerEvents: "none", userSelect: "none" }}
               >
-                {label}
+                {getZoneLabel(id) ?? label}
               </text>
             </g>
           );
