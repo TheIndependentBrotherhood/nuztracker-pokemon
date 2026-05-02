@@ -59,6 +59,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
     const zones: Zone[] = zoneTemplates.map((zt) => ({
       id: zt.id,
       zoneName: zt.zoneName,
+      zoneNames: zt.zoneNames,
       regionArea: zt.regionArea,
       status: "not-visited" as const,
       captures: [],

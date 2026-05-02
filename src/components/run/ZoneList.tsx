@@ -4,10 +4,10 @@ import { Run } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import { Box, TextField } from "@mui/material";
 import ZoneItem from "./ZoneItem";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
-import { getZonesForRegionAsync } from "@/lib/zones";
+import { getZonesForRegionAsync, getZoneDisplayName } from "@/lib/zones";
 
 interface Props {
   run: Run;
@@ -19,47 +19,62 @@ export default function ZoneList({ run }: Props) {
   const { selectedZoneId, updateRun } = useRunStore();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
-  const [zonesToDisplay, setZonesToDisplay] = useState(run.zones);
+  const [zoneNamesMap, setZoneNamesMap] = useState<
+    Map<string, { fr?: string; en?: string }>
+  >(new Map());
   const { lang } = useLanguage();
   const tr = translations;
 
   // Load correct zones for the region and sync if needed
   useEffect(() => {
     const loadAndSync = async () => {
-      // Try to get zones for the current region
       const correctZones = await getZonesForRegionAsync(run.region);
-      
-      // Check if zones match the region
+
       const expectedZoneIds = new Set(correctZones.map((z) => z.id));
       const currentZoneIds = new Set(run.zones.map((z) => z.id));
 
-      // If zones don't match, we need to sync
-      if (expectedZoneIds.size !== currentZoneIds.size ||
-          ![...expectedZoneIds].every((id) => currentZoneIds.has(id))) {
-        // Merge existing zone data with new zone structure
+      const zonesMismatch =
+        expectedZoneIds.size !== currentZoneIds.size ||
+        ![...expectedZoneIds].every((id) => currentZoneIds.has(id));
+
+      // Build a map of zoneId -> translated names for display (never persisted)
+      const newMap = new Map<string, { fr?: string; en?: string }>();
+      correctZones.forEach((z) => {
+        if (z.zoneNames) newMap.set(z.id, z.zoneNames);
+      });
+      setZoneNamesMap(newMap);
+
+      if (zonesMismatch) {
         const syncedZones = correctZones.map((expectedZone) => {
           const currentZone = run.zones.find((z) => z.id === expectedZone.id);
-          return currentZone ?? {
-            id: expectedZone.id,
-            zoneName: expectedZone.zoneName,
-            regionArea: expectedZone.regionArea,
-            status: "not-visited" as const,
-            captures: [],
-            updatedAt: 0,
-          };
+          return currentZone
+            ? { ...currentZone }
+            : {
+                id: expectedZone.id,
+                zoneName: expectedZone.zoneName,
+                regionArea: expectedZone.regionArea,
+                status: "not-visited" as const,
+                captures: [],
+                updatedAt: 0,
+              };
         });
-
-        // Update both display and storage
-        setZonesToDisplay(syncedZones);
         updateRun({ ...run, zones: syncedZones });
-      } else {
-        // Zones match, just use them
-        setZonesToDisplay(run.zones);
       }
     };
 
     loadAndSync();
-  }, [run, updateRun]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run.id, run.region]);
+
+  // Derive display zones: run.zones enriched with translated names from map
+  const zonesToDisplay = useMemo(
+    () =>
+      run.zones.map((zone) => ({
+        ...zone,
+        zoneNames: zoneNamesMap.get(zone.id) ?? zone.zoneNames,
+      })),
+    [run.zones, zoneNamesMap],
+  );
 
   const FILTERS: { key: FilterKey; label: string }[] = [
     { key: "all", label: t(tr.zoneList.filterAll, lang) },
@@ -70,8 +85,10 @@ export default function ZoneList({ run }: Props) {
 
   const filtered = zonesToDisplay.filter((z) => {
     if (filter !== "all" && z.status !== filter) return false;
-    if (search && !z.zoneName.toLowerCase().includes(search.toLowerCase()))
-      return false;
+    if (search) {
+      const displayName = getZoneDisplayName(z, lang).toLowerCase();
+      if (!displayName.includes(search.toLowerCase())) return false;
+    }
     return true;
   });
 

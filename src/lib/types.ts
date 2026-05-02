@@ -24,6 +24,10 @@ export interface RandomizerOptions {
 export interface Zone {
   id: string;
   zoneName: string;
+  zoneNames?: {
+    fr?: string;
+    en?: string;
+  };
   regionArea: string;
   status: "not-visited" | "visited" | "captured";
   captures: Capture[];

@@ -12,6 +12,7 @@ import {
   useCaptureDisplayLabel,
   useCaptureDisplayName,
 } from "@/lib/pokemon-display";
+import { getZoneDisplayName } from "@/lib/zones";
 
 interface Props {
   zone: Zone;
@@ -176,7 +177,7 @@ export default function ZoneItem({ zone, runId, isSelected }: Props) {
               whiteSpace: "nowrap",
             }}
           >
-            {zone.zoneName}
+            {getZoneDisplayName(zone, lang)}
           </Typography>
 
           <Box
