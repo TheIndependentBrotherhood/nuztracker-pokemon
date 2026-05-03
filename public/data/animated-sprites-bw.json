@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-03T00:35:52.433Z",
+  "generatedAt": "2026-05-03T00:58:02.166Z",
   "summary": {
     "totalPokemon": 1350,
     "totalLinksChecked": 2700,
-    "linksWorking": 1872,
-    "linksFailed": 828,
-    "normalWorking": 935,
-    "shinyWorking": 937,
+    "linksWorking": 1876,
+    "linksFailed": 824,
+    "normalWorking": 937,
+    "shinyWorking": 939,
     "sourceCoverage": {
       "pokemondb_bw": {
         "normalSelected": 663,
@@ -29,9 +29,9 @@
         "pokemonWithAtLeastOne": 92
       },
       "google_sheet_gen9": {
-        "normalSelected": 27,
-        "shinySelected": 26,
-        "pokemonWithAtLeastOne": 27
+        "normalSelected": 29,
+        "shinySelected": 28,
+        "pokemonWithAtLeastOne": 29
       }
     }
   },
@@ -19196,14 +19196,14 @@
       "name": "wooper-paldea",
       "generation": 2,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/194_1-gif.658903/",
+        "available": true,
+        "source": "google_sheet_gen9"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/194_1s-gif.658904/",
+        "available": true,
+        "source": "google_sheet_gen9"
       }
     },
     {
@@ -19481,14 +19481,14 @@
       "name": "ursaluna-bloodmoon",
       "generation": 8,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/901_1-gif.641556/",
+        "available": true,
+        "source": "google_sheet_gen9"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/901_1s-gif.641557/",
+        "available": true,
+        "source": "google_sheet_gen9"
       }
     },
     {
@@ -20288,7 +20288,7 @@
     }
   ],
   "missingByGeneration": {
-    "generatedAt": "2026-05-03T00:35:52.433Z",
+    "generatedAt": "2026-05-03T00:58:02.166Z",
     "summaryByGeneration": {
       "gen1": {
         "missingAnyAnimatedCount": 53,
@@ -20296,9 +20296,9 @@
         "missingShinyCount": 53
       },
       "gen2": {
-        "missingAnyAnimatedCount": 11,
-        "missingNormalCount": 11,
-        "missingShinyCount": 11
+        "missingAnyAnimatedCount": 10,
+        "missingNormalCount": 10,
+        "missingShinyCount": 10
       },
       "gen3": {
         "missingAnyAnimatedCount": 15,
@@ -20326,9 +20326,9 @@
         "missingShinyCount": 44
       },
       "gen8": {
-        "missingAnyAnimatedCount": 62,
-        "missingNormalCount": 62,
-        "missingShinyCount": 63
+        "missingAnyAnimatedCount": 61,
+        "missingNormalCount": 61,
+        "missingShinyCount": 62
       },
       "gen9": {
         "missingAnyAnimatedCount": 122,
@@ -21012,10 +21012,6 @@
             "name": "sneasel-hisui"
           },
           {
-            "id": 10253,
-            "name": "wooper-paldea"
-          },
-          {
             "id": 10282,
             "name": "meganium-mega"
           },
@@ -21058,10 +21054,6 @@
             "name": "sneasel-hisui"
           },
           {
-            "id": 10253,
-            "name": "wooper-paldea"
-          },
-          {
             "id": 10282,
             "name": "meganium-mega"
           },
@@ -21102,10 +21094,6 @@
           {
             "id": 10235,
             "name": "sneasel-hisui"
-          },
-          {
-            "id": 10253,
-            "name": "wooper-paldea"
           },
           {
             "id": 10282,
@@ -23368,10 +23356,6 @@
             "name": "enamorus-therian"
           },
           {
-            "id": 10272,
-            "name": "ursaluna-bloodmoon"
-          },
-          {
             "id": 10303,
             "name": "falinks-mega"
           }
@@ -23616,10 +23600,6 @@
           {
             "id": 10249,
             "name": "enamorus-therian"
-          },
-          {
-            "id": 10272,
-            "name": "ursaluna-bloodmoon"
           },
           {
             "id": 10303,
@@ -23870,10 +23850,6 @@
           {
             "id": 10249,
             "name": "enamorus-therian"
-          },
-          {
-            "id": 10272,
-            "name": "ursaluna-bloodmoon"
           },
           {
             "id": 10303,

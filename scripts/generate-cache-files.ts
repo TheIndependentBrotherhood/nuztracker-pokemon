@@ -270,6 +270,26 @@ function inferSheetKeysForRow(
     return [normalizedName];
   }
 
+  if (source.key === "google_sheet_gen9") {
+    if (!inPostMainSection) {
+      return [normalizedName];
+    }
+
+    // Paldean Wooper
+    if (pokemonId === 194) {
+      return ["wooper-paldea"];
+    }
+
+    // Paldean Tauros (no URLs yet, but map for future use)
+    if (pokemonId === 128 && normalizedName.startsWith("tauros-")) {
+      return [normalizedName.replace("tauros-", "tauros-paldea-")];
+    }
+
+    // Terastal and other cross-gen forms: name already normalizes correctly
+    // (ursaluna-bloodmoon, terapagos-stellar, etc.)
+    return [normalizedName];
+  }
+
   return [normalizedName];
 }
 
@@ -371,7 +391,9 @@ async function readSheetSprites(
         ? 722
         : source.key === "google_sheet_gen8"
           ? 810
-          : -1;
+          : source.key === "google_sheet_gen9"
+            ? 906
+            : -1;
   const mainRangeEnd =
     source.key === "google_sheet_gen6"
       ? 721
@@ -379,7 +401,9 @@ async function readSheetSprites(
         ? 809
         : source.key === "google_sheet_gen8"
           ? 905
-          : -1;
+          : source.key === "google_sheet_gen9"
+            ? 1025
+            : -1;
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);
@@ -1009,12 +1033,18 @@ async function generateAnimatedSpritesBw() {
           const isGen8GalarHisuiGmaxException =
             source.key === "google_sheet_gen8" &&
             (isGalarianForm || isHisuianForm || isGmaxForm);
+          const isGen9PaldeanCrossGenException =
+            source.key === "google_sheet_gen9" &&
+            (normalizedEntryName.endsWith("-paldea") ||
+              normalizedEntryName.startsWith("tauros-paldea-") ||
+              normalizedEntryName === "ursaluna-bloodmoon");
 
           if (
             !isGenMatch &&
             !isGen6MegaPrimalException &&
             !isGen7AlolanException &&
-            !isGen8GalarHisuiGmaxException
+            !isGen8GalarHisuiGmaxException &&
+            !isGen9PaldeanCrossGenException
           )
             return null;
 
@@ -1039,12 +1069,18 @@ async function generateAnimatedSpritesBw() {
           const isGen8GalarHisuiGmaxException =
             source.key === "google_sheet_gen8" &&
             (isGalarianForm || isHisuianForm || isGmaxForm);
+          const isGen9PaldeanCrossGenException =
+            source.key === "google_sheet_gen9" &&
+            (normalizedEntryName.endsWith("-paldea") ||
+              normalizedEntryName.startsWith("tauros-paldea-") ||
+              normalizedEntryName === "ursaluna-bloodmoon");
 
           if (
             !isGenMatch &&
             !isGen6MegaPrimalException &&
             !isGen7AlolanException &&
-            !isGen8GalarHisuiGmaxException
+            !isGen8GalarHisuiGmaxException &&
+            !isGen9PaldeanCrossGenException
           )
             return null;
 
