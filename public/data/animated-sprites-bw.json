@@ -14771,14 +14771,14 @@
       "name": "kingambit",
       "generation": 9,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/kingambit-gif.685654/",
+        "available": true,
+        "source": "smogon_forums"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/kingambit-s-gif.685655/",
+        "available": true,
+        "source": "smogon_forums"
       }
     },
     {
@@ -14908,12 +14908,12 @@
       "normal": {
         "url": "https://www.smogon.com/forums/attachments/992-gif.590582/",
         "available": true,
-        "source": "google_sheet_gen9"
+        "source": "smogon_forums"
       },
       "shiny": {
         "url": "https://www.smogon.com/forums/attachments/992s-gif.590583/",
         "available": true,
-        "source": "google_sheet_gen9"
+        "source": "smogon_forums"
       }
     },
     {
@@ -15913,12 +15913,12 @@
       "normal": {
         "url": "https://www.smogon.com/forums/attachments/006_1-gif.658899/",
         "available": true,
-        "source": "google_sheet_gen6"
+        "source": "smogon_forums"
       },
       "shiny": {
         "url": "https://www.smogon.com/forums/attachments/006_1s-gif.658900/",
         "available": true,
-        "source": "google_sheet_gen6"
+        "source": "smogon_forums"
       }
     },
     {

@@ -309,6 +309,31 @@ interface AnimatedSpriteRecord {
   };
 }
 
+function readExistingAnimatedSpritesCache(): Map<string, AnimatedSpriteRecord> {
+  const animatedSpritesPath = path.join(OUTPUT_DIR, "animated-sprites-bw.json");
+  if (!fs.existsSync(animatedSpritesPath)) {
+    return new Map<string, AnimatedSpriteRecord>();
+  }
+
+  try {
+    const raw = fs.readFileSync(animatedSpritesPath, "utf-8");
+    const parsed = JSON.parse(raw) as { sprites?: AnimatedSpriteRecord[] };
+    if (!Array.isArray(parsed.sprites)) {
+      return new Map<string, AnimatedSpriteRecord>();
+    }
+
+    const byName = new Map<string, AnimatedSpriteRecord>();
+    for (const sprite of parsed.sprites) {
+      if (sprite?.name) {
+        byName.set(sprite.name, sprite);
+      }
+    }
+    return byName;
+  } catch {
+    return new Map<string, AnimatedSpriteRecord>();
+  }
+}
+
 function buildMissingAnimatedSpritesByGeneration(
   sprites: AnimatedSpriteRecord[],
 ) {
@@ -973,6 +998,7 @@ async function generateAnimatedSpritesBw() {
   console.log("ANIM: Generating animated-sprites-bw.json...");
 
   const pokemon = readPokemonListFromCache();
+  const existingSpritesByName = readExistingAnimatedSpritesCache();
   const sheetSourcesData: Array<{
     source: SheetSourceConfig;
     map: Map<string, SheetSpriteEntry>;
@@ -1007,6 +1033,11 @@ async function generateAnimatedSpritesBw() {
       shinySelected: 0,
       pokemonWithAtLeastOne: 0,
     },
+    smogon_forums: {
+      normalSelected: 0,
+      shinySelected: 0,
+      pokemonWithAtLeastOne: 0,
+    },
   };
 
   for (const source of SHEET_SOURCES) {
@@ -1021,6 +1052,28 @@ async function generateAnimatedSpritesBw() {
     pokemon,
     25,
     async (entry, index) => {
+      const existingEntry = existingSpritesByName.get(entry.name);
+
+      const preservedSmogonNormal =
+        existingEntry?.normal?.source === "smogon_forums" &&
+        existingEntry.normal.available &&
+        Boolean(existingEntry.normal.url)
+          ? {
+              source: "smogon_forums",
+              url: existingEntry.normal.url as string,
+            }
+          : null;
+
+      const preservedSmogonShiny =
+        existingEntry?.shiny?.source === "smogon_forums" &&
+        existingEntry.shiny.available &&
+        Boolean(existingEntry.shiny.url)
+          ? {
+              source: "smogon_forums",
+              url: existingEntry.shiny.url as string,
+            }
+          : null;
+
       const normalizedEntryName = normalizePokemonName(entry.name);
 
       const isMegaOrPrimalForm =
@@ -1140,22 +1193,28 @@ async function generateAnimatedSpritesBw() {
             ...sheetCandidatesForShiny,
           ];
 
-      let normalSelected: { source: string; url: string } | null = null;
-      let shinySelected: { source: string; url: string } | null = null;
+      let normalSelected: { source: string; url: string } | null =
+        preservedSmogonNormal;
+      let shinySelected: { source: string; url: string } | null =
+        preservedSmogonShiny;
 
-      for (const candidate of normalCandidates) {
-        const available = await checkUrlAvailable(candidate.url);
-        if (available) {
-          normalSelected = candidate;
-          break;
+      if (!normalSelected) {
+        for (const candidate of normalCandidates) {
+          const available = await checkUrlAvailable(candidate.url);
+          if (available) {
+            normalSelected = candidate;
+            break;
+          }
         }
       }
 
-      for (const candidate of shinyCandidates) {
-        const available = await checkUrlAvailable(candidate.url);
-        if (available) {
-          shinySelected = candidate;
-          break;
+      if (!shinySelected) {
+        for (const candidate of shinyCandidates) {
+          const available = await checkUrlAvailable(candidate.url);
+          if (available) {
+            shinySelected = candidate;
+            break;
+          }
         }
       }
 

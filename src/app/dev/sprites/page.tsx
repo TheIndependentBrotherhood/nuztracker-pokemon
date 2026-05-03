@@ -123,6 +123,11 @@ function extractUnownLetterFromAnimatedUrl(url: string): string | undefined {
   return raw;
 }
 
+function isAnimatedSpriteEntry(entry: SpriteEntry): boolean {
+  if (entry.provider === "animated-catalog") return true;
+  return /\.gif(?:$|\?)/i.test(entry.url);
+}
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
@@ -265,6 +270,7 @@ export default function DevSpritesPage() {
   const [preferences, setPreferences] = useState<Preferences>({});
   const [search, setSearch] = useState("");
   const [multipleOnly, setMultipleOnly] = useState(false);
+  const [noAnimatedOnly, setNoAnimatedOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -387,6 +393,14 @@ export default function DevSpritesPage() {
     if (!spriteMap) return [];
     return Object.entries(spriteMap.mapping)
       .filter(([key, sprites]) => {
+        const hasAnimated = sprites.some((sprite) =>
+          isAnimatedSpriteEntry(sprite),
+        );
+        const hasStaticFallback = sprites.some(
+          (sprite) => sprite.isStaticFallback,
+        );
+
+        if (noAnimatedOnly && (hasAnimated || !hasStaticFallback)) return false;
         if (multipleOnly && sprites.length < 2) return false;
         if (search) {
           const q = search.toLowerCase();
@@ -402,11 +416,18 @@ export default function DevSpritesPage() {
         return true;
       })
       .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
-  }, [spriteMap, multipleOnly, search, pokemonNames]);
+  }, [spriteMap, noAnimatedOnly, multipleOnly, search, pokemonNames]);
 
   const totalPokemon = spriteMap ? Object.keys(spriteMap.mapping).length : 0;
   const multipleCount = spriteMap
     ? Object.values(spriteMap.mapping).filter((s) => s.length > 1).length
+    : 0;
+  const noAnimatedCount = spriteMap
+    ? Object.values(spriteMap.mapping).filter(
+        (sprites) =>
+          !sprites.some((sprite) => isAnimatedSpriteEntry(sprite)) &&
+          sprites.some((sprite) => sprite.isStaticFallback),
+      ).length
     : 0;
   const selectedCount = Object.values(preferences).filter(Boolean).length;
 
@@ -534,6 +555,9 @@ export default function DevSpritesPage() {
             <b style={{ color: "#fbbf24" }}>{multipleCount}</b> avec doublons
           </span>
           <span>
+            <b style={{ color: "#38bdf8" }}>{noAnimatedCount}</b> sans animé
+          </span>
+          <span>
             <b style={{ color: "#22c55e" }}>{selectedCount}</b> sélectionnés
           </span>
           <span>
@@ -620,6 +644,25 @@ export default function DevSpritesPage() {
           />
           Doublons uniquement
         </label>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            cursor: "pointer",
+            fontSize: 13,
+            color: "#94a3b8",
+            userSelect: "none",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={noAnimatedOnly}
+            onChange={(e) => setNoAnimatedOnly(e.target.checked)}
+            style={{ accentColor: "#38bdf8" }}
+          />
+          Sans animé uniquement
+        </label>
       </div>
 
       {/* ── Grid ── */}
@@ -633,7 +676,8 @@ export default function DevSpritesPage() {
       >
         {entries.map(([key, sprites]) => {
           const info = pokemonNames[key];
-          const displayName = info?.names?.fr || info?.names?.en || key;
+          const localizedName = info?.names?.fr || info?.names?.en || key;
+          const displayName = `${localizedName} (${key})`;
           return (
             <SpriteCard
               key={key}
