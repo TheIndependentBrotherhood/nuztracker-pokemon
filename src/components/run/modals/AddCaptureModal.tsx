@@ -13,10 +13,13 @@ import {
 } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import {
+  getAvailableCaptureSpriteOptions,
+  getCaptureSpriteOptionMeta,
   searchPokemon,
   getPokemonIdFromUrl,
   getSpriteFallbackUrl,
   getSpriteUrl,
+  type CaptureSpriteOption,
   type PokemonSearchResult,
 } from "@/lib/pokemon-api";
 import { Capture } from "@/lib/types";
@@ -54,39 +57,56 @@ export default function AddCaptureModal({
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
   const [isShiny, setIsShiny] = useState(forceShiny);
   const [unownLetter, setUnownLetter] = useState<string | null>(null);
+  const [spriteOptions, setSpriteOptions] = useState<CaptureSpriteOption[]>([]);
+  const [selectedSpriteUrl, setSelectedSpriteUrl] = useState<string | null>(
+    null,
+  );
+  const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(false);
   const [searching, setSearching] = useState(false);
 
   const UNOWN_ID = 201;
-  const UNOWN_LETTERS = [
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "p",
-    "q",
-    "r",
-    "s",
-    "t",
-    "u",
-    "v",
-    "w",
-    "x",
-    "y",
-    "z",
-    "!",
-    "?",
-  ];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSpriteOptions() {
+      if (!selected) {
+        setSpriteOptions([]);
+        setSelectedSpriteUrl(null);
+        return;
+      }
+
+      setLoadingSpriteOptions(true);
+      const options = await getAvailableCaptureSpriteOptions({
+        pokemonId: selected.id,
+        pokemonName: selected.name,
+        isShiny,
+      });
+
+      if (cancelled) return;
+
+      setSpriteOptions(options);
+      setSelectedSpriteUrl((prev) => {
+        if (prev && options.some((option) => option.url === prev)) return prev;
+        return options[0]?.url ?? null;
+      });
+      setLoadingSpriteOptions(false);
+    }
+
+    loadSpriteOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selected, isShiny]);
+
+  useEffect(() => {
+    if (!selected || selected.id !== UNOWN_ID) return;
+    const chosen = spriteOptions.find(
+      (option) => option.url === selectedSpriteUrl,
+    );
+    setUnownLetter(chosen?.unownLetter ?? null);
+  }, [selected, spriteOptions, selectedSpriteUrl]);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,11 +144,18 @@ export default function AddCaptureModal({
     setSelected({ name: item.name, id, names: item.names });
     setQuery(item.displayName);
     setResults([]);
-    if (id !== UNOWN_ID) setUnownLetter(null);
+    setSelectedSpriteUrl(null);
+    setSpriteOptions([]);
+    if (id !== UNOWN_ID) {
+      setUnownLetter(null);
+    }
   }
 
   function handleAdd() {
     if (!selected) return;
+    const selectedSprite =
+      spriteOptions.find((option) => option.url === selectedSpriteUrl) ?? null;
+
     addCapture(runId, zoneId, {
       pokemonId: selected.id,
       pokemonName: selected.name,
@@ -138,7 +165,30 @@ export default function AddCaptureModal({
       gender,
       isShiny,
       isDead: false,
-      ...(selected.id === UNOWN_ID && unownLetter ? { unownLetter } : {}),
+      ...(selectedSprite
+        ? {
+            selectedSprite: {
+              url: selectedSprite.url,
+              source: selectedSprite.source,
+              label: selectedSprite.label,
+              ...(selectedSprite.unownLetter
+                ? { unownLetter: selectedSprite.unownLetter }
+                : {}),
+              ...(selectedSprite.flabebeColor
+                ? { flabebeColor: selectedSprite.flabebeColor }
+                : {}),
+            },
+          }
+        : {}),
+      ...(selected.id === UNOWN_ID
+        ? {
+            unownLetter:
+              selectedSprite?.unownLetter ?? unownLetter ?? undefined,
+          }
+        : {}),
+      ...(selectedSprite?.flabebeColor
+        ? { flabebeColor: selectedSprite.flabebeColor }
+        : {}),
     });
     onClose();
   }
@@ -242,22 +292,21 @@ export default function AddCaptureModal({
             {selected && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={getSpriteUrl(
-                  selected.id,
-                  isShiny,
-                  true,
-                  selected.id === UNOWN_ID
-                    ? (unownLetter ?? undefined)
-                    : undefined,
-                )}
+                src={
+                  selectedSpriteUrl ??
+                  getSpriteUrl(
+                    selected.id,
+                    isShiny,
+                    true,
+                    unownLetter ?? undefined,
+                  )
+                }
                 alt={`${isShiny ? "Shiny " : ""}${selected.name} sprite`}
                 onError={(event) => {
                   const fallbackUrl = getSpriteFallbackUrl(
                     selected.id,
                     isShiny,
-                    selected.id === UNOWN_ID
-                      ? (unownLetter ?? undefined)
-                      : undefined,
+                    unownLetter ?? undefined,
                   );
                   if (event.currentTarget.src !== fallbackUrl) {
                     event.currentTarget.src = fallbackUrl;
@@ -331,6 +380,115 @@ export default function AddCaptureModal({
             </Typography>
           )}
         </Box>
+
+        {/* Sprite selection */}
+        {selected && (
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#000",
+                mb: 1,
+              }}
+            >
+              {t(tr.addCapture.sprite, lang)}
+            </Typography>
+
+            {loadingSpriteOptions ? (
+              <Typography sx={{ fontSize: "0.75rem", color: "#666" }}>
+                {t(tr.addCapture.loadingSprites, lang)}
+              </Typography>
+            ) : (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gap: 0.75,
+                  maxHeight: "220px",
+                  overflowY: "auto",
+                  pr: 0.25,
+                }}
+              >
+                {spriteOptions.map((option) => {
+                  const isSelectedSprite = selectedSpriteUrl === option.url;
+                  const meta = getCaptureSpriteOptionMeta(option);
+
+                  return (
+                    <Box
+                      key={option.url}
+                      component="button"
+                      onClick={() => {
+                        setSelectedSpriteUrl(option.url);
+                        if (selected.id === UNOWN_ID) {
+                          setUnownLetter(option.unownLetter ?? null);
+                        }
+                      }}
+                      title={`${meta.label} • ${meta.sourceLabel}`}
+                      sx={{
+                        background: isSelectedSprite ? "#3b82f6" : "#fff",
+                        border: isSelectedSprite
+                          ? "2px solid #1d4ed8"
+                          : "2px solid #000",
+                        borderRadius: "0.5rem",
+                        color: isSelectedSprite ? "#fff" : "#000",
+                        cursor: "pointer",
+                        p: 0.5,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 0.25,
+                        minHeight: "90px",
+                        transition: "all 150ms",
+                        "&:hover": {
+                          background: isSelectedSprite ? "#2563eb" : "#f0f0f0",
+                        },
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={option.url}
+                        alt={meta.label}
+                        width={44}
+                        height={44}
+                        style={{
+                          objectFit: "contain",
+                          imageRendering: "pixelated",
+                        }}
+                        loading="lazy"
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: "0.62rem",
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          textAlign: "center",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {meta.label}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "0.58rem",
+                          lineHeight: 1,
+                          textAlign: "center",
+                          opacity: isSelectedSprite ? 0.9 : 0.75,
+                        }}
+                      >
+                        {meta.sourceLabel}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+          </Box>
+        )}
 
         {/* Nickname */}
         <Box sx={{ mb: 1.5 }}>
@@ -507,65 +665,6 @@ export default function AddCaptureModal({
           }
           sx={{ mb: selected?.id === UNOWN_ID ? 1.5 : 2.5, ml: 0 }}
         />
-
-        {/* Unown letter picker */}
-        {selected?.id === UNOWN_ID && (
-          <Box sx={{ mb: 2.5 }}>
-            <Typography
-              sx={{
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#000",
-                mb: 1,
-              }}
-            >
-              {t(tr.addCapture.unownForm, lang)}
-            </Typography>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7, 1fr)",
-                gap: 0.5,
-              }}
-            >
-              {UNOWN_LETTERS.map((letter) => (
-                <Box
-                  key={letter}
-                  component="button"
-                  onClick={() =>
-                    setUnownLetter((prev) => (prev === letter ? null : letter))
-                  }
-                  sx={{
-                    background: unownLetter === letter ? "#3b82f6" : "#fff",
-                    border:
-                      unownLetter === letter
-                        ? "2px solid #1d4ed8"
-                        : "2px solid #000",
-                    borderRadius: "0.375rem",
-                    color: unownLetter === letter ? "#fff" : "#000",
-                    fontWeight: 700,
-                    fontSize: "0.875rem",
-                    cursor: "pointer",
-                    py: 0.75,
-                    transition: "all 150ms",
-                    "&:hover": {
-                      background:
-                        unownLetter === letter ? "#2563eb" : "#f0f0f0",
-                    },
-                  }}
-                >
-                  {letter === "!"
-                    ? "!"
-                    : letter === "?"
-                      ? "?"
-                      : letter.toUpperCase()}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
 
         <Box sx={{ display: "flex", gap: 1.5 }}>
           <Button

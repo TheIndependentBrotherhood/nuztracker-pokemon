@@ -14,6 +14,8 @@ interface SpriteEntry {
   url: string;
   dexId: number | null;
   candidates: string[];
+  provider?: "deviantart" | "animated-catalog" | "pokemon-list-static";
+  isStaticFallback?: boolean;
   unownLetter?: string;
 }
 
@@ -32,6 +34,27 @@ interface PokemonListEntry {
   id: number;
   name: string;
   names: { fr: string; en: string };
+  sprite: string;
+}
+
+interface AnimatedSpriteCatalogEntry {
+  id: number;
+  name: string;
+  generation: number;
+  normal?: {
+    url?: string;
+    available?: boolean;
+    source?: string;
+  };
+  shiny?: {
+    url?: string;
+    available?: boolean;
+    source?: string;
+  };
+}
+
+interface AnimatedSpriteCatalog {
+  sprites: AnimatedSpriteCatalogEntry[];
 }
 
 type Preferences = Record<string, SpriteEntry | null>;
@@ -78,6 +101,26 @@ function downloadJson(data: unknown, filename: string) {
 
 function formatUnownLabel(letter: string): string {
   return letter === "!" || letter === "?" ? letter : letter.toUpperCase();
+}
+
+function getFileNameFromUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname;
+    return path.split("/").pop() || "sprite.gif";
+  } catch {
+    return "sprite.gif";
+  }
+}
+
+function extractUnownLetterFromAnimatedUrl(url: string): string | undefined {
+  const m = url.match(/\/201-([a-z]|question|exclamation)\.gif$/i);
+  if (!m) return undefined;
+
+  const raw = m[1].toLowerCase();
+  if (raw === "question") return "?";
+  if (raw === "exclamation") return "!";
+  return raw;
 }
 
 // ---------------------------------------------------------------------------
@@ -155,7 +198,7 @@ function SpriteCard({
           return (
             <button
               key={idx}
-              title={sprite.alt || sprite.sourceName}
+              title={`${sprite.alt || sprite.sourceName}${sprite.provider ? ` [${sprite.provider}]` : ""}`}
               onClick={() => onSelect(pokemonKey, isSelected ? null : sprite)}
               style={{
                 background: isSelected ? "#166534" : "#0f172a",
@@ -202,7 +245,7 @@ function SpriteCard({
       {selected !== undefined && (
         <div style={{ fontSize: 11, color: selected ? "#22c55e" : "#94a3b8" }}>
           {selected
-            ? `✓ ${selected.sourceName}${selected.unownLetter ? ` (${formatUnownLabel(selected.unownLetter)})` : ""}`
+            ? `✓ ${selected.sourceName}${selected.unownLetter ? ` (${formatUnownLabel(selected.unownLetter)})` : ""}${selected.provider ? ` [${selected.provider}]` : ""}${selected.isStaticFallback ? " [static fallback]" : ""}`
             : "— aucune sélection"}
         </div>
       )}
@@ -221,24 +264,100 @@ export default function DevSpritesPage() {
   >({});
   const [preferences, setPreferences] = useState<Preferences>({});
   const [search, setSearch] = useState("");
-  const [multipleOnly, setMultipleOnly] = useState(true);
+  const [multipleOnly, setMultipleOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [mapRes, listRes] = await Promise.all([
+        const [mapRes, listRes, animatedRes] = await Promise.all([
           fetch("/data/deviantart-known-pokemon-map.json"),
           fetch("/data/pokemon-list.json"),
+          fetch("/data/animated-sprites-bw.json"),
         ]);
-        if (!mapRes.ok || !listRes.ok)
+        if (!mapRes.ok || !listRes.ok || !animatedRes.ok)
           throw new Error("Failed to fetch data files");
 
         const map: SpriteMap = await mapRes.json();
         const list: { pokemon: PokemonListEntry[] } = await listRes.json();
+        const animatedCatalog: AnimatedSpriteCatalog = await animatedRes.json();
 
-        setSpriteMap(map);
+        const mergedMapping: Record<string, SpriteEntry[]> = {};
+
+        const pushSprite = (key: string, entry: SpriteEntry) => {
+          if (!mergedMapping[key]) mergedMapping[key] = [];
+          if (
+            mergedMapping[key].some((existing) => existing.url === entry.url)
+          ) {
+            return;
+          }
+          mergedMapping[key].push(entry);
+        };
+
+        // Source 1: DeviantArt curated mapping.
+        for (const [key, sprites] of Object.entries(map.mapping)) {
+          for (const sprite of sprites) {
+            pushSprite(key, { ...sprite, provider: "deviantart" });
+          }
+        }
+
+        // Source 2: Animated sprites catalog (BW + external sheets).
+        for (const sprite of animatedCatalog.sprites ?? []) {
+          const key = sprite.name;
+          const normal = sprite.normal;
+
+          if (!normal?.available || !normal.url) continue;
+
+          pushSprite(key, {
+            alt: `Animated ${sprite.name}`,
+            sourceName: `${normal.source ?? "animated"}-${sprite.name}`,
+            normalizedSource: `${normal.source ?? "animated"}-${sprite.name}`,
+            file: getFileNameFromUrl(normal.url),
+            url: normal.url,
+            dexId: sprite.id,
+            candidates: [key],
+            provider: "animated-catalog",
+            ...(key === "unown"
+              ? {
+                  unownLetter: extractUnownLetterFromAnimatedUrl(normal.url),
+                }
+              : {}),
+          });
+        }
+
+        // Source 3 (last resort): static sprite from pokemon-list when no animated exists.
+        for (const p of list.pokemon) {
+          if ((mergedMapping[p.name]?.length ?? 0) > 0) continue;
+
+          pushSprite(p.name, {
+            alt: `Static fallback ${p.name}`,
+            sourceName: `pokemon-list-static-${p.name}`,
+            normalizedSource: `pokemon-list-static-${p.name}`,
+            file: getFileNameFromUrl(p.sprite),
+            url: p.sprite,
+            dexId: p.id,
+            candidates: [p.name],
+            provider: "pokemon-list-static",
+            isStaticFallback: true,
+          });
+        }
+
+        const mergedSpriteMap: SpriteMap = {
+          generatedAt: new Date().toISOString(),
+          stats: {
+            csvRows: map.stats.csvRows,
+            mappedSprites: Object.values(mergedMapping).reduce(
+              (acc, sprites) => acc + sprites.length,
+              0,
+            ),
+            knownKeysMatched: Object.keys(mergedMapping).length,
+            unmatchedSprites: 0,
+          },
+          mapping: mergedMapping,
+        };
+
+        setSpriteMap(mergedSpriteMap);
 
         const nameMap: Record<string, PokemonListEntry> = {};
         for (const p of list.pokemon) {
@@ -294,10 +413,11 @@ export default function DevSpritesPage() {
   function handleExport() {
     const output = {
       generatedAt: new Date().toISOString(),
+      note: "Selected default animated sprites per pokemon key (with static fallback only when no animated exists)",
       totalSelected: selectedCount,
       preferences: Object.fromEntries(
         Object.entries(preferences)
-          .filter(([, v]) => v !== null && v !== undefined)
+          .filter(([, value]) => value !== null && value !== undefined)
           .map(([k, v]) => [
             k,
             {
@@ -305,12 +425,14 @@ export default function DevSpritesPage() {
               file: v!.file,
               sourceName: v!.sourceName,
               alt: v!.alt,
+              provider: v!.provider,
+              isStaticFallback: Boolean(v!.isStaticFallback),
               ...(v!.unownLetter ? { unownLetter: v!.unownLetter } : {}),
             },
           ]),
       ),
     };
-    downloadJson(output, "deviantart-sprite-preferences.json");
+    downloadJson(output, "animated-sprite-preferences.json");
   }
 
   function handleReset() {

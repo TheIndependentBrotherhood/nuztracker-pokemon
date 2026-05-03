@@ -12,8 +12,8 @@ import {
 import { Capture, PokemonApiData } from "@/lib/types";
 import {
   fetchPokemon,
-  getSpriteFallbackUrl,
-  getSpriteUrl,
+  getCaptureSpriteFallbackUrl,
+  getCaptureSpriteUrl,
 } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
@@ -208,19 +208,10 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
             <Box sx={{ display: "flex", gap: 2, mb: 2.5 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getSpriteUrl(
-                  capture.pokemonId,
-                  capture.isShiny,
-                  true,
-                  capture.unownLetter,
-                )}
+                src={getCaptureSpriteUrl(capture, true)}
                 alt={pokemonDisplayName}
                 onError={(event) => {
-                  const fallbackUrl = getSpriteFallbackUrl(
-                    capture.pokemonId,
-                    capture.isShiny,
-                    capture.unownLetter,
-                  );
+                  const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
                   if (event.currentTarget.src !== fallbackUrl) {
                     event.currentTarget.src = fallbackUrl;
                   }

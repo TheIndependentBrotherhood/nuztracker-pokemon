@@ -2,7 +2,10 @@
 
 import { Box } from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
-import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
+import {
+  getCaptureSpriteFallbackUrl,
+  getCaptureSpriteUrl,
+} from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
 
 interface Props {
@@ -66,19 +69,10 @@ export default function TeamColumn({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getSpriteUrl(
-                  capture.pokemonId,
-                  capture.isShiny,
-                  preferAnimated,
-                  capture.unownLetter,
-                )}
+                src={getCaptureSpriteUrl(capture, preferAnimated)}
                 alt={capture.pokemonName}
                 onError={(event) => {
-                  const fallbackUrl = getSpriteFallbackUrl(
-                    capture.pokemonId,
-                    capture.isShiny,
-                    capture.unownLetter,
-                  );
+                  const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
                   if (event.currentTarget.src !== fallbackUrl) {
                     event.currentTarget.src = fallbackUrl;
                   }

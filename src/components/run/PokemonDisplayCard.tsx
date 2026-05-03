@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
 import { Capture } from "@/lib/types";
-import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
+import {
+  getCaptureSpriteFallbackUrl,
+  getCaptureSpriteUrl,
+} from "@/lib/pokemon-api";
 import PokemonDetailModal from "./modals/PokemonDetailModal";
 import { Lang } from "@/i18n/translations";
 import {
@@ -150,19 +153,10 @@ export default function PokemonDisplayCard({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={getSpriteUrl(
-                capture.pokemonId,
-                capture.isShiny,
-                true,
-                capture.unownLetter,
-              )}
+              src={getCaptureSpriteUrl(capture, true)}
               alt={pokemonDisplayName}
               onError={(event) => {
-                const fallbackUrl = getSpriteFallbackUrl(
-                  capture.pokemonId,
-                  capture.isShiny,
-                  capture.unownLetter,
-                );
+                const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
                 if (event.currentTarget.src !== fallbackUrl) {
                   event.currentTarget.src = fallbackUrl;
                 }

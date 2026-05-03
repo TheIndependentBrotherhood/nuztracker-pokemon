@@ -1,3 +1,11 @@
+export interface CaptureSelectedSprite {
+  url: string;
+  source: "deviantart" | "animated-catalog" | "static";
+  label?: string;
+  unownLetter?: string;
+  flabebeColor?: "red" | "orange" | "yellow" | "blue" | "white";
+}
+
 export interface Capture {
   id: string;
   pokemonId: number;
@@ -11,8 +19,11 @@ export interface Capture {
   gender: "male" | "female" | "unknown";
   isShiny: boolean;
   isDead: boolean;
+  selectedSprite?: CaptureSelectedSprite;
   /** For Unown captures: the chosen letter form, e.g. "a"–"z", "!", "?" */
   unownLetter?: string;
+  /** For Flabebe captures: the chosen flower color form. */
+  flabebeColor?: "red" | "orange" | "yellow" | "blue" | "white";
   createdAt: number;
 }
 

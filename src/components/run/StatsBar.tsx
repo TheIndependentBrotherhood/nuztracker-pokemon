@@ -14,7 +14,10 @@ import {
 import { Run, Zone, Capture } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
 import StyledTextField from "@/components/ui/StyledTextField";
-import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
+import {
+  getCaptureSpriteFallbackUrl,
+  getCaptureSpriteUrl,
+} from "@/lib/pokemon-api";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -49,19 +52,10 @@ function TeamPreviewPokemonTile({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={getSpriteUrl(
-          pokemon.pokemonId,
-          pokemon.isShiny,
-          true,
-          pokemon.unownLetter,
-        )}
+        src={getCaptureSpriteUrl(pokemon, true)}
         alt={displayName}
         onError={(event) => {
-          const fallbackUrl = getSpriteFallbackUrl(
-            pokemon.pokemonId,
-            pokemon.isShiny,
-            pokemon.unownLetter,
-          );
+          const fallbackUrl = getCaptureSpriteFallbackUrl(pokemon);
           if (event.currentTarget.src !== fallbackUrl) {
             event.currentTarget.src = fallbackUrl;
           }

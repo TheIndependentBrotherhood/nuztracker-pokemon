@@ -33,6 +33,7 @@ async function loadPokemonNamesCache(): Promise<Map<number, PokemonNames>> {
 }
 
 const UNOWN_POKEMON_ID = 201;
+const FLABEBE_POKEMON_ID = 669;
 
 function formatUnownLetter(letter: string): string {
   if (letter === "!") return "!";
@@ -40,10 +41,19 @@ function formatUnownLetter(letter: string): string {
   return letter.toUpperCase();
 }
 
+function formatFlabebeColor(color: string): string {
+  const normalized = color.trim().toLowerCase();
+  if (!normalized) return "";
+  return normalized[0].toUpperCase() + normalized.slice(1);
+}
+
 export function getCaptureDisplayName(capture: Capture, lang: Lang): string {
   const base = getLocalizedPokemonName(capture, lang);
   if (capture.pokemonId === UNOWN_POKEMON_ID && capture.unownLetter) {
     return `${base} (${formatUnownLetter(capture.unownLetter)})`;
+  }
+  if (capture.pokemonId === FLABEBE_POKEMON_ID && capture.flabebeColor) {
+    return `${base} (${formatFlabebeColor(capture.flabebeColor)})`;
   }
   return base;
 }

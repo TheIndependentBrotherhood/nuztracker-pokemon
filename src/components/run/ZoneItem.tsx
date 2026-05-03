@@ -5,7 +5,10 @@ import { Box, Typography } from "@mui/material";
 import { Capture, Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "./modals/AddCaptureModal";
-import { getSpriteFallbackUrl, getSpriteUrl } from "@/lib/pokemon-api";
+import {
+  getCaptureSpriteFallbackUrl,
+  getCaptureSpriteUrl,
+} from "@/lib/pokemon-api";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import {
@@ -46,19 +49,10 @@ function CaptureThumbnail({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={getSpriteUrl(
-          capture.pokemonId,
-          capture.isShiny,
-          true,
-          capture.unownLetter,
-        )}
+        src={getCaptureSpriteUrl(capture, true)}
         alt={displayName}
         onError={(event) => {
-          const fallbackUrl = getSpriteFallbackUrl(
-            capture.pokemonId,
-            capture.isShiny,
-            capture.unownLetter,
-          );
+          const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
           if (event.currentTarget.src !== fallbackUrl) {
             event.currentTarget.src = fallbackUrl;
           }
