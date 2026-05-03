@@ -15,6 +15,11 @@ const OUTPUT_JSON = path.join(
   ROOT_DIR,
   "scripts/deviantart-batch/entries/deviantart-known-pokemon-map.json",
 );
+// Also write to public/data/ so the dev sprite picker can fetch it.
+const OUTPUT_JSON_PUBLIC = path.join(
+  ROOT_DIR,
+  "public/data/deviantart-known-pokemon-map.json",
+);
 
 function normalizePokemonName(rawName) {
   return String(rawName || "")
@@ -469,6 +474,11 @@ function main() {
   };
 
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(result, null, 2), "utf-8");
+  fs.writeFileSync(
+    OUTPUT_JSON_PUBLIC,
+    JSON.stringify(result, null, 2),
+    "utf-8",
+  );
 
   console.log(`JSON généré: ${OUTPUT_JSON}`);
   console.log(
