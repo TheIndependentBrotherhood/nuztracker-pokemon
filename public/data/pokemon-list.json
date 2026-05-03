@@ -11202,21 +11202,6 @@
       "generation": 7
     },
     {
-      "id": 774,
-      "name": "minior-red-meteor",
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": [
-        "rock",
-        "flying"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/774.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
       "id": 775,
       "name": "komala",
       "names": {
@@ -16231,21 +16216,6 @@
       "generation": 1
     },
     {
-      "id": 10093,
-      "name": "raticate-totem-alola",
-      "names": {
-        "fr": "Rattatac",
-        "en": "Raticate"
-      },
-      "types": [
-        "dark",
-        "normal"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10093.png",
-      "isLegendary": false,
-      "generation": 1
-    },
-    {
       "id": 10094,
       "name": "pikachu-original-cap",
       "names": {
@@ -16773,96 +16743,6 @@
       "generation": 7
     },
     {
-      "id": 10130,
-      "name": "minior-orange-meteor",
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": [
-        "rock",
-        "flying"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10130.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
-      "id": 10131,
-      "name": "minior-yellow-meteor",
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": [
-        "rock",
-        "flying"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10131.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
-      "id": 10132,
-      "name": "minior-green-meteor",
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": [
-        "rock",
-        "flying"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10132.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
-      "id": 10133,
-      "name": "minior-blue-meteor",
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": [
-        "rock",
-        "flying"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10133.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
-      "id": 10134,
-      "name": "minior-indigo-meteor",
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": [
-        "rock",
-        "flying"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10134.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
-      "id": 10135,
-      "name": "minior-violet-meteor",
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": [
-        "rock",
-        "flying"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10135.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
       "id": 10136,
       "name": "minior-red",
       "names": {
@@ -16983,36 +16863,6 @@
       "generation": 7
     },
     {
-      "id": 10144,
-      "name": "mimikyu-totem-disguised",
-      "names": {
-        "fr": "Mimiqui",
-        "en": "Mimikyu"
-      },
-      "types": [
-        "ghost",
-        "fairy"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10144.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
-      "id": 10145,
-      "name": "mimikyu-totem-busted",
-      "names": {
-        "fr": "Mimiqui",
-        "en": "Mimikyu"
-      },
-      "types": [
-        "ghost",
-        "fairy"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10145.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
       "id": 10146,
       "name": "kommo-o-totem",
       "names": {
@@ -17083,20 +16933,6 @@
         "fairy"
       ],
       "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10150.png",
-      "isLegendary": false,
-      "generation": 7
-    },
-    {
-      "id": 10151,
-      "name": "rockruff-own-tempo",
-      "names": {
-        "fr": "Rocabot",
-        "en": "Rockruff"
-      },
-      "types": [
-        "rock"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10151.png",
       "isLegendary": false,
       "generation": 7
     },
@@ -17538,36 +17374,6 @@
       "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10181.png",
       "isLegendary": true,
       "generation": 6
-    },
-    {
-      "id": 10182,
-      "name": "cramorant-gulping",
-      "names": {
-        "fr": "Nigosier",
-        "en": "Cramorant"
-      },
-      "types": [
-        "flying",
-        "water"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10182.png",
-      "isLegendary": false,
-      "generation": 8
-    },
-    {
-      "id": 10183,
-      "name": "cramorant-gorging",
-      "names": {
-        "fr": "Nigosier",
-        "en": "Cramorant"
-      },
-      "types": [
-        "flying",
-        "water"
-      ],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10183.png",
-      "isLegendary": false,
-      "generation": 8
     },
     {
       "id": 10184,
