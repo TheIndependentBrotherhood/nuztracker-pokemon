@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-03T00:16:43.029Z",
+  "generatedAt": "2026-05-03T00:22:06.251Z",
   "summary": {
     "totalPokemon": 1350,
     "totalLinksChecked": 2700,
-    "linksWorking": 1788,
-    "linksFailed": 912,
-    "normalWorking": 893,
-    "shinyWorking": 895,
+    "linksWorking": 1824,
+    "linksFailed": 876,
+    "normalWorking": 911,
+    "shinyWorking": 913,
     "sourceCoverage": {
       "pokemondb_bw": {
         "normalSelected": 663,
@@ -19,9 +19,9 @@
         "pokemonWithAtLeastOne": 54
       },
       "google_sheet_gen7": {
-        "normalSelected": 81,
-        "shinySelected": 87,
-        "pokemonWithAtLeastOne": 87
+        "normalSelected": 99,
+        "shinySelected": 105,
+        "pokemonWithAtLeastOne": 105
       },
       "google_sheet_gen8": {
         "normalSelected": 68,
@@ -16766,14 +16766,14 @@
       "name": "rattata-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/019-gif.171350/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/019s-gif.173309/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16781,14 +16781,14 @@
       "name": "raticate-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/020_2-gif.302456/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/020_1s-gif.641398/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16901,14 +16901,14 @@
       "name": "raichu-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/026_1-gif.629204/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/026_1s-gif.629206/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16916,14 +16916,14 @@
       "name": "sandshrew-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/027_1-gif.641416/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/027_1s-gif.641419/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16931,14 +16931,14 @@
       "name": "sandslash-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/028_1-gif.641420/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/028_1s-gif.641422/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16946,14 +16946,14 @@
       "name": "vulpix-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/037_1-gif.641424/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/037_1s-gif.641426/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16961,14 +16961,14 @@
       "name": "ninetales-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/038_2-gif.641428/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/038_2s-gif.641430/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16976,14 +16976,14 @@
       "name": "diglett-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/050_1-gif.641432/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/050_1s-gif.641434/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16991,14 +16991,14 @@
       "name": "dugtrio-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/051_1-gif.641436/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/051_1s-gif.641438/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17006,14 +17006,14 @@
       "name": "meowth-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/052_1-gif.641440/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/052_1s-gif.641442/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17021,14 +17021,14 @@
       "name": "persian-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/053_1-gif.641444/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/053_1s-gif.641447/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17036,14 +17036,14 @@
       "name": "geodude-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/074_1-gif.641449/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/074_1s-gif.641451/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17051,14 +17051,14 @@
       "name": "graveler-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/075_1-gif.641453/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/075_1s-gif.641455/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17066,14 +17066,14 @@
       "name": "golem-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/076_1-gif.641457/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/076_1s-gif.641460/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17081,14 +17081,14 @@
       "name": "grimer-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/088_1-gif.641462/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/088_1s-gif.641464/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17096,14 +17096,14 @@
       "name": "muk-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/089_1-gif.641466/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/089_1s-gif.641468/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17111,14 +17111,14 @@
       "name": "exeggutor-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/103_2-gif.641470/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/103_2s-gif.641472/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17126,14 +17126,14 @@
       "name": "marowak-alola",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/105_1-gif.641474/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/105_1s-gif.641476/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -20288,12 +20288,12 @@
     }
   ],
   "missingByGeneration": {
-    "generatedAt": "2026-05-03T00:16:43.028Z",
+    "generatedAt": "2026-05-03T00:22:06.250Z",
     "summaryByGeneration": {
       "gen1": {
-        "missingAnyAnimatedCount": 82,
-        "missingNormalCount": 82,
-        "missingShinyCount": 82
+        "missingAnyAnimatedCount": 64,
+        "missingNormalCount": 64,
+        "missingShinyCount": 64
       },
       "gen2": {
         "missingAnyAnimatedCount": 13,
@@ -20404,14 +20404,6 @@
             "name": "pikachu-cosplay"
           },
           {
-            "id": 10091,
-            "name": "rattata-alola"
-          },
-          {
-            "id": 10092,
-            "name": "raticate-alola"
-          },
-          {
             "id": 10093,
             "name": "raticate-totem-alola"
           },
@@ -20438,70 +20430,6 @@
           {
             "id": 10099,
             "name": "pikachu-alola-cap"
-          },
-          {
-            "id": 10100,
-            "name": "raichu-alola"
-          },
-          {
-            "id": 10101,
-            "name": "sandshrew-alola"
-          },
-          {
-            "id": 10102,
-            "name": "sandslash-alola"
-          },
-          {
-            "id": 10103,
-            "name": "vulpix-alola"
-          },
-          {
-            "id": 10104,
-            "name": "ninetales-alola"
-          },
-          {
-            "id": 10105,
-            "name": "diglett-alola"
-          },
-          {
-            "id": 10106,
-            "name": "dugtrio-alola"
-          },
-          {
-            "id": 10107,
-            "name": "meowth-alola"
-          },
-          {
-            "id": 10108,
-            "name": "persian-alola"
-          },
-          {
-            "id": 10109,
-            "name": "geodude-alola"
-          },
-          {
-            "id": 10110,
-            "name": "graveler-alola"
-          },
-          {
-            "id": 10111,
-            "name": "golem-alola"
-          },
-          {
-            "id": 10112,
-            "name": "grimer-alola"
-          },
-          {
-            "id": 10113,
-            "name": "muk-alola"
-          },
-          {
-            "id": 10114,
-            "name": "exeggutor-alola"
-          },
-          {
-            "id": 10115,
-            "name": "marowak-alola"
           },
           {
             "id": 10148,
@@ -20734,14 +20662,6 @@
             "name": "pikachu-cosplay"
           },
           {
-            "id": 10091,
-            "name": "rattata-alola"
-          },
-          {
-            "id": 10092,
-            "name": "raticate-alola"
-          },
-          {
             "id": 10093,
             "name": "raticate-totem-alola"
           },
@@ -20768,70 +20688,6 @@
           {
             "id": 10099,
             "name": "pikachu-alola-cap"
-          },
-          {
-            "id": 10100,
-            "name": "raichu-alola"
-          },
-          {
-            "id": 10101,
-            "name": "sandshrew-alola"
-          },
-          {
-            "id": 10102,
-            "name": "sandslash-alola"
-          },
-          {
-            "id": 10103,
-            "name": "vulpix-alola"
-          },
-          {
-            "id": 10104,
-            "name": "ninetales-alola"
-          },
-          {
-            "id": 10105,
-            "name": "diglett-alola"
-          },
-          {
-            "id": 10106,
-            "name": "dugtrio-alola"
-          },
-          {
-            "id": 10107,
-            "name": "meowth-alola"
-          },
-          {
-            "id": 10108,
-            "name": "persian-alola"
-          },
-          {
-            "id": 10109,
-            "name": "geodude-alola"
-          },
-          {
-            "id": 10110,
-            "name": "graveler-alola"
-          },
-          {
-            "id": 10111,
-            "name": "golem-alola"
-          },
-          {
-            "id": 10112,
-            "name": "grimer-alola"
-          },
-          {
-            "id": 10113,
-            "name": "muk-alola"
-          },
-          {
-            "id": 10114,
-            "name": "exeggutor-alola"
-          },
-          {
-            "id": 10115,
-            "name": "marowak-alola"
           },
           {
             "id": 10148,
@@ -21064,14 +20920,6 @@
             "name": "pikachu-cosplay"
           },
           {
-            "id": 10091,
-            "name": "rattata-alola"
-          },
-          {
-            "id": 10092,
-            "name": "raticate-alola"
-          },
-          {
             "id": 10093,
             "name": "raticate-totem-alola"
           },
@@ -21098,70 +20946,6 @@
           {
             "id": 10099,
             "name": "pikachu-alola-cap"
-          },
-          {
-            "id": 10100,
-            "name": "raichu-alola"
-          },
-          {
-            "id": 10101,
-            "name": "sandshrew-alola"
-          },
-          {
-            "id": 10102,
-            "name": "sandslash-alola"
-          },
-          {
-            "id": 10103,
-            "name": "vulpix-alola"
-          },
-          {
-            "id": 10104,
-            "name": "ninetales-alola"
-          },
-          {
-            "id": 10105,
-            "name": "diglett-alola"
-          },
-          {
-            "id": 10106,
-            "name": "dugtrio-alola"
-          },
-          {
-            "id": 10107,
-            "name": "meowth-alola"
-          },
-          {
-            "id": 10108,
-            "name": "persian-alola"
-          },
-          {
-            "id": 10109,
-            "name": "geodude-alola"
-          },
-          {
-            "id": 10110,
-            "name": "graveler-alola"
-          },
-          {
-            "id": 10111,
-            "name": "golem-alola"
-          },
-          {
-            "id": 10112,
-            "name": "grimer-alola"
-          },
-          {
-            "id": 10113,
-            "name": "muk-alola"
-          },
-          {
-            "id": 10114,
-            "name": "exeggutor-alola"
-          },
-          {
-            "id": 10115,
-            "name": "marowak-alola"
           },
           {
             "id": 10148,

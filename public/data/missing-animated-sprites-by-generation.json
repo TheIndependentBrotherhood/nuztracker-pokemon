@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-05-03T00:16:43.028Z",
+  "generatedAt": "2026-05-03T00:22:06.250Z",
   "summaryByGeneration": {
     "gen1": {
-      "missingAnyAnimatedCount": 82,
-      "missingNormalCount": 82,
-      "missingShinyCount": 82
+      "missingAnyAnimatedCount": 64,
+      "missingNormalCount": 64,
+      "missingShinyCount": 64
     },
     "gen2": {
       "missingAnyAnimatedCount": 13,
@@ -115,14 +115,6 @@
           "name": "pikachu-cosplay"
         },
         {
-          "id": 10091,
-          "name": "rattata-alola"
-        },
-        {
-          "id": 10092,
-          "name": "raticate-alola"
-        },
-        {
           "id": 10093,
           "name": "raticate-totem-alola"
         },
@@ -149,70 +141,6 @@
         {
           "id": 10099,
           "name": "pikachu-alola-cap"
-        },
-        {
-          "id": 10100,
-          "name": "raichu-alola"
-        },
-        {
-          "id": 10101,
-          "name": "sandshrew-alola"
-        },
-        {
-          "id": 10102,
-          "name": "sandslash-alola"
-        },
-        {
-          "id": 10103,
-          "name": "vulpix-alola"
-        },
-        {
-          "id": 10104,
-          "name": "ninetales-alola"
-        },
-        {
-          "id": 10105,
-          "name": "diglett-alola"
-        },
-        {
-          "id": 10106,
-          "name": "dugtrio-alola"
-        },
-        {
-          "id": 10107,
-          "name": "meowth-alola"
-        },
-        {
-          "id": 10108,
-          "name": "persian-alola"
-        },
-        {
-          "id": 10109,
-          "name": "geodude-alola"
-        },
-        {
-          "id": 10110,
-          "name": "graveler-alola"
-        },
-        {
-          "id": 10111,
-          "name": "golem-alola"
-        },
-        {
-          "id": 10112,
-          "name": "grimer-alola"
-        },
-        {
-          "id": 10113,
-          "name": "muk-alola"
-        },
-        {
-          "id": 10114,
-          "name": "exeggutor-alola"
-        },
-        {
-          "id": 10115,
-          "name": "marowak-alola"
         },
         {
           "id": 10148,
@@ -445,14 +373,6 @@
           "name": "pikachu-cosplay"
         },
         {
-          "id": 10091,
-          "name": "rattata-alola"
-        },
-        {
-          "id": 10092,
-          "name": "raticate-alola"
-        },
-        {
           "id": 10093,
           "name": "raticate-totem-alola"
         },
@@ -479,70 +399,6 @@
         {
           "id": 10099,
           "name": "pikachu-alola-cap"
-        },
-        {
-          "id": 10100,
-          "name": "raichu-alola"
-        },
-        {
-          "id": 10101,
-          "name": "sandshrew-alola"
-        },
-        {
-          "id": 10102,
-          "name": "sandslash-alola"
-        },
-        {
-          "id": 10103,
-          "name": "vulpix-alola"
-        },
-        {
-          "id": 10104,
-          "name": "ninetales-alola"
-        },
-        {
-          "id": 10105,
-          "name": "diglett-alola"
-        },
-        {
-          "id": 10106,
-          "name": "dugtrio-alola"
-        },
-        {
-          "id": 10107,
-          "name": "meowth-alola"
-        },
-        {
-          "id": 10108,
-          "name": "persian-alola"
-        },
-        {
-          "id": 10109,
-          "name": "geodude-alola"
-        },
-        {
-          "id": 10110,
-          "name": "graveler-alola"
-        },
-        {
-          "id": 10111,
-          "name": "golem-alola"
-        },
-        {
-          "id": 10112,
-          "name": "grimer-alola"
-        },
-        {
-          "id": 10113,
-          "name": "muk-alola"
-        },
-        {
-          "id": 10114,
-          "name": "exeggutor-alola"
-        },
-        {
-          "id": 10115,
-          "name": "marowak-alola"
         },
         {
           "id": 10148,
@@ -775,14 +631,6 @@
           "name": "pikachu-cosplay"
         },
         {
-          "id": 10091,
-          "name": "rattata-alola"
-        },
-        {
-          "id": 10092,
-          "name": "raticate-alola"
-        },
-        {
           "id": 10093,
           "name": "raticate-totem-alola"
         },
@@ -809,70 +657,6 @@
         {
           "id": 10099,
           "name": "pikachu-alola-cap"
-        },
-        {
-          "id": 10100,
-          "name": "raichu-alola"
-        },
-        {
-          "id": 10101,
-          "name": "sandshrew-alola"
-        },
-        {
-          "id": 10102,
-          "name": "sandslash-alola"
-        },
-        {
-          "id": 10103,
-          "name": "vulpix-alola"
-        },
-        {
-          "id": 10104,
-          "name": "ninetales-alola"
-        },
-        {
-          "id": 10105,
-          "name": "diglett-alola"
-        },
-        {
-          "id": 10106,
-          "name": "dugtrio-alola"
-        },
-        {
-          "id": 10107,
-          "name": "meowth-alola"
-        },
-        {
-          "id": 10108,
-          "name": "persian-alola"
-        },
-        {
-          "id": 10109,
-          "name": "geodude-alola"
-        },
-        {
-          "id": 10110,
-          "name": "graveler-alola"
-        },
-        {
-          "id": 10111,
-          "name": "golem-alola"
-        },
-        {
-          "id": 10112,
-          "name": "grimer-alola"
-        },
-        {
-          "id": 10113,
-          "name": "muk-alola"
-        },
-        {
-          "id": 10114,
-          "name": "exeggutor-alola"
-        },
-        {
-          "id": 10115,
-          "name": "marowak-alola"
         },
         {
           "id": 10148,

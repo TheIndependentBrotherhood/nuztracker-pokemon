@@ -206,30 +206,47 @@ function toMegaFormKey(baseName: string): string {
   return `${baseName}-mega`;
 }
 
+// Gen7: Alolan form base Pokémon IDs (those listed in the Alolan Forms section of the Gen7 sheet)
+const GEN7_ALOLAN_IDS = new Set([
+  19, 20, 26, 27, 28, 37, 38, 50, 51, 52, 53, 74, 75, 76, 88, 89, 103, 105,
+]);
+
 function inferSheetKeysForRow(
   source: SheetSourceConfig,
   pokemonId: number | null,
   normalizedName: string,
-  inPostMainGen6Sections: boolean,
+  inPostMainSection: boolean,
 ): string[] {
-  if (source.key !== "google_sheet_gen6") {
+  if (source.key === "google_sheet_gen6") {
+    if (!inPostMainSection) {
+      return [normalizedName];
+    }
+
+    if (pokemonId === 382 && normalizedName === "kyogre") {
+      return ["kyogre-primal"];
+    }
+
+    if (pokemonId === 383 && normalizedName === "groudon") {
+      return ["groudon-primal"];
+    }
+
+    if (GEN6_MEGA_BASE_NAMES.has(normalizedName)) {
+      return [toMegaFormKey(normalizedName)];
+    }
+
     return [normalizedName];
   }
 
-  if (!inPostMainGen6Sections) {
+  if (source.key === "google_sheet_gen7") {
+    if (!inPostMainSection) {
+      return [normalizedName];
+    }
+
+    if (pokemonId !== null && GEN7_ALOLAN_IDS.has(pokemonId)) {
+      return [`${normalizedName}-alola`];
+    }
+
     return [normalizedName];
-  }
-
-  if (pokemonId === 382 && normalizedName === "kyogre") {
-    return ["kyogre-primal"];
-  }
-
-  if (pokemonId === 383 && normalizedName === "groudon") {
-    return ["groudon-primal"];
-  }
-
-  if (GEN6_MEGA_BASE_NAMES.has(normalizedName)) {
-    return [toMegaFormKey(normalizedName)];
   }
 
   return [normalizedName];
@@ -322,8 +339,21 @@ async function readSheetSprites(
     .filter((line) => line.length > 0);
 
   const map = new Map<string, SheetSpriteEntry>();
-  let hasReachedMainGen6DexSection = false;
-  let inPostMainGen6Sections = false;
+  let hasReachedMainSection = false;
+  let inPostMainSection = false;
+
+  const mainRangeStart =
+    source.key === "google_sheet_gen6"
+      ? 650
+      : source.key === "google_sheet_gen7"
+        ? 722
+        : -1;
+  const mainRangeEnd =
+    source.key === "google_sheet_gen6"
+      ? 721
+      : source.key === "google_sheet_gen7"
+        ? 809
+        : -1;
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);
@@ -333,11 +363,11 @@ async function readSheetSprites(
     const normalUrl = cols[2] ?? ""; // Column C
     const shinyUrl = cols[4] ?? ""; // Column E
 
-    if (source.key === "google_sheet_gen6" && pokemonId !== null) {
-      if (pokemonId >= 650 && pokemonId <= 721) {
-        hasReachedMainGen6DexSection = true;
-      } else if (hasReachedMainGen6DexSection && pokemonId < 650) {
-        inPostMainGen6Sections = true;
+    if (mainRangeStart !== -1 && pokemonId !== null) {
+      if (pokemonId >= mainRangeStart && pokemonId <= mainRangeEnd) {
+        hasReachedMainSection = true;
+      } else if (hasReachedMainSection && pokemonId < mainRangeStart) {
+        inPostMainSection = true;
       }
     }
 
@@ -360,7 +390,7 @@ async function readSheetSprites(
       source,
       pokemonId,
       key,
-      inPostMainGen6Sections,
+      inPostMainSection,
     );
 
     for (const inferredKey of inferredKeys) {
@@ -915,16 +945,25 @@ async function generateAnimatedSpritesBw() {
       const isMegaOrPrimalForm =
         normalizedEntryName.includes("-mega") ||
         normalizedEntryName.includes("-primal");
+      const isAlolanForm = normalizedEntryName.endsWith("-alola");
 
       const sheetCandidatesForNormal = sheetSourcesData
         .map(({ source, map }) => {
           // Each sheet only covers its own generation.
           // Exception: Gen6 sheet also covers mega/primal forms from any generation.
+          // Exception: Gen7 sheet also covers Alolan forms from Gen1.
           const isGenMatch = entry.generation === source.generation;
           const isGen6MegaPrimalException =
             source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
+          const isGen7AlolanException =
+            source.key === "google_sheet_gen7" && isAlolanForm;
 
-          if (!isGenMatch && !isGen6MegaPrimalException) return null;
+          if (
+            !isGenMatch &&
+            !isGen6MegaPrimalException &&
+            !isGen7AlolanException
+          )
+            return null;
 
           const sheetEntry = map.get(normalizedEntryName);
           if (!sheetEntry?.normal) return null;
@@ -942,8 +981,15 @@ async function generateAnimatedSpritesBw() {
           const isGenMatch = entry.generation === source.generation;
           const isGen6MegaPrimalException =
             source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
+          const isGen7AlolanException =
+            source.key === "google_sheet_gen7" && isAlolanForm;
 
-          if (!isGenMatch && !isGen6MegaPrimalException) return null;
+          if (
+            !isGenMatch &&
+            !isGen6MegaPrimalException &&
+            !isGen7AlolanException
+          )
+            return null;
 
           const sheetEntry = map.get(normalizedEntryName);
           if (!sheetEntry?.shiny) return null;
