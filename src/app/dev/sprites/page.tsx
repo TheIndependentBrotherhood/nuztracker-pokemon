@@ -57,31 +57,37 @@ interface AnimatedSpriteCatalog {
   sprites: AnimatedSpriteCatalogEntry[];
 }
 
-type Preferences = Record<string, SpriteEntry | null>;
+type SpriteCorrections = Record<string, string>;
+
+interface EditingSpriteState {
+  sprite: SpriteEntry;
+  currentKey: string;
+  originalKey: string;
+}
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = "dev-sprite-picker-preferences";
+const STORAGE_KEY = "dev-sprite-key-corrections";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function loadPreferences(): Preferences {
+function loadCorrections(): SpriteCorrections {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Preferences;
+    if (raw) return JSON.parse(raw) as SpriteCorrections;
   } catch {
     // ignore
   }
   return {};
 }
 
-function savePreferences(prefs: Preferences) {
+function saveCorrections(corrections: SpriteCorrections) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(corrections));
   } catch {
     // ignore
   }
@@ -128,6 +134,10 @@ function isAnimatedSpriteEntry(entry: SpriteEntry): boolean {
   return /\.gif(?:$|\?)/i.test(entry.url);
 }
 
+function normalizePokemonKey(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
@@ -136,14 +146,16 @@ function SpriteCard({
   pokemonKey,
   sprites,
   displayName,
-  selected,
-  onSelect,
+  onOpenEditor,
+  correctedCount,
+  isSpriteCorrected,
 }: {
   pokemonKey: string;
   sprites: SpriteEntry[];
   displayName: string;
-  selected: SpriteEntry | null | undefined;
-  onSelect: (key: string, entry: SpriteEntry | null) => void;
+  onOpenEditor: (key: string, entry: SpriteEntry) => void;
+  correctedCount: number;
+  isSpriteCorrected: (sprite: SpriteEntry) => boolean;
 }) {
   const isMultiple = sprites.length > 1;
 
@@ -196,18 +208,22 @@ function SpriteCard({
         </span>
       </div>
 
+      <div style={{ fontSize: 11, color: "#64748b" }}>
+        Cliquer un sprite pour agrandir et corriger son Pokemon.
+      </div>
+
       {/* Sprites row */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {sprites.map((sprite, idx) => {
-          const isSelected = selected?.url === sprite.url;
+          const isCorrected = isSpriteCorrected(sprite);
           return (
             <button
               key={idx}
               title={`${sprite.alt || sprite.sourceName}${sprite.provider ? ` [${sprite.provider}]` : ""}`}
-              onClick={() => onSelect(pokemonKey, isSelected ? null : sprite)}
+              onClick={() => onOpenEditor(pokemonKey, sprite)}
               style={{
-                background: isSelected ? "#166534" : "#0f172a",
-                border: isSelected ? "2px solid #22c55e" : "2px solid #334155",
+                background: isCorrected ? "#312e81" : "#0f172a",
+                border: isCorrected ? "2px solid #818cf8" : "2px solid #334155",
                 borderRadius: 8,
                 padding: 4,
                 cursor: "pointer",
@@ -233,7 +249,7 @@ function SpriteCard({
                   style={{
                     fontSize: 10,
                     fontWeight: 800,
-                    color: isSelected ? "#86efac" : "#64748b",
+                    color: isCorrected ? "#a5b4fc" : "#64748b",
                     lineHeight: 1,
                     marginTop: 2,
                   }}
@@ -246,14 +262,16 @@ function SpriteCard({
         })}
       </div>
 
-      {/* Selection status */}
-      {selected !== undefined && (
-        <div style={{ fontSize: 11, color: selected ? "#22c55e" : "#94a3b8" }}>
-          {selected
-            ? `✓ ${selected.sourceName}${selected.unownLetter ? ` (${formatUnownLabel(selected.unownLetter)})` : ""}${selected.provider ? ` [${selected.provider}]` : ""}${selected.isStaticFallback ? " [static fallback]" : ""}`
-            : "— aucune sélection"}
-        </div>
-      )}
+      <div
+        style={{
+          fontSize: 11,
+          color: correctedCount > 0 ? "#818cf8" : "#94a3b8",
+        }}
+      >
+        {correctedCount > 0
+          ? `${correctedCount} correction${correctedCount > 1 ? "s" : ""} sur cette fiche`
+          : "Aucune correction sur cette fiche"}
+      </div>
     </div>
   );
 }
@@ -267,7 +285,14 @@ export default function DevSpritesPage() {
   const [pokemonNames, setPokemonNames] = useState<
     Record<string, PokemonListEntry>
   >({});
-  const [preferences, setPreferences] = useState<Preferences>({});
+  const [spriteCorrections, setSpriteCorrections] = useState<SpriteCorrections>(
+    {},
+  );
+  const [editingSprite, setEditingSprite] = useState<EditingSpriteState | null>(
+    null,
+  );
+  const [targetPokemonKey, setTargetPokemonKey] = useState("");
+  const [editingError, setEditingError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [multipleOnly, setMultipleOnly] = useState(false);
   const [noAnimatedOnly, setNoAnimatedOnly] = useState(false);
@@ -332,10 +357,8 @@ export default function DevSpritesPage() {
           });
         }
 
-        // Source 3 (last resort): static sprite from pokemon-list when no animated exists.
+        // Source 3: always include static sprite from pokemon-list for comparison/corrections.
         for (const p of list.pokemon) {
-          if ((mergedMapping[p.name]?.length ?? 0) > 0) continue;
-
           pushSprite(p.name, {
             alt: `Static fallback ${p.name}`,
             sourceName: `pokemon-list-static-${p.name}`,
@@ -371,7 +394,7 @@ export default function DevSpritesPage() {
         }
         setPokemonNames(nameMap);
 
-        setPreferences(loadPreferences());
+        setSpriteCorrections(loadCorrections());
       } catch (e) {
         setError(String(e));
       } finally {
@@ -381,17 +404,74 @@ export default function DevSpritesPage() {
     load();
   }, []);
 
-  const handleSelect = useCallback((key: string, entry: SpriteEntry | null) => {
-    setPreferences((prev) => {
-      const next = { ...prev, [key]: entry };
-      savePreferences(next);
-      return next;
-    });
-  }, []);
+  const spriteIndexes = useMemo(() => {
+    const originalKeyByUrl: Record<string, string> = {};
+    const spriteByUrl: Record<string, SpriteEntry> = {};
+
+    if (!spriteMap) {
+      return { originalKeyByUrl, spriteByUrl };
+    }
+
+    for (const [pokemonKey, sprites] of Object.entries(spriteMap.mapping)) {
+      for (const sprite of sprites) {
+        if (!originalKeyByUrl[sprite.url]) {
+          originalKeyByUrl[sprite.url] = pokemonKey;
+        }
+        if (!spriteByUrl[sprite.url]) {
+          spriteByUrl[sprite.url] = sprite;
+        }
+      }
+    }
+
+    return { originalKeyByUrl, spriteByUrl };
+  }, [spriteMap]);
+
+  const effectiveMapping = useMemo(() => {
+    const mapping: Record<string, SpriteEntry[]> = {};
+
+    if (!spriteMap) {
+      return mapping;
+    }
+
+    const pushSprite = (key: string, sprite: SpriteEntry) => {
+      if (!mapping[key]) {
+        mapping[key] = [];
+      }
+      if (mapping[key].some((existing) => existing.url === sprite.url)) {
+        return;
+      }
+      mapping[key].push(sprite);
+    };
+
+    for (const [originalKey, sprites] of Object.entries(spriteMap.mapping)) {
+      for (const sprite of sprites) {
+        const correctedTarget = spriteCorrections[sprite.url];
+        const targetKey =
+          correctedTarget && correctedTarget.trim().length > 0
+            ? correctedTarget
+            : originalKey;
+
+        pushSprite(targetKey, sprite);
+      }
+    }
+
+    return mapping;
+  }, [spriteMap, spriteCorrections]);
+
+  const totalCorrections = useMemo(() => {
+    return Object.entries(spriteCorrections).filter(([url, targetKey]) => {
+      const originalKey = spriteIndexes.originalKeyByUrl[url];
+      return Boolean(originalKey) && targetKey !== originalKey;
+    }).length;
+  }, [spriteCorrections, spriteIndexes.originalKeyByUrl]);
+
+  const allPokemonKeys = useMemo(() => {
+    return Object.keys(pokemonNames).sort((a, b) => a.localeCompare(b));
+  }, [pokemonNames]);
 
   const entries = useMemo(() => {
     if (!spriteMap) return [];
-    return Object.entries(spriteMap.mapping)
+    return Object.entries(effectiveMapping)
       .filter(([key, sprites]) => {
         const hasAnimated = sprites.some((sprite) =>
           isAnimatedSpriteEntry(sprite),
@@ -416,55 +496,113 @@ export default function DevSpritesPage() {
         return true;
       })
       .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
-  }, [spriteMap, noAnimatedOnly, multipleOnly, search, pokemonNames]);
+  }, [
+    spriteMap,
+    effectiveMapping,
+    noAnimatedOnly,
+    multipleOnly,
+    search,
+    pokemonNames,
+  ]);
 
-  const totalPokemon = spriteMap ? Object.keys(spriteMap.mapping).length : 0;
+  const totalPokemon = spriteMap ? Object.keys(effectiveMapping).length : 0;
   const multipleCount = spriteMap
-    ? Object.values(spriteMap.mapping).filter((s) => s.length > 1).length
+    ? Object.values(effectiveMapping).filter((s) => s.length > 1).length
     : 0;
   const noAnimatedCount = spriteMap
-    ? Object.values(spriteMap.mapping).filter(
+    ? Object.values(effectiveMapping).filter(
         (sprites) =>
           !sprites.some((sprite) => isAnimatedSpriteEntry(sprite)) &&
           sprites.some((sprite) => sprite.isStaticFallback),
       ).length
     : 0;
-  const selectedCount = Object.values(preferences).filter(Boolean).length;
+  const correctedByKey = useMemo(() => {
+    const byKey: Record<string, number> = {};
+    for (const [url, targetKey] of Object.entries(spriteCorrections)) {
+      const originalKey = spriteIndexes.originalKeyByUrl[url];
+      if (!originalKey || originalKey === targetKey) continue;
+      byKey[targetKey] = (byKey[targetKey] ?? 0) + 1;
+    }
+    return byKey;
+  }, [spriteCorrections, spriteIndexes.originalKeyByUrl]);
+
+  const openSpriteEditor = useCallback(
+    (currentKey: string, sprite: SpriteEntry) => {
+      const originalKey =
+        spriteIndexes.originalKeyByUrl[sprite.url] ?? currentKey;
+      const currentTarget = spriteCorrections[sprite.url] ?? currentKey;
+      setEditingSprite({ sprite, currentKey, originalKey });
+      setTargetPokemonKey(currentTarget);
+      setEditingError(null);
+    },
+    [spriteCorrections, spriteIndexes.originalKeyByUrl],
+  );
+
+  const closeSpriteEditor = useCallback(() => {
+    setEditingSprite(null);
+    setTargetPokemonKey("");
+    setEditingError(null);
+  }, []);
+
+  const applySpriteCorrection = useCallback(() => {
+    if (!editingSprite) return;
+
+    const normalizedTarget = normalizePokemonKey(targetPokemonKey);
+    if (!normalizedTarget) {
+      setEditingError("Le nom technique ne peut pas etre vide.");
+      return;
+    }
+
+    setSpriteCorrections((prev) => {
+      const next = { ...prev };
+      if (normalizedTarget === editingSprite.originalKey) {
+        delete next[editingSprite.sprite.url];
+      } else {
+        next[editingSprite.sprite.url] = normalizedTarget;
+      }
+      saveCorrections(next);
+      return next;
+    });
+
+    closeSpriteEditor();
+  }, [closeSpriteEditor, editingSprite, targetPokemonKey]);
 
   function handleExport() {
+    const corrections = Object.entries(spriteCorrections)
+      .map(([url, targetKey]) => {
+        const originalKey = spriteIndexes.originalKeyByUrl[url];
+        if (!originalKey || originalKey === targetKey) return null;
+
+        const sprite = spriteIndexes.spriteByUrl[url];
+        return {
+          url,
+          file: sprite?.file ?? getFileNameFromUrl(url),
+          sourceName: sprite?.sourceName ?? null,
+          provider: sprite?.provider ?? null,
+          fromPokemonKey: originalKey,
+          toPokemonKey: targetKey,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
     const output = {
       generatedAt: new Date().toISOString(),
-      note: "Selected default animated sprites per pokemon key (with static fallback only when no animated exists)",
-      totalSelected: selectedCount,
-      preferences: Object.fromEntries(
-        Object.entries(preferences)
-          .filter(([, value]) => value !== null && value !== undefined)
-          .map(([k, v]) => [
-            k,
-            {
-              url: v!.url,
-              file: v!.file,
-              sourceName: v!.sourceName,
-              alt: v!.alt,
-              provider: v!.provider,
-              isStaticFallback: Boolean(v!.isStaticFallback),
-              ...(v!.unownLetter ? { unownLetter: v!.unownLetter } : {}),
-            },
-          ]),
-      ),
+      note: "Manual sprite-to-pokemon corrections exported from dev sprites page",
+      totalCorrections: corrections.length,
+      corrections,
     };
-    downloadJson(output, "animated-sprite-preferences.json");
+    downloadJson(output, "sprite-pokemon-corrections.json");
   }
 
   function handleReset() {
     if (
       !confirm(
-        "Réinitialiser toutes les sélections ? Cette action est irréversible.",
+        "Reinitialiser toutes les corrections ? Cette action est irreversible.",
       )
     )
       return;
-    setPreferences({});
-    savePreferences({});
+    setSpriteCorrections({});
+    saveCorrections({});
   }
 
   if (loading) {
@@ -558,7 +696,7 @@ export default function DevSpritesPage() {
             <b style={{ color: "#38bdf8" }}>{noAnimatedCount}</b> sans animé
           </span>
           <span>
-            <b style={{ color: "#22c55e" }}>{selectedCount}</b> sélectionnés
+            <b style={{ color: "#22c55e" }}>{totalCorrections}</b> corrigés
           </span>
           <span>
             <b style={{ color: "#94a3b8" }}>{entries.length}</b> affichés
@@ -684,8 +822,12 @@ export default function DevSpritesPage() {
               pokemonKey={key}
               sprites={sprites}
               displayName={displayName}
-              selected={preferences[key]}
-              onSelect={handleSelect}
+              onOpenEditor={openSpriteEditor}
+              correctedCount={correctedByKey[key] ?? 0}
+              isSpriteCorrected={(sprite) => {
+                const originalKey = spriteIndexes.originalKeyByUrl[sprite.url];
+                return Boolean(originalKey && originalKey !== key);
+              }}
             />
           );
         })}
@@ -703,6 +845,170 @@ export default function DevSpritesPage() {
           </div>
         )}
       </div>
+
+      {editingSprite && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            background: "rgba(2, 6, 23, 0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+          onClick={closeSpriteEditor}
+        >
+          <div
+            style={{
+              width: "min(760px, 100%)",
+              background: "#0f172a",
+              border: "1px solid #334155",
+              borderRadius: 12,
+              padding: 16,
+              display: "grid",
+              gridTemplateColumns: "minmax(200px, 280px) 1fr",
+              gap: 16,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                background: "#020617",
+                border: "1px solid #1e293b",
+                borderRadius: 10,
+                minHeight: 260,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={editingSprite.sprite.url}
+                alt={
+                  editingSprite.sprite.alt || editingSprite.sprite.sourceName
+                }
+                width={220}
+                height={220}
+                style={{ imageRendering: "pixelated", objectFit: "contain" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#f8fafc" }}>
+                Corriger l&apos;association du sprite
+              </div>
+
+              <div style={{ fontSize: 12, color: "#94a3b8" }}>
+                Source: {editingSprite.sprite.sourceName}
+              </div>
+              <div style={{ fontSize: 12, color: "#94a3b8" }}>
+                Fichier: {editingSprite.sprite.file}
+              </div>
+              <div style={{ fontSize: 12, color: "#94a3b8" }}>
+                Pokemon actuel: {editingSprite.currentKey}
+              </div>
+              <div style={{ fontSize: 12, color: "#94a3b8" }}>
+                Pokemon d&apos;origine: {editingSprite.originalKey}
+              </div>
+
+              <label
+                htmlFor="sprite-target-key"
+                style={{ fontSize: 12, color: "#cbd5e1", fontWeight: 700 }}
+              >
+                Pokemon cible (nom technique)
+              </label>
+              <input
+                id="sprite-target-key"
+                list="pokemon-keys-list"
+                value={targetPokemonKey}
+                onChange={(e) => {
+                  setTargetPokemonKey(e.target.value);
+                  if (editingError) setEditingError(null);
+                }}
+                placeholder="ex: greninja"
+                style={{
+                  background: "#1e293b",
+                  border: "1px solid #334155",
+                  borderRadius: 8,
+                  color: "#f1f5f9",
+                  padding: "8px 10px",
+                  fontSize: 13,
+                  outline: "none",
+                }}
+              />
+              <datalist id="pokemon-keys-list">
+                {allPokemonKeys.map((key) => {
+                  const info = pokemonNames[key];
+                  const localizedName =
+                    info?.names?.fr || info?.names?.en || key;
+                  return (
+                    <option
+                      key={key}
+                      value={key}
+                    >{`${localizedName} (${key})`}</option>
+                  );
+                })}
+              </datalist>
+
+              {!!targetPokemonKey &&
+                !pokemonNames[normalizePokemonKey(targetPokemonKey)] && (
+                  <div style={{ fontSize: 11, color: "#fbbf24" }}>
+                    Ce nom technique n&apos;existe pas dans pokemon-list.json,
+                    verifie la saisie.
+                  </div>
+                )}
+
+              {editingError && (
+                <div style={{ fontSize: 12, color: "#ef4444" }}>
+                  {editingError}
+                </div>
+              )}
+
+              <div
+                style={{
+                  marginTop: "auto",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 8,
+                }}
+              >
+                <button
+                  onClick={closeSpriteEditor}
+                  style={{
+                    background: "#1e293b",
+                    border: "1px solid #475569",
+                    borderRadius: 8,
+                    color: "#94a3b8",
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    fontSize: 13,
+                  }}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={applySpriteCorrection}
+                  style={{
+                    background: "#1d4ed8",
+                    border: "1px solid #3b82f6",
+                    borderRadius: 8,
+                    color: "#bfdbfe",
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
+                >
+                  Appliquer la correction
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
