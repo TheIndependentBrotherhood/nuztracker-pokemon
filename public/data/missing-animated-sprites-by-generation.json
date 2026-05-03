@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-05-03T00:22:06.250Z",
+  "generatedAt": "2026-05-03T00:35:52.433Z",
   "summaryByGeneration": {
     "gen1": {
-      "missingAnyAnimatedCount": 64,
-      "missingNormalCount": 64,
-      "missingShinyCount": 64
+      "missingAnyAnimatedCount": 53,
+      "missingNormalCount": 53,
+      "missingShinyCount": 53
     },
     "gen2": {
-      "missingAnyAnimatedCount": 13,
-      "missingNormalCount": 13,
-      "missingShinyCount": 13
+      "missingAnyAnimatedCount": 11,
+      "missingNormalCount": 11,
+      "missingShinyCount": 11
     },
     "gen3": {
-      "missingAnyAnimatedCount": 17,
-      "missingNormalCount": 17,
-      "missingShinyCount": 17
+      "missingAnyAnimatedCount": 15,
+      "missingNormalCount": 15,
+      "missingShinyCount": 15
     },
     "gen4": {
       "missingAnyAnimatedCount": 12,
@@ -22,14 +22,14 @@
       "missingShinyCount": 12
     },
     "gen5": {
-      "missingAnyAnimatedCount": 30,
-      "missingNormalCount": 30,
-      "missingShinyCount": 30
+      "missingAnyAnimatedCount": 26,
+      "missingNormalCount": 26,
+      "missingShinyCount": 26
     },
     "gen6": {
-      "missingAnyAnimatedCount": 66,
-      "missingNormalCount": 66,
-      "missingShinyCount": 68
+      "missingAnyAnimatedCount": 64,
+      "missingNormalCount": 64,
+      "missingShinyCount": 66
     },
     "gen7": {
       "missingAnyAnimatedCount": 44,
@@ -37,9 +37,9 @@
       "missingShinyCount": 44
     },
     "gen8": {
-      "missingAnyAnimatedCount": 65,
-      "missingNormalCount": 65,
-      "missingShinyCount": 66
+      "missingAnyAnimatedCount": 62,
+      "missingNormalCount": 62,
+      "missingShinyCount": 63
     },
     "gen9": {
       "missingAnyAnimatedCount": 122,
@@ -163,44 +163,12 @@
           "name": "pikachu-world-cap"
         },
         {
-          "id": 10161,
-          "name": "meowth-galar"
-        },
-        {
-          "id": 10162,
-          "name": "ponyta-galar"
-        },
-        {
           "id": 10163,
           "name": "rapidash-galar"
         },
         {
-          "id": 10164,
-          "name": "slowpoke-galar"
-        },
-        {
-          "id": 10165,
-          "name": "slowbro-galar"
-        },
-        {
-          "id": 10166,
-          "name": "farfetchd-galar"
-        },
-        {
-          "id": 10167,
-          "name": "weezing-galar"
-        },
-        {
           "id": 10168,
           "name": "mr-mime-galar"
-        },
-        {
-          "id": 10169,
-          "name": "articuno-galar"
-        },
-        {
-          "id": 10170,
-          "name": "zapdos-galar"
         },
         {
           "id": 10171,
@@ -227,10 +195,6 @@
           "name": "pikachu-gmax"
         },
         {
-          "id": 10200,
-          "name": "meowth-gmax"
-        },
-        {
           "id": 10201,
           "name": "machamp-gmax"
         },
@@ -247,10 +211,6 @@
           "name": "lapras-gmax"
         },
         {
-          "id": 10205,
-          "name": "eevee-gmax"
-        },
-        {
           "id": 10206,
           "name": "snorlax-gmax"
         },
@@ -261,10 +221,6 @@
         {
           "id": 10230,
           "name": "arcanine-hisui"
-        },
-        {
-          "id": 10231,
-          "name": "voltorb-hisui"
         },
         {
           "id": 10232,
@@ -421,44 +377,12 @@
           "name": "pikachu-world-cap"
         },
         {
-          "id": 10161,
-          "name": "meowth-galar"
-        },
-        {
-          "id": 10162,
-          "name": "ponyta-galar"
-        },
-        {
           "id": 10163,
           "name": "rapidash-galar"
         },
         {
-          "id": 10164,
-          "name": "slowpoke-galar"
-        },
-        {
-          "id": 10165,
-          "name": "slowbro-galar"
-        },
-        {
-          "id": 10166,
-          "name": "farfetchd-galar"
-        },
-        {
-          "id": 10167,
-          "name": "weezing-galar"
-        },
-        {
           "id": 10168,
           "name": "mr-mime-galar"
-        },
-        {
-          "id": 10169,
-          "name": "articuno-galar"
-        },
-        {
-          "id": 10170,
-          "name": "zapdos-galar"
         },
         {
           "id": 10171,
@@ -485,10 +409,6 @@
           "name": "pikachu-gmax"
         },
         {
-          "id": 10200,
-          "name": "meowth-gmax"
-        },
-        {
           "id": 10201,
           "name": "machamp-gmax"
         },
@@ -505,10 +425,6 @@
           "name": "lapras-gmax"
         },
         {
-          "id": 10205,
-          "name": "eevee-gmax"
-        },
-        {
           "id": 10206,
           "name": "snorlax-gmax"
         },
@@ -519,10 +435,6 @@
         {
           "id": 10230,
           "name": "arcanine-hisui"
-        },
-        {
-          "id": 10231,
-          "name": "voltorb-hisui"
         },
         {
           "id": 10232,
@@ -679,44 +591,12 @@
           "name": "pikachu-world-cap"
         },
         {
-          "id": 10161,
-          "name": "meowth-galar"
-        },
-        {
-          "id": 10162,
-          "name": "ponyta-galar"
-        },
-        {
           "id": 10163,
           "name": "rapidash-galar"
         },
         {
-          "id": 10164,
-          "name": "slowpoke-galar"
-        },
-        {
-          "id": 10165,
-          "name": "slowbro-galar"
-        },
-        {
-          "id": 10166,
-          "name": "farfetchd-galar"
-        },
-        {
-          "id": 10167,
-          "name": "weezing-galar"
-        },
-        {
           "id": 10168,
           "name": "mr-mime-galar"
-        },
-        {
-          "id": 10169,
-          "name": "articuno-galar"
-        },
-        {
-          "id": 10170,
-          "name": "zapdos-galar"
         },
         {
           "id": 10171,
@@ -743,10 +623,6 @@
           "name": "pikachu-gmax"
         },
         {
-          "id": 10200,
-          "name": "meowth-gmax"
-        },
-        {
           "id": 10201,
           "name": "machamp-gmax"
         },
@@ -763,10 +639,6 @@
           "name": "lapras-gmax"
         },
         {
-          "id": 10205,
-          "name": "eevee-gmax"
-        },
-        {
           "id": 10206,
           "name": "snorlax-gmax"
         },
@@ -777,10 +649,6 @@
         {
           "id": 10230,
           "name": "arcanine-hisui"
-        },
-        {
-          "id": 10231,
-          "name": "voltorb-hisui"
         },
         {
           "id": 10232,
@@ -843,14 +711,6 @@
           "name": "steelix-mega"
         },
         {
-          "id": 10172,
-          "name": "slowking-galar"
-        },
-        {
-          "id": 10173,
-          "name": "corsola-galar"
-        },
-        {
           "id": 10233,
           "name": "typhlosion-hisui"
         },
@@ -897,14 +757,6 @@
           "name": "steelix-mega"
         },
         {
-          "id": 10172,
-          "name": "slowking-galar"
-        },
-        {
-          "id": 10173,
-          "name": "corsola-galar"
-        },
-        {
           "id": 10233,
           "name": "typhlosion-hisui"
         },
@@ -949,14 +801,6 @@
         {
           "id": 10072,
           "name": "steelix-mega"
-        },
-        {
-          "id": 10172,
-          "name": "slowking-galar"
-        },
-        {
-          "id": 10173,
-          "name": "corsola-galar"
         },
         {
           "id": 10233,
@@ -1043,14 +887,6 @@
           "name": "camerupt-mega"
         },
         {
-          "id": 10174,
-          "name": "zigzagoon-galar"
-        },
-        {
-          "id": 10175,
-          "name": "linoone-galar"
-        },
-        {
           "id": 10306,
           "name": "chimecho-mega"
         },
@@ -1113,14 +949,6 @@
           "name": "camerupt-mega"
         },
         {
-          "id": 10174,
-          "name": "zigzagoon-galar"
-        },
-        {
-          "id": 10175,
-          "name": "linoone-galar"
-        },
-        {
           "id": 10306,
           "name": "chimecho-mega"
         },
@@ -1181,14 +1009,6 @@
         {
           "id": 10087,
           "name": "camerupt-mega"
-        },
-        {
-          "id": 10174,
-          "name": "zigzagoon-galar"
-        },
-        {
-          "id": 10175,
-          "name": "linoone-galar"
         },
         {
           "id": 10306,
@@ -1419,24 +1239,8 @@
           "name": "stunfisk-galar"
         },
         {
-          "id": 10207,
-          "name": "garbodor-gmax"
-        },
-        {
-          "id": 10236,
-          "name": "samurott-hisui"
-        },
-        {
-          "id": 10237,
-          "name": "lilligant-hisui"
-        },
-        {
           "id": 10238,
           "name": "zorua-hisui"
-        },
-        {
-          "id": 10239,
-          "name": "zoroark-hisui"
         },
         {
           "id": 10240,
@@ -1541,24 +1345,8 @@
           "name": "stunfisk-galar"
         },
         {
-          "id": 10207,
-          "name": "garbodor-gmax"
-        },
-        {
-          "id": 10236,
-          "name": "samurott-hisui"
-        },
-        {
-          "id": 10237,
-          "name": "lilligant-hisui"
-        },
-        {
           "id": 10238,
           "name": "zorua-hisui"
-        },
-        {
-          "id": 10239,
-          "name": "zoroark-hisui"
         },
         {
           "id": 10240,
@@ -1663,24 +1451,8 @@
           "name": "stunfisk-galar"
         },
         {
-          "id": 10207,
-          "name": "garbodor-gmax"
-        },
-        {
-          "id": 10236,
-          "name": "samurott-hisui"
-        },
-        {
-          "id": 10237,
-          "name": "lilligant-hisui"
-        },
-        {
           "id": 10238,
           "name": "zorua-hisui"
-        },
-        {
-          "id": 10239,
-          "name": "zoroark-hisui"
         },
         {
           "id": 10240,
@@ -1929,14 +1701,6 @@
         {
           "id": 10181,
           "name": "zygarde-10"
-        },
-        {
-          "id": 10241,
-          "name": "sliggoo-hisui"
-        },
-        {
-          "id": 10242,
-          "name": "goodra-hisui"
         },
         {
           "id": 10243,
@@ -2195,14 +1959,6 @@
         {
           "id": 10181,
           "name": "zygarde-10"
-        },
-        {
-          "id": 10241,
-          "name": "sliggoo-hisui"
-        },
-        {
-          "id": 10242,
-          "name": "goodra-hisui"
         },
         {
           "id": 10243,
@@ -2469,14 +2225,6 @@
         {
           "id": 10181,
           "name": "zygarde-10"
-        },
-        {
-          "id": 10241,
-          "name": "sliggoo-hisui"
-        },
-        {
-          "id": 10242,
-          "name": "goodra-hisui"
         },
         {
           "id": 10243,
@@ -3095,6 +2843,10 @@
           "name": "rillaboom"
         },
         {
+          "id": 815,
+          "name": "cinderace"
+        },
+        {
           "id": 819,
           "name": "skwovet"
         },
@@ -3105,6 +2857,10 @@
         {
           "id": 825,
           "name": "dottler"
+        },
+        {
+          "id": 826,
+          "name": "orbeetle"
         },
         {
           "id": 827,
@@ -3263,28 +3019,12 @@
           "name": "rillaboom-gmax"
         },
         {
-          "id": 10210,
-          "name": "cinderace-gmax"
-        },
-        {
           "id": 10211,
           "name": "inteleon-gmax"
         },
         {
           "id": 10212,
           "name": "corviknight-gmax"
-        },
-        {
-          "id": 10213,
-          "name": "orbeetle-gmax"
-        },
-        {
-          "id": 10214,
-          "name": "drednaw-gmax"
-        },
-        {
-          "id": 10215,
-          "name": "coalossal-gmax"
         },
         {
           "id": 10216,
@@ -3305,10 +3045,6 @@
         {
           "id": 10220,
           "name": "centiskorch-gmax"
-        },
-        {
-          "id": 10221,
-          "name": "hatterene-gmax"
         },
         {
           "id": 10222,
@@ -3357,6 +3093,10 @@
           "name": "rillaboom"
         },
         {
+          "id": 815,
+          "name": "cinderace"
+        },
+        {
           "id": 819,
           "name": "skwovet"
         },
@@ -3367,6 +3107,10 @@
         {
           "id": 825,
           "name": "dottler"
+        },
+        {
+          "id": 826,
+          "name": "orbeetle"
         },
         {
           "id": 827,
@@ -3525,28 +3269,12 @@
           "name": "rillaboom-gmax"
         },
         {
-          "id": 10210,
-          "name": "cinderace-gmax"
-        },
-        {
           "id": 10211,
           "name": "inteleon-gmax"
         },
         {
           "id": 10212,
           "name": "corviknight-gmax"
-        },
-        {
-          "id": 10213,
-          "name": "orbeetle-gmax"
-        },
-        {
-          "id": 10214,
-          "name": "drednaw-gmax"
-        },
-        {
-          "id": 10215,
-          "name": "coalossal-gmax"
         },
         {
           "id": 10216,
@@ -3567,10 +3295,6 @@
         {
           "id": 10220,
           "name": "centiskorch-gmax"
-        },
-        {
-          "id": 10221,
-          "name": "hatterene-gmax"
         },
         {
           "id": 10222,
@@ -3619,6 +3343,10 @@
           "name": "rillaboom"
         },
         {
+          "id": 815,
+          "name": "cinderace"
+        },
+        {
           "id": 819,
           "name": "skwovet"
         },
@@ -3629,6 +3357,10 @@
         {
           "id": 825,
           "name": "dottler"
+        },
+        {
+          "id": 826,
+          "name": "orbeetle"
         },
         {
           "id": 827,
@@ -3791,28 +3523,12 @@
           "name": "rillaboom-gmax"
         },
         {
-          "id": 10210,
-          "name": "cinderace-gmax"
-        },
-        {
           "id": 10211,
           "name": "inteleon-gmax"
         },
         {
           "id": 10212,
           "name": "corviknight-gmax"
-        },
-        {
-          "id": 10213,
-          "name": "orbeetle-gmax"
-        },
-        {
-          "id": 10214,
-          "name": "drednaw-gmax"
-        },
-        {
-          "id": 10215,
-          "name": "coalossal-gmax"
         },
         {
           "id": 10216,
@@ -3833,10 +3549,6 @@
         {
           "id": 10220,
           "name": "centiskorch-gmax"
-        },
-        {
-          "id": 10221,
-          "name": "hatterene-gmax"
         },
         {
           "id": 10222,

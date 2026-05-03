@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-03T00:22:06.251Z",
+  "generatedAt": "2026-05-03T00:35:52.433Z",
   "summary": {
     "totalPokemon": 1350,
     "totalLinksChecked": 2700,
-    "linksWorking": 1824,
-    "linksFailed": 876,
-    "normalWorking": 911,
-    "shinyWorking": 913,
+    "linksWorking": 1872,
+    "linksFailed": 828,
+    "normalWorking": 935,
+    "shinyWorking": 937,
     "sourceCoverage": {
       "pokemondb_bw": {
         "normalSelected": 663,
@@ -24,9 +24,9 @@
         "pokemonWithAtLeastOne": 105
       },
       "google_sheet_gen8": {
-        "normalSelected": 68,
-        "shinySelected": 67,
-        "pokemonWithAtLeastOne": 68
+        "normalSelected": 92,
+        "shinySelected": 91,
+        "pokemonWithAtLeastOne": 92
       },
       "google_sheet_gen9": {
         "normalSelected": 27,
@@ -12251,14 +12251,14 @@
       "name": "cinderace",
       "generation": 8,
       "normal": {
-        "url": "https://www.smogon.com/forums/attachments/815_g-gif.634001/",
-        "available": true,
-        "source": "google_sheet_gen8"
+        "url": null,
+        "available": false,
+        "source": null
       },
       "shiny": {
-        "url": "https://www.smogon.com/forums/attachments/815_gs-gif.634003/",
-        "available": true,
-        "source": "google_sheet_gen8"
+        "url": null,
+        "available": false,
+        "source": null
       }
     },
     {
@@ -12416,14 +12416,14 @@
       "name": "orbeetle",
       "generation": 8,
       "normal": {
-        "url": "https://www.smogon.com/forums/attachments/826_g-gif.369357/",
-        "available": true,
-        "source": "google_sheet_gen8"
+        "url": null,
+        "available": false,
+        "source": null
       },
       "shiny": {
-        "url": "https://www.smogon.com/forums/attachments/826_gs-gif.369358/",
-        "available": true,
-        "source": "google_sheet_gen8"
+        "url": null,
+        "available": false,
+        "source": null
       }
     },
     {
@@ -12536,12 +12536,12 @@
       "name": "drednaw",
       "generation": 8,
       "normal": {
-        "url": "https://www.smogon.com/forums/attachments/834_g-gif.302321/",
+        "url": "https://www.smogon.com/forums/attachments/drednaw-gif.185549/",
         "available": true,
         "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": "https://www.smogon.com/forums/attachments/834_gs-gif.302322/",
+        "url": "https://www.smogon.com/forums/attachments/834s-gif.277376/",
         "available": true,
         "source": "google_sheet_gen8"
       }
@@ -12611,12 +12611,12 @@
       "name": "coalossal",
       "generation": 8,
       "normal": {
-        "url": "https://www.smogon.com/forums/attachments/839_g-gif.659081/",
+        "url": "https://www.smogon.com/forums/attachments/839_1-gif.659076/",
         "available": true,
         "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": "https://www.smogon.com/forums/attachments/839_gs-gif.659083/",
+        "url": "https://www.smogon.com/forums/attachments/839_1s-gif.659078/",
         "available": true,
         "source": "google_sheet_gen8"
       }
@@ -12896,12 +12896,12 @@
       "name": "hatterene",
       "generation": 8,
       "normal": {
-        "url": "https://www.smogon.com/forums/attachments/858_g-gif.284212/",
+        "url": "https://www.smogon.com/forums/attachments/858_1-gif.284210/",
         "available": true,
         "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": "https://www.smogon.com/forums/attachments/858_gs-gif.284213/",
+        "url": "https://www.smogon.com/forums/attachments/858_1s-gif.284211/",
         "available": true,
         "source": "google_sheet_gen8"
       }
@@ -17816,14 +17816,14 @@
       "name": "meowth-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/052_3-gif.218690/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/052_3s-gif.277368/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17831,14 +17831,14 @@
       "name": "ponyta-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/077_2-gif.284204/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/077_2s-gif.284205/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17861,14 +17861,14 @@
       "name": "slowpoke-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/079_2-gif.302311/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/079_2s-gif.302312/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17876,14 +17876,14 @@
       "name": "slowbro-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/080_3-gif.302313/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/080_3s-gif.302314/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17891,14 +17891,14 @@
       "name": "farfetchd-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/083_2-gif.269806/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/083_2s-gif.269808/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17906,14 +17906,14 @@
       "name": "weezing-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/110_2-gif.286951/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/110_2s-gif.286952/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17936,14 +17936,14 @@
       "name": "articuno-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/144-gif.310070/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/144s-gif.310071/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17951,14 +17951,14 @@
       "name": "zapdos-galar",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/145_2-gif.641478/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/145_2s-gif.641480/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17981,14 +17981,14 @@
       "name": "slowking-galar",
       "generation": 2,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/199_2-gif.302315/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/199_2s-gif.302316/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -17996,14 +17996,14 @@
       "name": "corsola-galar",
       "generation": 2,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/222_2-gif.276820/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/222_2s-gif.276821/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18011,14 +18011,14 @@
       "name": "zigzagoon-galar",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/263_2-gif.284206/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/263_2s-gif.284207/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18026,14 +18026,14 @@
       "name": "linoone-galar",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/264_1-gif.658913/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/264_1s-gif.658915/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18401,14 +18401,14 @@
       "name": "meowth-gmax",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/052_g-gif.208890/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/052_gs-gif.277369/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18476,14 +18476,14 @@
       "name": "eevee-gmax",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/133_g-gif.290729/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/133_gs-gif.290730/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18506,14 +18506,14 @@
       "name": "garbodor-gmax",
       "generation": 5,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/569_g-gif.281804/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/569_gs-gif.281806/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18551,14 +18551,14 @@
       "name": "cinderace-gmax",
       "generation": 8,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/815_g-gif.634001/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/815_gs-gif.634003/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18596,14 +18596,14 @@
       "name": "orbeetle-gmax",
       "generation": 8,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/826_g-gif.369357/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/826_gs-gif.369358/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18611,14 +18611,14 @@
       "name": "drednaw-gmax",
       "generation": 8,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/834_g-gif.302321/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/834_gs-gif.302322/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18626,14 +18626,14 @@
       "name": "coalossal-gmax",
       "generation": 8,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/839_g-gif.659081/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/839_gs-gif.659083/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18716,14 +18716,14 @@
       "name": "hatterene-gmax",
       "generation": 8,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/858_g-gif.284212/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/858_gs-gif.284213/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18866,14 +18866,14 @@
       "name": "voltorb-hisui",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/100_1-gif.468131/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/100_1s-gif.468132/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18941,14 +18941,14 @@
       "name": "samurott-hisui",
       "generation": 5,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/503_1-gif.658929/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/503_1s-gif.658931/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18956,14 +18956,14 @@
       "name": "lilligant-hisui",
       "generation": 5,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/549_1-gif.468135/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/549_1s-gif.468136/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -18986,14 +18986,14 @@
       "name": "zoroark-hisui",
       "generation": 5,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/571_1-gif.512653/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/571_1s-gif.512654/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -19016,14 +19016,14 @@
       "name": "sliggoo-hisui",
       "generation": 6,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/705_1-gif.641496/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/705_1s-gif.641497/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -19031,14 +19031,14 @@
       "name": "goodra-hisui",
       "generation": 6,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/706_1-gif.629208/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/706_1s-gif.629210/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -20288,22 +20288,22 @@
     }
   ],
   "missingByGeneration": {
-    "generatedAt": "2026-05-03T00:22:06.250Z",
+    "generatedAt": "2026-05-03T00:35:52.433Z",
     "summaryByGeneration": {
       "gen1": {
-        "missingAnyAnimatedCount": 64,
-        "missingNormalCount": 64,
-        "missingShinyCount": 64
+        "missingAnyAnimatedCount": 53,
+        "missingNormalCount": 53,
+        "missingShinyCount": 53
       },
       "gen2": {
-        "missingAnyAnimatedCount": 13,
-        "missingNormalCount": 13,
-        "missingShinyCount": 13
+        "missingAnyAnimatedCount": 11,
+        "missingNormalCount": 11,
+        "missingShinyCount": 11
       },
       "gen3": {
-        "missingAnyAnimatedCount": 17,
-        "missingNormalCount": 17,
-        "missingShinyCount": 17
+        "missingAnyAnimatedCount": 15,
+        "missingNormalCount": 15,
+        "missingShinyCount": 15
       },
       "gen4": {
         "missingAnyAnimatedCount": 12,
@@ -20311,14 +20311,14 @@
         "missingShinyCount": 12
       },
       "gen5": {
-        "missingAnyAnimatedCount": 30,
-        "missingNormalCount": 30,
-        "missingShinyCount": 30
+        "missingAnyAnimatedCount": 26,
+        "missingNormalCount": 26,
+        "missingShinyCount": 26
       },
       "gen6": {
-        "missingAnyAnimatedCount": 66,
-        "missingNormalCount": 66,
-        "missingShinyCount": 68
+        "missingAnyAnimatedCount": 64,
+        "missingNormalCount": 64,
+        "missingShinyCount": 66
       },
       "gen7": {
         "missingAnyAnimatedCount": 44,
@@ -20326,9 +20326,9 @@
         "missingShinyCount": 44
       },
       "gen8": {
-        "missingAnyAnimatedCount": 65,
-        "missingNormalCount": 65,
-        "missingShinyCount": 66
+        "missingAnyAnimatedCount": 62,
+        "missingNormalCount": 62,
+        "missingShinyCount": 63
       },
       "gen9": {
         "missingAnyAnimatedCount": 122,
@@ -20452,44 +20452,12 @@
             "name": "pikachu-world-cap"
           },
           {
-            "id": 10161,
-            "name": "meowth-galar"
-          },
-          {
-            "id": 10162,
-            "name": "ponyta-galar"
-          },
-          {
             "id": 10163,
             "name": "rapidash-galar"
           },
           {
-            "id": 10164,
-            "name": "slowpoke-galar"
-          },
-          {
-            "id": 10165,
-            "name": "slowbro-galar"
-          },
-          {
-            "id": 10166,
-            "name": "farfetchd-galar"
-          },
-          {
-            "id": 10167,
-            "name": "weezing-galar"
-          },
-          {
             "id": 10168,
             "name": "mr-mime-galar"
-          },
-          {
-            "id": 10169,
-            "name": "articuno-galar"
-          },
-          {
-            "id": 10170,
-            "name": "zapdos-galar"
           },
           {
             "id": 10171,
@@ -20516,10 +20484,6 @@
             "name": "pikachu-gmax"
           },
           {
-            "id": 10200,
-            "name": "meowth-gmax"
-          },
-          {
             "id": 10201,
             "name": "machamp-gmax"
           },
@@ -20536,10 +20500,6 @@
             "name": "lapras-gmax"
           },
           {
-            "id": 10205,
-            "name": "eevee-gmax"
-          },
-          {
             "id": 10206,
             "name": "snorlax-gmax"
           },
@@ -20550,10 +20510,6 @@
           {
             "id": 10230,
             "name": "arcanine-hisui"
-          },
-          {
-            "id": 10231,
-            "name": "voltorb-hisui"
           },
           {
             "id": 10232,
@@ -20710,44 +20666,12 @@
             "name": "pikachu-world-cap"
           },
           {
-            "id": 10161,
-            "name": "meowth-galar"
-          },
-          {
-            "id": 10162,
-            "name": "ponyta-galar"
-          },
-          {
             "id": 10163,
             "name": "rapidash-galar"
           },
           {
-            "id": 10164,
-            "name": "slowpoke-galar"
-          },
-          {
-            "id": 10165,
-            "name": "slowbro-galar"
-          },
-          {
-            "id": 10166,
-            "name": "farfetchd-galar"
-          },
-          {
-            "id": 10167,
-            "name": "weezing-galar"
-          },
-          {
             "id": 10168,
             "name": "mr-mime-galar"
-          },
-          {
-            "id": 10169,
-            "name": "articuno-galar"
-          },
-          {
-            "id": 10170,
-            "name": "zapdos-galar"
           },
           {
             "id": 10171,
@@ -20774,10 +20698,6 @@
             "name": "pikachu-gmax"
           },
           {
-            "id": 10200,
-            "name": "meowth-gmax"
-          },
-          {
             "id": 10201,
             "name": "machamp-gmax"
           },
@@ -20794,10 +20714,6 @@
             "name": "lapras-gmax"
           },
           {
-            "id": 10205,
-            "name": "eevee-gmax"
-          },
-          {
             "id": 10206,
             "name": "snorlax-gmax"
           },
@@ -20808,10 +20724,6 @@
           {
             "id": 10230,
             "name": "arcanine-hisui"
-          },
-          {
-            "id": 10231,
-            "name": "voltorb-hisui"
           },
           {
             "id": 10232,
@@ -20968,44 +20880,12 @@
             "name": "pikachu-world-cap"
           },
           {
-            "id": 10161,
-            "name": "meowth-galar"
-          },
-          {
-            "id": 10162,
-            "name": "ponyta-galar"
-          },
-          {
             "id": 10163,
             "name": "rapidash-galar"
           },
           {
-            "id": 10164,
-            "name": "slowpoke-galar"
-          },
-          {
-            "id": 10165,
-            "name": "slowbro-galar"
-          },
-          {
-            "id": 10166,
-            "name": "farfetchd-galar"
-          },
-          {
-            "id": 10167,
-            "name": "weezing-galar"
-          },
-          {
             "id": 10168,
             "name": "mr-mime-galar"
-          },
-          {
-            "id": 10169,
-            "name": "articuno-galar"
-          },
-          {
-            "id": 10170,
-            "name": "zapdos-galar"
           },
           {
             "id": 10171,
@@ -21032,10 +20912,6 @@
             "name": "pikachu-gmax"
           },
           {
-            "id": 10200,
-            "name": "meowth-gmax"
-          },
-          {
             "id": 10201,
             "name": "machamp-gmax"
           },
@@ -21052,10 +20928,6 @@
             "name": "lapras-gmax"
           },
           {
-            "id": 10205,
-            "name": "eevee-gmax"
-          },
-          {
             "id": 10206,
             "name": "snorlax-gmax"
           },
@@ -21066,10 +20938,6 @@
           {
             "id": 10230,
             "name": "arcanine-hisui"
-          },
-          {
-            "id": 10231,
-            "name": "voltorb-hisui"
           },
           {
             "id": 10232,
@@ -21132,14 +21000,6 @@
             "name": "steelix-mega"
           },
           {
-            "id": 10172,
-            "name": "slowking-galar"
-          },
-          {
-            "id": 10173,
-            "name": "corsola-galar"
-          },
-          {
             "id": 10233,
             "name": "typhlosion-hisui"
           },
@@ -21186,14 +21046,6 @@
             "name": "steelix-mega"
           },
           {
-            "id": 10172,
-            "name": "slowking-galar"
-          },
-          {
-            "id": 10173,
-            "name": "corsola-galar"
-          },
-          {
             "id": 10233,
             "name": "typhlosion-hisui"
           },
@@ -21238,14 +21090,6 @@
           {
             "id": 10072,
             "name": "steelix-mega"
-          },
-          {
-            "id": 10172,
-            "name": "slowking-galar"
-          },
-          {
-            "id": 10173,
-            "name": "corsola-galar"
           },
           {
             "id": 10233,
@@ -21332,14 +21176,6 @@
             "name": "camerupt-mega"
           },
           {
-            "id": 10174,
-            "name": "zigzagoon-galar"
-          },
-          {
-            "id": 10175,
-            "name": "linoone-galar"
-          },
-          {
             "id": 10306,
             "name": "chimecho-mega"
           },
@@ -21402,14 +21238,6 @@
             "name": "camerupt-mega"
           },
           {
-            "id": 10174,
-            "name": "zigzagoon-galar"
-          },
-          {
-            "id": 10175,
-            "name": "linoone-galar"
-          },
-          {
             "id": 10306,
             "name": "chimecho-mega"
           },
@@ -21470,14 +21298,6 @@
           {
             "id": 10087,
             "name": "camerupt-mega"
-          },
-          {
-            "id": 10174,
-            "name": "zigzagoon-galar"
-          },
-          {
-            "id": 10175,
-            "name": "linoone-galar"
           },
           {
             "id": 10306,
@@ -21708,24 +21528,8 @@
             "name": "stunfisk-galar"
           },
           {
-            "id": 10207,
-            "name": "garbodor-gmax"
-          },
-          {
-            "id": 10236,
-            "name": "samurott-hisui"
-          },
-          {
-            "id": 10237,
-            "name": "lilligant-hisui"
-          },
-          {
             "id": 10238,
             "name": "zorua-hisui"
-          },
-          {
-            "id": 10239,
-            "name": "zoroark-hisui"
           },
           {
             "id": 10240,
@@ -21830,24 +21634,8 @@
             "name": "stunfisk-galar"
           },
           {
-            "id": 10207,
-            "name": "garbodor-gmax"
-          },
-          {
-            "id": 10236,
-            "name": "samurott-hisui"
-          },
-          {
-            "id": 10237,
-            "name": "lilligant-hisui"
-          },
-          {
             "id": 10238,
             "name": "zorua-hisui"
-          },
-          {
-            "id": 10239,
-            "name": "zoroark-hisui"
           },
           {
             "id": 10240,
@@ -21952,24 +21740,8 @@
             "name": "stunfisk-galar"
           },
           {
-            "id": 10207,
-            "name": "garbodor-gmax"
-          },
-          {
-            "id": 10236,
-            "name": "samurott-hisui"
-          },
-          {
-            "id": 10237,
-            "name": "lilligant-hisui"
-          },
-          {
             "id": 10238,
             "name": "zorua-hisui"
-          },
-          {
-            "id": 10239,
-            "name": "zoroark-hisui"
           },
           {
             "id": 10240,
@@ -22218,14 +21990,6 @@
           {
             "id": 10181,
             "name": "zygarde-10"
-          },
-          {
-            "id": 10241,
-            "name": "sliggoo-hisui"
-          },
-          {
-            "id": 10242,
-            "name": "goodra-hisui"
           },
           {
             "id": 10243,
@@ -22484,14 +22248,6 @@
           {
             "id": 10181,
             "name": "zygarde-10"
-          },
-          {
-            "id": 10241,
-            "name": "sliggoo-hisui"
-          },
-          {
-            "id": 10242,
-            "name": "goodra-hisui"
           },
           {
             "id": 10243,
@@ -22758,14 +22514,6 @@
           {
             "id": 10181,
             "name": "zygarde-10"
-          },
-          {
-            "id": 10241,
-            "name": "sliggoo-hisui"
-          },
-          {
-            "id": 10242,
-            "name": "goodra-hisui"
           },
           {
             "id": 10243,
@@ -23384,6 +23132,10 @@
             "name": "rillaboom"
           },
           {
+            "id": 815,
+            "name": "cinderace"
+          },
+          {
             "id": 819,
             "name": "skwovet"
           },
@@ -23394,6 +23146,10 @@
           {
             "id": 825,
             "name": "dottler"
+          },
+          {
+            "id": 826,
+            "name": "orbeetle"
           },
           {
             "id": 827,
@@ -23552,28 +23308,12 @@
             "name": "rillaboom-gmax"
           },
           {
-            "id": 10210,
-            "name": "cinderace-gmax"
-          },
-          {
             "id": 10211,
             "name": "inteleon-gmax"
           },
           {
             "id": 10212,
             "name": "corviknight-gmax"
-          },
-          {
-            "id": 10213,
-            "name": "orbeetle-gmax"
-          },
-          {
-            "id": 10214,
-            "name": "drednaw-gmax"
-          },
-          {
-            "id": 10215,
-            "name": "coalossal-gmax"
           },
           {
             "id": 10216,
@@ -23594,10 +23334,6 @@
           {
             "id": 10220,
             "name": "centiskorch-gmax"
-          },
-          {
-            "id": 10221,
-            "name": "hatterene-gmax"
           },
           {
             "id": 10222,
@@ -23646,6 +23382,10 @@
             "name": "rillaboom"
           },
           {
+            "id": 815,
+            "name": "cinderace"
+          },
+          {
             "id": 819,
             "name": "skwovet"
           },
@@ -23656,6 +23396,10 @@
           {
             "id": 825,
             "name": "dottler"
+          },
+          {
+            "id": 826,
+            "name": "orbeetle"
           },
           {
             "id": 827,
@@ -23814,28 +23558,12 @@
             "name": "rillaboom-gmax"
           },
           {
-            "id": 10210,
-            "name": "cinderace-gmax"
-          },
-          {
             "id": 10211,
             "name": "inteleon-gmax"
           },
           {
             "id": 10212,
             "name": "corviknight-gmax"
-          },
-          {
-            "id": 10213,
-            "name": "orbeetle-gmax"
-          },
-          {
-            "id": 10214,
-            "name": "drednaw-gmax"
-          },
-          {
-            "id": 10215,
-            "name": "coalossal-gmax"
           },
           {
             "id": 10216,
@@ -23856,10 +23584,6 @@
           {
             "id": 10220,
             "name": "centiskorch-gmax"
-          },
-          {
-            "id": 10221,
-            "name": "hatterene-gmax"
           },
           {
             "id": 10222,
@@ -23908,6 +23632,10 @@
             "name": "rillaboom"
           },
           {
+            "id": 815,
+            "name": "cinderace"
+          },
+          {
             "id": 819,
             "name": "skwovet"
           },
@@ -23918,6 +23646,10 @@
           {
             "id": 825,
             "name": "dottler"
+          },
+          {
+            "id": 826,
+            "name": "orbeetle"
           },
           {
             "id": 827,
@@ -24080,28 +23812,12 @@
             "name": "rillaboom-gmax"
           },
           {
-            "id": 10210,
-            "name": "cinderace-gmax"
-          },
-          {
             "id": 10211,
             "name": "inteleon-gmax"
           },
           {
             "id": 10212,
             "name": "corviknight-gmax"
-          },
-          {
-            "id": 10213,
-            "name": "orbeetle-gmax"
-          },
-          {
-            "id": 10214,
-            "name": "drednaw-gmax"
-          },
-          {
-            "id": 10215,
-            "name": "coalossal-gmax"
           },
           {
             "id": 10216,
@@ -24122,10 +23838,6 @@
           {
             "id": 10220,
             "name": "centiskorch-gmax"
-          },
-          {
-            "id": 10221,
-            "name": "hatterene-gmax"
           },
           {
             "id": 10222,

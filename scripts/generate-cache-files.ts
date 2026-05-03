@@ -216,6 +216,7 @@ function inferSheetKeysForRow(
   pokemonId: number | null,
   normalizedName: string,
   inPostMainSection: boolean,
+  gen8SubSection?: "galarian" | "hisuian" | "gmax" | "other" | null,
 ): string[] {
   if (source.key === "google_sheet_gen6") {
     if (!inPostMainSection) {
@@ -244,6 +245,26 @@ function inferSheetKeysForRow(
 
     if (pokemonId !== null && GEN7_ALOLAN_IDS.has(pokemonId)) {
       return [`${normalizedName}-alola`];
+    }
+
+    return [normalizedName];
+  }
+
+  if (source.key === "google_sheet_gen8") {
+    if (!inPostMainSection) {
+      return [normalizedName];
+    }
+
+    if (gen8SubSection === "galarian") {
+      return [`${normalizedName}-galar`];
+    }
+
+    if (gen8SubSection === "hisuian") {
+      return [`${normalizedName}-hisui`];
+    }
+
+    if (gen8SubSection === "gmax") {
+      return [`${normalizedName}-gmax`];
     }
 
     return [normalizedName];
@@ -341,19 +362,24 @@ async function readSheetSprites(
   const map = new Map<string, SheetSpriteEntry>();
   let hasReachedMainSection = false;
   let inPostMainSection = false;
+  let gen8SubSection: "galarian" | "hisuian" | "gmax" | "other" | null = null;
 
   const mainRangeStart =
     source.key === "google_sheet_gen6"
       ? 650
       : source.key === "google_sheet_gen7"
         ? 722
-        : -1;
+        : source.key === "google_sheet_gen8"
+          ? 810
+          : -1;
   const mainRangeEnd =
     source.key === "google_sheet_gen6"
       ? 721
       : source.key === "google_sheet_gen7"
         ? 809
-        : -1;
+        : source.key === "google_sheet_gen8"
+          ? 905
+          : -1;
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);
@@ -367,6 +393,24 @@ async function readSheetSprites(
       if (pokemonId >= mainRangeStart && pokemonId <= mainRangeEnd) {
         hasReachedMainSection = true;
       } else if (hasReachedMainSection && pokemonId < mainRangeStart) {
+        inPostMainSection = true;
+      }
+    }
+
+    // Gen8: track sub-sections (Galarian → Hisuian → Gigantamax → Other)
+    // The CSV export loses IDs for Hisuian rows; detect by null↔non-null ID transitions.
+    if (source.key === "google_sheet_gen8" && hasReachedMainSection) {
+      if (gen8SubSection === null && pokemonId !== null && pokemonId < 810) {
+        gen8SubSection = "galarian";
+        inPostMainSection = true;
+      } else if (gen8SubSection === "galarian" && pokemonId === null) {
+        gen8SubSection = "hisuian";
+        inPostMainSection = true;
+      } else if (gen8SubSection === "hisuian" && pokemonId !== null) {
+        gen8SubSection = "gmax";
+        inPostMainSection = true;
+      } else if (gen8SubSection === "gmax" && pokemonId === null) {
+        gen8SubSection = "other";
         inPostMainSection = true;
       }
     }
@@ -391,6 +435,7 @@ async function readSheetSprites(
       pokemonId,
       key,
       inPostMainSection,
+      gen8SubSection,
     );
 
     for (const inferredKey of inferredKeys) {
@@ -946,22 +991,30 @@ async function generateAnimatedSpritesBw() {
         normalizedEntryName.includes("-mega") ||
         normalizedEntryName.includes("-primal");
       const isAlolanForm = normalizedEntryName.endsWith("-alola");
+      const isGalarianForm = normalizedEntryName.endsWith("-galar");
+      const isHisuianForm = normalizedEntryName.endsWith("-hisui");
+      const isGmaxForm = normalizedEntryName.endsWith("-gmax");
 
       const sheetCandidatesForNormal = sheetSourcesData
         .map(({ source, map }) => {
           // Each sheet only covers its own generation.
           // Exception: Gen6 sheet also covers mega/primal forms from any generation.
           // Exception: Gen7 sheet also covers Alolan forms from Gen1.
+          // Exception: Gen8 sheet also covers Galarian/Hisuian/Gigantamax forms from any generation.
           const isGenMatch = entry.generation === source.generation;
           const isGen6MegaPrimalException =
             source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
           const isGen7AlolanException =
             source.key === "google_sheet_gen7" && isAlolanForm;
+          const isGen8GalarHisuiGmaxException =
+            source.key === "google_sheet_gen8" &&
+            (isGalarianForm || isHisuianForm || isGmaxForm);
 
           if (
             !isGenMatch &&
             !isGen6MegaPrimalException &&
-            !isGen7AlolanException
+            !isGen7AlolanException &&
+            !isGen8GalarHisuiGmaxException
           )
             return null;
 
@@ -983,11 +1036,15 @@ async function generateAnimatedSpritesBw() {
             source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
           const isGen7AlolanException =
             source.key === "google_sheet_gen7" && isAlolanForm;
+          const isGen8GalarHisuiGmaxException =
+            source.key === "google_sheet_gen8" &&
+            (isGalarianForm || isHisuianForm || isGmaxForm);
 
           if (
             !isGenMatch &&
             !isGen6MegaPrimalException &&
-            !isGen7AlolanException
+            !isGen7AlolanException &&
+            !isGen8GalarHisuiGmaxException
           )
             return null;
 
