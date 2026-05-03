@@ -997,6 +997,15 @@ async function generateTypeSprites() {
 async function generateAnimatedSpritesBw() {
   console.log("ANIM: Generating animated-sprites-bw.json...");
 
+  type PreservedSource = "smogon_forums" | "deviantart";
+
+  function getPreservedSource(source: string | null | undefined) {
+    const normalized = source?.toLowerCase();
+    if (normalized === "smogon_forums") return "smogon_forums";
+    if (normalized === "deviantart") return "deviantart";
+    return null;
+  }
+
   const pokemon = readPokemonListFromCache();
   const existingSpritesByName = readExistingAnimatedSpritesCache();
   const sheetSourcesData: Array<{
@@ -1038,6 +1047,11 @@ async function generateAnimatedSpritesBw() {
       shinySelected: 0,
       pokemonWithAtLeastOne: 0,
     },
+    deviantart: {
+      normalSelected: 0,
+      shinySelected: 0,
+      pokemonWithAtLeastOne: 0,
+    },
   };
 
   for (const source of SHEET_SOURCES) {
@@ -1053,23 +1067,29 @@ async function generateAnimatedSpritesBw() {
     25,
     async (entry, index) => {
       const existingEntry = existingSpritesByName.get(entry.name);
+      const preservedNormalSource = getPreservedSource(
+        existingEntry?.normal?.source,
+      );
+      const preservedShinySource = getPreservedSource(
+        existingEntry?.shiny?.source,
+      );
 
       const preservedSmogonNormal =
-        existingEntry?.normal?.source === "smogon_forums" &&
-        existingEntry.normal.available &&
+        Boolean(preservedNormalSource) &&
+        existingEntry?.normal?.available &&
         Boolean(existingEntry.normal.url)
           ? {
-              source: "smogon_forums",
+              source: preservedNormalSource as PreservedSource,
               url: existingEntry.normal.url as string,
             }
           : null;
 
       const preservedSmogonShiny =
-        existingEntry?.shiny?.source === "smogon_forums" &&
-        existingEntry.shiny.available &&
+        Boolean(preservedShinySource) &&
+        existingEntry?.shiny?.available &&
         Boolean(existingEntry.shiny.url)
           ? {
-              source: "smogon_forums",
+              source: preservedShinySource as PreservedSource,
               url: existingEntry.shiny.url as string,
             }
           : null;

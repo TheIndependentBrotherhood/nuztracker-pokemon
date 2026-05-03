@@ -149,6 +149,8 @@ function SpriteCard({
   onOpenEditor,
   correctedCount,
   isSpriteCorrected,
+  onSpriteError,
+  brokenUrls,
 }: {
   pokemonKey: string;
   sprites: SpriteEntry[];
@@ -156,6 +158,8 @@ function SpriteCard({
   onOpenEditor: (key: string, entry: SpriteEntry) => void;
   correctedCount: number;
   isSpriteCorrected: (sprite: SpriteEntry) => boolean;
+  onSpriteError: (url: string) => void;
+  brokenUrls: Set<string>;
 }) {
   const isMultiple = sprites.length > 1;
 
@@ -216,14 +220,23 @@ function SpriteCard({
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {sprites.map((sprite, idx) => {
           const isCorrected = isSpriteCorrected(sprite);
+          const isBroken = brokenUrls.has(sprite.url);
           return (
             <button
               key={idx}
-              title={`${sprite.alt || sprite.sourceName}${sprite.provider ? ` [${sprite.provider}]` : ""}`}
+              title={`${sprite.alt || sprite.sourceName}${sprite.provider ? ` [${sprite.provider}]` : ""}${isBroken ? " ⚠ 404" : ""}`}
               onClick={() => onOpenEditor(pokemonKey, sprite)}
               style={{
-                background: isCorrected ? "#312e81" : "#0f172a",
-                border: isCorrected ? "2px solid #818cf8" : "2px solid #334155",
+                background: isBroken
+                  ? "#1c0a0a"
+                  : isCorrected
+                    ? "#312e81"
+                    : "#0f172a",
+                border: isBroken
+                  ? "2px solid #ef4444"
+                  : isCorrected
+                    ? "2px solid #818cf8"
+                    : "2px solid #334155",
                 borderRadius: 8,
                 padding: 4,
                 cursor: "pointer",
@@ -233,6 +246,7 @@ function SpriteCard({
                 justifyContent: "center",
                 transition: "border-color 0.15s, background 0.15s",
                 flexShrink: 0,
+                position: "relative",
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -243,7 +257,23 @@ function SpriteCard({
                 height={64}
                 style={{ imageRendering: "pixelated", objectFit: "contain" }}
                 loading="lazy"
+                onError={() => onSpriteError(sprite.url)}
               />
+              {isBroken && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 2,
+                    right: 4,
+                    fontSize: 10,
+                    color: "#ef4444",
+                    fontWeight: 800,
+                    lineHeight: 1,
+                  }}
+                >
+                  404
+                </span>
+              )}
               {sprite.unownLetter && (
                 <span
                   style={{
@@ -293,9 +323,11 @@ export default function DevSpritesPage() {
   );
   const [targetPokemonKey, setTargetPokemonKey] = useState("");
   const [editingError, setEditingError] = useState<string | null>(null);
+  const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [multipleOnly, setMultipleOnly] = useState(false);
   const [noAnimatedOnly, setNoAnimatedOnly] = useState(false);
+  const [brokenOnly, setBrokenOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -482,6 +514,8 @@ export default function DevSpritesPage() {
 
         if (noAnimatedOnly && (hasAnimated || !hasStaticFallback)) return false;
         if (multipleOnly && sprites.length < 2) return false;
+        if (brokenOnly && !sprites.some((s) => brokenUrls.has(s.url)))
+          return false;
         if (search) {
           const q = search.toLowerCase();
           const name = pokemonNames[key];
@@ -501,6 +535,8 @@ export default function DevSpritesPage() {
     effectiveMapping,
     noAnimatedOnly,
     multipleOnly,
+    brokenOnly,
+    brokenUrls,
     search,
     pokemonNames,
   ]);
@@ -516,6 +552,11 @@ export default function DevSpritesPage() {
           sprites.some((sprite) => sprite.isStaticFallback),
       ).length
     : 0;
+  const brokenCount = spriteMap
+    ? Object.values(effectiveMapping).filter((sprites) =>
+        sprites.some((s) => brokenUrls.has(s.url)),
+      ).length
+    : 0;
   const correctedByKey = useMemo(() => {
     const byKey: Record<string, number> = {};
     for (const [url, targetKey] of Object.entries(spriteCorrections)) {
@@ -525,6 +566,13 @@ export default function DevSpritesPage() {
     }
     return byKey;
   }, [spriteCorrections, spriteIndexes.originalKeyByUrl]);
+
+  const handleSpriteError = useCallback((url: string) => {
+    setBrokenUrls((prev) => {
+      if (prev.has(url)) return prev;
+      return new Set([...prev, url]);
+    });
+  }, []);
 
   const openSpriteEditor = useCallback(
     (currentKey: string, sprite: SpriteEntry) => {
@@ -699,6 +747,9 @@ export default function DevSpritesPage() {
             <b style={{ color: "#22c55e" }}>{totalCorrections}</b> corrigés
           </span>
           <span>
+            <b style={{ color: "#ef4444" }}>{brokenCount}</b> cassés
+          </span>
+          <span>
             <b style={{ color: "#94a3b8" }}>{entries.length}</b> affichés
           </span>
         </div>
@@ -801,6 +852,25 @@ export default function DevSpritesPage() {
           />
           Sans animé uniquement
         </label>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            cursor: "pointer",
+            fontSize: 13,
+            color: "#94a3b8",
+            userSelect: "none",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={brokenOnly}
+            onChange={(e) => setBrokenOnly(e.target.checked)}
+            style={{ accentColor: "#ef4444" }}
+          />
+          Cassés (404) uniquement
+        </label>
       </div>
 
       {/* ── Grid ── */}
@@ -828,6 +898,8 @@ export default function DevSpritesPage() {
                 const originalKey = spriteIndexes.originalKeyByUrl[sprite.url];
                 return Boolean(originalKey && originalKey !== key);
               }}
+              onSpriteError={handleSpriteError}
+              brokenUrls={brokenUrls}
             />
           );
         })}
