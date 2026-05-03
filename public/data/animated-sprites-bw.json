@@ -1,32 +1,32 @@
 {
-  "generatedAt": "2026-05-03T00:58:02.166Z",
+  "generatedAt": "2026-05-03T01:14:14.920Z",
   "summary": {
     "totalPokemon": 1350,
     "totalLinksChecked": 2700,
-    "linksWorking": 1876,
-    "linksFailed": 824,
-    "normalWorking": 937,
-    "shinyWorking": 939,
+    "linksWorking": 1894,
+    "linksFailed": 806,
+    "normalWorking": 946,
+    "shinyWorking": 948,
     "sourceCoverage": {
       "pokemondb_bw": {
         "normalSelected": 663,
-        "shinySelected": 663,
+        "shinySelected": 660,
         "pokemonWithAtLeastOne": 663
       },
       "google_sheet_gen6": {
         "normalSelected": 54,
-        "shinySelected": 52,
-        "pokemonWithAtLeastOne": 54
+        "shinySelected": 55,
+        "pokemonWithAtLeastOne": 57
       },
       "google_sheet_gen7": {
-        "normalSelected": 99,
-        "shinySelected": 105,
-        "pokemonWithAtLeastOne": 105
+        "normalSelected": 106,
+        "shinySelected": 112,
+        "pokemonWithAtLeastOne": 112
       },
       "google_sheet_gen8": {
-        "normalSelected": 92,
-        "shinySelected": 91,
-        "pokemonWithAtLeastOne": 92
+        "normalSelected": 94,
+        "shinySelected": 93,
+        "pokemonWithAtLeastOne": 94
       },
       "google_sheet_gen9": {
         "normalSelected": 29,
@@ -15601,9 +15601,9 @@
         "source": "pokemondb_bw"
       },
       "shiny": {
-        "url": "https://img.pokemondb.net/sprites/black-white/anim/shiny/castform-sunny.gif",
+        "url": "https://www.smogon.com/forums/attachments/351_2s-gif.274498/",
         "available": true,
-        "source": "pokemondb_bw"
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -15616,9 +15616,9 @@
         "source": "pokemondb_bw"
       },
       "shiny": {
-        "url": "https://img.pokemondb.net/sprites/black-white/anim/shiny/castform-rainy.gif",
+        "url": "https://www.smogon.com/forums/attachments/351_3s-gif.274500/",
         "available": true,
-        "source": "pokemondb_bw"
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -15631,9 +15631,9 @@
         "source": "pokemondb_bw"
       },
       "shiny": {
-        "url": "https://img.pokemondb.net/sprites/black-white/anim/shiny/castform-snowy.gif",
+        "url": "https://www.smogon.com/forums/attachments/351_4s-gif.274502/",
         "available": true,
-        "source": "pokemondb_bw"
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16811,14 +16811,14 @@
       "name": "pikachu-original-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_7-gif.641400/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_7s-gif.641401/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16826,14 +16826,14 @@
       "name": "pikachu-hoenn-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_8-gif.641517/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_8s-gif.641518/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16841,14 +16841,14 @@
       "name": "pikachu-sinnoh-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_9-gif.641404/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_9s-gif.641410/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16856,14 +16856,14 @@
       "name": "pikachu-unova-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_10-gif.641406/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_10s-gif.641407/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16871,14 +16871,14 @@
       "name": "pikachu-kalos-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_11-gif.641409/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_12s-gif.641413/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -16886,14 +16886,14 @@
       "name": "pikachu-alola-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_13-gif.641414/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_13s-gif.641415/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17621,14 +17621,14 @@
       "name": "pikachu-partner-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_15-gif.641519/",
+        "available": true,
+        "source": "google_sheet_gen7"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_15s-gif.641520/",
+        "available": true,
+        "source": "google_sheet_gen7"
       }
     },
     {
@@ -17801,14 +17801,14 @@
       "name": "pikachu-world-cap",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_15-gif.468127/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/025_15s-gif.468129/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -19106,14 +19106,14 @@
       "name": "basculin-white-striped",
       "generation": 5,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/550_2-gif.658933/",
+        "available": true,
+        "source": "google_sheet_gen8"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/550_2s-gif.658935/",
+        "available": true,
+        "source": "google_sheet_gen8"
       }
     },
     {
@@ -20288,12 +20288,12 @@
     }
   ],
   "missingByGeneration": {
-    "generatedAt": "2026-05-03T00:58:02.166Z",
+    "generatedAt": "2026-05-03T01:14:14.920Z",
     "summaryByGeneration": {
       "gen1": {
-        "missingAnyAnimatedCount": 53,
-        "missingNormalCount": 53,
-        "missingShinyCount": 53
+        "missingAnyAnimatedCount": 45,
+        "missingNormalCount": 45,
+        "missingShinyCount": 45
       },
       "gen2": {
         "missingAnyAnimatedCount": 10,
@@ -20311,9 +20311,9 @@
         "missingShinyCount": 12
       },
       "gen5": {
-        "missingAnyAnimatedCount": 26,
-        "missingNormalCount": 26,
-        "missingShinyCount": 26
+        "missingAnyAnimatedCount": 25,
+        "missingNormalCount": 25,
+        "missingShinyCount": 25
       },
       "gen6": {
         "missingAnyAnimatedCount": 64,
@@ -20408,34 +20408,6 @@
             "name": "raticate-totem-alola"
           },
           {
-            "id": 10094,
-            "name": "pikachu-original-cap"
-          },
-          {
-            "id": 10095,
-            "name": "pikachu-hoenn-cap"
-          },
-          {
-            "id": 10096,
-            "name": "pikachu-sinnoh-cap"
-          },
-          {
-            "id": 10097,
-            "name": "pikachu-unova-cap"
-          },
-          {
-            "id": 10098,
-            "name": "pikachu-kalos-cap"
-          },
-          {
-            "id": 10099,
-            "name": "pikachu-alola-cap"
-          },
-          {
-            "id": 10148,
-            "name": "pikachu-partner-cap"
-          },
-          {
             "id": 10149,
             "name": "marowak-totem"
           },
@@ -20446,10 +20418,6 @@
           {
             "id": 10159,
             "name": "eevee-starter"
-          },
-          {
-            "id": 10160,
-            "name": "pikachu-world-cap"
           },
           {
             "id": 10163,
@@ -20622,34 +20590,6 @@
             "name": "raticate-totem-alola"
           },
           {
-            "id": 10094,
-            "name": "pikachu-original-cap"
-          },
-          {
-            "id": 10095,
-            "name": "pikachu-hoenn-cap"
-          },
-          {
-            "id": 10096,
-            "name": "pikachu-sinnoh-cap"
-          },
-          {
-            "id": 10097,
-            "name": "pikachu-unova-cap"
-          },
-          {
-            "id": 10098,
-            "name": "pikachu-kalos-cap"
-          },
-          {
-            "id": 10099,
-            "name": "pikachu-alola-cap"
-          },
-          {
-            "id": 10148,
-            "name": "pikachu-partner-cap"
-          },
-          {
             "id": 10149,
             "name": "marowak-totem"
           },
@@ -20660,10 +20600,6 @@
           {
             "id": 10159,
             "name": "eevee-starter"
-          },
-          {
-            "id": 10160,
-            "name": "pikachu-world-cap"
           },
           {
             "id": 10163,
@@ -20836,34 +20772,6 @@
             "name": "raticate-totem-alola"
           },
           {
-            "id": 10094,
-            "name": "pikachu-original-cap"
-          },
-          {
-            "id": 10095,
-            "name": "pikachu-hoenn-cap"
-          },
-          {
-            "id": 10096,
-            "name": "pikachu-sinnoh-cap"
-          },
-          {
-            "id": 10097,
-            "name": "pikachu-unova-cap"
-          },
-          {
-            "id": 10098,
-            "name": "pikachu-kalos-cap"
-          },
-          {
-            "id": 10099,
-            "name": "pikachu-alola-cap"
-          },
-          {
-            "id": 10148,
-            "name": "pikachu-partner-cap"
-          },
-          {
             "id": 10149,
             "name": "marowak-totem"
           },
@@ -20874,10 +20782,6 @@
           {
             "id": 10159,
             "name": "eevee-starter"
-          },
-          {
-            "id": 10160,
-            "name": "pikachu-world-cap"
           },
           {
             "id": 10163,
@@ -21524,10 +21428,6 @@
             "name": "braviary-hisui"
           },
           {
-            "id": 10247,
-            "name": "basculin-white-striped"
-          },
-          {
             "id": 10286,
             "name": "emboar-mega"
           },
@@ -21630,10 +21530,6 @@
             "name": "braviary-hisui"
           },
           {
-            "id": 10247,
-            "name": "basculin-white-striped"
-          },
-          {
             "id": 10286,
             "name": "emboar-mega"
           },
@@ -21734,10 +21630,6 @@
           {
             "id": 10240,
             "name": "braviary-hisui"
-          },
-          {
-            "id": 10247,
-            "name": "basculin-white-striped"
           },
           {
             "id": 10286,

@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-05-03T00:58:02.166Z",
+  "generatedAt": "2026-05-03T01:14:14.920Z",
   "summaryByGeneration": {
     "gen1": {
-      "missingAnyAnimatedCount": 53,
-      "missingNormalCount": 53,
-      "missingShinyCount": 53
+      "missingAnyAnimatedCount": 45,
+      "missingNormalCount": 45,
+      "missingShinyCount": 45
     },
     "gen2": {
       "missingAnyAnimatedCount": 10,
@@ -22,9 +22,9 @@
       "missingShinyCount": 12
     },
     "gen5": {
-      "missingAnyAnimatedCount": 26,
-      "missingNormalCount": 26,
-      "missingShinyCount": 26
+      "missingAnyAnimatedCount": 25,
+      "missingNormalCount": 25,
+      "missingShinyCount": 25
     },
     "gen6": {
       "missingAnyAnimatedCount": 64,
@@ -119,34 +119,6 @@
           "name": "raticate-totem-alola"
         },
         {
-          "id": 10094,
-          "name": "pikachu-original-cap"
-        },
-        {
-          "id": 10095,
-          "name": "pikachu-hoenn-cap"
-        },
-        {
-          "id": 10096,
-          "name": "pikachu-sinnoh-cap"
-        },
-        {
-          "id": 10097,
-          "name": "pikachu-unova-cap"
-        },
-        {
-          "id": 10098,
-          "name": "pikachu-kalos-cap"
-        },
-        {
-          "id": 10099,
-          "name": "pikachu-alola-cap"
-        },
-        {
-          "id": 10148,
-          "name": "pikachu-partner-cap"
-        },
-        {
           "id": 10149,
           "name": "marowak-totem"
         },
@@ -157,10 +129,6 @@
         {
           "id": 10159,
           "name": "eevee-starter"
-        },
-        {
-          "id": 10160,
-          "name": "pikachu-world-cap"
         },
         {
           "id": 10163,
@@ -333,34 +301,6 @@
           "name": "raticate-totem-alola"
         },
         {
-          "id": 10094,
-          "name": "pikachu-original-cap"
-        },
-        {
-          "id": 10095,
-          "name": "pikachu-hoenn-cap"
-        },
-        {
-          "id": 10096,
-          "name": "pikachu-sinnoh-cap"
-        },
-        {
-          "id": 10097,
-          "name": "pikachu-unova-cap"
-        },
-        {
-          "id": 10098,
-          "name": "pikachu-kalos-cap"
-        },
-        {
-          "id": 10099,
-          "name": "pikachu-alola-cap"
-        },
-        {
-          "id": 10148,
-          "name": "pikachu-partner-cap"
-        },
-        {
           "id": 10149,
           "name": "marowak-totem"
         },
@@ -371,10 +311,6 @@
         {
           "id": 10159,
           "name": "eevee-starter"
-        },
-        {
-          "id": 10160,
-          "name": "pikachu-world-cap"
         },
         {
           "id": 10163,
@@ -547,34 +483,6 @@
           "name": "raticate-totem-alola"
         },
         {
-          "id": 10094,
-          "name": "pikachu-original-cap"
-        },
-        {
-          "id": 10095,
-          "name": "pikachu-hoenn-cap"
-        },
-        {
-          "id": 10096,
-          "name": "pikachu-sinnoh-cap"
-        },
-        {
-          "id": 10097,
-          "name": "pikachu-unova-cap"
-        },
-        {
-          "id": 10098,
-          "name": "pikachu-kalos-cap"
-        },
-        {
-          "id": 10099,
-          "name": "pikachu-alola-cap"
-        },
-        {
-          "id": 10148,
-          "name": "pikachu-partner-cap"
-        },
-        {
           "id": 10149,
           "name": "marowak-totem"
         },
@@ -585,10 +493,6 @@
         {
           "id": 10159,
           "name": "eevee-starter"
-        },
-        {
-          "id": 10160,
-          "name": "pikachu-world-cap"
         },
         {
           "id": 10163,
@@ -1235,10 +1139,6 @@
           "name": "braviary-hisui"
         },
         {
-          "id": 10247,
-          "name": "basculin-white-striped"
-        },
-        {
           "id": 10286,
           "name": "emboar-mega"
         },
@@ -1341,10 +1241,6 @@
           "name": "braviary-hisui"
         },
         {
-          "id": 10247,
-          "name": "basculin-white-striped"
-        },
-        {
           "id": 10286,
           "name": "emboar-mega"
         },
@@ -1445,10 +1341,6 @@
         {
           "id": 10240,
           "name": "braviary-hisui"
-        },
-        {
-          "id": 10247,
-          "name": "basculin-white-striped"
         },
         {
           "id": 10286,

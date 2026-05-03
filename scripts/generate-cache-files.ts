@@ -370,7 +370,7 @@ function buildMissingAnimatedSpritesByGeneration(
 
 async function readSheetSprites(
   source: SheetSourceConfig,
-): Promise<Map<string, SheetSpriteEntry>> {
+): Promise<{ map: Map<string, SheetSpriteEntry>; crossGenKeys: Set<string> }> {
   console.log(`SHEET: Fetching ${source.key} animated sprites spreadsheet...`);
 
   const csv = await fetchTextWithRetry(source.csvUrl);
@@ -380,6 +380,7 @@ async function readSheetSprites(
     .filter((line) => line.length > 0);
 
   const map = new Map<string, SheetSpriteEntry>();
+  const crossGenKeys = new Set<string>();
   let hasReachedMainSection = false;
   let inPostMainSection = false;
   let gen8SubSection: "galarian" | "hisuian" | "gmax" | "other" | null = null;
@@ -410,7 +411,10 @@ async function readSheetSprites(
     const idRaw = cols[0] ?? "";
     const pokemonId = idRaw ? Number.parseInt(idRaw, 10) : null;
     const nameFromColumn = cols[1] ?? "";
-    const normalUrl = cols[2] ?? ""; // Column C
+    const normalUrlRaw = cols[2] ?? ""; // Column C
+    // "unchanged" is used in Gen6 sheet (e.g. Castform forms) to indicate no new normal sprite
+    const normalUrl =
+      normalUrlRaw.toLowerCase() === "unchanged" ? "" : normalUrlRaw;
     const shinyUrl = cols[4] ?? ""; // Column E
 
     if (mainRangeStart !== -1 && pokemonId !== null) {
@@ -468,11 +472,14 @@ async function readSheetSprites(
         normal: normalUrl || existing?.normal,
         shiny: shinyUrl || existing?.shiny,
       });
+      if (inPostMainSection) {
+        crossGenKeys.add(inferredKey);
+      }
     }
   }
 
   console.log(`SHEET: Parsed ${map.size} Pokemon entries from ${source.key}`);
-  return map;
+  return { map, crossGenKeys };
 }
 
 async function checkUrlAvailable(url: string): Promise<boolean> {
@@ -969,11 +976,16 @@ async function generateAnimatedSpritesBw() {
   const sheetSourcesData: Array<{
     source: SheetSourceConfig;
     map: Map<string, SheetSpriteEntry>;
+    crossGenKeys: Set<string>;
   }> = [];
 
   for (const source of SHEET_SOURCES) {
     const parsed = await readSheetSprites(source);
-    sheetSourcesData.push({ source, map: parsed });
+    sheetSourcesData.push({
+      source,
+      map: parsed.map,
+      crossGenKeys: parsed.crossGenKeys,
+    });
   }
 
   const totalLinksToCheck = pokemon.length * 2;
@@ -1020,11 +1032,13 @@ async function generateAnimatedSpritesBw() {
       const isGmaxForm = normalizedEntryName.endsWith("-gmax");
 
       const sheetCandidatesForNormal = sheetSourcesData
-        .map(({ source, map }) => {
+        .map(({ source, map, crossGenKeys }) => {
           // Each sheet only covers its own generation.
           // Exception: Gen6 sheet also covers mega/primal forms from any generation.
           // Exception: Gen7 sheet also covers Alolan forms from Gen1.
           // Exception: Gen8 sheet also covers Galarian/Hisuian/Gigantamax forms from any generation.
+          // Exception: Gen9 sheet also covers Paldean forms and Ursaluna-bloodmoon.
+          // Exception: Any sheet can cover cross-gen forms found in its "Other Forms" section.
           const isGenMatch = entry.generation === source.generation;
           const isGen6MegaPrimalException =
             source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
@@ -1038,13 +1052,15 @@ async function generateAnimatedSpritesBw() {
             (normalizedEntryName.endsWith("-paldea") ||
               normalizedEntryName.startsWith("tauros-paldea-") ||
               normalizedEntryName === "ursaluna-bloodmoon");
+          const isOtherFormsException = crossGenKeys.has(normalizedEntryName);
 
           if (
             !isGenMatch &&
             !isGen6MegaPrimalException &&
             !isGen7AlolanException &&
             !isGen8GalarHisuiGmaxException &&
-            !isGen9PaldeanCrossGenException
+            !isGen9PaldeanCrossGenException &&
+            !isOtherFormsException
           )
             return null;
 
@@ -1060,7 +1076,7 @@ async function generateAnimatedSpritesBw() {
         );
 
       const sheetCandidatesForShiny = sheetSourcesData
-        .map(({ source, map }) => {
+        .map(({ source, map, crossGenKeys }) => {
           const isGenMatch = entry.generation === source.generation;
           const isGen6MegaPrimalException =
             source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
@@ -1074,13 +1090,15 @@ async function generateAnimatedSpritesBw() {
             (normalizedEntryName.endsWith("-paldea") ||
               normalizedEntryName.startsWith("tauros-paldea-") ||
               normalizedEntryName === "ursaluna-bloodmoon");
+          const isOtherFormsException = crossGenKeys.has(normalizedEntryName);
 
           if (
             !isGenMatch &&
             !isGen6MegaPrimalException &&
             !isGen7AlolanException &&
             !isGen8GalarHisuiGmaxException &&
-            !isGen9PaldeanCrossGenException
+            !isGen9PaldeanCrossGenException &&
+            !isOtherFormsException
           )
             return null;
 
@@ -1103,13 +1121,24 @@ async function generateAnimatedSpritesBw() {
         ...sheetCandidatesForNormal,
       ];
 
-      const shinyCandidates = [
-        {
-          source: "pokemondb_bw",
-          url: `${POKEMON_DB_ANIM_BASE}/shiny/${entry.name}.gif`,
-        },
-        ...sheetCandidatesForShiny,
-      ];
+      // For Castform forms, prefer the Gen6 sheet shiny over PokeDB
+      // (the Gen6 sheet has dedicated Castform form shinys; PokeDB only has the base form)
+      const isCastformForm = normalizedEntryName.startsWith("castform-");
+      const shinyCandidates = isCastformForm
+        ? [
+            ...sheetCandidatesForShiny,
+            {
+              source: "pokemondb_bw",
+              url: `${POKEMON_DB_ANIM_BASE}/shiny/${entry.name}.gif`,
+            },
+          ]
+        : [
+            {
+              source: "pokemondb_bw",
+              url: `${POKEMON_DB_ANIM_BASE}/shiny/${entry.name}.gif`,
+            },
+            ...sheetCandidatesForShiny,
+          ];
 
       let normalSelected: { source: string; url: string } | null = null;
       let shinySelected: { source: string; url: string } | null = null;
