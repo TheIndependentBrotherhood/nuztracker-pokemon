@@ -8,6 +8,26 @@ const translations = {
       fr: "Découvrez ce que NuzTracker peut faire pour vous",
       en: "Discover what NuzTracker can do for you",
     },
+    spriteSourcesButton: {
+      fr: "🖼️ Sources des sprites",
+      en: "🖼️ Sprite sources",
+    },
+    spriteSourcesDescription: {
+      fr: "Consultez les crédits et sources utilisées pour les sprites affichés dans l'application.",
+      en: "Browse the credits and sources used for the sprites shown in the app.",
+    },
+    spriteSourcesTitle: {
+      fr: "Sources des sprites",
+      en: "Sprite sources",
+    },
+    spriteSourcesSubtitle: {
+      fr: "NuzTracker s'appuie sur plusieurs catalogues et collections de sprites Gen 5 style.",
+      en: "NuzTracker relies on several Gen 5 style sprite catalogs and collections.",
+    },
+    visitSource: {
+      fr: "Ouvrir la source",
+      en: "Open source",
+    },
     yourRuns: { fr: "Vos Runs", en: "Your Runs" },
     runsInProgress: {
       fr: (n: number) => `${n} run${n > 1 ? "s" : ""} en cours ou complétés`,
