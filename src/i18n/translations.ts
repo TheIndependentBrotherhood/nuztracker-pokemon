@@ -139,6 +139,7 @@ const translations = {
     genderMale: { fr: "Mâle ♂", en: "Male ♂" },
     genderFemale: { fr: "Femelle ♀", en: "Female ♀" },
     isShiny: { fr: "✨ Est Shiny ?", en: "✨ Is Shiny?" },
+    unownForm: { fr: "Forme (lettre capturée)", en: "Form (captured letter)" },
     cancel: { fr: "Annuler", en: "Cancel" },
     add: { fr: "Ajouter", en: "Add" },
   },

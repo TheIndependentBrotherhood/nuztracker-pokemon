@@ -14,6 +14,7 @@ interface SpriteEntry {
   url: string;
   dexId: number | null;
   candidates: string[];
+  unownLetter?: string;
 }
 
 interface SpriteMap {
@@ -73,6 +74,10 @@ function downloadJson(data: unknown, filename: string) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function formatUnownLabel(letter: string): string {
+  return letter === "!" || letter === "?" ? letter : letter.toUpperCase();
 }
 
 // ---------------------------------------------------------------------------
@@ -144,13 +149,7 @@ function SpriteCard({
       </div>
 
       {/* Sprites row */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 6,
-        }}
-      >
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {sprites.map((sprite, idx) => {
           const isSelected = selected?.url === sprite.url;
           return (
@@ -165,6 +164,7 @@ function SpriteCard({
                 padding: 4,
                 cursor: "pointer",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 transition: "border-color 0.15s, background 0.15s",
@@ -180,6 +180,19 @@ function SpriteCard({
                 style={{ imageRendering: "pixelated", objectFit: "contain" }}
                 loading="lazy"
               />
+              {sprite.unownLetter && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    color: isSelected ? "#86efac" : "#64748b",
+                    lineHeight: 1,
+                    marginTop: 2,
+                  }}
+                >
+                  {formatUnownLabel(sprite.unownLetter)}
+                </span>
+              )}
             </button>
           );
         })}
@@ -187,13 +200,10 @@ function SpriteCard({
 
       {/* Selection status */}
       {selected !== undefined && (
-        <div
-          style={{
-            fontSize: 11,
-            color: selected ? "#22c55e" : "#94a3b8",
-          }}
-        >
-          {selected ? `✓ ${selected.sourceName}` : "— aucune sélection"}
+        <div style={{ fontSize: 11, color: selected ? "#22c55e" : "#94a3b8" }}>
+          {selected
+            ? `✓ ${selected.sourceName}${selected.unownLetter ? ` (${formatUnownLabel(selected.unownLetter)})` : ""}`
+            : "— aucune sélection"}
         </div>
       )}
     </div>
@@ -215,7 +225,6 @@ export default function DevSpritesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load data on mount
   useEffect(() => {
     async function load() {
       try {
@@ -296,6 +305,7 @@ export default function DevSpritesPage() {
               file: v!.file,
               sourceName: v!.sourceName,
               alt: v!.alt,
+              ...(v!.unownLetter ? { unownLetter: v!.unownLetter } : {}),
             },
           ]),
       ),
@@ -313,10 +323,6 @@ export default function DevSpritesPage() {
     setPreferences({});
     savePreferences({});
   }
-
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
 
   if (loading) {
     return (
@@ -390,7 +396,6 @@ export default function DevSpritesPage() {
           </span>
         </div>
 
-        {/* Stats */}
         <div
           style={{
             display: "flex",
@@ -414,10 +419,8 @@ export default function DevSpritesPage() {
           </span>
         </div>
 
-        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Controls */}
         <button
           onClick={handleExport}
           style={{

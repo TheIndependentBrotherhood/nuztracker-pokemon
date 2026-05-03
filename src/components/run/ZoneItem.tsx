@@ -46,12 +46,18 @@ function CaptureThumbnail({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={getSpriteUrl(capture.pokemonId, capture.isShiny)}
+        src={getSpriteUrl(
+          capture.pokemonId,
+          capture.isShiny,
+          true,
+          capture.unownLetter,
+        )}
         alt={displayName}
         onError={(event) => {
           const fallbackUrl = getSpriteFallbackUrl(
             capture.pokemonId,
             capture.isShiny,
+            capture.unownLetter,
           );
           if (event.currentTarget.src !== fallbackUrl) {
             event.currentTarget.src = fallbackUrl;

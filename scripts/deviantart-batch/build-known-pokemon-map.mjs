@@ -427,6 +427,13 @@ function main() {
       url: row.url || "",
       dexId,
       candidates,
+      // For Unown: extract the letter from the alt text, e.g. "Unown A (...)" → "a"
+      ...(bestKnownKey === "unown"
+        ? (() => {
+            const m = alt.match(/\bUnown\s+([A-Z!?])/i);
+            return m ? { unownLetter: m[1].toLowerCase() } : {};
+          })()
+        : {}),
     };
 
     if (!bestKnownKey) {

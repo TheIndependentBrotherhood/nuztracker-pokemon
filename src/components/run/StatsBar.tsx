@@ -49,12 +49,18 @@ function TeamPreviewPokemonTile({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={getSpriteUrl(pokemon.pokemonId, pokemon.isShiny)}
+        src={getSpriteUrl(
+          pokemon.pokemonId,
+          pokemon.isShiny,
+          true,
+          pokemon.unownLetter,
+        )}
         alt={displayName}
         onError={(event) => {
           const fallbackUrl = getSpriteFallbackUrl(
             pokemon.pokemonId,
             pokemon.isShiny,
+            pokemon.unownLetter,
           );
           if (event.currentTarget.src !== fallbackUrl) {
             event.currentTarget.src = fallbackUrl;

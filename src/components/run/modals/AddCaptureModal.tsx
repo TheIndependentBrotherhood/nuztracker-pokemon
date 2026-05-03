@@ -53,7 +53,40 @@ export default function AddCaptureModal({
   const [level, setLevel] = useState(5);
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
   const [isShiny, setIsShiny] = useState(forceShiny);
+  const [unownLetter, setUnownLetter] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+
+  const UNOWN_ID = 201;
+  const UNOWN_LETTERS = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+    "!",
+    "?",
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +124,7 @@ export default function AddCaptureModal({
     setSelected({ name: item.name, id, names: item.names });
     setQuery(item.displayName);
     setResults([]);
+    if (id !== UNOWN_ID) setUnownLetter(null);
   }
 
   function handleAdd() {
@@ -104,6 +138,7 @@ export default function AddCaptureModal({
       gender,
       isShiny,
       isDead: false,
+      ...(selected.id === UNOWN_ID && unownLetter ? { unownLetter } : {}),
     });
     onClose();
   }
@@ -207,12 +242,22 @@ export default function AddCaptureModal({
             {selected && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={getSpriteUrl(selected.id, isShiny)}
+                src={getSpriteUrl(
+                  selected.id,
+                  isShiny,
+                  true,
+                  selected.id === UNOWN_ID
+                    ? (unownLetter ?? undefined)
+                    : undefined,
+                )}
                 alt={`${isShiny ? "Shiny " : ""}${selected.name} sprite`}
                 onError={(event) => {
                   const fallbackUrl = getSpriteFallbackUrl(
                     selected.id,
                     isShiny,
+                    selected.id === UNOWN_ID
+                      ? (unownLetter ?? undefined)
+                      : undefined,
                   );
                   if (event.currentTarget.src !== fallbackUrl) {
                     event.currentTarget.src = fallbackUrl;
@@ -460,8 +505,67 @@ export default function AddCaptureModal({
               )}
             </Typography>
           }
-          sx={{ mb: 2.5, ml: 0 }}
+          sx={{ mb: selected?.id === UNOWN_ID ? 1.5 : 2.5, ml: 0 }}
         />
+
+        {/* Unown letter picker */}
+        {selected?.id === UNOWN_ID && (
+          <Box sx={{ mb: 2.5 }}>
+            <Typography
+              sx={{
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#000",
+                mb: 1,
+              }}
+            >
+              {t(tr.addCapture.unownForm, lang)}
+            </Typography>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7, 1fr)",
+                gap: 0.5,
+              }}
+            >
+              {UNOWN_LETTERS.map((letter) => (
+                <Box
+                  key={letter}
+                  component="button"
+                  onClick={() =>
+                    setUnownLetter((prev) => (prev === letter ? null : letter))
+                  }
+                  sx={{
+                    background: unownLetter === letter ? "#3b82f6" : "#fff",
+                    border:
+                      unownLetter === letter
+                        ? "2px solid #1d4ed8"
+                        : "2px solid #000",
+                    borderRadius: "0.375rem",
+                    color: unownLetter === letter ? "#fff" : "#000",
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    cursor: "pointer",
+                    py: 0.75,
+                    transition: "all 150ms",
+                    "&:hover": {
+                      background:
+                        unownLetter === letter ? "#2563eb" : "#f0f0f0",
+                    },
+                  }}
+                >
+                  {letter === "!"
+                    ? "!"
+                    : letter === "?"
+                      ? "?"
+                      : letter.toUpperCase()}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
 
         <Box sx={{ display: "flex", gap: 1.5 }}>
           <Button

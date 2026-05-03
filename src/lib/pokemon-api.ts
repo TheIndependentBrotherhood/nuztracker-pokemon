@@ -2,6 +2,7 @@ import { PokemonApiData } from "./types";
 import { Lang } from "@/i18n/translations";
 
 const BASE_URL = "https://pokeapi.co/api/v2";
+const UNOWN_ID = 201;
 
 // In-memory fallback for environments where the cache file hasn't been generated yet
 let pokemonListFallbackCache: Array<{ name: string; url: string }> | null =
@@ -131,32 +132,69 @@ export function getPokemonIdFromUrl(url: string): number {
   return parseInt(parts[parts.length - 1]);
 }
 
-export function getStaticSpriteUrl(id: number, shiny = false): string {
-  const staticBase =
-    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
-  return shiny ? `${staticBase}/shiny/${id}.png` : `${staticBase}/${id}.png`;
+function getUnownFormSlug(unownLetter?: string): string | null {
+  if (!unownLetter) return null;
+
+  const normalized = unownLetter.trim().toLowerCase();
+  if (/^[a-z]$/.test(normalized)) return normalized;
+  if (normalized === "!") return "exclamation";
+  if (normalized === "?") return "question";
+
+  return null;
 }
 
-export function getAnimatedSpriteUrl(id: number, shiny = false): string {
+export function getStaticSpriteUrl(
+  id: number,
+  shiny = false,
+  unownLetter?: string,
+): string {
+  const staticBase =
+    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
+
+  const unownSlug = id === UNOWN_ID ? getUnownFormSlug(unownLetter) : null;
+  const supportsStaticUnownForm =
+    unownSlug === "exclamation" || unownSlug === "question";
+  const spriteName =
+    supportsStaticUnownForm && unownSlug ? `${id}-${unownSlug}` : `${id}`;
+
+  return shiny
+    ? `${staticBase}/shiny/${spriteName}.png`
+    : `${staticBase}/${spriteName}.png`;
+}
+
+export function getAnimatedSpriteUrl(
+  id: number,
+  shiny = false,
+  unownLetter?: string,
+): string {
   const animatedBase =
     "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated";
+
+  const unownSlug = id === UNOWN_ID ? getUnownFormSlug(unownLetter) : null;
+  const spriteName = unownSlug ? `${id}-${unownSlug}` : `${id}`;
+
   return shiny
-    ? `${animatedBase}/shiny/${id}.gif`
-    : `${animatedBase}/${id}.gif`;
+    ? `${animatedBase}/shiny/${spriteName}.gif`
+    : `${animatedBase}/${spriteName}.gif`;
 }
 
 export function getSpriteUrl(
   id: number,
   shiny = false,
   preferAnimated = true,
+  unownLetter?: string,
 ): string {
   if (preferAnimated) {
-    return getAnimatedSpriteUrl(id, shiny);
+    return getAnimatedSpriteUrl(id, shiny, unownLetter);
   }
 
-  return getStaticSpriteUrl(id, shiny);
+  return getStaticSpriteUrl(id, shiny, unownLetter);
 }
 
-export function getSpriteFallbackUrl(id: number, shiny = false): string {
-  return getStaticSpriteUrl(id, shiny);
+export function getSpriteFallbackUrl(
+  id: number,
+  shiny = false,
+  unownLetter?: string,
+): string {
+  return getStaticSpriteUrl(id, shiny, unownLetter);
 }

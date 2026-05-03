@@ -70,12 +70,14 @@ export default function TeamColumn({
                   capture.pokemonId,
                   capture.isShiny,
                   preferAnimated,
+                  capture.unownLetter,
                 )}
                 alt={capture.pokemonName}
                 onError={(event) => {
                   const fallbackUrl = getSpriteFallbackUrl(
                     capture.pokemonId,
                     capture.isShiny,
+                    capture.unownLetter,
                   );
                   if (event.currentTarget.src !== fallbackUrl) {
                     event.currentTarget.src = fallbackUrl;

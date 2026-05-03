@@ -11,6 +11,8 @@ export interface Capture {
   gender: "male" | "female" | "unknown";
   isShiny: boolean;
   isDead: boolean;
+  /** For Unown captures: the chosen letter form, e.g. "a"–"z", "!", "?" */
+  unownLetter?: string;
   createdAt: number;
 }
 

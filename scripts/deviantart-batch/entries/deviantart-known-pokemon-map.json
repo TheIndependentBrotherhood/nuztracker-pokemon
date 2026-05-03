@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T12:09:57.157Z",
+  "generatedAt": "2026-05-03T12:22:12.482Z",
   "source": {
     "csv": "scripts/deviantart-batch/entries/deviantart-resolved-map.csv",
     "knownAnimated": "public/data/animated-sprites-bw.json",
@@ -2057,7 +2057,8 @@
           "unown-a-pokemon-black",
           "unown-a-pokemon",
           "unown-a"
-        ]
+        ],
+        "unownLetter": "a"
       },
       {
         "alt": "Unown B (Pokemon Black White, animation) Icon",
@@ -2073,7 +2074,8 @@
           "unown-b-pokemon-black",
           "unown-b-pokemon",
           "unown-b"
-        ]
+        ],
+        "unownLetter": "b"
       },
       {
         "alt": "Unown C (Pokemon Black White, animation) Icon",
@@ -2089,7 +2091,8 @@
           "unown-c-pokemon-black",
           "unown-c-pokemon",
           "unown-c"
-        ]
+        ],
+        "unownLetter": "c"
       },
       {
         "alt": "Unown D (Pokemon Black White, animation) Icon",
@@ -2105,7 +2108,8 @@
           "unown-d-pokemon-black",
           "unown-d-pokemon",
           "unown-d"
-        ]
+        ],
+        "unownLetter": "d"
       },
       {
         "alt": "Unown E (Pokemon Black White, animation) Icon",
@@ -2121,7 +2125,8 @@
           "unown-e-pokemon-black",
           "unown-e-pokemon",
           "unown-e"
-        ]
+        ],
+        "unownLetter": "e"
       },
       {
         "alt": "Unown ! (Pokemon Black White, animation) Icon",
@@ -2137,7 +2142,8 @@
           "unown-pokemon-black",
           "unown-pokemon",
           "unown"
-        ]
+        ],
+        "unownLetter": "!"
       },
       {
         "alt": "Unown F (Pokemon Black White, animation) Icon",
@@ -2153,7 +2159,8 @@
           "unown-f-pokemon-black",
           "unown-f-pokemon",
           "unown-f"
-        ]
+        ],
+        "unownLetter": "f"
       },
       {
         "alt": "Unown G (Pokemon Black White, animation) Icon",
@@ -2169,7 +2176,8 @@
           "unown-g-pokemon-black",
           "unown-g-pokemon",
           "unown-g"
-        ]
+        ],
+        "unownLetter": "g"
       },
       {
         "alt": "Unown H (Pokemon Black White, animation) Icon",
@@ -2185,7 +2193,8 @@
           "unown-h-pokemon-black",
           "unown-h-pokemon",
           "unown-h"
-        ]
+        ],
+        "unownLetter": "h"
       },
       {
         "alt": "Unown I (Pokemon Black White, animation) Icon",
@@ -2201,7 +2210,8 @@
           "unown-i-pokemon-black",
           "unown-i-pokemon",
           "unown-i"
-        ]
+        ],
+        "unownLetter": "i"
       },
       {
         "alt": "Unown J (Pokemon Black White, animation) Icon",
@@ -2217,7 +2227,8 @@
           "unown-j-pokemon-black",
           "unown-j-pokemon",
           "unown-j"
-        ]
+        ],
+        "unownLetter": "j"
       },
       {
         "alt": "Unown K (Pokemon Black White, animation) Icon",
@@ -2233,7 +2244,8 @@
           "unown-k-pokemon-black",
           "unown-k-pokemon",
           "unown-k"
-        ]
+        ],
+        "unownLetter": "k"
       },
       {
         "alt": "Unown L (Pokemon Black White, animation) Icon",
@@ -2249,7 +2261,8 @@
           "unown-l-pokemon-black",
           "unown-l-pokemon",
           "unown-l"
-        ]
+        ],
+        "unownLetter": "l"
       },
       {
         "alt": "Unown M (Pokemon Black White, animation) Icon",
@@ -2265,7 +2278,8 @@
           "unown-m-pokemon-black",
           "unown-m-pokemon",
           "unown-m"
-        ]
+        ],
+        "unownLetter": "m"
       },
       {
         "alt": "Unown N (Pokemon Black White, animation) Icon",
@@ -2281,7 +2295,8 @@
           "unown-n-pokemon-black",
           "unown-n-pokemon",
           "unown-n"
-        ]
+        ],
+        "unownLetter": "n"
       },
       {
         "alt": "Unown O (Pokemon Black White, animation) Icon",
@@ -2297,7 +2312,8 @@
           "unown-o-pokemon-black",
           "unown-o-pokemon",
           "unown-o"
-        ]
+        ],
+        "unownLetter": "o"
       },
       {
         "alt": "Unown P (Pokemon Black White, animation) Icon",
@@ -2313,7 +2329,8 @@
           "unown-p-pokemon-black",
           "unown-p-pokemon",
           "unown-p"
-        ]
+        ],
+        "unownLetter": "p"
       },
       {
         "alt": "Unown Q (Pokemon Black White, animation) Icon",
@@ -2329,7 +2346,8 @@
           "unown-q-pokemon-black",
           "unown-q-pokemon",
           "unown-q"
-        ]
+        ],
+        "unownLetter": "q"
       },
       {
         "alt": "Unown ? (Pokemon Black White, animation) Icon",
@@ -2345,7 +2363,8 @@
           "unown-pokemon-black",
           "unown-pokemon",
           "unown"
-        ]
+        ],
+        "unownLetter": "?"
       },
       {
         "alt": "Unown R (Pokemon Black White, animation) Icon",
@@ -2361,7 +2380,8 @@
           "unown-r-pokemon-black",
           "unown-r-pokemon",
           "unown-r"
-        ]
+        ],
+        "unownLetter": "r"
       },
       {
         "alt": "Unown S (Pokemon Black White, animation) Icon",
@@ -2377,7 +2397,8 @@
           "unown-s-pokemon-black",
           "unown-s-pokemon",
           "unown-s"
-        ]
+        ],
+        "unownLetter": "s"
       },
       {
         "alt": "Unown T (Pokemon Black White, animation) Icon",
@@ -2393,7 +2414,8 @@
           "unown-t-pokemon-black",
           "unown-t-pokemon",
           "unown-t"
-        ]
+        ],
+        "unownLetter": "t"
       },
       {
         "alt": "Unown U (Pokemon Black White, animation) Icon",
@@ -2409,7 +2431,8 @@
           "unown-u-pokemon-black",
           "unown-u-pokemon",
           "unown-u"
-        ]
+        ],
+        "unownLetter": "u"
       },
       {
         "alt": "Unown V (Pokemon Black White, animation) Icon",
@@ -2425,7 +2448,8 @@
           "unown-v-pokemon-black",
           "unown-v-pokemon",
           "unown-v"
-        ]
+        ],
+        "unownLetter": "v"
       },
       {
         "alt": "Unown W (Pokemon Black White, animation) Icon",
@@ -2441,7 +2465,8 @@
           "unown-w-pokemon-black",
           "unown-w-pokemon",
           "unown-w"
-        ]
+        ],
+        "unownLetter": "w"
       },
       {
         "alt": "Unown X (Pokemon Black White, animation) Icon",
@@ -2457,7 +2482,8 @@
           "unown-x-pokemon-black",
           "unown-x-pokemon",
           "unown-x"
-        ]
+        ],
+        "unownLetter": "x"
       },
       {
         "alt": "Unown Y (Pokemon Black White, animation) Icon",
@@ -2473,7 +2499,8 @@
           "unown-y-pokemon-black",
           "unown-y-pokemon",
           "unown-y"
-        ]
+        ],
+        "unownLetter": "y"
       },
       {
         "alt": "Unown Z (Pokemon Black White, animation) Icon",
@@ -2489,7 +2516,8 @@
           "unown-z-pokemon-black",
           "unown-z-pokemon",
           "unown-z"
-        ]
+        ],
+        "unownLetter": "z"
       }
     ],
     "zweilous": [
