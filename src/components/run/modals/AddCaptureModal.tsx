@@ -371,7 +371,7 @@ export default function AddCaptureModal({
                     },
                   }}
                 >
-                  {r.displayName}
+                  {`${r.displayName} (${r.name})`}
                 </Box>
               ))}
             </Box>
