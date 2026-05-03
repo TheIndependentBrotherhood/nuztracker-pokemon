@@ -6,6 +6,39 @@ const OUTPUT_DIR = path.join(process.cwd(), "public/data");
 const POKEMON_DB_ANIM_BASE =
   "https://img.pokemondb.net/sprites/black-white/anim";
 
+interface SheetSourceConfig {
+  key: string;
+  generation: number;
+  csvUrl: string;
+}
+
+const SHEET_SOURCES: SheetSourceConfig[] = [
+  {
+    key: "google_sheet_gen6",
+    generation: 6,
+    csvUrl:
+      "https://docs.google.com/spreadsheets/d/1Gn0UORn-unvcbUeQhQdEBz0ADNcH49BZZqQ1dpXm9eo/gviz/tq?tqx=out:csv&sheet=animated%20sprites",
+  },
+  {
+    key: "google_sheet_gen7",
+    generation: 7,
+    csvUrl:
+      "https://docs.google.com/spreadsheets/d/1FMcHbSKEWZc7v2Ur4cyJjT_NhO0gqXyU9kDhsOQhlBQ/gviz/tq?tqx=out:csv&sheet=animated%20sprites",
+  },
+  {
+    key: "google_sheet_gen8",
+    generation: 8,
+    csvUrl:
+      "https://docs.google.com/spreadsheets/d/1acgzAjh0dnFRQnjZu8kSjS177rKCzpFfEHRLtwuuXRU/gviz/tq?tqx=out:csv&sheet=animated%20sprites",
+  },
+  {
+    key: "google_sheet_gen9",
+    generation: 9,
+    csvUrl:
+      "https://docs.google.com/spreadsheets/d/1MCjDktTOOFjLKM5C-RW6SfBQGkjlxDSCZAZDma_ItuA/gviz/tq?tqx=out:csv&sheet=animated%20sprites",
+  },
+];
+
 // Utility: fetch with exponential-backoff retry
 async function fetchWithRetry(url: string, retries = 3): Promise<unknown> {
   for (let i = 0; i < retries; i++) {
@@ -28,6 +61,206 @@ async function fetchWithRetry(url: string, retries = 3): Promise<unknown> {
     }
   }
   throw new Error("unreachable");
+}
+
+async function fetchTextWithRetry(url: string, retries = 3): Promise<string> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status} – ${url}`);
+      return res.text();
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      const backoffMs = 1000 * Math.pow(2, i);
+      console.warn(
+        `    WARNING: Retry ${i + 1}/${retries} after ${backoffMs}ms: ${url}`,
+      );
+      await new Promise((r) => setTimeout(r, backoffMs));
+    }
+  }
+
+  throw new Error("unreachable");
+}
+
+function parseCsvLine(line: string): string[] {
+  const values: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (ch === "," && !inQuotes) {
+      values.push(current);
+      current = "";
+      continue;
+    }
+
+    current += ch;
+  }
+
+  values.push(current);
+  return values.map((v) => v.trim());
+}
+
+function normalizePokemonName(rawName: string): string {
+  return rawName
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.'’]/g, "")
+    .replace(/\s+/g, "-");
+}
+
+function extractNameFromGifUrl(url: string): string | null {
+  if (!url || !url.includes(".gif")) return null;
+
+  const cleanUrl = url.split("?")[0];
+  const fileName = cleanUrl.split("/").pop();
+  if (!fileName) return null;
+
+  const namePart = fileName.replace(/\.gif$/i, "");
+  return namePart ? normalizePokemonName(namePart) : null;
+}
+
+interface SheetSpriteEntry {
+  normal?: string;
+  shiny?: string;
+}
+
+interface AnimatedSpriteRecord {
+  id: number;
+  name: string;
+  generation: number;
+  normal: {
+    url: string | null;
+    available: boolean;
+    source: string | null;
+  };
+  shiny: {
+    url: string | null;
+    available: boolean;
+    source: string | null;
+  };
+}
+
+function buildMissingAnimatedSpritesByGeneration(
+  sprites: AnimatedSpriteRecord[],
+) {
+  const byGeneration: Record<
+    string,
+    {
+      missingAnyAnimated: { id: number; name: string }[];
+      missingNormal: { id: number; name: string }[];
+      missingShiny: { id: number; name: string }[];
+    }
+  > = {};
+
+  for (const sprite of sprites) {
+    const generationKey = `gen${sprite.generation}`;
+    if (!byGeneration[generationKey]) {
+      byGeneration[generationKey] = {
+        missingAnyAnimated: [],
+        missingNormal: [],
+        missingShiny: [],
+      };
+    }
+
+    const baseInfo = { id: sprite.id, name: sprite.name };
+
+    if (!sprite.normal.available) {
+      byGeneration[generationKey].missingNormal.push(baseInfo);
+    }
+    if (!sprite.shiny.available) {
+      byGeneration[generationKey].missingShiny.push(baseInfo);
+    }
+    if (!sprite.normal.available && !sprite.shiny.available) {
+      byGeneration[generationKey].missingAnyAnimated.push(baseInfo);
+    }
+  }
+
+  const summaryByGeneration: Record<
+    string,
+    {
+      missingAnyAnimatedCount: number;
+      missingNormalCount: number;
+      missingShinyCount: number;
+    }
+  > = {};
+
+  for (const [generation, missing] of Object.entries(byGeneration)) {
+    summaryByGeneration[generation] = {
+      missingAnyAnimatedCount: missing.missingAnyAnimated.length,
+      missingNormalCount: missing.missingNormal.length,
+      missingShinyCount: missing.missingShiny.length,
+    };
+  }
+
+  return {
+    generatedAt: new Date().toISOString(),
+    summaryByGeneration,
+    byGeneration,
+  };
+}
+
+async function readSheetSprites(
+  source: SheetSourceConfig,
+): Promise<Map<string, SheetSpriteEntry>> {
+  console.log(`SHEET: Fetching ${source.key} animated sprites spreadsheet...`);
+
+  const csv = await fetchTextWithRetry(source.csvUrl);
+  const lines = csv
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  const map = new Map<string, SheetSpriteEntry>();
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCsvLine(lines[i]);
+    const nameFromColumn = cols[1] ?? "";
+    const normalUrl = cols[2] ?? ""; // Column C
+    const shinyUrl = cols[4] ?? ""; // Column E
+
+    if (!normalUrl && !shinyUrl) {
+      continue;
+    }
+
+    const keyFromName = nameFromColumn
+      ? normalizePokemonName(nameFromColumn)
+      : null;
+    const keyFromNormal = extractNameFromGifUrl(normalUrl);
+    const keyFromShiny = extractNameFromGifUrl(shinyUrl);
+    const key = keyFromName || keyFromNormal || keyFromShiny;
+
+    if (!key) {
+      continue;
+    }
+
+    map.set(key, {
+      normal: normalUrl || undefined,
+      shiny: shinyUrl || undefined,
+    });
+  }
+
+  console.log(`SHEET: Parsed ${map.size} Pokemon entries from ${source.key}`);
+  return map;
 }
 
 async function checkUrlAvailable(url: string): Promise<boolean> {
@@ -521,23 +754,119 @@ async function generateAnimatedSpritesBw() {
   console.log("ANIM: Generating animated-sprites-bw.json...");
 
   const pokemon = readPokemonListFromCache();
+  const sheetSpritesByGeneration = new Map<
+    number,
+    Map<string, SheetSpriteEntry>
+  >();
+  const sheetSourceByGeneration = new Map<number, string>();
+
+  for (const source of SHEET_SOURCES) {
+    const parsed = await readSheetSprites(source);
+    sheetSpritesByGeneration.set(source.generation, parsed);
+    sheetSourceByGeneration.set(source.generation, source.key);
+  }
+
   const totalLinksToCheck = pokemon.length * 2;
 
   console.log(
     `LINK: Checking ${totalLinksToCheck} links (${pokemon.length} Pokemon x normal + shiny)...`,
   );
 
+  const sourceStats: Record<
+    string,
+    {
+      normalSelected: number;
+      shinySelected: number;
+      pokemonWithAtLeastOne: number;
+    }
+  > = {
+    pokemondb_bw: {
+      normalSelected: 0,
+      shinySelected: 0,
+      pokemonWithAtLeastOne: 0,
+    },
+  };
+
+  for (const source of SHEET_SOURCES) {
+    sourceStats[source.key] = {
+      normalSelected: 0,
+      shinySelected: 0,
+      pokemonWithAtLeastOne: 0,
+    };
+  }
+
   const sprites = await mapWithConcurrency(
     pokemon,
     25,
     async (entry, index) => {
-      const normalUrl = `${POKEMON_DB_ANIM_BASE}/normal/${entry.name}.gif`;
-      const shinyUrl = `${POKEMON_DB_ANIM_BASE}/shiny/${entry.name}.gif`;
+      const sheetMap = sheetSpritesByGeneration.get(entry.generation);
+      const sheetSourceKey = sheetSourceByGeneration.get(entry.generation);
+      const sheetEntry = sheetMap?.get(normalizePokemonName(entry.name));
 
-      const [normalAvailable, shinyAvailable] = await Promise.all([
-        checkUrlAvailable(normalUrl),
-        checkUrlAvailable(shinyUrl),
-      ]);
+      const normalCandidates = [
+        {
+          source: "pokemondb_bw",
+          url: `${POKEMON_DB_ANIM_BASE}/normal/${entry.name}.gif`,
+        },
+        ...(sheetEntry?.normal && sheetSourceKey
+          ? [
+              {
+                source: sheetSourceKey,
+                url: sheetEntry.normal,
+              },
+            ]
+          : []),
+      ];
+
+      const shinyCandidates = [
+        {
+          source: "pokemondb_bw",
+          url: `${POKEMON_DB_ANIM_BASE}/shiny/${entry.name}.gif`,
+        },
+        ...(sheetEntry?.shiny && sheetSourceKey
+          ? [
+              {
+                source: sheetSourceKey,
+                url: sheetEntry.shiny,
+              },
+            ]
+          : []),
+      ];
+
+      let normalSelected: { source: string; url: string } | null = null;
+      let shinySelected: { source: string; url: string } | null = null;
+
+      for (const candidate of normalCandidates) {
+        const available = await checkUrlAvailable(candidate.url);
+        if (available) {
+          normalSelected = candidate;
+          break;
+        }
+      }
+
+      for (const candidate of shinyCandidates) {
+        const available = await checkUrlAvailable(candidate.url);
+        if (available) {
+          shinySelected = candidate;
+          break;
+        }
+      }
+
+      if (normalSelected) {
+        sourceStats[normalSelected.source].normalSelected += 1;
+      }
+      if (shinySelected) {
+        sourceStats[shinySelected.source].shinySelected += 1;
+      }
+
+      for (const sourceName of Object.keys(sourceStats)) {
+        const hasAtLeastOne =
+          normalSelected?.source === sourceName ||
+          shinySelected?.source === sourceName;
+        if (hasAtLeastOne) {
+          sourceStats[sourceName].pokemonWithAtLeastOne += 1;
+        }
+      }
 
       if ((index + 1) % 50 === 0 || index + 1 === pokemon.length) {
         console.log(`  OK: Checked ${index + 1}/${pokemon.length} Pokemon`);
@@ -548,20 +877,34 @@ async function generateAnimatedSpritesBw() {
         name: entry.name,
         generation: entry.generation,
         normal: {
-          url: normalUrl,
-          available: normalAvailable,
+          url: normalSelected?.url ?? null,
+          available: Boolean(normalSelected),
+          source: normalSelected?.source ?? null,
         },
         shiny: {
-          url: shinyUrl,
-          available: shinyAvailable,
+          url: shinySelected?.url ?? null,
+          available: Boolean(shinySelected),
+          source: shinySelected?.source ?? null,
         },
       };
     },
   );
 
-  const normalWorking = sprites.filter((s) => s.normal.available).length;
-  const shinyWorking = sprites.filter((s) => s.shiny.available).length;
+  const typedSprites = sprites as AnimatedSpriteRecord[];
+
+  const normalWorking = typedSprites.filter((s) => s.normal.available).length;
+  const shinyWorking = typedSprites.filter((s) => s.shiny.available).length;
   const linksWorking = normalWorking + shinyWorking;
+  const missingByGeneration =
+    buildMissingAnimatedSpritesByGeneration(typedSprites);
+
+  const sourceNames = Object.keys(sourceStats);
+  for (const sourceName of sourceNames) {
+    const stats = sourceStats[sourceName];
+    console.log(
+      `SOURCE: ${sourceName} -> normal=${stats.normalSelected}, shiny=${stats.shinySelected}, pokemonWithAtLeastOne=${stats.pokemonWithAtLeastOne}`,
+    );
+  }
 
   return {
     generatedAt: new Date().toISOString(),
@@ -572,8 +915,10 @@ async function generateAnimatedSpritesBw() {
       linksFailed: totalLinksToCheck - linksWorking,
       normalWorking,
       shinyWorking,
+      sourceCoverage: sourceStats,
     },
-    sprites,
+    sprites: typedSprites,
+    missingByGeneration,
   };
 }
 
@@ -627,6 +972,27 @@ async function main() {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
       const outputPath = path.join(OUTPUT_DIR, file.name);
       fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
+
+      if (file.name === "animated-sprites-bw.json") {
+        const animatedData = data as {
+          missingByGeneration?: unknown;
+        };
+
+        if (animatedData.missingByGeneration) {
+          const missingOutputPath = path.join(
+            OUTPUT_DIR,
+            "missing-animated-sprites-by-generation.json",
+          );
+          fs.writeFileSync(
+            missingOutputPath,
+            JSON.stringify(animatedData.missingByGeneration, null, 2),
+          );
+          console.log(
+            "INFO: missing-animated-sprites-by-generation.json generated",
+          );
+        }
+      }
+
       console.log(`\nSUCCESS: ${file.name} generated (${elapsed}s)\n`);
     } catch (e) {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
