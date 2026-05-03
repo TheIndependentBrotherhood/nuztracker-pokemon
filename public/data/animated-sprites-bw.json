@@ -14906,14 +14906,14 @@
       "name": "iron-hands",
       "generation": 9,
       "normal": {
-        "url": "https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/page-11",
+        "url": "https://www.smogon.com/forums/attachments/992-gif.590582/",
         "available": true,
         "source": "google_sheet_gen9"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/992s-gif.590583/",
+        "available": true,
+        "source": "google_sheet_gen9"
       }
     },
     {
@@ -16751,7 +16751,7 @@
       "name": "beedrill-mega",
       "generation": 1,
       "normal": {
-        "url": "https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/page-13#lg=attachment658901&slide=0",
+        "url": "https://www.smogon.com/forums/attachments/015_1-gif.658901/",
         "available": true,
         "source": "google_sheet_gen6"
       },
