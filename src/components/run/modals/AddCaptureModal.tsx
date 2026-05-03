@@ -14,7 +14,6 @@ import {
 import { useRunStore } from "@/store/runStore";
 import {
   getAvailableCaptureSpriteOptions,
-  getCaptureSpriteOptionMeta,
   searchPokemon,
   getPokemonIdFromUrl,
   getSpriteFallbackUrl,
@@ -87,8 +86,19 @@ export default function AddCaptureModal({
 
       setSpriteOptions(options);
       setSelectedSpriteUrl((prev) => {
-        if (prev && options.some((option) => option.url === prev)) return prev;
-        return options[0]?.url ?? null;
+        const nextSelectedUrl =
+          prev && options.some((option) => option.url === prev)
+            ? prev
+            : (options[0]?.url ?? null);
+
+        if (selected.id === UNOWN_ID) {
+          const selectedOption = options.find(
+            (option) => option.url === nextSelectedUrl,
+          );
+          setUnownLetter(selectedOption?.unownLetter ?? null);
+        }
+
+        return nextSelectedUrl;
       });
       setLoadingSpriteOptions(false);
     }
@@ -99,14 +109,6 @@ export default function AddCaptureModal({
       cancelled = true;
     };
   }, [selected, isShiny]);
-
-  useEffect(() => {
-    if (!selected || selected.id !== UNOWN_ID) return;
-    const chosen = spriteOptions.find(
-      (option) => option.url === selectedSpriteUrl,
-    );
-    setUnownLetter(chosen?.unownLetter ?? null);
-  }, [selected, spriteOptions, selectedSpriteUrl]);
 
   useEffect(() => {
     let cancelled = false;
@@ -416,7 +418,12 @@ export default function AddCaptureModal({
               >
                 {spriteOptions.map((option) => {
                   const isSelectedSprite = selectedSpriteUrl === option.url;
-                  const meta = getCaptureSpriteOptionMeta(option);
+                  const sourceTitle =
+                    option.source === "deviantart"
+                      ? "DeviantArt"
+                      : option.source === "animated-catalog"
+                        ? "Animated"
+                        : "Static";
 
                   return (
                     <Box
@@ -428,7 +435,7 @@ export default function AddCaptureModal({
                           setUnownLetter(option.unownLetter ?? null);
                         }
                       }}
-                      title={`${meta.label} • ${meta.sourceLabel}`}
+                      title={`${sourceTitle} • ${option.label}`}
                       sx={{
                         background: isSelectedSprite ? "#3b82f6" : "#fff",
                         border: isSelectedSprite
@@ -452,7 +459,7 @@ export default function AddCaptureModal({
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={option.url}
-                        alt={meta.label}
+                        alt={option.label}
                         width={44}
                         height={44}
                         style={{
@@ -470,7 +477,7 @@ export default function AddCaptureModal({
                           textTransform: "uppercase",
                         }}
                       >
-                        {meta.label}
+                        {sourceTitle}
                       </Typography>
                       <Typography
                         sx={{
@@ -480,7 +487,7 @@ export default function AddCaptureModal({
                           opacity: isSelectedSprite ? 0.9 : 0.75,
                         }}
                       >
-                        {meta.sourceLabel}
+                        {option.label}
                       </Typography>
                     </Box>
                   );
