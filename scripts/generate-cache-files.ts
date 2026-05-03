@@ -144,6 +144,97 @@ interface SheetSpriteEntry {
   shiny?: string;
 }
 
+const GEN6_MEGA_BASE_NAMES = new Set([
+  "venusaur",
+  "charizard-x",
+  "charizard-y",
+  "blastoise",
+  "beedrill",
+  "pidgeot",
+  "alakazam",
+  "slowbro",
+  "gengar",
+  "kangaskhan",
+  "pinsir",
+  "gyarados",
+  "aerodactyl",
+  "mewtwo-x",
+  "mewtwo-y",
+  "ampharos",
+  "steelix",
+  "scizor",
+  "heracross",
+  "houndoom",
+  "tyranitar",
+  "sceptile",
+  "blaziken",
+  "swampert",
+  "gardevoir",
+  "sableye",
+  "mawile",
+  "aggron",
+  "medicham",
+  "manectric",
+  "sharpedo",
+  "camerupt",
+  "altaria",
+  "banette",
+  "absol",
+  "glalie",
+  "salamence",
+  "metagross",
+  "latias",
+  "latios",
+  "rayquaza",
+  "lopunny",
+  "garchomp",
+  "lucario",
+  "abomasnow",
+  "gallade",
+  "audino",
+  "diancie",
+]);
+
+function toMegaFormKey(baseName: string): string {
+  const megaSuffixMatch = baseName.match(/^(.*)-(x|y)$/i);
+  if (megaSuffixMatch) {
+    const root = megaSuffixMatch[1];
+    const suffix = megaSuffixMatch[2].toLowerCase();
+    return `${root}-mega-${suffix}`;
+  }
+
+  return `${baseName}-mega`;
+}
+
+function inferSheetKeysForRow(
+  source: SheetSourceConfig,
+  pokemonId: number | null,
+  normalizedName: string,
+  inPostMainGen6Sections: boolean,
+): string[] {
+  if (source.key !== "google_sheet_gen6") {
+    return [normalizedName];
+  }
+
+  if (!inPostMainGen6Sections) {
+    return [normalizedName];
+  }
+
+  if (pokemonId === 382 && normalizedName === "kyogre") {
+    return ["kyogre-primal"];
+  }
+
+  if (pokemonId === 383 && normalizedName === "groudon") {
+    return ["groudon-primal"];
+  }
+
+  if (GEN6_MEGA_BASE_NAMES.has(normalizedName)) {
+    return [toMegaFormKey(normalizedName)];
+  }
+
+  return [normalizedName];
+}
+
 interface AnimatedSpriteRecord {
   id: number;
   name: string;
@@ -231,12 +322,24 @@ async function readSheetSprites(
     .filter((line) => line.length > 0);
 
   const map = new Map<string, SheetSpriteEntry>();
+  let hasReachedMainGen6DexSection = false;
+  let inPostMainGen6Sections = false;
 
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);
+    const idRaw = cols[0] ?? "";
+    const pokemonId = idRaw ? Number.parseInt(idRaw, 10) : null;
     const nameFromColumn = cols[1] ?? "";
     const normalUrl = cols[2] ?? ""; // Column C
     const shinyUrl = cols[4] ?? ""; // Column E
+
+    if (source.key === "google_sheet_gen6" && pokemonId !== null) {
+      if (pokemonId >= 650 && pokemonId <= 721) {
+        hasReachedMainGen6DexSection = true;
+      } else if (hasReachedMainGen6DexSection && pokemonId < 650) {
+        inPostMainGen6Sections = true;
+      }
+    }
 
     if (!normalUrl && !shinyUrl) {
       continue;
@@ -253,10 +356,20 @@ async function readSheetSprites(
       continue;
     }
 
-    map.set(key, {
-      normal: normalUrl || undefined,
-      shiny: shinyUrl || undefined,
-    });
+    const inferredKeys = inferSheetKeysForRow(
+      source,
+      pokemonId,
+      key,
+      inPostMainGen6Sections,
+    );
+
+    for (const inferredKey of inferredKeys) {
+      const existing = map.get(inferredKey);
+      map.set(inferredKey, {
+        normal: normalUrl || existing?.normal,
+        shiny: shinyUrl || existing?.shiny,
+      });
+    }
   }
 
   console.log(`SHEET: Parsed ${map.size} Pokemon entries from ${source.key}`);
@@ -754,16 +867,14 @@ async function generateAnimatedSpritesBw() {
   console.log("ANIM: Generating animated-sprites-bw.json...");
 
   const pokemon = readPokemonListFromCache();
-  const sheetSpritesByGeneration = new Map<
-    number,
-    Map<string, SheetSpriteEntry>
-  >();
-  const sheetSourceByGeneration = new Map<number, string>();
+  const sheetSourcesData: Array<{
+    source: SheetSourceConfig;
+    map: Map<string, SheetSpriteEntry>;
+  }> = [];
 
   for (const source of SHEET_SOURCES) {
     const parsed = await readSheetSprites(source);
-    sheetSpritesByGeneration.set(source.generation, parsed);
-    sheetSourceByGeneration.set(source.generation, source.key);
+    sheetSourcesData.push({ source, map: parsed });
   }
 
   const totalLinksToCheck = pokemon.length * 2;
@@ -799,23 +910,58 @@ async function generateAnimatedSpritesBw() {
     pokemon,
     25,
     async (entry, index) => {
-      const sheetMap = sheetSpritesByGeneration.get(entry.generation);
-      const sheetSourceKey = sheetSourceByGeneration.get(entry.generation);
-      const sheetEntry = sheetMap?.get(normalizePokemonName(entry.name));
+      const normalizedEntryName = normalizePokemonName(entry.name);
+
+      const isMegaOrPrimalForm =
+        normalizedEntryName.includes("-mega") ||
+        normalizedEntryName.includes("-primal");
+
+      const sheetCandidatesForNormal = sheetSourcesData
+        .map(({ source, map }) => {
+          // Each sheet only covers its own generation.
+          // Exception: Gen6 sheet also covers mega/primal forms from any generation.
+          const isGenMatch = entry.generation === source.generation;
+          const isGen6MegaPrimalException =
+            source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
+
+          if (!isGenMatch && !isGen6MegaPrimalException) return null;
+
+          const sheetEntry = map.get(normalizedEntryName);
+          if (!sheetEntry?.normal) return null;
+          return {
+            source: source.key,
+            url: sheetEntry.normal,
+          };
+        })
+        .filter((candidate): candidate is { source: string; url: string } =>
+          Boolean(candidate),
+        );
+
+      const sheetCandidatesForShiny = sheetSourcesData
+        .map(({ source, map }) => {
+          const isGenMatch = entry.generation === source.generation;
+          const isGen6MegaPrimalException =
+            source.key === "google_sheet_gen6" && isMegaOrPrimalForm;
+
+          if (!isGenMatch && !isGen6MegaPrimalException) return null;
+
+          const sheetEntry = map.get(normalizedEntryName);
+          if (!sheetEntry?.shiny) return null;
+          return {
+            source: source.key,
+            url: sheetEntry.shiny,
+          };
+        })
+        .filter((candidate): candidate is { source: string; url: string } =>
+          Boolean(candidate),
+        );
 
       const normalCandidates = [
         {
           source: "pokemondb_bw",
           url: `${POKEMON_DB_ANIM_BASE}/normal/${entry.name}.gif`,
         },
-        ...(sheetEntry?.normal && sheetSourceKey
-          ? [
-              {
-                source: sheetSourceKey,
-                url: sheetEntry.normal,
-              },
-            ]
-          : []),
+        ...sheetCandidatesForNormal,
       ];
 
       const shinyCandidates = [
@@ -823,14 +969,7 @@ async function generateAnimatedSpritesBw() {
           source: "pokemondb_bw",
           url: `${POKEMON_DB_ANIM_BASE}/shiny/${entry.name}.gif`,
         },
-        ...(sheetEntry?.shiny && sheetSourceKey
-          ? [
-              {
-                source: sheetSourceKey,
-                url: sheetEntry.shiny,
-              },
-            ]
-          : []),
+        ...sheetCandidatesForShiny,
       ];
 
       let normalSelected: { source: string; url: string } | null = null;

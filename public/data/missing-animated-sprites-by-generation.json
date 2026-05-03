@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-05-02T23:59:22.553Z",
+  "generatedAt": "2026-05-03T00:16:43.028Z",
   "summaryByGeneration": {
     "gen1": {
-      "missingAnyAnimatedCount": 87,
-      "missingNormalCount": 87,
-      "missingShinyCount": 87
+      "missingAnyAnimatedCount": 82,
+      "missingNormalCount": 82,
+      "missingShinyCount": 82
     },
     "gen2": {
-      "missingAnyAnimatedCount": 15,
-      "missingNormalCount": 15,
-      "missingShinyCount": 15
-    },
-    "gen3": {
-      "missingAnyAnimatedCount": 26,
-      "missingNormalCount": 26,
-      "missingShinyCount": 26
-    },
-    "gen4": {
       "missingAnyAnimatedCount": 13,
       "missingNormalCount": 13,
       "missingShinyCount": 13
+    },
+    "gen3": {
+      "missingAnyAnimatedCount": 17,
+      "missingNormalCount": 17,
+      "missingShinyCount": 17
+    },
+    "gen4": {
+      "missingAnyAnimatedCount": 12,
+      "missingNormalCount": 12,
+      "missingShinyCount": 12
     },
     "gen5": {
       "missingAnyAnimatedCount": 30,
@@ -55,20 +55,12 @@
           "name": "venusaur-mega"
         },
         {
-          "id": 10034,
-          "name": "charizard-mega-x"
-        },
-        {
           "id": 10035,
           "name": "charizard-mega-y"
         },
         {
           "id": 10036,
           "name": "blastoise-mega"
-        },
-        {
-          "id": 10037,
-          "name": "alakazam-mega"
         },
         {
           "id": 10038,
@@ -89,14 +81,6 @@
         {
           "id": 10042,
           "name": "aerodactyl-mega"
-        },
-        {
-          "id": 10043,
-          "name": "mewtwo-mega-x"
-        },
-        {
-          "id": 10044,
-          "name": "mewtwo-mega-y"
         },
         {
           "id": 10071,
@@ -129,10 +113,6 @@
         {
           "id": 10085,
           "name": "pikachu-cosplay"
-        },
-        {
-          "id": 10090,
-          "name": "beedrill-mega"
         },
         {
           "id": 10091,
@@ -405,20 +385,12 @@
           "name": "venusaur-mega"
         },
         {
-          "id": 10034,
-          "name": "charizard-mega-x"
-        },
-        {
           "id": 10035,
           "name": "charizard-mega-y"
         },
         {
           "id": 10036,
           "name": "blastoise-mega"
-        },
-        {
-          "id": 10037,
-          "name": "alakazam-mega"
         },
         {
           "id": 10038,
@@ -439,14 +411,6 @@
         {
           "id": 10042,
           "name": "aerodactyl-mega"
-        },
-        {
-          "id": 10043,
-          "name": "mewtwo-mega-x"
-        },
-        {
-          "id": 10044,
-          "name": "mewtwo-mega-y"
         },
         {
           "id": 10071,
@@ -479,10 +443,6 @@
         {
           "id": 10085,
           "name": "pikachu-cosplay"
-        },
-        {
-          "id": 10090,
-          "name": "beedrill-mega"
         },
         {
           "id": 10091,
@@ -755,20 +715,12 @@
           "name": "venusaur-mega"
         },
         {
-          "id": 10034,
-          "name": "charizard-mega-x"
-        },
-        {
           "id": 10035,
           "name": "charizard-mega-y"
         },
         {
           "id": 10036,
           "name": "blastoise-mega"
-        },
-        {
-          "id": 10037,
-          "name": "alakazam-mega"
         },
         {
           "id": 10038,
@@ -789,14 +741,6 @@
         {
           "id": 10042,
           "name": "aerodactyl-mega"
-        },
-        {
-          "id": 10043,
-          "name": "mewtwo-mega-x"
-        },
-        {
-          "id": 10044,
-          "name": "mewtwo-mega-y"
         },
         {
           "id": 10071,
@@ -829,10 +773,6 @@
         {
           "id": 10085,
           "name": "pikachu-cosplay"
-        },
-        {
-          "id": 10090,
-          "name": "beedrill-mega"
         },
         {
           "id": 10091,
@@ -1107,20 +1047,12 @@
           "name": "ampharos-mega"
         },
         {
-          "id": 10046,
-          "name": "scizor-mega"
-        },
-        {
           "id": 10047,
           "name": "heracross-mega"
         },
         {
           "id": 10048,
           "name": "houndoom-mega"
-        },
-        {
-          "id": 10049,
-          "name": "tyranitar-mega"
         },
         {
           "id": 10072,
@@ -1169,20 +1101,12 @@
           "name": "ampharos-mega"
         },
         {
-          "id": 10046,
-          "name": "scizor-mega"
-        },
-        {
           "id": 10047,
           "name": "heracross-mega"
         },
         {
           "id": 10048,
           "name": "houndoom-mega"
-        },
-        {
-          "id": 10049,
-          "name": "tyranitar-mega"
         },
         {
           "id": 10072,
@@ -1231,20 +1155,12 @@
           "name": "ampharos-mega"
         },
         {
-          "id": 10046,
-          "name": "scizor-mega"
-        },
-        {
           "id": 10047,
           "name": "heracross-mega"
         },
         {
           "id": 10048,
           "name": "houndoom-mega"
-        },
-        {
-          "id": 10049,
-          "name": "tyranitar-mega"
         },
         {
           "id": 10072,
@@ -1291,10 +1207,6 @@
     "gen3": {
       "missingAnyAnimated": [
         {
-          "id": 10050,
-          "name": "blaziken-mega"
-        },
-        {
           "id": 10051,
           "name": "gardevoir-mega"
         },
@@ -1307,28 +1219,12 @@
           "name": "aggron-mega"
         },
         {
-          "id": 10054,
-          "name": "medicham-mega"
-        },
-        {
-          "id": 10055,
-          "name": "manectric-mega"
-        },
-        {
           "id": 10056,
           "name": "banette-mega"
         },
         {
           "id": 10057,
           "name": "absol-mega"
-        },
-        {
-          "id": 10062,
-          "name": "latias-mega"
-        },
-        {
-          "id": 10063,
-          "name": "latios-mega"
         },
         {
           "id": 10064,
@@ -1351,20 +1247,8 @@
           "name": "sharpedo-mega"
         },
         {
-          "id": 10074,
-          "name": "glalie-mega"
-        },
-        {
           "id": 10076,
           "name": "metagross-mega"
-        },
-        {
-          "id": 10077,
-          "name": "kyogre-primal"
-        },
-        {
-          "id": 10078,
-          "name": "groudon-primal"
         },
         {
           "id": 10079,
@@ -1373,10 +1257,6 @@
         {
           "id": 10087,
           "name": "camerupt-mega"
-        },
-        {
-          "id": 10089,
-          "name": "salamence-mega"
         },
         {
           "id": 10174,
@@ -1397,10 +1277,6 @@
       ],
       "missingNormal": [
         {
-          "id": 10050,
-          "name": "blaziken-mega"
-        },
-        {
           "id": 10051,
           "name": "gardevoir-mega"
         },
@@ -1413,28 +1289,12 @@
           "name": "aggron-mega"
         },
         {
-          "id": 10054,
-          "name": "medicham-mega"
-        },
-        {
-          "id": 10055,
-          "name": "manectric-mega"
-        },
-        {
           "id": 10056,
           "name": "banette-mega"
         },
         {
           "id": 10057,
           "name": "absol-mega"
-        },
-        {
-          "id": 10062,
-          "name": "latias-mega"
-        },
-        {
-          "id": 10063,
-          "name": "latios-mega"
         },
         {
           "id": 10064,
@@ -1457,20 +1317,8 @@
           "name": "sharpedo-mega"
         },
         {
-          "id": 10074,
-          "name": "glalie-mega"
-        },
-        {
           "id": 10076,
           "name": "metagross-mega"
-        },
-        {
-          "id": 10077,
-          "name": "kyogre-primal"
-        },
-        {
-          "id": 10078,
-          "name": "groudon-primal"
         },
         {
           "id": 10079,
@@ -1479,10 +1327,6 @@
         {
           "id": 10087,
           "name": "camerupt-mega"
-        },
-        {
-          "id": 10089,
-          "name": "salamence-mega"
         },
         {
           "id": 10174,
@@ -1503,10 +1347,6 @@
       ],
       "missingShiny": [
         {
-          "id": 10050,
-          "name": "blaziken-mega"
-        },
-        {
           "id": 10051,
           "name": "gardevoir-mega"
         },
@@ -1519,28 +1359,12 @@
           "name": "aggron-mega"
         },
         {
-          "id": 10054,
-          "name": "medicham-mega"
-        },
-        {
-          "id": 10055,
-          "name": "manectric-mega"
-        },
-        {
           "id": 10056,
           "name": "banette-mega"
         },
         {
           "id": 10057,
           "name": "absol-mega"
-        },
-        {
-          "id": 10062,
-          "name": "latias-mega"
-        },
-        {
-          "id": 10063,
-          "name": "latios-mega"
         },
         {
           "id": 10064,
@@ -1563,20 +1387,8 @@
           "name": "sharpedo-mega"
         },
         {
-          "id": 10074,
-          "name": "glalie-mega"
-        },
-        {
           "id": 10076,
           "name": "metagross-mega"
-        },
-        {
-          "id": 10077,
-          "name": "kyogre-primal"
-        },
-        {
-          "id": 10078,
-          "name": "groudon-primal"
         },
         {
           "id": 10079,
@@ -1585,10 +1397,6 @@
         {
           "id": 10087,
           "name": "camerupt-mega"
-        },
-        {
-          "id": 10089,
-          "name": "salamence-mega"
         },
         {
           "id": 10174,
@@ -1611,10 +1419,6 @@
     "gen4": {
       "missingAnyAnimated": [
         {
-          "id": 10058,
-          "name": "garchomp-mega"
-        },
-        {
           "id": 10059,
           "name": "lucario-mega"
         },
@@ -1665,10 +1469,6 @@
       ],
       "missingNormal": [
         {
-          "id": 10058,
-          "name": "garchomp-mega"
-        },
-        {
           "id": 10059,
           "name": "lucario-mega"
         },
@@ -1718,10 +1518,6 @@
         }
       ],
       "missingShiny": [
-        {
-          "id": 10058,
-          "name": "garchomp-mega"
-        },
         {
           "id": 10059,
           "name": "lucario-mega"

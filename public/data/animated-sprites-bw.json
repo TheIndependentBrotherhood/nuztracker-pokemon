@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-02T23:59:22.554Z",
+  "generatedAt": "2026-05-03T00:16:43.029Z",
   "summary": {
     "totalPokemon": 1350,
     "totalLinksChecked": 2700,
-    "linksWorking": 1754,
-    "linksFailed": 946,
-    "normalWorking": 876,
-    "shinyWorking": 878,
+    "linksWorking": 1788,
+    "linksFailed": 912,
+    "normalWorking": 893,
+    "shinyWorking": 895,
     "sourceCoverage": {
       "pokemondb_bw": {
         "normalSelected": 663,
@@ -14,9 +14,9 @@
         "pokemonWithAtLeastOne": 663
       },
       "google_sheet_gen6": {
-        "normalSelected": 37,
-        "shinySelected": 35,
-        "pokemonWithAtLeastOne": 37
+        "normalSelected": 54,
+        "shinySelected": 52,
+        "pokemonWithAtLeastOne": 54
       },
       "google_sheet_gen7": {
         "normalSelected": 81,
@@ -15911,14 +15911,14 @@
       "name": "charizard-mega-x",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/page-13#lg=attachment658899&slide=0",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/page-13#lg=attachment658900&slide=0",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -15956,14 +15956,14 @@
       "name": "alakazam-mega",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/065_2-gif.369422/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/065_2s-gif.369424/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16046,14 +16046,14 @@
       "name": "mewtwo-mega-x",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/150_2-gif.633935/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/150_2s-gif.633936/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16061,14 +16061,14 @@
       "name": "mewtwo-mega-y",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/150_3-gif.641482/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/150_3s-gif.641483/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16091,14 +16091,14 @@
       "name": "scizor-mega",
       "generation": 2,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/212_1-gif.658905/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/212_1s-gif.658906/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16136,14 +16136,14 @@
       "name": "tyranitar-mega",
       "generation": 2,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/248_1-gif.658907/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/248_1s-gif.658909/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16151,14 +16151,14 @@
       "name": "blaziken-mega",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/257_1-gif.658911/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/257_1s-gif.658912/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16211,14 +16211,14 @@
       "name": "medicham-mega",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/308_1-gif.658917/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/308_1s-gif.658918/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16226,14 +16226,14 @@
       "name": "manectric-mega",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/310_1-gif.641484/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/310_1s-gif.641485/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16271,14 +16271,14 @@
       "name": "garchomp-mega",
       "generation": 4,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/445_1-gif.641490/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/445_1s-gif.641491/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16331,14 +16331,14 @@
       "name": "latias-mega",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/380_2-gif.641486/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/380_2s-gif.641487/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16346,14 +16346,14 @@
       "name": "latios-mega",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/381_2-gif.641488/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/381_2s-gif.641489/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16511,14 +16511,14 @@
       "name": "glalie-mega",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/362-gif.658919/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/362s-gif.658921/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16556,14 +16556,14 @@
       "name": "kyogre-primal",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/382_2-gif.574626/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/382_2s-gif.574627/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16571,14 +16571,14 @@
       "name": "groudon-primal",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/383_2-gif.575155/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/383_2s-gif.575156/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16736,14 +16736,14 @@
       "name": "salamence-mega",
       "generation": 3,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/373_1-gif.658923/",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/373_1s-gif.658924/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -16751,14 +16751,14 @@
       "name": "beedrill-mega",
       "generation": 1,
       "normal": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/threads/smogon-sprite-project.3647722/page-13#lg=attachment658901&slide=0",
+        "available": true,
+        "source": "google_sheet_gen6"
       },
       "shiny": {
-        "url": null,
-        "available": false,
-        "source": null
+        "url": "https://www.smogon.com/forums/attachments/015_1s-gif.658902/",
+        "available": true,
+        "source": "google_sheet_gen6"
       }
     },
     {
@@ -20288,27 +20288,27 @@
     }
   ],
   "missingByGeneration": {
-    "generatedAt": "2026-05-02T23:59:22.553Z",
+    "generatedAt": "2026-05-03T00:16:43.028Z",
     "summaryByGeneration": {
       "gen1": {
-        "missingAnyAnimatedCount": 87,
-        "missingNormalCount": 87,
-        "missingShinyCount": 87
+        "missingAnyAnimatedCount": 82,
+        "missingNormalCount": 82,
+        "missingShinyCount": 82
       },
       "gen2": {
-        "missingAnyAnimatedCount": 15,
-        "missingNormalCount": 15,
-        "missingShinyCount": 15
-      },
-      "gen3": {
-        "missingAnyAnimatedCount": 26,
-        "missingNormalCount": 26,
-        "missingShinyCount": 26
-      },
-      "gen4": {
         "missingAnyAnimatedCount": 13,
         "missingNormalCount": 13,
         "missingShinyCount": 13
+      },
+      "gen3": {
+        "missingAnyAnimatedCount": 17,
+        "missingNormalCount": 17,
+        "missingShinyCount": 17
+      },
+      "gen4": {
+        "missingAnyAnimatedCount": 12,
+        "missingNormalCount": 12,
+        "missingShinyCount": 12
       },
       "gen5": {
         "missingAnyAnimatedCount": 30,
@@ -20344,20 +20344,12 @@
             "name": "venusaur-mega"
           },
           {
-            "id": 10034,
-            "name": "charizard-mega-x"
-          },
-          {
             "id": 10035,
             "name": "charizard-mega-y"
           },
           {
             "id": 10036,
             "name": "blastoise-mega"
-          },
-          {
-            "id": 10037,
-            "name": "alakazam-mega"
           },
           {
             "id": 10038,
@@ -20378,14 +20370,6 @@
           {
             "id": 10042,
             "name": "aerodactyl-mega"
-          },
-          {
-            "id": 10043,
-            "name": "mewtwo-mega-x"
-          },
-          {
-            "id": 10044,
-            "name": "mewtwo-mega-y"
           },
           {
             "id": 10071,
@@ -20418,10 +20402,6 @@
           {
             "id": 10085,
             "name": "pikachu-cosplay"
-          },
-          {
-            "id": 10090,
-            "name": "beedrill-mega"
           },
           {
             "id": 10091,
@@ -20694,20 +20674,12 @@
             "name": "venusaur-mega"
           },
           {
-            "id": 10034,
-            "name": "charizard-mega-x"
-          },
-          {
             "id": 10035,
             "name": "charizard-mega-y"
           },
           {
             "id": 10036,
             "name": "blastoise-mega"
-          },
-          {
-            "id": 10037,
-            "name": "alakazam-mega"
           },
           {
             "id": 10038,
@@ -20728,14 +20700,6 @@
           {
             "id": 10042,
             "name": "aerodactyl-mega"
-          },
-          {
-            "id": 10043,
-            "name": "mewtwo-mega-x"
-          },
-          {
-            "id": 10044,
-            "name": "mewtwo-mega-y"
           },
           {
             "id": 10071,
@@ -20768,10 +20732,6 @@
           {
             "id": 10085,
             "name": "pikachu-cosplay"
-          },
-          {
-            "id": 10090,
-            "name": "beedrill-mega"
           },
           {
             "id": 10091,
@@ -21044,20 +21004,12 @@
             "name": "venusaur-mega"
           },
           {
-            "id": 10034,
-            "name": "charizard-mega-x"
-          },
-          {
             "id": 10035,
             "name": "charizard-mega-y"
           },
           {
             "id": 10036,
             "name": "blastoise-mega"
-          },
-          {
-            "id": 10037,
-            "name": "alakazam-mega"
           },
           {
             "id": 10038,
@@ -21078,14 +21030,6 @@
           {
             "id": 10042,
             "name": "aerodactyl-mega"
-          },
-          {
-            "id": 10043,
-            "name": "mewtwo-mega-x"
-          },
-          {
-            "id": 10044,
-            "name": "mewtwo-mega-y"
           },
           {
             "id": 10071,
@@ -21118,10 +21062,6 @@
           {
             "id": 10085,
             "name": "pikachu-cosplay"
-          },
-          {
-            "id": 10090,
-            "name": "beedrill-mega"
           },
           {
             "id": 10091,
@@ -21396,20 +21336,12 @@
             "name": "ampharos-mega"
           },
           {
-            "id": 10046,
-            "name": "scizor-mega"
-          },
-          {
             "id": 10047,
             "name": "heracross-mega"
           },
           {
             "id": 10048,
             "name": "houndoom-mega"
-          },
-          {
-            "id": 10049,
-            "name": "tyranitar-mega"
           },
           {
             "id": 10072,
@@ -21458,20 +21390,12 @@
             "name": "ampharos-mega"
           },
           {
-            "id": 10046,
-            "name": "scizor-mega"
-          },
-          {
             "id": 10047,
             "name": "heracross-mega"
           },
           {
             "id": 10048,
             "name": "houndoom-mega"
-          },
-          {
-            "id": 10049,
-            "name": "tyranitar-mega"
           },
           {
             "id": 10072,
@@ -21520,20 +21444,12 @@
             "name": "ampharos-mega"
           },
           {
-            "id": 10046,
-            "name": "scizor-mega"
-          },
-          {
             "id": 10047,
             "name": "heracross-mega"
           },
           {
             "id": 10048,
             "name": "houndoom-mega"
-          },
-          {
-            "id": 10049,
-            "name": "tyranitar-mega"
           },
           {
             "id": 10072,
@@ -21580,10 +21496,6 @@
       "gen3": {
         "missingAnyAnimated": [
           {
-            "id": 10050,
-            "name": "blaziken-mega"
-          },
-          {
             "id": 10051,
             "name": "gardevoir-mega"
           },
@@ -21596,28 +21508,12 @@
             "name": "aggron-mega"
           },
           {
-            "id": 10054,
-            "name": "medicham-mega"
-          },
-          {
-            "id": 10055,
-            "name": "manectric-mega"
-          },
-          {
             "id": 10056,
             "name": "banette-mega"
           },
           {
             "id": 10057,
             "name": "absol-mega"
-          },
-          {
-            "id": 10062,
-            "name": "latias-mega"
-          },
-          {
-            "id": 10063,
-            "name": "latios-mega"
           },
           {
             "id": 10064,
@@ -21640,20 +21536,8 @@
             "name": "sharpedo-mega"
           },
           {
-            "id": 10074,
-            "name": "glalie-mega"
-          },
-          {
             "id": 10076,
             "name": "metagross-mega"
-          },
-          {
-            "id": 10077,
-            "name": "kyogre-primal"
-          },
-          {
-            "id": 10078,
-            "name": "groudon-primal"
           },
           {
             "id": 10079,
@@ -21662,10 +21546,6 @@
           {
             "id": 10087,
             "name": "camerupt-mega"
-          },
-          {
-            "id": 10089,
-            "name": "salamence-mega"
           },
           {
             "id": 10174,
@@ -21686,10 +21566,6 @@
         ],
         "missingNormal": [
           {
-            "id": 10050,
-            "name": "blaziken-mega"
-          },
-          {
             "id": 10051,
             "name": "gardevoir-mega"
           },
@@ -21702,28 +21578,12 @@
             "name": "aggron-mega"
           },
           {
-            "id": 10054,
-            "name": "medicham-mega"
-          },
-          {
-            "id": 10055,
-            "name": "manectric-mega"
-          },
-          {
             "id": 10056,
             "name": "banette-mega"
           },
           {
             "id": 10057,
             "name": "absol-mega"
-          },
-          {
-            "id": 10062,
-            "name": "latias-mega"
-          },
-          {
-            "id": 10063,
-            "name": "latios-mega"
           },
           {
             "id": 10064,
@@ -21746,20 +21606,8 @@
             "name": "sharpedo-mega"
           },
           {
-            "id": 10074,
-            "name": "glalie-mega"
-          },
-          {
             "id": 10076,
             "name": "metagross-mega"
-          },
-          {
-            "id": 10077,
-            "name": "kyogre-primal"
-          },
-          {
-            "id": 10078,
-            "name": "groudon-primal"
           },
           {
             "id": 10079,
@@ -21768,10 +21616,6 @@
           {
             "id": 10087,
             "name": "camerupt-mega"
-          },
-          {
-            "id": 10089,
-            "name": "salamence-mega"
           },
           {
             "id": 10174,
@@ -21792,10 +21636,6 @@
         ],
         "missingShiny": [
           {
-            "id": 10050,
-            "name": "blaziken-mega"
-          },
-          {
             "id": 10051,
             "name": "gardevoir-mega"
           },
@@ -21808,28 +21648,12 @@
             "name": "aggron-mega"
           },
           {
-            "id": 10054,
-            "name": "medicham-mega"
-          },
-          {
-            "id": 10055,
-            "name": "manectric-mega"
-          },
-          {
             "id": 10056,
             "name": "banette-mega"
           },
           {
             "id": 10057,
             "name": "absol-mega"
-          },
-          {
-            "id": 10062,
-            "name": "latias-mega"
-          },
-          {
-            "id": 10063,
-            "name": "latios-mega"
           },
           {
             "id": 10064,
@@ -21852,20 +21676,8 @@
             "name": "sharpedo-mega"
           },
           {
-            "id": 10074,
-            "name": "glalie-mega"
-          },
-          {
             "id": 10076,
             "name": "metagross-mega"
-          },
-          {
-            "id": 10077,
-            "name": "kyogre-primal"
-          },
-          {
-            "id": 10078,
-            "name": "groudon-primal"
           },
           {
             "id": 10079,
@@ -21874,10 +21686,6 @@
           {
             "id": 10087,
             "name": "camerupt-mega"
-          },
-          {
-            "id": 10089,
-            "name": "salamence-mega"
           },
           {
             "id": 10174,
@@ -21900,10 +21708,6 @@
       "gen4": {
         "missingAnyAnimated": [
           {
-            "id": 10058,
-            "name": "garchomp-mega"
-          },
-          {
             "id": 10059,
             "name": "lucario-mega"
           },
@@ -21954,10 +21758,6 @@
         ],
         "missingNormal": [
           {
-            "id": 10058,
-            "name": "garchomp-mega"
-          },
-          {
             "id": 10059,
             "name": "lucario-mega"
           },
@@ -22007,10 +21807,6 @@
           }
         ],
         "missingShiny": [
-          {
-            "id": 10058,
-            "name": "garchomp-mega"
-          },
           {
             "id": 10059,
             "name": "lucario-mega"
