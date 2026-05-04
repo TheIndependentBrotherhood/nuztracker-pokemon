@@ -1,9 +1,22 @@
 import { NextRequest } from "next/server";
 import path from "path";
 import fs from "fs";
-import { mergeAnimatedSpritesIntoPokemonList } from "@/src/lib/server/animatedSpritesMerge";
+import { mergeAnimatedSpritesIntoPokemonList } from "@/lib/server/animatedSpritesMerge";
+
+export const dynamic = "force-static";
 
 const DATA_DIR = path.join(process.cwd(), "public", "data");
+
+export async function generateStaticParams() {
+  return [
+    { step: "type-charts" },
+    { step: "type-sprites" },
+    { step: "abilities" },
+    { step: "pokemon-list" },
+    { step: "regions" },
+    { step: "animated-sprites" },
+  ];
+}
 
 /**
  * POST /api/dev/sync/[step]
@@ -17,52 +30,63 @@ const DATA_DIR = path.join(process.cwd(), "public", "data");
  */
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { step: string } },
+  { params }: { params: Promise<{ step: string }> },
 ) {
-  const { step } = params;
+  const { step } = await params;
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      function send(data: unknown) {
+  let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
+
+  const stream = new ReadableStream<Uint8Array>({
+    start(c) {
+      controller = c;
+    },
+  });
+
+  // Start async sync independently from ReadableStream.start()
+  (async () => {
+    if (!controller) return; // Safety check
+
+    function send(data: unknown) {
+      if (controller) {
         controller.enqueue(
           new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`),
         );
       }
+    }
 
-      try {
-        switch (step) {
-          case "type-charts":
-            await syncTypeCharts(send);
-            break;
-          case "type-sprites":
-            await syncTypeSprites(send);
-            break;
-          case "abilities":
-            await syncAbilities(send);
-            break;
-          case "pokemon-list":
-            await syncPokemonList(send);
-            break;
-          case "regions":
-            await syncRegions(send);
-            break;
-          case "animated-sprites":
-            await syncAnimatedSprites(send);
-            break;
-          default:
-            send({ type: "error", message: `Unknown step: ${step}` });
-        }
-        send({ type: "done" });
-      } catch (e) {
-        send({
-          type: "error",
-          message: e instanceof Error ? e.message : String(e),
-        });
-      } finally {
-        controller.close();
+    try {
+      switch (step) {
+        case "type-charts":
+          await syncTypeCharts(send);
+          break;
+        case "type-sprites":
+          await syncTypeSprites(send);
+          break;
+        case "abilities":
+          await syncAbilities(send);
+          break;
+        case "pokemon-list":
+          await syncPokemonList(send);
+          break;
+        case "regions":
+          await syncRegions(send);
+          break;
+        case "animated-sprites":
+          await syncAnimatedSprites(send);
+          break;
+        default:
+          send({ type: "error", message: `Unknown step: ${step}` });
       }
-    },
-  });
+      send({ type: "done" });
+    } catch (e) {
+      send({
+        type: "error",
+        message: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      controller?.close();
+    }
+  })();
 
   return new Response(stream, {
     headers: {
@@ -71,6 +95,27 @@ export async function POST(
       Connection: "keep-alive",
     },
   });
+}
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ step: string }> },
+) {
+  const { step } = await params;
+  return new Response(
+    JSON.stringify({
+      ok: false,
+      step,
+      message:
+        "Use POST on this endpoint from the dev sync UI to run the synchronization stream.",
+    }),
+    {
+      status: 405,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -85,10 +130,79 @@ function readCurrentFile<T>(filename: string): T | null {
   }
 }
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} – ${url}`);
-  return res.json() as Promise<T>;
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchJson<T>(url: string, minDelayMs = 0): Promise<T> {
+  if (minDelayMs > 0) await delay(minDelayMs);
+
+  const maxRetries = 3;
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        if (res.status >= 500) {
+          // Server error - might be temporary
+          if (attempt < maxRetries - 1) {
+            const backoffMs = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+            await delay(backoffMs);
+            continue;
+          }
+        }
+        throw new Error(`HTTP ${res.status} – ${url}`);
+      }
+      return res.json() as Promise<T>;
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+      if (attempt < maxRetries - 1) {
+        const backoffMs = Math.pow(2, attempt) * 1000;
+        await delay(backoffMs);
+      }
+    }
+  }
+
+  throw (
+    lastError ||
+    new Error(`Failed to fetch ${url} after ${maxRetries} attempts`)
+  );
+}
+
+/**
+ * Map PokeAPI generation name (e.g. "generation-iii") to app format (e.g. "gen3")
+ */
+function mapGenerationName(pokeapiGen: string): string {
+  const romanToNum: Record<string, string> = {
+    i: "1",
+    ii: "2",
+    iii: "3",
+    iv: "4",
+    v: "5",
+    vi: "6",
+    vii: "7",
+    viii: "8",
+    ix: "9",
+  };
+
+  // Extract roman numeral from "generation-iii" format
+  const match = pokeapiGen.match(/generation-([ivx]+)/);
+  if (!match) return pokeapiGen;
+
+  const roman = match[1];
+  const num = romanToNum[roman];
+  return num ? `gen${num}` : pokeapiGen;
+}
+
+/**
+ * Map generation number to app format:
+ * 1 → "gen1", 2 → "gen2-5", 6+ → "gen6+"
+ */
+function mapGenerationNumberToKey(genId: number): string {
+  if (genId === 1) return "gen1";
+  if (genId <= 5) return "gen2-5";
+  return "gen6+";
 }
 
 type SendFn = (data: unknown) => void;
@@ -96,60 +210,69 @@ type SendFn = (data: unknown) => void;
 // ─── type-charts sync ─────────────────────────────────────────────────────────
 
 async function syncTypeCharts(send: SendFn) {
-  send({ type: "progress", message: "Fetching types from PokeAPI…" });
-
-  const POKEAPI = "https://pokeapi.co/api/v2";
-
-  const typeList = await fetchJson<{
-    results: { name: string; url: string }[];
-  }>(`${POKEAPI}/type?limit=100`);
   send({
     type: "progress",
-    message: `Found ${typeList.results.length} types`,
-    current: 0,
-    total: typeList.results.length,
+    message: "Fetching type-charts by generation from PokeAPI…",
   });
 
+  const POKEAPI = "https://pokeapi.co/api/v2";
   const current = readCurrentFile<Record<string, unknown>>("type-charts.json");
 
+  // Build charts for generations 1, 2, and 6
   const incoming: Record<string, unknown> = {};
-  for (let i = 0; i < typeList.results.length; i++) {
-    const typeInfo = await fetchJson<{
-      name: string;
-      damage_relations: {
-        double_damage_from: { name: string }[];
-        half_damage_from: { name: string }[];
-        no_damage_from: { name: string }[];
-        double_damage_to: { name: string }[];
-      };
-      names: { language: { name: string }; name: string }[];
-    }>(typeList.results[i].url);
+  const genIds = [1, 2, 6];
 
-    const names: Record<string, string> = {};
-    for (const n of typeInfo.names) {
-      if (n.language.name === "fr" || n.language.name === "en") {
-        names[n.language.name] = n.name;
-      }
-    }
-
-    incoming[typeInfo.name] = {
-      names,
-      weakTo: typeInfo.damage_relations.double_damage_from.map((t) => t.name),
-      resistsAgainst: typeInfo.damage_relations.half_damage_from.map(
-        (t) => t.name,
-      ),
-      immuneTo: typeInfo.damage_relations.no_damage_from.map((t) => t.name),
-      strongAgainst: typeInfo.damage_relations.double_damage_to.map(
-        (t) => t.name,
-      ),
-    };
+  for (let gIdx = 0; gIdx < genIds.length; gIdx++) {
+    const genId = genIds[gIdx];
+    const genKey = mapGenerationNumberToKey(genId);
 
     send({
       type: "progress",
-      message: `Fetched type: ${typeInfo.name}`,
-      current: i + 1,
-      total: typeList.results.length,
+      message: `📊 Generation ${gIdx + 1}/3: Fetching ${genKey}…`,
+      current: gIdx,
+      total: 3,
     });
+
+    const genData = await fetchJson<{
+      types: { name: string }[];
+    }>(`${POKEAPI}/generation/${genId}`, 100);
+
+    const types = genData.types.map((t) => t.name);
+    const effectiveness: Record<string, unknown> = {};
+
+    for (const typeName of types) {
+      const typeInfo = await fetchJson<{
+        name: string;
+        damage_relations: {
+          double_damage_from: { name: string }[];
+          half_damage_from: { name: string }[];
+          no_damage_from: { name: string }[];
+          double_damage_to: { name: string }[];
+        };
+        names: { language: { name: string }; name: string }[];
+      }>(`${POKEAPI}/type/${typeName}`, 50);
+
+      const names: Record<string, string> = {};
+      for (const n of typeInfo.names) {
+        if (n.language.name === "fr" || n.language.name === "en") {
+          names[n.language.name] = n.name;
+        }
+      }
+
+      effectiveness[typeName] = {
+        names,
+        weakTo: typeInfo.damage_relations.double_damage_from.map((t) => t.name),
+        resistsAgainst: typeInfo.damage_relations.half_damage_from.map(
+          (t) => t.name,
+        ),
+        immuneTo: typeInfo.damage_relations.no_damage_from.map((t) => t.name),
+        strongAgainst: typeInfo.damage_relations.double_damage_to.map(
+          (t) => t.name,
+        ),
+      };
+    }
+
+    incoming[genKey] = { types, effectiveness };
   }
 
   const diff = diffObjects(
@@ -162,7 +285,10 @@ async function syncTypeCharts(send: SendFn) {
 // ─── type-sprites sync ────────────────────────────────────────────────────────
 
 async function syncTypeSprites(send: SendFn) {
-  send({ type: "progress", message: "Fetching type sprites from PokeAPI…" });
+  send({
+    type: "progress",
+    message: "Fetching type sprites from PokeAPI…",
+  });
   const POKEAPI = "https://pokeapi.co/api/v2";
 
   const typeList = await fetchJson<{
@@ -180,13 +306,25 @@ async function syncTypeSprites(send: SendFn) {
       id: number;
       name: string;
       sprites: Record<string, unknown>;
-    }>(typeList.results[i].url);
+    }>(typeList.results[i].url, 50);
+
+    // Normalize generation keys from "generation-iii" to "gen3"
+    const normalizedSprites: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(typeData.sprites)) {
+      if (key.startsWith("generation-")) {
+        const mappedKey = mapGenerationName(key);
+        normalizedSprites[mappedKey] = value;
+      } else {
+        normalizedSprites[key] = value;
+      }
+    }
 
     incomingTypes.push({
       id: typeData.id,
       name: typeData.name,
-      sprites: typeData.sprites,
+      sprites: normalizedSprites,
     });
+
     send({
       type: "progress",
       message: `Fetched sprites: ${typeData.name}`,
@@ -225,14 +363,38 @@ async function syncTypeSprites(send: SendFn) {
 
 // ─── abilities sync ──────────────────────────────────────────────────────────
 
+// Map of abilities that grant immunity to specific types
+const IMMUNITY_MAP: Record<string, string[]> = {
+  "water-absorb": ["water"],
+  "flash-fire": ["fire"],
+  levitate: ["ground"],
+  "sap-sipper": ["grass"],
+  "lightning-rod": ["electric"],
+  "wonder-guard": ["all-except-super-effective"],
+  "volt-absorb": ["electric"],
+  "dry-skin": ["water"],
+  "storm-drain": ["water"],
+  "earth-eater": ["ground"],
+};
+
 async function syncAbilities(send: SendFn) {
-  send({ type: "progress", message: "Fetching abilities from PokeAPI…" });
+  send({
+    type: "progress",
+    message: "Fetching all abilities from PokeAPI…",
+  });
   const POKEAPI = "https://pokeapi.co/api/v2";
 
   const abilityList = await fetchJson<{
     results: { name: string; url: string }[];
     count: number;
-  }>(`${POKEAPI}/ability?limit=400`);
+  }>(`${POKEAPI}/ability?limit=500`);
+
+  send({
+    type: "progress",
+    message: `Found ${abilityList.results.length} abilities`,
+    current: 0,
+    total: abilityList.results.length,
+  });
 
   const current = readCurrentFile<{ abilities: unknown[] }>(
     "abilities-immunity.json",
@@ -247,24 +409,52 @@ async function syncAbilities(send: SendFn) {
       id: number;
       name: string;
       generation: { name: string };
-      effect_entries: { effect: string; language: { name: string } }[];
-    }>(abilityList.results[i].url);
+      names: { language: { name: string }; name: string }[];
+      effect_entries: {
+        effect: string;
+        short_effect: string;
+        language: { name: string };
+      }[];
+    }>(abilityList.results[i].url, 50);
 
-    const effectEntry = abilityData.effect_entries.find(
-      (e) => e.language.name === "en",
-    );
+    // Get name translations
+    const names: Record<string, string> = {};
+    for (const n of abilityData.names) {
+      if (n.language.name === "fr" || n.language.name === "en") {
+        names[n.language.name] = n.name;
+      }
+    }
 
-    incoming.push({
+    // Get effect translations
+    const effectEn =
+      abilityData.effect_entries.find((e) => e.language.name === "en")
+        ?.effect ?? "";
+    const effectFr =
+      abilityData.effect_entries.find((e) => e.language.name === "fr")
+        ?.effect ?? "";
+
+    const entry: Record<string, unknown> = {
       id: abilityData.id,
       name: abilityData.name,
+      names,
       generation: abilityData.generation.name,
-      effect: effectEntry?.effect ?? "",
-    });
+      effects: {
+        fr: effectFr,
+        en: effectEn,
+      },
+    };
 
-    if ((i + 1) % 20 === 0) {
+    // Add immuneTypes if this ability grants immunity
+    if (abilityData.name in IMMUNITY_MAP) {
+      entry.immuneTypes = IMMUNITY_MAP[abilityData.name];
+    }
+
+    incoming.push(entry);
+
+    if ((i + 1) % 50 === 0) {
       send({
         type: "progress",
-        message: `Fetched ${i + 1}/${abilityList.results.length} abilities`,
+        message: `⚡ ${i + 1}/${abilityList.results.length} abilities fetched`,
         current: i + 1,
         total: abilityList.results.length,
       });
@@ -309,8 +499,8 @@ async function syncPokemonList(send: SendFn) {
 
   type CurrentPokemonEntry = {
     id: number;
-    name: string;
-    alternativeNames?: string[];
+    technicalName: string;
+    alternativeTechnicalNames?: string[];
     types?: string[];
     generation?: number;
     isLegendary?: boolean;
@@ -321,16 +511,16 @@ async function syncPokemonList(send: SendFn) {
   };
 
   const getTechnicalNames = (pokemon: {
-    name: string;
-    alternativeNames?: string[];
-  }) => [pokemon.name, ...(pokemon.alternativeNames ?? [])];
+    technicalName: string;
+    alternativeTechnicalNames?: string[];
+  }) => [pokemon.technicalName, ...(pokemon.alternativeTechnicalNames ?? [])];
 
   const current = readCurrentFile<{ pokemon: CurrentPokemonEntry[] }>(
     "pokemon-list.json",
   );
   const currentPokemon = current?.pokemon ?? [];
   const currentByCanonicalName = new Map(
-    currentPokemon.map((p) => [p.name, p]),
+    currentPokemon.map((p) => [p.technicalName, p]),
   );
   const currentByAnyName = new Map<string, CurrentPokemonEntry>();
   for (const pokemon of currentPokemon) {
@@ -397,12 +587,12 @@ async function syncPokemonList(send: SendFn) {
     const staticShinyUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${details.id}.png`;
 
     const existing = currentByAnyName.get(p.name);
-    const canonicalName = existing?.name ?? details.name;
+    const canonicalName = existing?.technicalName ?? details.name;
     const previousEntry = incomingByCanonicalName.get(canonicalName) as
       | {
           id: number;
-          name: string;
-          alternativeNames?: string[];
+          technicalName: string;
+          alternativeTechnicalNames?: string[];
           names: Record<string, string>;
           types: string[];
           isLegendary: boolean;
@@ -413,18 +603,18 @@ async function syncPokemonList(send: SendFn) {
           };
         }
       | undefined;
-    const alternativeNames = Array.from(
+    const alternativeTechnicalNames = Array.from(
       new Set([
-        ...(existing?.alternativeNames ?? []),
-        ...(previousEntry?.alternativeNames ?? []),
+        ...(existing?.alternativeTechnicalNames ?? []),
+        ...(previousEntry?.alternativeTechnicalNames ?? []),
         ...(canonicalName !== details.name ? [details.name] : []),
       ]),
     ).sort((a, b) => a.localeCompare(b));
 
     incomingByCanonicalName.set(canonicalName, {
       id: existing?.id ?? previousEntry?.id ?? details.id,
-      name: canonicalName,
-      alternativeNames,
+      technicalName: canonicalName,
+      alternativeTechnicalNames,
       names,
       types:
         existing?.types ??
@@ -478,14 +668,17 @@ async function syncPokemonList(send: SendFn) {
   const deleted: unknown[] = [];
 
   for (const p of incoming as {
-    name: string;
+    technicalName: string;
     id: number;
-    alternativeNames?: string[];
+    alternativeTechnicalNames?: string[];
+    types?: string[];
+    generation?: number;
+    isLegendary?: boolean;
   }[]) {
-    const cur = currentByCanonicalName.get(p.name) as
+    const cur = currentByCanonicalName.get(p.technicalName) as
       | {
           id: number;
-          alternativeNames?: string[];
+          alternativeTechnicalNames?: string[];
           types: string[];
           generation: number;
           isLegendary: boolean;
@@ -495,15 +688,19 @@ async function syncPokemonList(send: SendFn) {
       added.push(p);
     } else {
       // Only flag as modified if core fields changed (ignore sprite alternatives)
-      const currentAlternativeNames = [...(cur.alternativeNames ?? [])].sort();
-      const incomingAlternativeNames = [...(p.alternativeNames ?? [])].sort();
+      const currentAlternativeTechnicalNames = [
+        ...(cur.alternativeTechnicalNames ?? []),
+      ].sort();
+      const incomingAlternativeTechnicalNames = [
+        ...(p.alternativeTechnicalNames ?? []),
+      ].sort();
       const coreChanged =
         cur.id !== p.id ||
-        cur.types?.join(",") !== (p as { types: string[] }).types.join(",") ||
-        cur.generation !== (p as { generation: number }).generation ||
-        cur.isLegendary !== (p as { isLegendary: boolean }).isLegendary ||
-        currentAlternativeNames.join(",") !==
-          incomingAlternativeNames.join(",");
+        cur.types?.join(",") !== p.types?.join(",") ||
+        cur.generation !== p.generation ||
+        cur.isLegendary !== p.isLegendary ||
+        currentAlternativeTechnicalNames.join(",") !==
+          incomingAlternativeTechnicalNames.join(",");
       if (coreChanged) {
         modified.push({ current: cur, incoming: p });
       }
@@ -511,10 +708,10 @@ async function syncPokemonList(send: SendFn) {
   }
 
   const incomingNames = new Set(
-    (incoming as { name: string }[]).map((p) => p.name),
+    (incoming as { technicalName: string }[]).map((p) => p.technicalName),
   );
-  for (const [name, pokemon] of currentByCanonicalName) {
-    if (!incomingNames.has(name)) deleted.push(pokemon);
+  for (const [technicalName, pokemon] of currentByCanonicalName) {
+    if (!incomingNames.has(technicalName)) deleted.push(pokemon);
   }
 
   send({
@@ -533,7 +730,7 @@ async function syncPokemonList(send: SendFn) {
 // ─── regions sync ────────────────────────────────────────────────────────────
 
 async function syncRegions(send: SendFn) {
-  send({ type: "progress", message: "Fetching regions from PokeAPI…" });
+  send({ type: "progress", message: "📍 Fetching regions list from PokeAPI…" });
   const POKEAPI = "https://pokeapi.co/api/v2";
 
   const current = readCurrentFile<{ regions: { name: string }[] }>(
@@ -549,7 +746,7 @@ async function syncRegions(send: SendFn) {
 
   send({
     type: "progress",
-    message: `Found ${regionList.results.length} regions`,
+    message: `✓ Found ${regionList.results.length} regions – fetching details…`,
     current: 0,
     total: regionList.results.length,
   });
@@ -560,8 +757,8 @@ async function syncRegions(send: SendFn) {
     const r = regionList.results[rIdx];
     send({
       type: "progress",
-      message: `Processing region: ${r.name} (${rIdx + 1}/${regionList.results.length})`,
-      current: rIdx + 1,
+      message: `🌎 Region ${rIdx + 1}/${regionList.results.length}: ${r.name}…`,
+      current: rIdx,
       total: regionList.results.length,
     });
 
@@ -570,7 +767,7 @@ async function syncRegions(send: SendFn) {
       name: string;
       locations: { name: string }[];
       names: { language: { name: string }; name: string }[];
-    }>(`${POKEAPI}/region/${r.name}`);
+    }>(`${POKEAPI}/region/${r.name}`, 100);
 
     const regionNames: Record<string, string> = {};
     for (const n of regionData.names) {
@@ -579,14 +776,25 @@ async function syncRegions(send: SendFn) {
       }
     }
 
+    send({
+      type: "progress",
+      message: `  → ${regionData.locations.length} locations found`,
+    });
+
     const locations: unknown[] = [];
-    for (const loc of regionData.locations) {
+    for (let locIdx = 0; locIdx < regionData.locations.length; locIdx++) {
+      const loc = regionData.locations[locIdx];
+      send({
+        type: "progress",
+        message: `    🏙️ Location ${locIdx + 1}/${regionData.locations.length}: ${loc.name}`,
+      });
+
       const locData = await fetchJson<{
         id: number;
         name: string;
-        areas: { name: string }[];
+        areas?: { name: string }[];
         names: { language: { name: string }; name: string }[];
-      }>(`${POKEAPI}/location/${loc.name}`);
+      }>(`${POKEAPI}/location/${loc.name}`, 100);
 
       const locNames: Record<string, string> = {};
       for (const n of locData.names) {
@@ -596,20 +804,39 @@ async function syncRegions(send: SendFn) {
       }
 
       const areas: unknown[] = [];
-      for (const area of locData.areas ?? []) {
-        const areaData = await fetchJson<{
-          id: number;
-          name: string;
-          names: { language: { name: string }; name: string }[];
-        }>(`${POKEAPI}/location-area/${area.name}`);
+      if (locData.areas && locData.areas.length > 0) {
+        send({
+          type: "progress",
+          message: `      📍 ${locData.areas.length} areas in ${loc.name}`,
+        });
 
-        const areaNames: Record<string, string> = {};
-        for (const n of areaData.names ?? []) {
-          if (n.language.name === "fr" || n.language.name === "en") {
-            areaNames[n.language.name] = n.name;
+        for (let areaIdx = 0; areaIdx < locData.areas.length; areaIdx++) {
+          const area = locData.areas[areaIdx];
+          const areaData = await fetchJson<{
+            id: number;
+            name: string;
+            names: { language: { name: string }; name: string }[];
+          }>(`${POKEAPI}/location-area/${area.name}`, 150); // 150ms delay to avoid rate limit
+
+          const areaNames: Record<string, string> = {};
+          for (const n of areaData.names ?? []) {
+            if (n.language.name === "fr" || n.language.name === "en") {
+              areaNames[n.language.name] = n.name;
+            }
+          }
+          areas.push({
+            id: areaData.id,
+            name: areaData.name,
+            names: areaNames,
+          });
+
+          if ((areaIdx + 1) % 10 === 0) {
+            send({
+              type: "progress",
+              message: `        → ${areaIdx + 1}/${locData.areas.length} areas processed`,
+            });
           }
         }
-        areas.push({ id: areaData.id, name: areaData.name, names: areaNames });
       }
 
       locations.push({
@@ -625,6 +852,13 @@ async function syncRegions(send: SendFn) {
       name: regionData.name,
       names: regionNames,
       locations,
+    });
+
+    send({
+      type: "progress",
+      message: `✓ Region ${r.name} done (${locations.length} locations)`,
+      current: rIdx + 1,
+      total: regionList.results.length,
     });
   }
 
@@ -649,6 +883,11 @@ async function syncRegions(send: SendFn) {
   }
 
   send({
+    type: "progress",
+    message: `📊 Diff: +${added.length} | ~${modified.length} | -${deleted.length}`,
+  });
+
+  send({
     type: "diff",
     added,
     modified,
@@ -665,8 +904,8 @@ async function syncRegions(send: SendFn) {
 async function syncAnimatedSprites(send: SendFn) {
   type PokemonListEntry = {
     id: number;
-    name: string;
-    alternativeNames?: string[];
+    technicalName: string;
+    alternativeTechnicalNames?: string[];
     generation: number;
     sprite?: string;
     sprites?: {
@@ -703,10 +942,10 @@ async function syncAnimatedSprites(send: SendFn) {
   );
 
   const currentByName = new Map(
-    current.pokemon.map((pokemon) => [pokemon.name, pokemon]),
+    current.pokemon.map((pokemon) => [pokemon.technicalName, pokemon]),
   );
   const incomingByName = new Map(
-    incoming.pokemon.map((pokemon) => [pokemon.name, pokemon]),
+    incoming.pokemon.map((pokemon) => [pokemon.technicalName, pokemon]),
   );
 
   const added: PokemonListEntry[] = [];
@@ -717,7 +956,7 @@ async function syncAnimatedSprites(send: SendFn) {
   const deleted: PokemonListEntry[] = [];
 
   for (const pokemon of incoming.pokemon) {
-    const currentPokemon = currentByName.get(pokemon.name);
+    const currentPokemon = currentByName.get(pokemon.technicalName);
     if (!currentPokemon) {
       added.push(pokemon);
       continue;
@@ -729,7 +968,7 @@ async function syncAnimatedSprites(send: SendFn) {
   }
 
   for (const pokemon of current.pokemon) {
-    if (!incomingByName.has(pokemon.name)) {
+    if (!incomingByName.has(pokemon.technicalName)) {
       deleted.push(pokemon);
     }
   }

@@ -23,8 +23,8 @@ const ITEMS_PER_PAGE = 20;
 
 interface PokemonListEntry {
   id: number;
-  name: string;
-  alternativeNames?: string[];
+  technicalName: string;
+  alternativeTechnicalNames?: string[];
   names?: { fr?: string; en?: string };
   types: string[];
   sprites: {
@@ -131,7 +131,7 @@ export default function PokedexView({ runId }: Props) {
 
       const nameFr = entry.names?.fr?.toLowerCase() ?? "";
       const nameEn = entry.names?.en?.toLowerCase() ?? "";
-      const technicalName = entry.name.toLowerCase();
+      const technicalName = entry.technicalName.toLowerCase();
       const dexNumber = String(entry.id);
 
       return (
@@ -148,12 +148,12 @@ export default function PokedexView({ runId }: Props) {
       if (sortBy === "name") {
         const nameA =
           lang === "fr"
-            ? (a.names?.fr ?? a.names?.en ?? a.name)
-            : (a.names?.en ?? a.name);
+            ? (a.names?.fr ?? a.names?.en ?? a.technicalName)
+            : (a.names?.en ?? a.technicalName);
         const nameB =
           lang === "fr"
-            ? (b.names?.fr ?? b.names?.en ?? b.name)
-            : (b.names?.en ?? b.name);
+            ? (b.names?.fr ?? b.names?.en ?? b.technicalName)
+            : (b.names?.en ?? b.technicalName);
         result = nameA.localeCompare(nameB, lang);
         if (result === 0) result = a.id - b.id;
       } else if (sortBy === "bst") {
@@ -289,8 +289,8 @@ export default function PokedexView({ runId }: Props) {
             const data = pokemonData[entry.id];
             const displayLabel =
               lang === "fr"
-                ? (entry.names?.fr ?? entry.names?.en ?? entry.name)
-                : (entry.names?.en ?? entry.name);
+                ? (entry.names?.fr ?? entry.names?.en ?? entry.technicalName)
+                : (entry.names?.en ?? entry.technicalName);
             const bst = data
               ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
               : null;
@@ -299,7 +299,7 @@ export default function PokedexView({ runId }: Props) {
             const rowCapture: Capture = {
               id: `pokedex-${entry.id}`,
               pokemonId: entry.id,
-              pokemonName: entry.name,
+              pokemonName: entry.technicalName,
               pokemonNames: entry.names,
               customTypes: run?.customTypesByPokemonId?.[entry.id],
               gender: "unknown",

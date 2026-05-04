@@ -52,9 +52,9 @@ let pokemonListFallbackCache: Array<{ name: string; url: string }> | null =
 
 // Module-level cache for the static JSON file so it is only downloaded once
 let pokemonListJsonCache: Array<{
-  name: string;
+  technicalName: string;
   id: number;
-  alternativeNames?: string[];
+  alternativeTechnicalNames?: string[];
   names?: { fr?: string; en?: string };
   sprites?: {
     normal: { default: string; alternatives: string[] };
@@ -68,17 +68,17 @@ export interface PokemonNames {
 }
 
 export interface PokemonSearchResult {
-  name: string;
+  technicalName: string;
   displayName: string;
   url: string;
   names?: PokemonNames;
 }
 
 function getTechnicalNames(entry: {
-  name: string;
-  alternativeNames?: string[];
+  technicalName: string;
+  alternativeTechnicalNames?: string[];
 }): string[] {
-  return [entry.name, ...(entry.alternativeNames ?? [])];
+  return [entry.technicalName, ...(entry.alternativeTechnicalNames ?? [])];
 }
 
 export async function fetchPokemon(
@@ -114,9 +114,9 @@ export async function searchPokemon(
       if (res.ok) {
         const data = (await res.json()) as {
           pokemon?: {
-            name: string;
+            technicalName: string;
             id: number;
-            alternativeNames?: string[];
+            alternativeTechnicalNames?: string[];
             names?: { fr?: string; en?: string };
           }[];
         };
@@ -129,7 +129,8 @@ export async function searchPokemon(
       return pokemonListJsonCache
         .filter((p) => {
           const nameFr = p.names?.fr?.toLowerCase() ?? "";
-          const nameEn = p.names?.en?.toLowerCase() ?? p.name.toLowerCase();
+          const nameEn =
+            p.names?.en?.toLowerCase() ?? p.technicalName.toLowerCase();
           const technicalNames = getTechnicalNames(p);
           return (
             nameFr.includes(lower) ||
@@ -141,10 +142,10 @@ export async function searchPokemon(
         .map((p) => {
           const displayName =
             lang === "fr"
-              ? (p.names?.fr ?? p.names?.en ?? p.name)
-              : (p.names?.en ?? p.name);
+              ? (p.names?.fr ?? p.names?.en ?? p.technicalName)
+              : (p.names?.en ?? p.technicalName);
           return {
-            name: p.name,
+            technicalName: p.technicalName,
             displayName,
             url: `${BASE_URL}/pokemon/${p.id}`,
             names: p.names,
@@ -170,7 +171,11 @@ export async function searchPokemon(
     return pokemonListFallbackCache
       .filter((p) => p.name.includes(lower))
       .slice(0, 10)
-      .map((p) => ({ ...p, displayName: p.name }));
+      .map((p) => ({
+        technicalName: p.name,
+        displayName: p.name,
+        url: p.url,
+      }));
   } catch {
     return [];
   }
@@ -306,7 +311,16 @@ export async function getAvailableCaptureSpriteOptions(params: {
       const res = await fetch("/data/pokemon-list.json");
       if (res.ok) {
         const data = (await res.json()) as {
-          pokemon?: typeof pokemonListJsonCache;
+          pokemon?: Array<{
+            technicalName: string;
+            id: number;
+            alternativeTechnicalNames?: string[];
+            names?: { fr?: string; en?: string };
+            sprites?: {
+              normal: { default: string; alternatives: string[] };
+              shiny: { default: string; alternatives: string[] };
+            };
+          }>;
         };
         if (data.pokemon && data.pokemon.length > 0) {
           pokemonListJsonCache = data.pokemon;

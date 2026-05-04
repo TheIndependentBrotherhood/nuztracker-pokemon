@@ -7,7 +7,7 @@ import SyncPanel from "@/components/dev/SyncPanel";
 
 interface MissingEntry {
   id: number;
-  name: string;
+  technicalName: string;
 }
 
 interface GenSummary {
@@ -30,7 +30,7 @@ interface MissingReport {
 
 interface PokemonListEntry {
   id: number;
-  name: string;
+  technicalName: string;
   generation: number;
   sprites?: {
     normal?: { alternatives?: string[] };
@@ -92,7 +92,7 @@ function buildMissingReportFromPokemonList(
     const hasShinyAnimated = (entry.sprites?.shiny?.alternatives ?? []).some(
       isAnimatedUrl,
     );
-    const info = { id: entry.id, name: entry.name };
+    const info = { id: entry.id, technicalName: entry.technicalName };
 
     if (!hasNormalAnimated) {
       byGeneration[genKey].missingNormal.push(info);
@@ -142,7 +142,7 @@ function PokemonTag({ entry }: { entry: MissingEntry }) {
       }}
     >
       <span style={{ color: "#475569" }}>#{entry.id}</span>
-      {entry.name}
+      {entry.technicalName}
     </span>
   );
 }

@@ -160,7 +160,7 @@ export default function AddCaptureModal({
 
   async function handleSelect(item: PokemonSearchResult) {
     const id = getPokemonIdFromUrl(item.url);
-    setSelected({ name: item.name, id, names: item.names });
+    setSelected({ name: item.technicalName, id, names: item.names });
     setQuery(item.displayName);
     setResults([]);
     setSelectedSpriteUrl(null);
@@ -431,7 +431,7 @@ export default function AddCaptureModal({
                     },
                   }}
                 >
-                  {`${r.displayName} (${r.name})`}
+                  {`${r.displayName} (${r.technicalName})`}
                 </Box>
               ))}
             </Box>

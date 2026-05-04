@@ -6,8 +6,8 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 export interface CachedPokemon {
   id: number;
-  name: string;
-  alternativeNames?: string[];
+  technicalName: string;
+  alternativeTechnicalNames?: string[];
   types: string[];
   sprites: {
     normal: { default: string; alternatives: string[] };

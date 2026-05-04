@@ -93,7 +93,7 @@ interface SheetSpriteEntry {
 
 interface AnimatedSpriteRecord {
   id: number;
-  name: string;
+  technicalName: string;
   generation: number;
   normal: {
     url: string | null;
@@ -109,13 +109,21 @@ interface AnimatedSpriteRecord {
 
 export interface MergePokemonListEntry {
   id: number;
-  name: string;
-  alternativeNames?: string[];
+  technicalName: string;
+  alternativeTechnicalNames?: string[];
   generation: number;
   sprite?: string;
   sprites?: {
-    normal?: { default?: string; alternatives?: string[] };
-    shiny?: { default?: string; alternatives?: string[] };
+    normal?: {
+      default?: string;
+      alternatives?: string[];
+      excludeUrls?: string[];
+    };
+    shiny?: {
+      default?: string;
+      alternatives?: string[];
+      excludeUrls?: string[];
+    };
   };
 }
 
@@ -421,10 +429,10 @@ async function mapWithConcurrency<T, R>(
 }
 
 function getTechnicalNames(entry: {
-  name: string;
-  alternativeNames?: string[];
+  technicalName: string;
+  alternativeTechnicalNames?: string[];
 }): string[] {
-  return [entry.name, ...(entry.alternativeNames ?? [])];
+  return [entry.technicalName, ...(entry.alternativeTechnicalNames ?? [])];
 }
 
 function ensureSpriteStructure(entry: MergePokemonListEntry) {
@@ -441,10 +449,12 @@ function ensureSpriteStructure(entry: MergePokemonListEntry) {
     normal: {
       default: baseDefault,
       alternatives: [...(entry.sprites?.normal?.alternatives ?? [])],
+      excludeUrls: [...(entry.sprites?.normal?.excludeUrls ?? [])],
     },
     shiny: {
       default: entry.sprites?.shiny?.default ?? shinyDefault,
       alternatives: [...(entry.sprites?.shiny?.alternatives ?? [])],
+      excludeUrls: [...(entry.sprites?.shiny?.excludeUrls ?? [])],
     },
   };
 
@@ -486,7 +496,7 @@ export async function mergeAnimatedSpritesIntoPokemonList(
     pokemon,
     25,
     async (entry, index): Promise<AnimatedSpriteRecord> => {
-      const normalizedEntryName = normalizePokemonName(entry.name);
+      const normalizedEntryName = normalizePokemonName(entry.technicalName);
       const isMegaOrPrimalForm =
         normalizedEntryName.includes("-mega") ||
         normalizedEntryName.includes("-primal");
@@ -596,7 +606,7 @@ export async function mergeAnimatedSpritesIntoPokemonList(
 
       return {
         id: entry.id,
-        name: entry.name,
+        technicalName: entry.technicalName,
         generation: entry.generation,
         normal: {
           url: normalSelected?.url ?? null,
@@ -617,7 +627,7 @@ export async function mergeAnimatedSpritesIntoPokemonList(
     { normal: string | null; shiny: string | null }
   >();
   for (const sprite of spriteRecords) {
-    animatedByName.set(sprite.name, {
+    animatedByName.set(sprite.technicalName, {
       normal: sprite.normal.available ? sprite.normal.url : null,
       shiny: sprite.shiny.available ? sprite.shiny.url : null,
     });
@@ -633,7 +643,8 @@ export async function mergeAnimatedSpritesIntoPokemonList(
 
     if (
       animated?.normal &&
-      !entry.sprites?.normal?.alternatives?.includes(animated.normal)
+      !entry.sprites?.normal?.alternatives?.includes(animated.normal) &&
+      !entry.sprites?.normal?.excludeUrls?.includes(animated.normal)
     ) {
       entry.sprites?.normal?.alternatives?.unshift(animated.normal);
       normalInjected += 1;
@@ -641,7 +652,8 @@ export async function mergeAnimatedSpritesIntoPokemonList(
 
     if (
       animated?.shiny &&
-      !entry.sprites?.shiny?.alternatives?.includes(animated.shiny)
+      !entry.sprites?.shiny?.alternatives?.includes(animated.shiny) &&
+      !entry.sprites?.shiny?.excludeUrls?.includes(animated.shiny)
     ) {
       entry.sprites?.shiny?.alternatives?.unshift(animated.shiny);
       shinyInjected += 1;
