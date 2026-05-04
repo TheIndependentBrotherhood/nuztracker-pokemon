@@ -5,6 +5,7 @@ import { Box, Typography } from "@mui/material";
 import { Capture, Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "./modals/AddCaptureModal";
+import PokemonDetailModal from "./modals/PokemonDetailModal";
 import {
   getCaptureSpriteFallbackUrl,
   getCaptureSpriteUrl,
@@ -27,52 +28,84 @@ interface Props {
 function CaptureThumbnail({
   capture,
   lang,
+  runId,
 }: {
   capture: Capture;
   lang: "fr" | "en";
+  runId: string;
 }) {
   const displayName = useCaptureDisplayName(capture, lang);
   const displayLabel = useCaptureDisplayLabel(capture, lang);
+  const [showPokemonDetail, setShowPokemonDetail] = useState(false);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        background: "rgba(51, 65, 85, 0.4)",
-        border: "1px solid rgba(71, 85, 99, 0.3)",
-        borderRadius: "0.5rem",
-        px: 1,
-        py: 0.25,
-      }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={getCaptureSpriteUrl(capture, true)}
-        alt={displayName}
-        onError={(event) => {
-          const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
-          if (event.currentTarget.src !== fallbackUrl) {
-            event.currentTarget.src = fallbackUrl;
+    <>
+      <Box
+        component="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowPokemonDetail(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowPokemonDetail(true);
           }
         }}
-        style={{
-          width: "46px",
-          height: "46px",
-          objectFit: "contain",
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          background: "rgba(51, 65, 85, 0.4)",
+          border: "1px solid rgba(71, 85, 99, 0.3)",
+          borderRadius: "0.5rem",
+          px: 1,
+          py: 0.25,
+          cursor: "pointer",
+          transition: "all 150ms ease",
+          "&:hover": {
+            background: "rgba(51, 65, 85, 0.55)",
+            borderColor: "rgba(71, 85, 99, 0.45)",
+          },
         }}
-      />
-      <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
-        {displayLabel}
-      </Typography>
-      <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
-        Lv{capture.level}
-      </Typography>
-      {capture.isShiny && (
-        <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
+        aria-label={displayName}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={getCaptureSpriteUrl(capture, true)}
+          alt={displayName}
+          onError={(event) => {
+            const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
+            if (event.currentTarget.src !== fallbackUrl) {
+              event.currentTarget.src = fallbackUrl;
+            }
+          }}
+          style={{
+            width: "46px",
+            height: "46px",
+            objectFit: "contain",
+          }}
+        />
+        <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
+          {displayLabel}
+        </Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
+          Lv{capture.level}
+        </Typography>
+        {capture.isShiny && (
+          <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
+        )}
+      </Box>
+
+      {showPokemonDetail && (
+        <PokemonDetailModal
+          capture={capture}
+          runId={runId}
+          onClose={() => setShowPokemonDetail(false)}
+        />
       )}
-    </Box>
+    </>
   );
 }
 
@@ -316,7 +349,7 @@ export default function ZoneItem({
         {zone.captures.length > 0 && (
           <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
             {zone.captures.map((c) => (
-              <CaptureThumbnail key={c.id} capture={c} lang={lang} />
+              <CaptureThumbnail key={c.id} capture={c} lang={lang} runId={runId} />
             ))}
           </Box>
         )}
