@@ -28,6 +28,12 @@ import {
 
 interface Props {
   run: Run;
+  exportShowTypes: boolean;
+  exportTightTypes: boolean;
+  onChangeExportOptions: (options: {
+    showTypes: boolean;
+    tightTypes: boolean;
+  }) => void;
 }
 
 function TeamPreviewPokemonTile({
@@ -91,12 +97,20 @@ function TeamPreviewPokemonTile({
   );
 }
 
-export default function StatsBar({ run }: Props) {
+export default function StatsBar({
+  run,
+  exportShowTypes,
+  exportTightTypes,
+  onChangeExportOptions,
+}: Props) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportMode, setExportMode] = useState<"png" | "url">("png");
   const [exportWidth, setExportWidth] = useState(440);
   const [exportHeight, setExportHeight] = useState(720);
+  const [dialogShowTypes, setDialogShowTypes] = useState(exportShowTypes);
+  const [dialogTightTypes, setDialogTightTypes] = useState(exportTightTypes);
   const { lang } = useLanguage();
   const tr = translations;
 
@@ -119,16 +133,32 @@ export default function StatsBar({ run }: Props) {
   );
 
   // Export handlers for team stats card
-  async function handleExportPng() {
+  async function handleOpenExportPng() {
+    setExportMode("png");
+    setDialogShowTypes(exportShowTypes);
+    setDialogTightTypes(exportTightTypes);
     setShowExportDialog(true);
   }
 
-  async function performExport() {
+  async function handleOpenGenerateUrl() {
+    setExportMode("url");
+    setDialogShowTypes(exportShowTypes);
+    setDialogTightTypes(exportTightTypes);
+    setShowExportDialog(true);
+  }
+
+  async function performExportPng() {
     setExporting(true);
     setExportError("");
     setShowExportDialog(false);
+    onChangeExportOptions({
+      showTypes: dialogShowTypes,
+      tightTypes: dialogTightTypes,
+    });
 
     try {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+
       const element = document.getElementById("team-export-target");
       if (!element) {
         setExportError(t(tr.statsBar.teamViewElementNotFound, lang));
@@ -172,10 +202,19 @@ export default function StatsBar({ run }: Props) {
     }
   }
 
-  async function handleGenerateUrl() {
+  async function performGenerateUrl() {
+    setShowExportDialog(false);
+    onChangeExportOptions({
+      showTypes: dialogShowTypes,
+      tightTypes: dialogTightTypes,
+    });
+
     try {
       const encoded = await encodeTeam(run.team);
-      const shareUrl = buildShareUrl(encoded);
+      const shareUrl = buildShareUrl(encoded, {
+        showTypes: dialogShowTypes,
+        tightTypes: dialogTightTypes,
+      });
       const link = document.createElement("a");
       link.href = shareUrl;
       link.target = "_blank";
@@ -190,13 +229,13 @@ export default function StatsBar({ run }: Props) {
     {
       icon: "🖼️",
       title: t(tr.statsBar.exportTeamAsPng, lang),
-      onClick: handleExportPng,
+      onClick: handleOpenExportPng,
       disabled: exporting || run.team.length === 0,
     },
     {
       icon: "🔗",
       title: t(tr.statsBar.generateShareableUrl, lang),
-      onClick: handleGenerateUrl,
+      onClick: handleOpenGenerateUrl,
       disabled: run.team.length === 0,
     },
   ];
@@ -422,7 +461,7 @@ export default function StatsBar({ run }: Props) {
         />
       </Box>
 
-      {/* PNG Export Dialog */}
+      {/* Export Dialog */}
       <Dialog
         open={showExportDialog}
         onClose={() => setShowExportDialog(false)}
@@ -445,7 +484,9 @@ export default function StatsBar({ run }: Props) {
             borderBottom: "2px solid #000",
           }}
         >
-          {t(tr.statsBar.exportPngTitle, lang)}
+          {exportMode === "png"
+            ? t(tr.statsBar.exportPngTitle, lang)
+            : t(tr.statsBar.generateShareableUrl, lang)}
         </DialogTitle>
         <DialogContent
           sx={{
@@ -458,29 +499,111 @@ export default function StatsBar({ run }: Props) {
             overflow: "auto",
           }}
         >
-          <StyledTextField
-            label={t(tr.statsBar.width, lang)}
-            type="number"
-            value={exportWidth}
-            onChange={(e) => {
-              const value = parseInt(e.target.value) || 440;
-              setExportWidth(Math.max(440, Math.min(1920, value)));
-            }}
-            fullWidth
-          />
-          <StyledTextField
-            label={t(tr.statsBar.height, lang)}
-            type="number"
-            value={exportHeight}
-            onChange={(e) => {
-              const value = parseInt(e.target.value) || 720;
-              setExportHeight(Math.max(720, Math.min(1080, value)));
-            }}
-            fullWidth
-          />
-          <Typography sx={{ fontSize: "0.875rem", color: "#666" }}>
-            {t(tr.statsBar.exportDimensionsHint, lang)}
-          </Typography>
+          {exportMode === "png" && (
+            <>
+              <StyledTextField
+                label={t(tr.statsBar.width, lang)}
+                type="number"
+                value={exportWidth}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 440;
+                  setExportWidth(Math.max(440, Math.min(1920, value)));
+                }}
+                fullWidth
+              />
+              <StyledTextField
+                label={t(tr.statsBar.height, lang)}
+                type="number"
+                value={exportHeight}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 720;
+                  setExportHeight(Math.max(720, Math.min(1080, value)));
+                }}
+                fullWidth
+              />
+              <Typography sx={{ fontSize: "0.875rem", color: "#666" }}>
+                {t(tr.statsBar.exportDimensionsHint, lang)}
+              </Typography>
+            </>
+          )}
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+            <Typography sx={{ fontSize: "0.875rem", color: "#000", fontWeight: 700 }}>
+              {t(tr.statsBar.showTypesLabel, lang)}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button
+                onClick={() => setDialogShowTypes(true)}
+                sx={{
+                  flex: 1,
+                  border: "2px solid #000",
+                  borderRadius: "0.75rem",
+                  color: "#000",
+                  background: dialogShowTypes ? "#bfdbfe" : "#fff",
+                  fontWeight: 700,
+                  textTransform: "none",
+                }}
+              >
+                {t(tr.statsBar.yes, lang)}
+              </Button>
+              <Button
+                onClick={() => {
+                  setDialogShowTypes(false);
+                  setDialogTightTypes(false);
+                }}
+                sx={{
+                  flex: 1,
+                  border: "2px solid #000",
+                  borderRadius: "0.75rem",
+                  color: "#000",
+                  background: !dialogShowTypes ? "#fecaca" : "#fff",
+                  fontWeight: 700,
+                  textTransform: "none",
+                }}
+              >
+                {t(tr.statsBar.no, lang)}
+              </Button>
+            </Box>
+          </Box>
+
+          {dialogShowTypes && (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+              <Typography sx={{ fontSize: "0.875rem", color: "#000", fontWeight: 700 }}>
+                {t(tr.statsBar.tightTypesLabel, lang)}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button
+                  onClick={() => setDialogTightTypes(true)}
+                  sx={{
+                    flex: 1,
+                    border: "2px solid #000",
+                    borderRadius: "0.75rem",
+                    color: "#000",
+                    background: dialogTightTypes ? "#bfdbfe" : "#fff",
+                    fontWeight: 700,
+                    textTransform: "none",
+                  }}
+                >
+                  {t(tr.statsBar.yes, lang)}
+                </Button>
+                <Button
+                  onClick={() => setDialogTightTypes(false)}
+                  sx={{
+                    flex: 1,
+                    border: "2px solid #000",
+                    borderRadius: "0.75rem",
+                    color: "#000",
+                    background: !dialogTightTypes ? "#fecaca" : "#fff",
+                    fontWeight: 700,
+                    textTransform: "none",
+                  }}
+                >
+                  {t(tr.statsBar.no, lang)}
+                </Button>
+              </Box>
+            </Box>
+          )}
+
           {exportError && (
             <Typography
               sx={{ fontSize: "0.875rem", color: "#dc2626", fontWeight: 700 }}
@@ -517,7 +640,7 @@ export default function StatsBar({ run }: Props) {
             {t(tr.statsBar.cancel, lang)}
           </Button>
           <Button
-            onClick={performExport}
+            onClick={exportMode === "png" ? performExportPng : performGenerateUrl}
             disabled={exporting}
             sx={{
               border: "3px solid #000",
@@ -548,9 +671,11 @@ export default function StatsBar({ run }: Props) {
               },
             }}
           >
-            {exporting
-              ? t(tr.statsBar.exporting, lang)
-              : t(tr.statsBar.export, lang)}
+            {exportMode === "png"
+              ? exporting
+                ? t(tr.statsBar.exporting, lang)
+                : t(tr.statsBar.export, lang)
+              : t(tr.statsBar.generate, lang)}
           </Button>
         </DialogActions>
       </Dialog>

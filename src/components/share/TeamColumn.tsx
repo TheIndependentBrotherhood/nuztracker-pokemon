@@ -13,6 +13,8 @@ interface Props {
   team: Capture[];
   pokemonData: Record<number, PokemonApiData>;
   run?: Run;
+  showTypes?: boolean;
+  tightTypes?: boolean;
   mirror?: boolean;
   fullHeight?: boolean;
   preferAnimated?: boolean;
@@ -22,6 +24,8 @@ export default function TeamColumn({
   team,
   pokemonData,
   run,
+  showTypes = true,
+  tightTypes = false,
   mirror = false,
   fullHeight = false,
   preferAnimated = true,
@@ -101,34 +105,39 @@ export default function TeamColumn({
             </Box>
 
             {/* Types - stacked vertically */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1,
-              }}
-            >
-              {types.map((typeName) => (
-                <Box
-                  key={typeName}
-                  sx={{
-                    background:
-                      typeColors[typeName] ??
-                      (typeName === "???" ? "#64748b" : "#888"),
-                    color: "#fff",
-                    padding: "6px 12px",
-                    borderRadius: "4px",
-                    fontSize: "0.875rem",
-                    fontWeight: 700,
-                    textTransform: "capitalize",
-                    minWidth: "80px",
-                    textAlign: "center",
-                  }}
-                >
-                  {typeName}
-                </Box>
-              ))}
-            </Box>
+            {showTypes && (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  transform: tightTypes
+                    ? `translateX(${mirror ? "25px" : "-25px"})`
+                    : "none",
+                }}
+              >
+                {types.map((typeName) => (
+                  <Box
+                    key={typeName}
+                    sx={{
+                      background:
+                        typeColors[typeName] ??
+                        (typeName === "???" ? "#64748b" : "#888"),
+                      color: "#fff",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      fontSize: "0.875rem",
+                      fontWeight: 700,
+                      textTransform: "capitalize",
+                      minWidth: "80px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {typeName}
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
         );
       })}

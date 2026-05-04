@@ -36,9 +36,14 @@ export async function decodeTeam(base64: string): Promise<Capture[]> {
 
 export function buildShareUrl(
   base64: string,
-  options: { showTypes?: boolean } = {}
+  options: { showTypes?: boolean; tightTypes?: boolean } = {}
 ): string {
   const params = new URLSearchParams({ team: base64 });
-  if (options.showTypes) params.set('showTypes', 'true');
+  if (typeof options?.showTypes === "boolean") {
+    params.set("showTypes", String(options.showTypes));
+  }
+  if (typeof options?.tightTypes === "boolean") {
+    params.set("tightTypes", String(options.tightTypes));
+  }
   return `/share/?${params.toString()}`;
 }

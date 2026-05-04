@@ -42,6 +42,8 @@ export default function RunPageContent({ runId }: Props) {
   const [pokemonData, setPokemonData] = useState<
     Record<number, PokemonApiData>
   >({});
+  const [exportShowTypes, setExportShowTypes] = useState(true);
+  const [exportTightTypes, setExportTightTypes] = useState(false);
   const { lang } = useLanguage();
   const tr = translations;
   const effectiveRunId = runId ?? runIdFromUrl;
@@ -222,7 +224,15 @@ export default function RunPageContent({ runId }: Props) {
         actions={statusActions}
       />
 
-      <StatsBar run={run} />
+      <StatsBar
+        run={run}
+        exportShowTypes={exportShowTypes}
+        exportTightTypes={exportTightTypes}
+        onChangeExportOptions={(options) => {
+          setExportShowTypes(options.showTypes);
+          setExportTightTypes(options.tightTypes);
+        }}
+      />
 
       <Box
         sx={{
@@ -320,12 +330,16 @@ export default function RunPageContent({ runId }: Props) {
               team={run.team}
               pokemonData={pokemonData}
               run={run}
+              showTypes={exportShowTypes}
+              tightTypes={exportTightTypes}
               preferAnimated={false}
             />
             <TeamColumn
               team={run.team}
               pokemonData={pokemonData}
               run={run}
+              showTypes={exportShowTypes}
+              tightTypes={exportTightTypes}
               mirror
               preferAnimated={false}
             />

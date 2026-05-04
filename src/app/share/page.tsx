@@ -10,6 +10,9 @@ import TeamColumn from "@/components/share/TeamColumn";
 
 function ShareContent() {
   const searchParams = useSearchParams();
+  const showTypes = searchParams.get("showTypes") !== "false";
+  const tightTypes =
+    showTypes && searchParams.get("tightTypes") === "true";
   const [team, setTeam] = useState<Capture[]>([]);
   const [shareRun, setShareRun] = useState<Run | undefined>(undefined);
   const [pokemonData, setPokemonData] = useState<
@@ -124,6 +127,8 @@ function ShareContent() {
         team={team}
         pokemonData={pokemonData}
         run={shareRun}
+        showTypes={showTypes}
+        tightTypes={tightTypes}
         fullHeight
       />
 
@@ -132,6 +137,8 @@ function ShareContent() {
         team={team}
         pokemonData={pokemonData}
         run={shareRun}
+        showTypes={showTypes}
+        tightTypes={tightTypes}
         mirror
         fullHeight
       />
