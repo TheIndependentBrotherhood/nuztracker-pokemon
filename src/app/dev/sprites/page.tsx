@@ -14,6 +14,7 @@ interface SpriteEntry {
   url: string;
   dexId: number | null;
   candidates: string[];
+  spriteVariant?: "normal" | "shiny";
   provider?: "deviantart" | "animated-catalog" | "pokemon-list-static";
   isStaticFallback?: boolean;
   unownLetter?: string;
@@ -117,6 +118,10 @@ function getFileNameFromUrl(url: string): string {
   } catch {
     return "sprite.gif";
   }
+}
+
+function toPokeApiShinyUrl(url: string): string {
+  return url.replace("/sprites/pokemon/", "/sprites/pokemon/shiny/");
 }
 
 function extractUnownLetterFromAnimatedUrl(url: string): string | undefined {
@@ -328,6 +333,9 @@ export default function DevSpritesPage() {
   const [multipleOnly, setMultipleOnly] = useState(false);
   const [noAnimatedOnly, setNoAnimatedOnly] = useState(false);
   const [brokenOnly, setBrokenOnly] = useState(false);
+  const [spriteVariant, setSpriteVariant] = useState<"normal" | "shiny">(
+    "normal",
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -369,28 +377,51 @@ export default function DevSpritesPage() {
         for (const sprite of animatedCatalog.sprites ?? []) {
           const key = sprite.name;
           const normal = sprite.normal;
+          const shiny = sprite.shiny;
 
-          if (!normal?.available || !normal.url) continue;
+          if (normal?.available && normal.url) {
+            pushSprite(key, {
+              alt: `Animated ${sprite.name}`,
+              sourceName: `${normal.source ?? "animated"}-${sprite.name}`,
+              normalizedSource: `${normal.source ?? "animated"}-${sprite.name}`,
+              file: getFileNameFromUrl(normal.url),
+              url: normal.url,
+              dexId: sprite.id,
+              candidates: [key],
+              spriteVariant: "normal",
+              provider: "animated-catalog",
+              ...(key === "unown"
+                ? {
+                    unownLetter: extractUnownLetterFromAnimatedUrl(normal.url),
+                  }
+                : {}),
+            });
+          }
 
-          pushSprite(key, {
-            alt: `Animated ${sprite.name}`,
-            sourceName: `${normal.source ?? "animated"}-${sprite.name}`,
-            normalizedSource: `${normal.source ?? "animated"}-${sprite.name}`,
-            file: getFileNameFromUrl(normal.url),
-            url: normal.url,
-            dexId: sprite.id,
-            candidates: [key],
-            provider: "animated-catalog",
-            ...(key === "unown"
-              ? {
-                  unownLetter: extractUnownLetterFromAnimatedUrl(normal.url),
-                }
-              : {}),
-          });
+          if (shiny?.available && shiny.url) {
+            pushSprite(key, {
+              alt: `Shiny ${sprite.name}`,
+              sourceName: `${shiny.source ?? "animated"}-shiny-${sprite.name}`,
+              normalizedSource: `${shiny.source ?? "animated"}-shiny-${sprite.name}`,
+              file: getFileNameFromUrl(shiny.url),
+              url: shiny.url,
+              dexId: sprite.id,
+              candidates: [key],
+              spriteVariant: "shiny",
+              provider: "animated-catalog",
+              ...(key === "unown"
+                ? {
+                    unownLetter: extractUnownLetterFromAnimatedUrl(shiny.url),
+                  }
+                : {}),
+            });
+          }
         }
 
         // Source 3: always include static sprite from pokemon-list for comparison/corrections.
         for (const p of list.pokemon) {
+          const shinyStaticUrl = toPokeApiShinyUrl(p.sprite);
+
           pushSprite(p.name, {
             alt: `Static fallback ${p.name}`,
             sourceName: `pokemon-list-static-${p.name}`,
@@ -399,6 +430,20 @@ export default function DevSpritesPage() {
             url: p.sprite,
             dexId: p.id,
             candidates: [p.name],
+            spriteVariant: "normal",
+            provider: "pokemon-list-static",
+            isStaticFallback: true,
+          });
+
+          pushSprite(p.name, {
+            alt: `Static shiny fallback ${p.name}`,
+            sourceName: `pokemon-list-static-shiny-${p.name}`,
+            normalizedSource: `pokemon-list-static-shiny-${p.name}`,
+            file: getFileNameFromUrl(shinyStaticUrl),
+            url: shinyStaticUrl,
+            dexId: p.id,
+            candidates: [p.name],
+            spriteVariant: "shiny",
             provider: "pokemon-list-static",
             isStaticFallback: true,
           });
@@ -490,6 +535,25 @@ export default function DevSpritesPage() {
     return mapping;
   }, [spriteMap, spriteCorrections]);
 
+  const variantFilteredMapping = useMemo(() => {
+    const mapping: Record<string, SpriteEntry[]> = {};
+
+    for (const [key, sprites] of Object.entries(effectiveMapping)) {
+      const filteredSprites = sprites.filter((sprite) => {
+        if (spriteVariant === "normal") {
+          return sprite.spriteVariant !== "shiny";
+        }
+        return sprite.spriteVariant === "shiny";
+      });
+
+      if (filteredSprites.length > 0) {
+        mapping[key] = filteredSprites;
+      }
+    }
+
+    return mapping;
+  }, [effectiveMapping, spriteVariant]);
+
   const totalCorrections = useMemo(() => {
     return Object.entries(spriteCorrections).filter(([url, targetKey]) => {
       const originalKey = spriteIndexes.originalKeyByUrl[url];
@@ -503,7 +567,7 @@ export default function DevSpritesPage() {
 
   const entries = useMemo(() => {
     if (!spriteMap) return [];
-    return Object.entries(effectiveMapping)
+    return Object.entries(variantFilteredMapping)
       .filter(([key, sprites]) => {
         const hasAnimated = sprites.some((sprite) =>
           isAnimatedSpriteEntry(sprite),
@@ -532,7 +596,7 @@ export default function DevSpritesPage() {
       .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
   }, [
     spriteMap,
-    effectiveMapping,
+    variantFilteredMapping,
     noAnimatedOnly,
     multipleOnly,
     brokenOnly,
@@ -541,19 +605,21 @@ export default function DevSpritesPage() {
     pokemonNames,
   ]);
 
-  const totalPokemon = spriteMap ? Object.keys(effectiveMapping).length : 0;
+  const totalPokemon = spriteMap
+    ? Object.keys(variantFilteredMapping).length
+    : 0;
   const multipleCount = spriteMap
-    ? Object.values(effectiveMapping).filter((s) => s.length > 1).length
+    ? Object.values(variantFilteredMapping).filter((s) => s.length > 1).length
     : 0;
   const noAnimatedCount = spriteMap
-    ? Object.values(effectiveMapping).filter(
+    ? Object.values(variantFilteredMapping).filter(
         (sprites) =>
           !sprites.some((sprite) => isAnimatedSpriteEntry(sprite)) &&
           sprites.some((sprite) => sprite.isStaticFallback),
       ).length
     : 0;
   const brokenCount = spriteMap
-    ? Object.values(effectiveMapping).filter((sprites) =>
+    ? Object.values(variantFilteredMapping).filter((sprites) =>
         sprites.some((s) => brokenUrls.has(s.url)),
       ).length
     : 0;
@@ -562,10 +628,24 @@ export default function DevSpritesPage() {
     for (const [url, targetKey] of Object.entries(spriteCorrections)) {
       const originalKey = spriteIndexes.originalKeyByUrl[url];
       if (!originalKey || originalKey === targetKey) continue;
+
+      const sprite = spriteIndexes.spriteByUrl[url];
+      if (spriteVariant === "normal" && sprite?.spriteVariant === "shiny") {
+        continue;
+      }
+      if (spriteVariant === "shiny" && sprite?.spriteVariant !== "shiny") {
+        continue;
+      }
+
       byKey[targetKey] = (byKey[targetKey] ?? 0) + 1;
     }
     return byKey;
-  }, [spriteCorrections, spriteIndexes.originalKeyByUrl]);
+  }, [
+    spriteCorrections,
+    spriteIndexes.originalKeyByUrl,
+    spriteIndexes.spriteByUrl,
+    spriteVariant,
+  ]);
 
   const handleSpriteError = useCallback((url: string) => {
     setBrokenUrls((prev) => {
@@ -752,6 +832,50 @@ export default function DevSpritesPage() {
           <span>
             <b style={{ color: "#94a3b8" }}>{entries.length}</b> affichés
           </span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "#1e293b",
+            border: "1px solid #334155",
+            borderRadius: 8,
+            padding: "3px",
+          }}
+        >
+          <button
+            onClick={() => setSpriteVariant("normal")}
+            style={{
+              background:
+                spriteVariant === "normal" ? "#2563eb" : "transparent",
+              border: "none",
+              borderRadius: 6,
+              color: spriteVariant === "normal" ? "#dbeafe" : "#94a3b8",
+              padding: "5px 10px",
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            Normal
+          </button>
+          <button
+            onClick={() => setSpriteVariant("shiny")}
+            style={{
+              background: spriteVariant === "shiny" ? "#16a34a" : "transparent",
+              border: "none",
+              borderRadius: 6,
+              color: spriteVariant === "shiny" ? "#dcfce7" : "#94a3b8",
+              padding: "5px 10px",
+              cursor: "pointer",
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            Shiny
+          </button>
         </div>
 
         <div style={{ flex: 1 }} />
