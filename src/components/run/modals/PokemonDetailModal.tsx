@@ -306,6 +306,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
               />
               <Box sx={{ minWidth: 0 }}>
                 <Typography
+                  component="div"
                   sx={{
                     fontSize: "1.25rem",
                     fontWeight: 700,
@@ -477,16 +478,18 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                     </Box>
                   ))}
                 </Box>
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    color: "#f59e0b",
-                    fontWeight: 700,
-                    mt: 0.75,
-                  }}
-                >
-                  Lv. {capture.level}
-                </Typography>
+                {runId && (
+                  <Typography
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: "#f59e0b",
+                      fontWeight: 700,
+                      mt: 0.75,
+                    }}
+                  >
+                    Lv. {capture.level}
+                  </Typography>
+                )}
               </Box>
             </Box>
 

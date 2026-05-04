@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getRun } from "@/lib/storage";
@@ -9,6 +9,7 @@ import StatsBar from "@/components/run/StatsBar";
 import MapView from "@/components/run/maps/MapView";
 import ZoneList from "@/components/run/zone/ZoneList";
 import TeamView from "@/components/run/team/TeamView";
+import PokedexView from "@/components/run/pokedex/PokedexView";
 import TeamColumn from "@/components/share/TeamColumn";
 import TypeAnalysis from "@/components/run/team/TypeAnalysis";
 import Header from "@/components/layout/Header";
@@ -18,10 +19,12 @@ import { PokemonApiData } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 
-type Tab = "zones" | "team";
+type Tab = "zones" | "team" | "pokedex";
 
-export default function RunPageContent() {
-  const searchParams = useSearchParams();
+interface Props {
+  runId?: string;
+}
+export default function RunPageContent({ runId }: Props) {
   const router = useRouter();
   const { runs, loadRuns, setCurrentRun, updateRun } = useRunStore();
   const [tab, setTab] = useState<Tab>("zones");
@@ -31,20 +34,25 @@ export default function RunPageContent() {
     () => true,
     () => false,
   );
+  const runIdFromUrl = useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get("id") ?? "",
+    () => "",
+  );
   const [pokemonData, setPokemonData] = useState<
     Record<number, PokemonApiData>
   >({});
   const { lang } = useLanguage();
   const tr = translations;
-
-  const id = searchParams.get("id") ?? "";
+  const effectiveRunId = runId ?? runIdFromUrl;
 
   useEffect(() => {
     loadRuns();
   }, [loadRuns]);
 
-  const run = runs.find((r) => r.id === id) ?? (mounted ? getRun(id) : null);
-
+  const run =
+    runs.find((r) => r.id === effectiveRunId) ??
+    (mounted ? getRun(effectiveRunId) : null);
   useEffect(() => {
     if (run) setCurrentRun(run);
   }, [run, setCurrentRun]);
@@ -247,7 +255,7 @@ export default function RunPageContent() {
               background: "linear-gradient(to right, #DBEAFE, #E9D5FF)",
             }}
           >
-            {(["zones", "team"] as Tab[]).map((tabKey) => (
+            {(["zones", "team", "pokedex"] as Tab[]).map((tabKey) => (
               <Box
                 component="button"
                 key={tabKey}
@@ -272,7 +280,9 @@ export default function RunPageContent() {
               >
                 {tabKey === "zones"
                   ? t(tr.runPage.tabZones, lang)
-                  : t(tr.runPage.tabTeam, lang)}
+                  : tabKey === "team"
+                    ? t(tr.runPage.tabTeam, lang)
+                    : t(tr.runPage.tabPokedex, lang)}
               </Box>
             ))}
           </Box>
@@ -287,6 +297,7 @@ export default function RunPageContent() {
                 />
               </Box>
             )}
+            {tab === "pokedex" && <PokedexView />}
           </Box>
 
           {/* Hidden export view for PNG - sprite + types in columns */}

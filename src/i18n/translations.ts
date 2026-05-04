@@ -172,7 +172,10 @@ const translations = {
   // ── Pokemon Detail Modal ───────────────────────────────────────────────────
   pokemonDetail: {
     loading: { fr: "Chargement...", en: "Loading..." },
-    loadingSprites: { fr: "Chargement des sprites...", en: "Loading sprites..." },
+    loadingSprites: {
+      fr: "Chargement des sprites...",
+      en: "Loading sprites...",
+    },
     baseStats: { fr: "Statistiques de base", en: "Base Stats" },
     baseStatTotal: { fr: "BST", en: "BST" },
     nickname: { fr: "Surnom", en: "Nickname" },
@@ -382,6 +385,30 @@ const translations = {
     home: { fr: "← Accueil", en: "← Home" },
     tabZones: { fr: "🗺 Zones", en: "🗺 Zones" },
     tabTeam: { fr: "⚔️ Équipe", en: "⚔️ Team" },
+    tabPokedex: { fr: "📘 Pokédex", en: "📘 Pokédex" },
+    pokedexEmpty: {
+      fr: "Impossible de charger le Pokédex pour le moment.",
+      en: "Unable to load the Pokédex right now.",
+    },
+    pokedexNoSearchResult: {
+      fr: "Aucun Pokémon ne correspond à cette recherche.",
+      en: "No Pokémon matches this search.",
+    },
+    pokedexPageInfo: {
+      fr: (n: number) => `Page ${n}`,
+      en: (n: number) => `Page ${n}`,
+    },
+    pokedexPrev: { fr: "← Préc.", en: "← Prev" },
+    pokedexNext: { fr: "Suiv. →", en: "Next →" },
+    pokedexSearchPlaceholder: {
+      fr: "Rechercher par nom ou numéro du Pokédex",
+      en: "Search by name or Pokédex number",
+    },
+    pokedexSortAsc: { fr: "Croissant ↑", en: "Ascending ↑" },
+    pokedexSortBst: { fr: "Trier par BST", en: "Sort by BST" },
+    pokedexSortDesc: { fr: "Décroissant ↓", en: "Descending ↓" },
+    pokedexSortDex: { fr: "Trier par numéro", en: "Sort by Pokédex number" },
+    pokedexSortName: { fr: "Trier par nom", en: "Sort by name" },
     analysis: { fr: "🔬 Analyse", en: "🔬 Analysis" },
     close: { fr: "Fermer", en: "Close" },
     loading: { fr: "Chargement...", en: "Loading..." },
