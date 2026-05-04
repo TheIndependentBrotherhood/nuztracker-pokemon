@@ -17,7 +17,6 @@ interface Props {
   tightTypes?: boolean;
   mirror?: boolean;
   fullHeight?: boolean;
-  preferAnimated?: boolean;
 }
 
 export default function TeamColumn({
@@ -28,7 +27,6 @@ export default function TeamColumn({
   tightTypes = false,
   mirror = false,
   fullHeight = false,
-  preferAnimated = true,
 }: Props) {
   const randomTypesMode = isRandomTypesMode(run);
 
@@ -87,7 +85,8 @@ export default function TeamColumn({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getCaptureSpriteUrl(capture, preferAnimated)}
+                src={getCaptureSpriteUrl(capture)}
+                data-export-fallback-src={getCaptureSpriteFallbackUrl(capture)}
                 alt={capture.pokemonName}
                 onError={(event) => {
                   const fallbackUrl = getCaptureSpriteFallbackUrl(capture);

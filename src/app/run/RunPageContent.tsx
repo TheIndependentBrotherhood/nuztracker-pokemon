@@ -332,7 +332,6 @@ export default function RunPageContent({ runId }: Props) {
               run={run}
               showTypes={exportShowTypes}
               tightTypes={exportTightTypes}
-              preferAnimated={false}
             />
             <TeamColumn
               team={run.team}
@@ -341,7 +340,6 @@ export default function RunPageContent({ runId }: Props) {
               showTypes={exportShowTypes}
               tightTypes={exportTightTypes}
               mirror
-              preferAnimated={false}
             />
           </Box>
         </Box>

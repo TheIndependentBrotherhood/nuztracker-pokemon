@@ -156,6 +156,11 @@ export default function StatsBar({
       tightTypes: dialogTightTypes,
     });
 
+    let exportElement: HTMLElement | null = null;
+    let originalWidth = "";
+    let originalHeight = "";
+    const replacedSprites: Array<{ node: HTMLImageElement; originalSrc: string }> = [];
+
     try {
       await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
 
@@ -164,10 +169,33 @@ export default function StatsBar({
         setExportError(t(tr.statsBar.teamViewElementNotFound, lang));
         return;
       }
+      exportElement = element;
+
+      // Replace known non-CORS sprite hosts with fallback URLs for PNG capture,
+      // then restore original URLs after export.
+      const spriteNodes = element.querySelectorAll<HTMLImageElement>(
+        "img[data-export-fallback-src]",
+      );
+      spriteNodes.forEach((spriteNode) => {
+        const fallbackSrc = spriteNode.getAttribute("data-export-fallback-src");
+        if (!fallbackSrc) return;
+
+        let hostname = "";
+        try {
+          hostname = new URL(spriteNode.src, window.location.href).hostname;
+        } catch {
+          return;
+        }
+
+        if (hostname === "img.pokemondb.net") {
+          replacedSprites.push({ node: spriteNode, originalSrc: spriteNode.src });
+          spriteNode.src = fallbackSrc;
+        }
+      });
 
       // Save original dimensions
-      const originalWidth = element.style.width;
-      const originalHeight = element.style.height;
+      originalWidth = element.style.width;
+      originalHeight = element.style.height;
 
       // Apply export dimensions to the element
       element.style.width = `${exportWidth}px`;
@@ -183,13 +211,10 @@ export default function StatsBar({
         logging: false,
         useCORS: true,
         allowTaint: true,
-        imageTimeout: 0,
+        imageTimeout: 15000,
       });
 
       // Restore original dimensions
-      element.style.width = originalWidth;
-      element.style.height = originalHeight;
-
       const link = document.createElement("a");
       link.href = canvas.toDataURL("image/png");
       link.download = `team-${new Date().getTime()}.png`;
@@ -198,6 +223,13 @@ export default function StatsBar({
       console.error("PNG export error:", error);
       setExportError(t(tr.statsBar.failedToExportPng, lang));
     } finally {
+      if (exportElement) {
+        exportElement.style.width = originalWidth;
+        exportElement.style.height = originalHeight;
+      }
+      replacedSprites.forEach(({ node, originalSrc }) => {
+        node.src = originalSrc;
+      });
       setExporting(false);
     }
   }
