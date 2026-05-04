@@ -171,8 +171,8 @@ export default function StatsBar({
       }
       exportElement = element;
 
-      // Replace known non-CORS sprite hosts with fallback URLs for PNG capture,
-      // then restore original URLs after export.
+      // Always use canvas-safe fallback sprite URLs during PNG capture,
+      // then restore original selected sprite URLs after export.
       const spriteNodes = element.querySelectorAll<HTMLImageElement>(
         "img[data-export-fallback-src]",
       );
@@ -180,14 +180,7 @@ export default function StatsBar({
         const fallbackSrc = spriteNode.getAttribute("data-export-fallback-src");
         if (!fallbackSrc) return;
 
-        let hostname = "";
-        try {
-          hostname = new URL(spriteNode.src, window.location.href).hostname;
-        } catch {
-          return;
-        }
-
-        if (hostname === "img.pokemondb.net") {
+        if (spriteNode.src !== fallbackSrc) {
           replacedSprites.push({ node: spriteNode, originalSrc: spriteNode.src });
           spriteNode.src = fallbackSrc;
         }
