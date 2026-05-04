@@ -83,8 +83,23 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
         .flatMap((z) => z.captures)
         .find((c) => c.id === capturedPokemonId);
 
-      if (capturedPokemon && run.team.length < 6) {
-        updateTeam(run.id, [...run.team, capturedPokemon]);
+      if (capturedPokemon) {
+        const nextTeam = [...run.team];
+        if (nextTeam[slotIndex]) {
+          // Replace occupied slot: previous team member automatically goes back to Captured
+          nextTeam[slotIndex] = capturedPokemon;
+        } else if (nextTeam.length < 6) {
+          // Empty slot: add at the targeted position when possible
+          if (slotIndex >= nextTeam.length) {
+            nextTeam.push(capturedPokemon);
+          } else {
+            nextTeam.splice(slotIndex, 0, capturedPokemon);
+          }
+        }
+
+        if (nextTeam.length <= 6) {
+          updateTeam(run.id, nextTeam);
+        }
       }
     } else if (deadPokemonId) {
       // Resurrect dead pokémon and add to team
@@ -92,11 +107,25 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
         .flatMap((z) => z.captures)
         .find((c) => c.id === deadPokemonId);
 
-      if (capturedPokemon && run.team.length < 6) {
+      if (capturedPokemon) {
         const resurrectPokemon = { ...capturedPokemon, isDead: false };
+        const nextTeam = [...run.team];
+
+        if (nextTeam[slotIndex]) {
+          // Replace occupied slot: previous team member automatically goes back to Captured
+          nextTeam[slotIndex] = resurrectPokemon;
+        } else if (nextTeam.length < 6) {
+          // Empty slot: add at the targeted position when possible
+          if (slotIndex >= nextTeam.length) {
+            nextTeam.push(resurrectPokemon);
+          } else {
+            nextTeam.splice(slotIndex, 0, resurrectPokemon);
+          }
+        }
+
         const updatedRun = {
           ...run,
-          team: [...run.team, resurrectPokemon],
+          team: nextTeam,
           zones: run.zones.map((zone) => ({
             ...zone,
             captures: zone.captures.map((capture) =>
@@ -106,8 +135,11 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             ),
           })),
         };
-        const { updateRun } = useRunStore.getState();
-        updateRun(updatedRun);
+
+        if (nextTeam.length <= 6) {
+          const { updateRun } = useRunStore.getState();
+          updateRun(updatedRun);
+        }
       }
     }
   };
