@@ -12,8 +12,11 @@ import {
 import { Capture, PokemonApiData } from "@/lib/types";
 import {
   fetchPokemon,
+  getAvailableCaptureSpriteOptions,
+  getCaptureSpriteOptionMeta,
   getCaptureSpriteFallbackUrl,
   getCaptureSpriteUrl,
+  type CaptureSpriteOption,
 } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
@@ -102,8 +105,14 @@ function StatBar({
 }
 
 export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
+  const UNOWN_ID = 201;
   const [data, setData] = useState<PokemonApiData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(false);
+  const [spriteOptions, setSpriteOptions] = useState<CaptureSpriteOption[]>([]);
+  const [selectedSpriteUrl, setSelectedSpriteUrl] = useState<string | null>(
+    capture.selectedSprite?.url ?? null,
+  );
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameDraft, setNicknameDraft] = useState("");
   const { lang } = useLanguage();
@@ -123,9 +132,67 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
       .finally(() => setLoading(false));
   }, [capture.pokemonId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSpriteOptions() {
+      setLoadingSpriteOptions(true);
+      const options = await getAvailableCaptureSpriteOptions({
+        pokemonId: capture.pokemonId,
+        pokemonName: capture.pokemonName,
+        isShiny: capture.isShiny,
+      });
+
+      if (cancelled) return;
+
+      setSpriteOptions(options);
+      setSelectedSpriteUrl((prev) => {
+        if (prev && options.some((option) => option.url === prev)) return prev;
+        if (
+          capture.selectedSprite?.url &&
+          options.some((option) => option.url === capture.selectedSprite?.url)
+        ) {
+          return capture.selectedSprite.url;
+        }
+        return options[0]?.url ?? null;
+      });
+      setLoadingSpriteOptions(false);
+    }
+
+    loadSpriteOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    capture.isShiny,
+    capture.pokemonId,
+    capture.pokemonName,
+    capture.selectedSprite?.url,
+  ]);
+
   const genderSymbol =
     capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : null;
   const genderColor = capture.gender === "male" ? "#60a5fa" : "#ec4899";
+
+  function updateCaptureInRun(updater: (target: Capture) => Capture) {
+    if (!runToUpdate) return;
+
+    const updatedRun = {
+      ...runToUpdate,
+      team: runToUpdate.team.map((teamCapture) =>
+        teamCapture.id === capture.id ? updater(teamCapture) : teamCapture,
+      ),
+      zones: runToUpdate.zones.map((zone) => ({
+        ...zone,
+        captures: zone.captures.map((zoneCapture) =>
+          zoneCapture.id === capture.id ? updater(zoneCapture) : zoneCapture,
+        ),
+      })),
+    };
+
+    updateRun(updatedRun);
+  }
 
   function handleSaveNickname() {
     if (!runToUpdate) return;
@@ -139,25 +206,37 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
       return;
     }
 
-    const updatedRun = {
-      ...runToUpdate,
-      team: runToUpdate.team.map((teamCapture) =>
-        teamCapture.id === capture.id
-          ? { ...teamCapture, nickname: nextNickname }
-          : teamCapture,
-      ),
-      zones: runToUpdate.zones.map((zone) => ({
-        ...zone,
-        captures: zone.captures.map((zoneCapture) =>
-          zoneCapture.id === capture.id
-            ? { ...zoneCapture, nickname: nextNickname }
-            : zoneCapture,
-        ),
-      })),
-    };
-
-    updateRun(updatedRun);
+    updateCaptureInRun((target) => ({ ...target, nickname: nextNickname }));
     setIsEditingNickname(false);
+  }
+
+  function handleSelectSprite(url: string) {
+    setSelectedSpriteUrl(url);
+    if (!runToUpdate) return;
+
+    const selectedOption = spriteOptions.find((option) => option.url === url);
+    if (!selectedOption) return;
+
+    updateCaptureInRun((target) => ({
+      ...target,
+      selectedSprite: {
+        url: selectedOption.url,
+        source: selectedOption.source,
+        label: selectedOption.label,
+        ...(selectedOption.unownLetter
+          ? { unownLetter: selectedOption.unownLetter }
+          : {}),
+        ...(selectedOption.flabebeColor
+          ? { flabebeColor: selectedOption.flabebeColor }
+          : {}),
+      },
+      ...(capture.pokemonId === UNOWN_ID && selectedOption.unownLetter
+        ? { unownLetter: selectedOption.unownLetter }
+        : {}),
+      ...(selectedOption.flabebeColor
+        ? { flabebeColor: selectedOption.flabebeColor }
+        : {}),
+    }));
   }
 
   return (
@@ -209,7 +288,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
             <Box sx={{ display: "flex", gap: 2, mb: 2.5 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getCaptureSpriteUrl(capture, true)}
+                src={selectedSpriteUrl ?? getCaptureSpriteUrl(capture, true)}
                 alt={pokemonDisplayName}
                 onError={(event) => {
                   const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
@@ -409,6 +488,106 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                   Lv. {capture.level}
                 </Typography>
               </Box>
+            </Box>
+
+            {/* Sprite selection */}
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "#666",
+                  mb: 1,
+                }}
+              >
+                {t(tr.pokemonDetail.sprite, lang)}
+              </Typography>
+
+              {loadingSpriteOptions ? (
+                <Typography sx={{ fontSize: "0.75rem", color: "#666" }}>
+                  {t(tr.pokemonDetail.loadingSprites, lang)}
+                </Typography>
+              ) : (
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                    gap: 0.75,
+                    maxHeight: "210px",
+                    overflowY: "auto",
+                    pr: 0.25,
+                  }}
+                >
+                  {spriteOptions.map((option) => {
+                    const isSelectedSprite = selectedSpriteUrl === option.url;
+                    const meta = getCaptureSpriteOptionMeta(option);
+
+                    return (
+                      <Box
+                        key={option.url}
+                        component="button"
+                        onClick={() => handleSelectSprite(option.url)}
+                        title={`${meta.sourceLabel} • ${meta.label}`}
+                        sx={{
+                          background: isSelectedSprite ? "#3b82f6" : "#fff",
+                          border: isSelectedSprite
+                            ? "2px solid #1d4ed8"
+                            : "2px solid #000",
+                          borderRadius: "0.5rem",
+                          color: isSelectedSprite ? "#fff" : "#000",
+                          cursor: "pointer",
+                          p: 0.5,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 0.25,
+                          minHeight: "88px",
+                          transition: "all 150ms",
+                          "&:hover": {
+                            background: isSelectedSprite ? "#2563eb" : "#f0f0f0",
+                          },
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={option.url}
+                          alt={option.label}
+                          width={42}
+                          height={42}
+                          style={{
+                            objectFit: "contain",
+                            imageRendering: "pixelated",
+                          }}
+                          loading="lazy"
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: "0.62rem",
+                            fontWeight: 700,
+                            lineHeight: 1,
+                            textAlign: "center",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {meta.sourceLabel}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: "0.58rem",
+                            lineHeight: 1,
+                            textAlign: "center",
+                            opacity: isSelectedSprite ? 0.9 : 0.75,
+                          }}
+                        >
+                          {meta.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
             </Box>
 
             {/* Base Stats */}

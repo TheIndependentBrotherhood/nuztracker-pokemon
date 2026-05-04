@@ -172,6 +172,7 @@ const translations = {
   // ── Pokemon Detail Modal ───────────────────────────────────────────────────
   pokemonDetail: {
     loading: { fr: "Chargement...", en: "Loading..." },
+    loadingSprites: { fr: "Chargement des sprites...", en: "Loading sprites..." },
     baseStats: { fr: "Statistiques de base", en: "Base Stats" },
     baseStatTotal: { fr: "BST", en: "BST" },
     nickname: { fr: "Surnom", en: "Nickname" },
@@ -189,6 +190,7 @@ const translations = {
       fr: "Impossible de charger les données",
       en: "Failed to load data",
     },
+    sprite: { fr: "Sprite", en: "Sprite" },
     close: { fr: "Fermer", en: "Close" },
     statSpeed: { fr: "Vit", en: "Spd" },
   },
