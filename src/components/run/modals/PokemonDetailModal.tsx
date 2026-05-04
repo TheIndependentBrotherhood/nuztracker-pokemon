@@ -56,6 +56,7 @@ function StatBar({
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       <Typography
+        component="div"
         sx={{
           fontSize: "0.75rem",
           color: "#666",
