@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -316,6 +322,11 @@ function SpriteCard({
 // ---------------------------------------------------------------------------
 
 export default function DevSpritesPage() {
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [spriteMap, setSpriteMap] = useState<SpriteMap | null>(null);
   const [pokemonNames, setPokemonNames] = useState<
     Record<string, PokemonListEntry>
@@ -733,9 +744,10 @@ export default function DevSpritesPage() {
     saveCorrections({});
   }
 
-  if (loading) {
+  if (!isHydrated || loading) {
     return (
       <div
+        suppressHydrationWarning
         style={{
           minHeight: "100vh",
           background: "#0f172a",
