@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "generate-cache": "tsx scripts/generate-cache-files.ts"
+    "apply-sprite-corrections": "tsx scripts/apply-sprite-corrections.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

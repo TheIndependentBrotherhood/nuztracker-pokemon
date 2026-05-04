@@ -7,29 +7,6 @@ const FLABEBE_ID = 669;
 
 type FlabebeColor = "red" | "orange" | "yellow" | "blue" | "white";
 
-interface DeviantArtSpriteEntry {
-  alt: string;
-  sourceName: string;
-  file: string;
-  url: string;
-  unownLetter?: string;
-}
-
-interface DeviantArtSpriteMap {
-  mapping: Record<string, DeviantArtSpriteEntry[]>;
-}
-
-interface AnimatedCatalogEntry {
-  id: number;
-  name: string;
-  normal?: { url?: string; available?: boolean; source?: string };
-  shiny?: { url?: string; available?: boolean; source?: string };
-}
-
-interface AnimatedCatalog {
-  sprites: AnimatedCatalogEntry[];
-}
-
 export interface CaptureSpriteOption {
   url: string;
   source: "deviantart" | "animated-catalog" | "static";
@@ -69,10 +46,6 @@ export function getCaptureSpriteOptionMeta(option: CaptureSpriteOption): {
   return { label: option.label, sourceLabel };
 }
 
-let deviantArtSpriteMapPromise: Promise<DeviantArtSpriteMap | null> | null =
-  null;
-let animatedCatalogPromise: Promise<AnimatedCatalog | null> | null = null;
-
 // In-memory fallback for environments where the cache file hasn't been generated yet
 let pokemonListFallbackCache: Array<{ name: string; url: string }> | null =
   null;
@@ -81,7 +54,12 @@ let pokemonListFallbackCache: Array<{ name: string; url: string }> | null =
 let pokemonListJsonCache: Array<{
   name: string;
   id: number;
+  alternativeNames?: string[];
   names?: { fr?: string; en?: string };
+  sprites?: {
+    normal: { default: string; alternatives: string[] };
+    shiny: { default: string; alternatives: string[] };
+  };
 }> | null = null;
 
 export interface PokemonNames {
@@ -94,6 +72,13 @@ export interface PokemonSearchResult {
   displayName: string;
   url: string;
   names?: PokemonNames;
+}
+
+function getTechnicalNames(entry: {
+  name: string;
+  alternativeNames?: string[];
+}): string[] {
+  return [entry.name, ...(entry.alternativeNames ?? [])];
 }
 
 export async function fetchPokemon(
@@ -131,6 +116,7 @@ export async function searchPokemon(
           pokemon?: {
             name: string;
             id: number;
+            alternativeNames?: string[];
             names?: { fr?: string; en?: string };
           }[];
         };
@@ -144,10 +130,11 @@ export async function searchPokemon(
         .filter((p) => {
           const nameFr = p.names?.fr?.toLowerCase() ?? "";
           const nameEn = p.names?.en?.toLowerCase() ?? p.name.toLowerCase();
+          const technicalNames = getTechnicalNames(p);
           return (
             nameFr.includes(lower) ||
             nameEn.includes(lower) ||
-            p.name.includes(lower)
+            technicalNames.some((name) => name.includes(lower))
           );
         })
         .slice(0, 10)
@@ -229,28 +216,6 @@ function getUnownLetterFromUrl(url: string): string | undefined {
   if (raw === "question") return "?";
   if (raw === "exclamation") return "!";
   return raw;
-}
-
-async function loadDeviantArtSpriteMap(): Promise<DeviantArtSpriteMap | null> {
-  if (!deviantArtSpriteMapPromise) {
-    deviantArtSpriteMapPromise = fetch(
-      "/data/deviantart-known-pokemon-map.json",
-    )
-      .then((res) =>
-        res.ok ? (res.json() as Promise<DeviantArtSpriteMap>) : null,
-      )
-      .catch(() => null);
-  }
-  return deviantArtSpriteMapPromise;
-}
-
-async function loadAnimatedCatalog(): Promise<AnimatedCatalog | null> {
-  if (!animatedCatalogPromise) {
-    animatedCatalogPromise = fetch("/data/animated-sprites-bw.json")
-      .then((res) => (res.ok ? (res.json() as Promise<AnimatedCatalog>) : null))
-      .catch(() => null);
-  }
-  return animatedCatalogPromise;
 }
 
 function getUnownFormSlug(unownLetter?: string): string | null {
@@ -335,57 +300,40 @@ export async function getAvailableCaptureSpriteOptions(params: {
     }
   };
 
-  const deviantArtMap = await loadDeviantArtSpriteMap();
-  for (const entry of deviantArtMap?.mapping?.[key] ?? []) {
-    pushUnique({
-      url: entry.url,
-      source: "deviantart",
-      label: entry.sourceName,
-      ...(pokemonId === UNOWN_ID
-        ? {
-            unownLetter:
-              entry.unownLetter ??
-              getUnownLetterFromUrl(entry.url) ??
-              undefined,
-          }
-        : {}),
-      ...(pokemonId === FLABEBE_ID
-        ? {
-            flabebeColor:
-              getFlabebeColorFromText(entry.sourceName) ??
-              getFlabebeColorFromText(entry.alt),
-          }
-        : {}),
-    });
+  // Load alternatives from pokemon-list.json (merged source)
+  if (!pokemonListJsonCache) {
+    try {
+      const res = await fetch("/data/pokemon-list.json");
+      if (res.ok) {
+        const data = (await res.json()) as {
+          pokemon?: typeof pokemonListJsonCache;
+        };
+        if (data.pokemon && data.pokemon.length > 0) {
+          pokemonListJsonCache = data.pokemon;
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 
-  const animatedCatalog = await loadAnimatedCatalog();
-  const catalogEntry = (animatedCatalog?.sprites ?? []).find(
-    (sprite) => sprite.id === pokemonId || sprite.name === key,
+  const cachedEntry = pokemonListJsonCache?.find(
+    (p) => p.id === pokemonId || getTechnicalNames(p).includes(key),
   );
-  if (catalogEntry) {
-    const animatedUrl = isShiny
-      ? catalogEntry.shiny?.available && catalogEntry.shiny.url
-        ? catalogEntry.shiny.url
-        : catalogEntry.normal?.available
-          ? catalogEntry.normal.url
-          : undefined
-      : catalogEntry.normal?.available && catalogEntry.normal.url
-        ? catalogEntry.normal.url
-        : undefined;
 
-    if (animatedUrl) {
-      pushUnique({
-        url: animatedUrl,
-        source: "animated-catalog",
-        label: `${catalogEntry.normal?.source ?? catalogEntry.shiny?.source ?? "animated-catalog"}-${key}`,
-        ...(pokemonId === UNOWN_ID
-          ? {
-              unownLetter: getUnownLetterFromUrl(animatedUrl),
-            }
-          : {}),
-      });
-    }
+  const spriteSlot = isShiny
+    ? cachedEntry?.sprites?.shiny
+    : cachedEntry?.sprites?.normal;
+
+  for (const altUrl of spriteSlot?.alternatives ?? []) {
+    pushUnique({
+      url: altUrl,
+      source: "animated-catalog",
+      label: altUrl,
+      ...(pokemonId === UNOWN_ID
+        ? { unownLetter: getUnownLetterFromUrl(altUrl) ?? undefined }
+        : {}),
+    });
   }
 
   pushUnique({

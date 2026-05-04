@@ -21,7 +21,11 @@ interface SpriteEntry {
   dexId: number | null;
   candidates: string[];
   spriteVariant?: "normal" | "shiny";
-  provider?: "deviantart" | "animated-catalog" | "pokemon-list-static";
+  provider?:
+    | "deviantart"
+    | "animated-catalog"
+    | "pokemon-list-static"
+    | "manual";
   isStaticFallback?: boolean;
   unownLetter?: string;
 }
@@ -41,27 +45,10 @@ interface PokemonListEntry {
   id: number;
   name: string;
   names: { fr: string; en: string };
-  sprite: string;
-}
-
-interface AnimatedSpriteCatalogEntry {
-  id: number;
-  name: string;
-  generation: number;
-  normal?: {
-    url?: string;
-    available?: boolean;
-    source?: string;
+  sprites: {
+    normal: { default: string; alternatives: string[] };
+    shiny: { default: string; alternatives: string[] };
   };
-  shiny?: {
-    url?: string;
-    available?: boolean;
-    source?: string;
-  };
-}
-
-interface AnimatedSpriteCatalog {
-  sprites: AnimatedSpriteCatalogEntry[];
 }
 
 type SpriteCorrections = Record<string, string>;
@@ -77,6 +64,8 @@ interface EditingSpriteState {
 // ---------------------------------------------------------------------------
 
 const STORAGE_KEY = "dev-sprite-key-corrections";
+const STORAGE_KEY_ADDITIONS = "dev-sprite-manual-additions";
+const STORAGE_KEY_DELETIONS = "dev-sprite-manual-deletions";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -95,6 +84,46 @@ function loadCorrections(): SpriteCorrections {
 function saveCorrections(corrections: SpriteCorrections) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(corrections));
+  } catch {
+    // ignore
+  }
+}
+
+type ManualAdditions = Record<string, SpriteEntry[]>;
+
+type DeletedSpriteUrls = string[];
+
+function loadAdditions(): ManualAdditions {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_ADDITIONS);
+    if (raw) return JSON.parse(raw) as ManualAdditions;
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+function saveAdditions(additions: ManualAdditions) {
+  try {
+    localStorage.setItem(STORAGE_KEY_ADDITIONS, JSON.stringify(additions));
+  } catch {
+    // ignore
+  }
+}
+
+function loadDeletedSpriteUrls(): DeletedSpriteUrls {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DELETIONS);
+    if (raw) return JSON.parse(raw) as DeletedSpriteUrls;
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+function saveDeletedSpriteUrls(urls: DeletedSpriteUrls) {
+  try {
+    localStorage.setItem(STORAGE_KEY_DELETIONS, JSON.stringify(urls));
   } catch {
     // ignore
   }
@@ -162,6 +191,9 @@ function SpriteCard({
   isSpriteCorrected,
   onSpriteError,
   brokenUrls,
+  onAddSprite,
+  deletedSpriteUrls,
+  onDeleteSprite,
 }: {
   pokemonKey: string;
   sprites: SpriteEntry[];
@@ -171,6 +203,9 @@ function SpriteCard({
   isSpriteCorrected: (sprite: SpriteEntry) => boolean;
   onSpriteError: (url: string) => void;
   brokenUrls: Set<string>;
+  onAddSprite: (key: string) => void;
+  deletedSpriteUrls: Set<string>;
+  onDeleteSprite: (pokemonKey: string, sprite: SpriteEntry) => void;
 }) {
   const isMultiple = sprites.length > 1;
 
@@ -232,22 +267,32 @@ function SpriteCard({
         {sprites.map((sprite, idx) => {
           const isCorrected = isSpriteCorrected(sprite);
           const isBroken = brokenUrls.has(sprite.url);
+          const isManual = sprite.provider === "manual";
+          const isDeleted = deletedSpriteUrls.has(sprite.url);
           return (
             <button
               key={idx}
               title={`${sprite.alt || sprite.sourceName}${sprite.provider ? ` [${sprite.provider}]` : ""}${isBroken ? " ⚠ 404" : ""}`}
               onClick={() => onOpenEditor(pokemonKey, sprite)}
               style={{
-                background: isBroken
-                  ? "#1c0a0a"
-                  : isCorrected
-                    ? "#312e81"
-                    : "#0f172a",
-                border: isBroken
-                  ? "2px solid #ef4444"
-                  : isCorrected
-                    ? "2px solid #818cf8"
-                    : "2px solid #334155",
+                background: isDeleted
+                  ? "#3b0d0c"
+                  : isBroken
+                    ? "#1c0a0a"
+                    : isManual
+                      ? "#0d1f14"
+                      : isCorrected
+                        ? "#312e81"
+                        : "#0f172a",
+                border: isDeleted
+                  ? "2px solid #f97316"
+                  : isBroken
+                    ? "2px solid #ef4444"
+                    : isManual
+                      ? "2px solid #22c55e"
+                      : isCorrected
+                        ? "2px solid #818cf8"
+                        : "2px solid #334155",
                 borderRadius: 8,
                 padding: 4,
                 cursor: "pointer",
@@ -258,6 +303,7 @@ function SpriteCard({
                 transition: "border-color 0.15s, background 0.15s",
                 flexShrink: 0,
                 position: "relative",
+                opacity: isDeleted ? 0.75 : 1,
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -266,10 +312,26 @@ function SpriteCard({
                 alt={sprite.alt || sprite.sourceName}
                 width={64}
                 height={64}
-                style={{ imageRendering: "pixelated", objectFit: "contain" }}
+                style={{
+                  imageRendering: "pixelated",
+                  objectFit: "contain",
+                  filter: isDeleted ? "grayscale(0.35) saturate(0.7)" : "none",
+                }}
                 loading="lazy"
                 onError={() => onSpriteError(sprite.url)}
               />
+              {isDeleted && (
+                <span
+                  style={{
+                    position: "absolute",
+                    inset: "50% 8px auto 8px",
+                    height: 2,
+                    background: "#f97316",
+                    transform: "translateY(-50%) rotate(-18deg)",
+                    boxShadow: "0 0 10px rgba(249, 115, 22, 0.45)",
+                  }}
+                />
+              )}
               {isBroken && (
                 <span
                   style={{
@@ -285,12 +347,64 @@ function SpriteCard({
                   404
                 </span>
               )}
+              {isManual && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 2,
+                    left: 4,
+                    fontSize: 9,
+                    color: "#22c55e",
+                    fontWeight: 800,
+                    lineHeight: 1,
+                  }}
+                >
+                  +
+                </span>
+              )}
+              <button
+                type="button"
+                title={
+                  isManual
+                    ? "Supprimer ce sprite ajouté"
+                    : "Masquer ce sprite pour ce correcteur"
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteSprite(pokemonKey, sprite);
+                }}
+                style={{
+                  position: "absolute",
+                  bottom: 2,
+                  right: 2,
+                  width: 18,
+                  height: 18,
+                  borderRadius: 999,
+                  border: `1px solid ${isDeleted ? "#fdba74" : "#7c2d12"}`,
+                  background: isDeleted ? "#f97316" : "rgba(124, 45, 18, 0.92)",
+                  color: isDeleted ? "#431407" : "#fed7aa",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  padding: 0,
+                }}
+              >
+                ×
+              </button>
               {sprite.unownLetter && (
                 <span
                   style={{
                     fontSize: 10,
                     fontWeight: 800,
-                    color: isCorrected ? "#a5b4fc" : "#64748b",
+                    color: isDeleted
+                      ? "#fdba74"
+                      : isCorrected
+                        ? "#a5b4fc"
+                        : "#64748b",
                     lineHeight: 1,
                     marginTop: 2,
                   }}
@@ -301,6 +415,40 @@ function SpriteCard({
             </button>
           );
         })}
+
+        {/* Add sprite button */}
+        <button
+          title="Ajouter un sprite à la volée"
+          onClick={() => onAddSprite(pokemonKey)}
+          style={{
+            width: 72,
+            height: 72,
+            background: "transparent",
+            border: "2px dashed #334155",
+            borderRadius: 8,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#475569",
+            fontSize: 24,
+            fontWeight: 300,
+            flexShrink: 0,
+            transition: "border-color 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "#22c55e";
+            (e.currentTarget as HTMLButtonElement).style.color = "#22c55e";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "#334155";
+            (e.currentTarget as HTMLButtonElement).style.color = "#475569";
+          }}
+        >
+          +
+        </button>
       </div>
 
       <div
@@ -349,21 +497,21 @@ export default function DevSpritesPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [manualAdditions, setManualAdditions] = useState<ManualAdditions>({});
+  const [deletedSpriteUrls, setDeletedSpriteUrls] = useState<Set<string>>(
+    new Set(),
+  );
+  const [addingToKey, setAddingToKey] = useState<string | null>(null);
+  const [addUrl, setAddUrl] = useState("");
+  const [addVariant, setAddVariant] = useState<"normal" | "shiny">("normal");
 
   useEffect(() => {
     async function load() {
       try {
-        const [mapRes, listRes, animatedRes] = await Promise.all([
-          fetch("/data/deviantart-known-pokemon-map.json"),
-          fetch("/data/pokemon-list.json"),
-          fetch("/data/animated-sprites-bw.json"),
-        ]);
-        if (!mapRes.ok || !listRes.ok || !animatedRes.ok)
-          throw new Error("Failed to fetch data files");
+        const listRes = await fetch("/data/pokemon-list.json");
+        if (!listRes.ok) throw new Error("Failed to fetch data files");
 
-        const map: SpriteMap = await mapRes.json();
         const list: { pokemon: PokemonListEntry[] } = await listRes.json();
-        const animatedCatalog: AnimatedSpriteCatalog = await animatedRes.json();
 
         const mergedMapping: Record<string, SpriteEntry[]> = {};
 
@@ -377,68 +525,21 @@ export default function DevSpritesPage() {
           mergedMapping[key].push(entry);
         };
 
-        // Source 1: DeviantArt curated mapping.
-        for (const [key, sprites] of Object.entries(map.mapping)) {
-          for (const sprite of sprites) {
-            pushSprite(key, { ...sprite, provider: "deviantart" });
-          }
-        }
-
-        // Source 2: Animated sprites catalog (BW + external sheets).
-        for (const sprite of animatedCatalog.sprites ?? []) {
-          const key = sprite.name;
-          const normal = sprite.normal;
-          const shiny = sprite.shiny;
-
-          if (normal?.available && normal.url) {
-            pushSprite(key, {
-              alt: `Animated ${sprite.name}`,
-              sourceName: `${normal.source ?? "animated"}-${sprite.name}`,
-              normalizedSource: `${normal.source ?? "animated"}-${sprite.name}`,
-              file: getFileNameFromUrl(normal.url),
-              url: normal.url,
-              dexId: sprite.id,
-              candidates: [key],
-              spriteVariant: "normal",
-              provider: "animated-catalog",
-              ...(key === "unown"
-                ? {
-                    unownLetter: extractUnownLetterFromAnimatedUrl(normal.url),
-                  }
-                : {}),
-            });
-          }
-
-          if (shiny?.available && shiny.url) {
-            pushSprite(key, {
-              alt: `Shiny ${sprite.name}`,
-              sourceName: `${shiny.source ?? "animated"}-shiny-${sprite.name}`,
-              normalizedSource: `${shiny.source ?? "animated"}-shiny-${sprite.name}`,
-              file: getFileNameFromUrl(shiny.url),
-              url: shiny.url,
-              dexId: sprite.id,
-              candidates: [key],
-              spriteVariant: "shiny",
-              provider: "animated-catalog",
-              ...(key === "unown"
-                ? {
-                    unownLetter: extractUnownLetterFromAnimatedUrl(shiny.url),
-                  }
-                : {}),
-            });
-          }
-        }
-
-        // Source 3: always include static sprite from pokemon-list for comparison/corrections.
+        // Source 1: pokemon-list alternatives.
+        // Source 2: always include static sprite from pokemon-list for comparison/corrections.
         for (const p of list.pokemon) {
-          const shinyStaticUrl = toPokeApiShinyUrl(p.sprite);
+          const normalDefault =
+            p.sprites?.normal?.default ??
+            `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`;
+          const shinyDefault =
+            p.sprites?.shiny?.default ?? toPokeApiShinyUrl(normalDefault);
 
           pushSprite(p.name, {
             alt: `Static fallback ${p.name}`,
             sourceName: `pokemon-list-static-${p.name}`,
             normalizedSource: `pokemon-list-static-${p.name}`,
-            file: getFileNameFromUrl(p.sprite),
-            url: p.sprite,
+            file: getFileNameFromUrl(normalDefault),
+            url: normalDefault,
             dexId: p.id,
             candidates: [p.name],
             spriteVariant: "normal",
@@ -450,20 +551,50 @@ export default function DevSpritesPage() {
             alt: `Static shiny fallback ${p.name}`,
             sourceName: `pokemon-list-static-shiny-${p.name}`,
             normalizedSource: `pokemon-list-static-shiny-${p.name}`,
-            file: getFileNameFromUrl(shinyStaticUrl),
-            url: shinyStaticUrl,
+            file: getFileNameFromUrl(shinyDefault),
+            url: shinyDefault,
             dexId: p.id,
             candidates: [p.name],
             spriteVariant: "shiny",
             provider: "pokemon-list-static",
             isStaticFallback: true,
           });
+
+          // Also add alternatives from new format
+          for (const altUrl of p.sprites?.normal?.alternatives ?? []) {
+            pushSprite(p.name, {
+              alt: `Alternative ${p.name}`,
+              sourceName: `pokemon-list-alt-${p.name}`,
+              normalizedSource: `pokemon-list-alt-${p.name}`,
+              file: getFileNameFromUrl(altUrl),
+              url: altUrl,
+              dexId: p.id,
+              candidates: [p.name],
+              spriteVariant: "normal",
+              provider: "animated-catalog",
+              isStaticFallback: false,
+            });
+          }
+          for (const altUrl of p.sprites?.shiny?.alternatives ?? []) {
+            pushSprite(p.name, {
+              alt: `Alternative shiny ${p.name}`,
+              sourceName: `pokemon-list-alt-shiny-${p.name}`,
+              normalizedSource: `pokemon-list-alt-shiny-${p.name}`,
+              file: getFileNameFromUrl(altUrl),
+              url: altUrl,
+              dexId: p.id,
+              candidates: [p.name],
+              spriteVariant: "shiny",
+              provider: "animated-catalog",
+              isStaticFallback: false,
+            });
+          }
         }
 
         const mergedSpriteMap: SpriteMap = {
           generatedAt: new Date().toISOString(),
           stats: {
-            csvRows: map.stats.csvRows,
+            csvRows: 0,
             mappedSprites: Object.values(mergedMapping).reduce(
               (acc, sprites) => acc + sprites.length,
               0,
@@ -483,6 +614,8 @@ export default function DevSpritesPage() {
         setPokemonNames(nameMap);
 
         setSpriteCorrections(loadCorrections());
+        setManualAdditions(loadAdditions());
+        setDeletedSpriteUrls(new Set(loadDeletedSpriteUrls()));
       } catch (e) {
         setError(String(e));
       } finally {
@@ -578,7 +711,24 @@ export default function DevSpritesPage() {
 
   const entries = useMemo(() => {
     if (!spriteMap) return [];
-    return Object.entries(variantFilteredMapping)
+
+    // Include ALL known pokemon, even those with 0 sprites for current variant
+    const allKeys = new Set([
+      ...Object.keys(variantFilteredMapping),
+      ...Object.keys(pokemonNames),
+    ]);
+
+    return Array.from(allKeys)
+      .map((key) => {
+        const mapSprites = variantFilteredMapping[key] ?? [];
+        const manualSprites = (manualAdditions[key] ?? []).filter(
+          (s) => s.spriteVariant === spriteVariant,
+        );
+        return [key, [...mapSprites, ...manualSprites]] as [
+          string,
+          SpriteEntry[],
+        ];
+      })
       .filter(([key, sprites]) => {
         const hasAnimated = sprites.some((sprite) =>
           isAnimatedSpriteEntry(sprite),
@@ -587,7 +737,12 @@ export default function DevSpritesPage() {
           (sprite) => sprite.isStaticFallback,
         );
 
-        if (noAnimatedOnly && (hasAnimated || !hasStaticFallback)) return false;
+        if (
+          noAnimatedOnly &&
+          sprites.length > 0 &&
+          (hasAnimated || !hasStaticFallback)
+        )
+          return false;
         if (multipleOnly && sprites.length < 2) return false;
         if (brokenOnly && !sprites.some((s) => brokenUrls.has(s.url)))
           return false;
@@ -608,12 +763,14 @@ export default function DevSpritesPage() {
   }, [
     spriteMap,
     variantFilteredMapping,
+    pokemonNames,
+    manualAdditions,
+    spriteVariant,
     noAnimatedOnly,
     multipleOnly,
     brokenOnly,
     brokenUrls,
     search,
-    pokemonNames,
   ]);
 
   const totalPokemon = spriteMap
@@ -706,6 +863,83 @@ export default function DevSpritesPage() {
     closeSpriteEditor();
   }, [closeSpriteEditor, editingSprite, targetPokemonKey]);
 
+  function handleAddSprite(key: string) {
+    setAddingToKey(key);
+    setAddUrl("");
+    setAddVariant(spriteVariant);
+  }
+
+  function confirmAddSprite() {
+    if (!addingToKey || !addUrl.trim()) return;
+    const newEntry: SpriteEntry = {
+      url: addUrl.trim(),
+      file: addUrl.trim().split("/").pop() ?? "manual",
+      alt: addingToKey,
+      sourceName: "manual",
+      normalizedSource: "manual",
+      dexId: pokemonNames[addingToKey]?.id ?? 0,
+      candidates: [],
+      spriteVariant: addVariant,
+      provider: "manual",
+    };
+    setManualAdditions((prev) => {
+      const updated = {
+        ...prev,
+        [addingToKey]: [...(prev[addingToKey] ?? []), newEntry],
+      };
+      saveAdditions(updated);
+      return updated;
+    });
+    setAddingToKey(null);
+    setAddUrl("");
+  }
+
+  const handleDeleteSprite = useCallback(
+    (pokemonKey: string, sprite: SpriteEntry) => {
+      if (sprite.provider === "manual") {
+        setManualAdditions((prev) => {
+          const current = prev[pokemonKey] ?? [];
+          const nextSprites = current.filter(
+            (entry) => entry.url !== sprite.url,
+          );
+
+          if (nextSprites.length === current.length) {
+            return prev;
+          }
+
+          const updated = { ...prev };
+          if (nextSprites.length > 0) {
+            updated[pokemonKey] = nextSprites;
+          } else {
+            delete updated[pokemonKey];
+          }
+          saveAdditions(updated);
+          return updated;
+        });
+        setDeletedSpriteUrls((prev) => {
+          if (!prev.has(sprite.url)) return prev;
+          const next = new Set(prev);
+          next.delete(sprite.url);
+          saveDeletedSpriteUrls(Array.from(next));
+          return next;
+        });
+        return;
+      }
+
+      setDeletedSpriteUrls((prev) => {
+        const next = new Set(prev);
+        if (next.has(sprite.url)) {
+          next.delete(sprite.url);
+        } else {
+          next.add(sprite.url);
+        }
+        saveDeletedSpriteUrls(Array.from(next));
+        return next;
+      });
+    },
+    [],
+  );
+
   function handleExport() {
     const corrections = Object.entries(spriteCorrections)
       .map(([url, targetKey]) => {
@@ -718,17 +952,41 @@ export default function DevSpritesPage() {
           file: sprite?.file ?? getFileNameFromUrl(url),
           sourceName: sprite?.sourceName ?? null,
           provider: sprite?.provider ?? null,
+          spriteVariant: sprite?.spriteVariant ?? null,
           fromPokemonKey: originalKey,
           toPokemonKey: targetKey,
         };
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
+    const additions = Object.entries(manualAdditions).flatMap(
+      ([key, sprites]) =>
+        sprites.map((s) => ({
+          pokemonKey: key,
+          url: s.url,
+          file: s.file,
+          spriteVariant: s.spriteVariant ?? "normal",
+        })),
+    );
+
     const output = {
       generatedAt: new Date().toISOString(),
       note: "Manual sprite-to-pokemon corrections exported from dev sprites page",
       totalCorrections: corrections.length,
       corrections,
+      totalManualAdditions: additions.length,
+      manualAdditions: additions,
+      totalDeletedSprites: deletedSpriteUrls.size,
+      deletedSprites: Array.from(deletedSpriteUrls).map((url) => {
+        const sprite = spriteIndexes.spriteByUrl[url];
+        return {
+          url,
+          file: sprite?.file ?? getFileNameFromUrl(url),
+          sourceName: sprite?.sourceName ?? null,
+          provider: sprite?.provider ?? null,
+          spriteVariant: sprite?.spriteVariant ?? null,
+        };
+      }),
     };
     downloadJson(output, "sprite-pokemon-corrections.json");
   }
@@ -736,12 +994,16 @@ export default function DevSpritesPage() {
   function handleReset() {
     if (
       !confirm(
-        "Reinitialiser toutes les corrections ? Cette action est irreversible.",
+        "Reinitialiser toutes les corrections, additions manuelles et suppressions ? Cette action est irreversible.",
       )
     )
       return;
     setSpriteCorrections({});
     saveCorrections({});
+    setManualAdditions({});
+    saveAdditions({});
+    setDeletedSpriteUrls(new Set());
+    saveDeletedSpriteUrls([]);
   }
 
   if (!isHydrated || loading) {
@@ -1036,6 +1298,9 @@ export default function DevSpritesPage() {
               }}
               onSpriteError={handleSpriteError}
               brokenUrls={brokenUrls}
+              onAddSprite={handleAddSprite}
+              deletedSpriteUrls={deletedSpriteUrls}
+              onDeleteSprite={handleDeleteSprite}
             />
           );
         })}
@@ -1053,6 +1318,155 @@ export default function DevSpritesPage() {
           </div>
         )}
       </div>
+
+      {addingToKey && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            background: "rgba(2, 6, 23, 0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+          onClick={() => setAddingToKey(null)}
+        >
+          <div
+            style={{
+              width: "min(520px, 100%)",
+              background: "#0f172a",
+              border: "1px solid #334155",
+              borderRadius: 12,
+              padding: 20,
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 17, fontWeight: 800, color: "#f8fafc" }}>
+              Ajouter un sprite pour{" "}
+              <span style={{ color: "#22c55e" }}>
+                {pokemonNames[addingToKey]?.names?.fr ||
+                  pokemonNames[addingToKey]?.names?.en ||
+                  addingToKey}
+              </span>
+            </div>
+
+            {/* Variant selector */}
+            <div style={{ display: "flex", gap: 8 }}>
+              {(["normal", "shiny"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setAddVariant(v)}
+                  style={{
+                    background: addVariant === v ? "#166534" : "#1e293b",
+                    border: `1px solid ${addVariant === v ? "#22c55e" : "#334155"}`,
+                    borderRadius: 6,
+                    color: addVariant === v ? "#bbf7d0" : "#94a3b8",
+                    padding: "4px 12px",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+
+            {/* URL input */}
+            <input
+              type="url"
+              autoFocus
+              placeholder="https://..."
+              value={addUrl}
+              onChange={(e) => setAddUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") confirmAddSprite();
+                if (e.key === "Escape") setAddingToKey(null);
+              }}
+              style={{
+                background: "#1e293b",
+                border: "1px solid #334155",
+                borderRadius: 8,
+                color: "#f1f5f9",
+                padding: "8px 12px",
+                fontSize: 13,
+                outline: "none",
+              }}
+            />
+
+            {/* Preview */}
+            {addUrl.trim() && (
+              <div
+                style={{
+                  background: "#020617",
+                  border: "1px solid #1e293b",
+                  borderRadius: 10,
+                  height: 130,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={addUrl.trim()}
+                  alt="preview"
+                  width={100}
+                  height={100}
+                  style={{ imageRendering: "pixelated", objectFit: "contain" }}
+                />
+              </div>
+            )}
+
+            {/* Actions */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 8,
+                marginTop: 4,
+              }}
+            >
+              <button
+                onClick={() => setAddingToKey(null)}
+                style={{
+                  background: "#1e293b",
+                  border: "1px solid #475569",
+                  borderRadius: 8,
+                  color: "#94a3b8",
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  fontSize: 13,
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmAddSprite}
+                disabled={!addUrl.trim()}
+                style={{
+                  background: addUrl.trim() ? "#166534" : "#1e293b",
+                  border: `1px solid ${addUrl.trim() ? "#22c55e" : "#334155"}`,
+                  borderRadius: 8,
+                  color: addUrl.trim() ? "#bbf7d0" : "#475569",
+                  padding: "8px 12px",
+                  cursor: addUrl.trim() ? "pointer" : "not-allowed",
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                Ajouter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editingSprite && (
         <div

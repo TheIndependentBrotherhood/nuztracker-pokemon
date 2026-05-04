@@ -24,9 +24,13 @@ const ITEMS_PER_PAGE = 20;
 interface PokemonListEntry {
   id: number;
   name: string;
+  alternativeNames?: string[];
   names?: { fr?: string; en?: string };
   types: string[];
-  sprite: string;
+  sprites: {
+    normal: { default: string; alternatives: string[] };
+    shiny: { default: string; alternatives: string[] };
+  };
 }
 
 type SortOption = "dex" | "name" | "bst";
@@ -350,7 +354,7 @@ export default function PokedexView({ runId }: Props) {
 
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={entry.sprite}
+                  src={entry.sprites.normal.default}
                   alt={displayLabel}
                   onError={(event) => {
                     const fallbackUrl = getCaptureSpriteFallbackUrl(rowCapture);

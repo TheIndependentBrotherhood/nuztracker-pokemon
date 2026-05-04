@@ -8,6 +8,15 @@ export interface ZoneTemplate {
   regionArea: string;
 }
 
+export interface LocationArea {
+  id: number;
+  name: string;
+  names?: {
+    fr?: string;
+    en?: string;
+  };
+}
+
 export interface Location {
   id: number;
   name: string;
@@ -15,6 +24,7 @@ export interface Location {
     fr?: string;
     en?: string;
   };
+  areas?: LocationArea[];
 }
 
 export interface Region {
@@ -53,15 +63,34 @@ export async function loadRegions(): Promise<Region[]> {
         })) || [],
     }));
 
-    // Populate regionZones from the loaded regions
-    mappedRegions.forEach((region) => {
-      if (region.locations && !regionZones[region.id]) {
-        regionZones[region.id] = region.locations.map((loc) => ({
-          id: loc.name,
-          zoneName: loc.names?.en || loc.name,
-          zoneNames: loc.names,
-          regionArea: "", // We don't have region area info in the JSON
-        }));
+// Populate regionZones from the loaded regions: flatten location-areas as zones
+      mappedRegions.forEach((region) => {
+        if (region.locations && !regionZones[region.id]) {
+          const zones: ZoneTemplate[] = [];
+          region.locations.forEach((loc) => {
+            const locationLabel = loc.names?.en || loc.name;
+            if (loc.areas && loc.areas.length > 0) {
+              loc.areas.forEach((area) => {
+                zones.push({
+                  id: area.name,
+                  zoneName: area.names?.en || locationLabel,
+                  zoneNames: area.names && (area.names.fr || area.names.en)
+                    ? area.names
+                    : loc.names,
+                  regionArea: locationLabel,
+                });
+              });
+            } else {
+              // Fallback: no areas, use the location itself
+              zones.push({
+                id: loc.name,
+                zoneName: locationLabel,
+                zoneNames: loc.names,
+                regionArea: "",
+              });
+            }
+          });
+          regionZones[region.id] = zones;
       }
     });
 
@@ -92,12 +121,30 @@ export async function getZonesForRegionAsync(
     return []; // Fallback to empty array
   }
 
-  const templatesFromJson = foundRegion.locations.map((loc) => ({
-    id: loc.name,
-    zoneName: loc.names?.en || loc.name,
-    zoneNames: loc.names,
-    regionArea: "",
-  }));
+  // Flatten location-areas as zones
+  const templatesFromJson: ZoneTemplate[] = [];
+  foundRegion.locations.forEach((loc) => {
+    const locationLabel = loc.names?.en || loc.name;
+    if (loc.areas && loc.areas.length > 0) {
+      loc.areas.forEach((area) => {
+        templatesFromJson.push({
+          id: area.name,
+          zoneName: area.names?.en || locationLabel,
+          zoneNames: area.names && (area.names.fr || area.names.en)
+            ? area.names
+            : loc.names,
+          regionArea: locationLabel,
+        });
+      });
+    } else {
+      templatesFromJson.push({
+        id: loc.name,
+        zoneName: locationLabel,
+        zoneNames: loc.names,
+        regionArea: "",
+      });
+    }
+  });
 
   const existing = regionZones[region];
   if (!existing) {
