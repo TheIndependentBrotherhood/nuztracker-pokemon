@@ -27,6 +27,7 @@ import {
   type TypeChartData,
 } from "@/lib/type-chart";
 import { fetchPokemon } from "@/lib/pokemon-api";
+import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 
@@ -51,11 +52,27 @@ export default function TypeAnalysis({ run }: Props) {
 
   useEffect(() => {
     async function load() {
+      if (run.team.length === 0) {
+        setTeamTypes([]);
+        return;
+      }
+
+      if (isRandomTypesMode(run)) {
+        setTeamTypes(
+          run.team.map((capture) => getCaptureTypesForRun(capture, run, [])),
+        );
+        return;
+      }
+
       const types = await Promise.all(
         run.team.map(async (c) => {
           try {
             const data = await fetchPokemon(c.pokemonId);
-            return data.types.map((t) => t.type.name);
+            return getCaptureTypesForRun(
+              c,
+              run,
+              data.types.map((t) => t.type.name),
+            );
           } catch {
             return [];
           }
@@ -63,8 +80,8 @@ export default function TypeAnalysis({ run }: Props) {
       );
       setTeamTypes(types);
     }
-    if (run.team.length > 0) load();
-  }, [run.team]);
+    void load();
+  }, [run]);
 
   // Helper functions to use JSON data or fallback to old system
   const getDefenses = (types: string[]): Record<string, number> => {

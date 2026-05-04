@@ -153,7 +153,6 @@ const translations = {
       fr: "Entrez un surnom...",
       en: "Enter a nickname...",
     },
-    level: { fr: "Niveau", en: "Level" },
     gender: { fr: "Genre", en: "Gender" },
     genderUnknown: { fr: "Inconnu", en: "Unknown" },
     genderMale: { fr: "Mâle ♂", en: "Male ♂" },
@@ -162,6 +161,18 @@ const translations = {
     loadingSprites: {
       fr: "Chargement des sprites...",
       en: "Loading sprites...",
+    },
+    randomTypes: { fr: "Types (randomizer)", en: "Types (randomizer)" },
+    chooseType: { fr: "Choisir un type", en: "Choose a type" },
+    unknownType: { fr: "???", en: "???" },
+    addSecondType: { fr: "Ajouter un second type", en: "Add second type" },
+    removeSecondType: {
+      fr: "Retirer le second type",
+      en: "Remove second type",
+    },
+    firstTypeRequired: {
+      fr: "Choisis au moins un type pour cette capture.",
+      en: "Choose at least one type for this capture.",
     },
     sprite: { fr: "Sprite", en: "Sprite" },
     unownForm: { fr: "Forme (lettre capturée)", en: "Form (captured letter)" },
@@ -175,6 +186,14 @@ const translations = {
     loadingSprites: {
       fr: "Chargement des sprites...",
       en: "Loading sprites...",
+    },
+    randomTypes: { fr: "Types (randomizer)", en: "Types (randomizer)" },
+    chooseType: { fr: "Choisir un type", en: "Choose a type" },
+    unknownType: { fr: "???", en: "???" },
+    addSecondType: { fr: "Ajouter un second type", en: "Add second type" },
+    removeSecondType: {
+      fr: "Retirer le second type",
+      en: "Remove second type",
     },
     baseStats: { fr: "Statistiques de base", en: "Base Stats" },
     baseStatTotal: { fr: "BST", en: "BST" },

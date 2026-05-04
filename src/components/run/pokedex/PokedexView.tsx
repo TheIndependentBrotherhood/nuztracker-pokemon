@@ -13,9 +13,11 @@ import {
 import { Capture, PokemonApiData } from "@/lib/types";
 import { fetchPokemon, getCaptureSpriteFallbackUrl } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
+import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import PokemonDetailModal from "@/components/run/modals/PokemonDetailModal";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { useRunStore } from "@/store/runStore";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -30,8 +32,13 @@ interface PokemonListEntry {
 type SortOption = "dex" | "name" | "bst";
 type SortDir = "asc" | "desc";
 
-export default function PokedexView() {
+interface Props {
+  runId?: string;
+}
+
+export default function PokedexView({ runId }: Props) {
   const { lang } = useLanguage();
+  const { runs } = useRunStore();
   const tr = translations;
   const [listLoading, setListLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,6 +50,8 @@ export default function PokedexView() {
     Record<number, PokemonApiData>
   >({});
   const [selectedCapture, setSelectedCapture] = useState<Capture | null>(null);
+  const run = runId ? runs.find((candidate) => candidate.id === runId) : null;
+  const randomTypesMode = isRandomTypesMode(run);
 
   useEffect(() => {
     let cancelled = false;
@@ -281,17 +290,28 @@ export default function PokedexView() {
             const bst = data
               ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
               : null;
+            const fallbackTypes =
+              data?.types?.map((tValue) => tValue.type.name) ?? entry.types;
             const rowCapture: Capture = {
               id: `pokedex-${entry.id}`,
               pokemonId: entry.id,
               pokemonName: entry.name,
               pokemonNames: entry.names,
-              level: 50,
+              customTypes: run?.customTypesByPokemonId?.[entry.id],
               gender: "unknown",
               isShiny: false,
               isDead: false,
               createdAt: 0,
             };
+            const resolvedTypes = getCaptureTypesForRun(
+              rowCapture,
+              run,
+              fallbackTypes,
+            );
+            const displayedTypes =
+              randomTypesMode && resolvedTypes.length === 0
+                ? [t(tr.pokemonDetail.unknownType, lang)]
+                : resolvedTypes;
 
             return (
               <Box
@@ -367,10 +387,7 @@ export default function PokedexView() {
                       flexWrap: "wrap",
                     }}
                   >
-                    {(
-                      data?.types?.map((tValue) => tValue.type.name) ??
-                      entry.types
-                    ).map((typeName) => (
+                    {displayedTypes.map((typeName) => (
                       <Box
                         key={typeName}
                         sx={{
@@ -381,7 +398,11 @@ export default function PokedexView() {
                           fontWeight: 700,
                           color: "#fff",
                           textTransform: "capitalize",
-                          background: typeColors[typeName] ?? "#888",
+                          background:
+                            typeColors[typeName] ??
+                            (typeName === t(tr.pokemonDetail.unknownType, lang)
+                              ? "#64748b"
+                              : "#888"),
                           border: "1px solid #000",
                         }}
                       >
@@ -472,7 +493,9 @@ export default function PokedexView() {
 
       {selectedCapture && (
         <PokemonDetailModal
+          key={selectedCapture.id}
           capture={selectedCapture}
+          runId={runId}
           onClose={() => setSelectedCapture(null)}
         />
       )}

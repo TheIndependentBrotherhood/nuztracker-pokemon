@@ -90,9 +90,6 @@ function CaptureThumbnail({
         <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
           {displayLabel}
         </Typography>
-        <Typography sx={{ fontSize: "0.75rem", color: "#475569" }}>
-          Lv{capture.level}
-        </Typography>
         {capture.isShiny && (
           <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
         )}
@@ -100,6 +97,7 @@ function CaptureThumbnail({
 
       {showPokemonDetail && (
         <PokemonDetailModal
+          key={capture.id}
           capture={capture}
           runId={runId}
           onClose={() => setShowPokemonDetail(false)}

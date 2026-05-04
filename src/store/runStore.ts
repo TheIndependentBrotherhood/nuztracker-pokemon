@@ -128,8 +128,19 @@ export const useRunStore = create<RunStore>((set, get) => ({
       id: newId(),
       createdAt: Date.now(),
     };
+    const nextCustomTypesByPokemonId = {
+      ...(run.customTypesByPokemonId ?? {}),
+    };
+    if (captureData.customTypes && captureData.customTypes.length > 0) {
+      nextCustomTypesByPokemonId[captureData.pokemonId] =
+        captureData.customTypes;
+    }
     const updatedRun = {
       ...run,
+      customTypesByPokemonId:
+        Object.keys(nextCustomTypesByPokemonId).length > 0
+          ? nextCustomTypesByPokemonId
+          : undefined,
       zones: run.zones.map((z) =>
         z.id === zoneId
           ? {

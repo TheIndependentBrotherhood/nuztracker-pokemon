@@ -1,16 +1,18 @@
 "use client";
 
 import { Box } from "@mui/material";
-import { Capture, PokemonApiData } from "@/lib/types";
+import { Capture, PokemonApiData, Run } from "@/lib/types";
 import {
   getCaptureSpriteFallbackUrl,
   getCaptureSpriteUrl,
 } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
+import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 
 interface Props {
   team: Capture[];
   pokemonData: Record<number, PokemonApiData>;
+  run?: Run;
   mirror?: boolean;
   fullHeight?: boolean;
   preferAnimated?: boolean;
@@ -19,10 +21,13 @@ interface Props {
 export default function TeamColumn({
   team,
   pokemonData,
+  run,
   mirror = false,
   fullHeight = false,
   preferAnimated = true,
 }: Props) {
+  const randomTypesMode = isRandomTypesMode(run);
+
   return (
     <Box
       sx={{
@@ -36,7 +41,16 @@ export default function TeamColumn({
     >
       {team.map((capture) => {
         const data = pokemonData[capture.pokemonId];
-        const types = data?.types?.map((t) => t.type.name) ?? [];
+        const fallbackTypes = data?.types?.map((t) => t.type.name) ?? [];
+        const resolvedTypes = getCaptureTypesForRun(
+          capture,
+          run,
+          fallbackTypes,
+        );
+        const types =
+          randomTypesMode && resolvedTypes.length === 0
+            ? ["???"]
+            : resolvedTypes;
 
         return (
           <Box
@@ -98,7 +112,9 @@ export default function TeamColumn({
                 <Box
                   key={typeName}
                   sx={{
-                    background: typeColors[typeName] ?? "#888",
+                    background:
+                      typeColors[typeName] ??
+                      (typeName === "???" ? "#64748b" : "#888"),
                     color: "#fff",
                     padding: "6px 12px",
                     borderRadius: "4px",

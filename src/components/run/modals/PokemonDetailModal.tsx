@@ -8,6 +8,9 @@ import {
   Grid,
   TextField,
   IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
 } from "@mui/material";
 import { Capture, PokemonApiData } from "@/lib/types";
 import {
@@ -19,6 +22,7 @@ import {
   type CaptureSpriteOption,
 } from "@/lib/pokemon-api";
 import { typeColors } from "@/lib/type-chart";
+import { TYPES } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import {
@@ -104,7 +108,11 @@ function StatBar({
   );
 }
 
-export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
+export default function PokemonDetailModal({
+  capture,
+  runId,
+  onClose,
+}: Props) {
   const UNOWN_ID = 201;
   const [data, setData] = useState<PokemonApiData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,6 +123,13 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
   );
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameDraft, setNicknameDraft] = useState("");
+  const [customTypesDraft, setCustomTypesDraft] = useState<string[] | null>(
+    null,
+  );
+  const [showSecondTypeSlot, setShowSecondTypeSlot] = useState(false);
+  const [typePickerAnchorEl, setTypePickerAnchorEl] =
+    useState<HTMLElement | null>(null);
+  const [typePickerSlot, setTypePickerSlot] = useState<0 | 1 | null>(null);
   const { lang } = useLanguage();
   const { runs, updateRun } = useRunStore();
   const tr = translations;
@@ -125,6 +140,16 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
     : 0;
   const runToUpdate = runId ? runs.find((r) => r.id === runId) : null;
   const currentNickname = capture.nickname ?? "";
+  const runCustomTypes =
+    runToUpdate?.customTypesByPokemonId?.[capture.pokemonId];
+  const isRandomTypeMode = Boolean(
+    runToUpdate?.isRandomMode && runToUpdate.randomizerOptions?.randomizeTypes,
+  );
+  const persistedCustomTypes = capture.customTypes ?? runCustomTypes ?? [];
+  const activeCustomTypes = customTypesDraft ?? persistedCustomTypes;
+  const hasSecondTypeSlot = showSecondTypeSlot || Boolean(activeCustomTypes[1]);
+  const firstType = activeCustomTypes[0] || null;
+  const secondType = activeCustomTypes[1] || null;
 
   useEffect(() => {
     fetchPokemon(capture.pokemonId)
@@ -239,6 +264,93 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
     }));
   }
 
+  function openTypePicker(slot: 0 | 1, event: React.MouseEvent<HTMLElement>) {
+    setTypePickerSlot(slot);
+    setTypePickerAnchorEl(event.currentTarget);
+  }
+
+  function closeTypePicker() {
+    setTypePickerAnchorEl(null);
+    setTypePickerSlot(null);
+  }
+
+  function persistCustomTypes(nextTypes: string[]) {
+    const compactTypes = nextTypes.filter(Boolean);
+    setCustomTypesDraft(compactTypes);
+
+    if (!runToUpdate) return;
+
+    const customTypesByPokemonId = {
+      ...(runToUpdate.customTypesByPokemonId ?? {}),
+    };
+    if (compactTypes.length > 0) {
+      customTypesByPokemonId[capture.pokemonId] = compactTypes;
+    } else {
+      delete customTypesByPokemonId[capture.pokemonId];
+    }
+
+    const nextRun = {
+      ...runToUpdate,
+      customTypesByPokemonId:
+        Object.keys(customTypesByPokemonId).length > 0
+          ? customTypesByPokemonId
+          : undefined,
+      team: runToUpdate.team.map((teamCapture) =>
+        teamCapture.pokemonId === capture.pokemonId
+          ? {
+              ...teamCapture,
+              customTypes: compactTypes.length > 0 ? compactTypes : undefined,
+            }
+          : teamCapture,
+      ),
+      zones: runToUpdate.zones.map((zone) => ({
+        ...zone,
+        captures: zone.captures.map((zoneCapture) =>
+          zoneCapture.pokemonId === capture.pokemonId
+            ? {
+                ...zoneCapture,
+                customTypes: compactTypes.length > 0 ? compactTypes : undefined,
+              }
+            : zoneCapture,
+        ),
+      })),
+    };
+
+    updateRun(nextRun);
+  }
+
+  function setCustomType(slot: 0 | 1, typeName: string) {
+    if (!runToUpdate) return;
+
+    const nextTypes = [...activeCustomTypes];
+    nextTypes[slot] = typeName;
+    if (slot === 1) {
+      setShowSecondTypeSlot(true);
+    }
+
+    // Prevent duplicate dual typing by keeping only one copy.
+    if (nextTypes[0] && nextTypes[1] && nextTypes[0] === nextTypes[1]) {
+      nextTypes.splice(1, 1);
+      setShowSecondTypeSlot(false);
+    }
+
+    persistCustomTypes(nextTypes);
+  }
+
+  function addSecondType() {
+    if (!runToUpdate) return;
+    setShowSecondTypeSlot(true);
+  }
+
+  function removeSecondType() {
+    if (!runToUpdate) return;
+
+    const nextTypes = [...activeCustomTypes];
+    nextTypes.splice(1, 1);
+    setShowSecondTypeSlot(false);
+    persistCustomTypes(nextTypes);
+  }
+
   return (
     <Box
       sx={{
@@ -335,11 +447,8 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                         alignItems: "center",
                         gap: 0.75,
                         minHeight: "2rem",
-                        border: isEditingNickname
-                          ? "1px solid #cbd5e1"
-                          : "1px solid transparent",
-                        borderRadius: "0.5rem",
-                        px: 0.75,
+                        border: isEditingNickname ? "1px solid #cbd5e1" : "",
+                        borderRadius: isEditingNickname ? "0.5rem" : "",
                         py: 0.5,
                         background: isEditingNickname
                           ? "rgba(255, 255, 255, 0.75)"
@@ -459,39 +568,179 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                 <Box
                   sx={{ display: "flex", gap: 0.5, mt: 1, flexWrap: "wrap" }}
                 >
-                  {data.types.map(({ type }) => (
-                    <Box
-                      key={type.name}
-                      sx={{
-                        px: 1,
-                        py: 0.25,
-                        borderRadius: "999px",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        color: "#fff",
-                        textTransform: "capitalize",
-                        background: typeColors[type.name] ?? "#888",
-                        border: "2px solid #000",
-                      }}
-                    >
-                      {type.name}
-                    </Box>
-                  ))}
+                  {isRandomTypeMode ? (
+                    <>
+                      <Tooltip title={t(tr.pokemonDetail.chooseType, lang)}>
+                        <Box
+                          component="button"
+                          onClick={(event) => openTypePicker(0, event)}
+                          sx={{
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: "999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            color: firstType ? "#fff" : "#000",
+                            textTransform: "capitalize",
+                            background: firstType
+                              ? (typeColors[firstType] ?? "#888")
+                              : "#fef3c7",
+                            border: "2px solid #000",
+                            cursor: runToUpdate ? "pointer" : "default",
+                          }}
+                          disabled={!runToUpdate}
+                        >
+                          {firstType ?? t(tr.pokemonDetail.unknownType, lang)}
+                        </Box>
+                      </Tooltip>
+
+                      {!hasSecondTypeSlot && (
+                        <Tooltip
+                          title={t(tr.pokemonDetail.addSecondType, lang)}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={addSecondType}
+                            disabled={!runToUpdate}
+                            sx={{
+                              border: "2px solid #000",
+                              borderRadius: "999px",
+                              width: "24px",
+                              height: "24px",
+                              background: "#fff",
+                              fontWeight: 800,
+                              fontSize: "0.75rem",
+                            }}
+                          >
+                            +
+                          </IconButton>
+                        </Tooltip>
+                      )}
+
+                      {hasSecondTypeSlot && (
+                        <>
+                          <Tooltip title={t(tr.pokemonDetail.chooseType, lang)}>
+                            <Box
+                              component="button"
+                              onClick={(event) => openTypePicker(1, event)}
+                              sx={{
+                                px: 1,
+                                py: 0.25,
+                                borderRadius: "999px",
+                                fontSize: "0.75rem",
+                                fontWeight: 700,
+                                color: secondType ? "#fff" : "#000",
+                                textTransform: "capitalize",
+                                background: secondType
+                                  ? (typeColors[secondType] ?? "#888")
+                                  : "#fef3c7",
+                                border: "2px solid #000",
+                                cursor: runToUpdate ? "pointer" : "default",
+                              }}
+                              disabled={!runToUpdate}
+                            >
+                              {secondType ??
+                                t(tr.pokemonDetail.unknownType, lang)}
+                            </Box>
+                          </Tooltip>
+
+                          <Tooltip
+                            title={t(tr.pokemonDetail.removeSecondType, lang)}
+                          >
+                            <IconButton
+                              size="small"
+                              onClick={removeSecondType}
+                              disabled={!runToUpdate}
+                              sx={{
+                                border: "2px solid #000",
+                                borderRadius: "999px",
+                                width: "24px",
+                                height: "24px",
+                                background: "#fff",
+                                fontWeight: 800,
+                                fontSize: "0.75rem",
+                              }}
+                            >
+                              -
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    data.types.map(({ type }) => (
+                      <Box
+                        key={type.name}
+                        sx={{
+                          px: 1,
+                          py: 0.25,
+                          borderRadius: "999px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          color: "#fff",
+                          textTransform: "capitalize",
+                          background: typeColors[type.name] ?? "#888",
+                          border: "2px solid #000",
+                        }}
+                      >
+                        {type.name}
+                      </Box>
+                    ))
+                  )}
                 </Box>
-                {runId && (
-                  <Typography
-                    sx={{
-                      fontSize: "0.75rem",
-                      color: "#f59e0b",
-                      fontWeight: 700,
-                      mt: 0.75,
-                    }}
-                  >
-                    Lv. {capture.level}
-                  </Typography>
-                )}
               </Box>
             </Box>
+
+            {/* Sprite selection */}
+            {isRandomTypeMode && (
+              <Typography
+                sx={{
+                  fontSize: "0.68rem",
+                  color: "#475569",
+                  fontWeight: 600,
+                  mt: -1.5,
+                  mb: 1.5,
+                }}
+              >
+                {t(tr.pokemonDetail.randomTypes, lang)}
+              </Typography>
+            )}
+
+            <Menu
+              anchorEl={typePickerAnchorEl}
+              open={Boolean(typePickerAnchorEl)}
+              onClose={closeTypePicker}
+              keepMounted
+            >
+              {TYPES.map((typeName) => (
+                <MenuItem
+                  key={typeName}
+                  onClick={() => {
+                    if (typePickerSlot !== null) {
+                      setCustomType(typePickerSlot, typeName);
+                    }
+                    closeTypePicker();
+                  }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "999px",
+                      background: typeColors[typeName] ?? "#888",
+                      border: "1px solid #000",
+                    }}
+                  />
+                  {typeName}
+                </MenuItem>
+              ))}
+            </Menu>
 
             {/* Sprite selection */}
             <Box sx={{ mb: 2 }}>
@@ -549,7 +798,9 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                           minHeight: "88px",
                           transition: "all 150ms",
                           "&:hover": {
-                            background: isSelectedSprite ? "#2563eb" : "#f0f0f0",
+                            background: isSelectedSprite
+                              ? "#2563eb"
+                              : "#f0f0f0",
                           },
                         }}
                       >

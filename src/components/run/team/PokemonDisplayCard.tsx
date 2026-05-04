@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
 import { Capture } from "@/lib/types";
 import {
+  fetchPokemon,
   getCaptureSpriteFallbackUrl,
   getCaptureSpriteUrl,
 } from "@/lib/pokemon-api";
+import { useRunStore } from "@/store/runStore";
+import { getCaptureTypesForRun } from "@/lib/capture-types";
+import { typeColors } from "@/lib/type-chart";
 import PokemonDetailModal from "../modals/PokemonDetailModal";
 import { Lang } from "@/i18n/translations";
 import {
@@ -56,8 +60,18 @@ export default function PokemonDisplayCard({
   imageFilter,
 }: Props) {
   const [showDetail, setShowDetail] = useState(false);
+  const [fallbackTypes, setFallbackTypes] = useState<string[]>([]);
+  const { runs } = useRunStore();
   const pokemonDisplayName = useCaptureDisplayName(capture, lang);
   const cardLabel = useCaptureDisplayLabel(capture, lang);
+  const run = runId ? runs.find((candidate) => candidate.id === runId) : null;
+  const resolvedTypes = getCaptureTypesForRun(capture, run, fallbackTypes);
+  const displayedTypes =
+    run?.isRandomMode && run.randomizerOptions?.randomizeTypes
+      ? resolvedTypes.length > 0
+        ? resolvedTypes
+        : ["???"]
+      : resolvedTypes;
   const genderSymbol =
     capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : "";
   const genderColor =
@@ -67,6 +81,29 @@ export default function PokemonDisplayCard({
         ? "#ec4899"
         : "#94a3b8";
   const tooltipTitle = `${pokemonDisplayName}${capture.nickname ? ` (${capture.nickname})` : ""}${zone ? ` - ${zone}` : ""}`;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadTypes = async () => {
+      try {
+        const data = await fetchPokemon(capture.pokemonId);
+        if (!cancelled) {
+          setFallbackTypes(data.types.map((entry) => entry.type.name));
+        }
+      } catch {
+        if (!cancelled) {
+          setFallbackTypes([]);
+        }
+      }
+    };
+
+    void loadTypes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [capture.pokemonId]);
 
   return (
     <>
@@ -170,10 +207,10 @@ export default function PokemonDisplayCard({
             />
           </Box>
 
-          <Box sx={{ textAlign: "center", mt: 0.5 }}>
+          <Box sx={{ textAlign: "center", mt: 0.25 }}>
             <Box
               sx={{
-                fontSize: "0.875rem",
+                fontSize: "0.8rem",
                 fontWeight: 600,
                 color: "#000",
                 textOverflow: "ellipsis",
@@ -197,22 +234,49 @@ export default function PokemonDisplayCard({
                 </Typography>
               )}
             </Box>
-            <Typography
+
+            <Box
               sx={{
-                fontSize: "0.75rem",
-                color: "#f59e0b",
-                fontWeight: 700,
-                mt: 0.25,
+                mt: 0.4,
+                display: "flex",
+                gap: 0.35,
+                justifyContent: "center",
+                flexWrap: "wrap",
+                minHeight: "18px",
               }}
             >
-              Lv.{capture.level}
-            </Typography>
+              {displayedTypes.slice(0, 2).map((typeName) => (
+                <Box
+                  key={`${capture.id}-${typeName}`}
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    px: 0.6,
+                    minHeight: "14px",
+                    borderRadius: "999px",
+                    fontSize: "0.58rem",
+                    fontWeight: 700,
+                    color: "#fff",
+                    textTransform: "capitalize",
+                    lineHeight: 1,
+                    border: "1px solid #000",
+                    background:
+                      typeColors[typeName] ??
+                      (typeName === "???" ? "#64748b" : "#888"),
+                  }}
+                >
+                  {typeName}
+                </Box>
+              ))}
+            </Box>
           </Box>
         </Box>
       </Tooltip>
 
       {showDetail && (
         <PokemonDetailModal
+          key={capture.id}
           capture={capture}
           runId={runId}
           onClose={() => setShowDetail(false)}

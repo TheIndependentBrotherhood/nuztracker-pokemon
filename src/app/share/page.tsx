@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Box } from "@mui/material";
-import { Capture, PokemonApiData } from "@/lib/types";
+import { Capture, PokemonApiData, Run } from "@/lib/types";
 import { decodeTeam } from "@/lib/share";
 import { fetchPokemon } from "@/lib/pokemon-api";
 import TeamColumn from "@/components/share/TeamColumn";
@@ -11,6 +11,7 @@ import TeamColumn from "@/components/share/TeamColumn";
 function ShareContent() {
   const searchParams = useSearchParams();
   const [team, setTeam] = useState<Capture[]>([]);
+  const [shareRun, setShareRun] = useState<Run | undefined>(undefined);
   const [pokemonData, setPokemonData] = useState<
     Record<number, PokemonApiData>
   >({});
@@ -24,6 +25,42 @@ function ShareContent() {
     }
     decodeTeam(encoded).then(async (captures) => {
       setTeam(captures);
+      const hasCustomTypes = captures.some(
+        (capture) => (capture.customTypes?.length ?? 0) > 0,
+      );
+      if (hasCustomTypes) {
+        const customTypesByPokemonId: Record<number, string[]> = {};
+        for (const capture of captures) {
+          if (capture.customTypes && capture.customTypes.length > 0) {
+            customTypesByPokemonId[capture.pokemonId] = capture.customTypes;
+          }
+        }
+
+        setShareRun({
+          id: "share",
+          gameName: "share",
+          region: "share",
+          difficulty: "normal",
+          isShinyHuntMode: false,
+          isRandomMode: true,
+          randomizerOptions: {
+            randomizeTypes: true,
+            randomizeAbilities: false,
+            randomizeEncounters: false,
+            randomizeEvolvedForms: false,
+          },
+          customTypesByPokemonId,
+          status: "in-progress",
+          zones: [],
+          team: captures,
+          typeChartGeneration: "gen6+",
+          createdAt: 0,
+          updatedAt: 0,
+        });
+      } else {
+        setShareRun(undefined);
+      }
+
       // Fetch pokemon data for types
       const dataMap: Record<number, PokemonApiData> = {};
       await Promise.all(
@@ -83,10 +120,21 @@ function ShareContent() {
       }}
     >
       {/* Left column */}
-      <TeamColumn team={team} pokemonData={pokemonData} fullHeight />
+      <TeamColumn
+        team={team}
+        pokemonData={pokemonData}
+        run={shareRun}
+        fullHeight
+      />
 
       {/* Right column - mirror */}
-      <TeamColumn team={team} pokemonData={pokemonData} mirror fullHeight />
+      <TeamColumn
+        team={team}
+        pokemonData={pokemonData}
+        run={shareRun}
+        mirror
+        fullHeight
+      />
     </Box>
   );
 }

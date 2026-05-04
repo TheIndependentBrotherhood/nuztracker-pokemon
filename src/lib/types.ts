@@ -15,10 +15,11 @@ export interface Capture {
     en?: string;
   };
   nickname?: string;
-  level: number;
   gender: "male" | "female" | "unknown";
   isShiny: boolean;
   isDead: boolean;
+  /** User-discovered types for randomizer type mode (max two). */
+  customTypes?: string[];
   selectedSprite?: CaptureSelectedSprite;
   /** For Unown captures: the chosen letter form, e.g. "a"–"z", "!", "?" */
   unownLetter?: string;
@@ -55,6 +56,8 @@ export interface Run {
   isShinyHuntMode: boolean;
   isRandomMode: boolean;
   randomizerOptions?: RandomizerOptions;
+  /** User-discovered types for randomizer type mode, indexed by pokemon id. */
+  customTypesByPokemonId?: Record<number, string[]>;
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];

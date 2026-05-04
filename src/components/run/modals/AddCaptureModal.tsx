@@ -10,6 +10,9 @@ import {
   Typography,
   Switch,
   FormControlLabel,
+  IconButton,
+  Menu,
+  Tooltip,
 } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import {
@@ -22,6 +25,8 @@ import {
   type PokemonSearchResult,
 } from "@/lib/pokemon-api";
 import { Capture } from "@/lib/types";
+import { TYPES, typeColors } from "@/lib/type-chart";
+import { isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 
@@ -40,7 +45,7 @@ export default function AddCaptureModal({
   forceShiny = false,
   onClose,
 }: Props) {
-  const { addCapture } = useRunStore();
+  const { addCapture, runs } = useRunStore();
   const { lang } = useLanguage();
   const tr = translations;
 
@@ -52,7 +57,6 @@ export default function AddCaptureModal({
     names?: { fr?: string; en?: string };
   } | null>(null);
   const [nickname, setNickname] = useState("");
-  const [level, setLevel] = useState(5);
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
   const [isShiny, setIsShiny] = useState(forceShiny);
   const [unownLetter, setUnownLetter] = useState<string | null>(null);
@@ -62,8 +66,21 @@ export default function AddCaptureModal({
   );
   const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [typePickerAnchorEl, setTypePickerAnchorEl] =
+    useState<HTMLElement | null>(null);
+  const [typePickerSlot, setTypePickerSlot] = useState<0 | 1 | null>(null);
+  const [customTypesDraft, setCustomTypesDraft] = useState<string[]>([]);
+  const [showSecondTypeSlot, setShowSecondTypeSlot] = useState(false);
 
   const UNOWN_ID = 201;
+  const run = runs.find((candidate) => candidate.id === runId);
+  const randomTypesMode = isRandomTypesMode(run);
+  const firstType = customTypesDraft[0] || null;
+  const secondType = customTypesDraft[1] || null;
+  const hasSecondTypeSlot = showSecondTypeSlot || Boolean(secondType);
+  const canAddCapture = Boolean(
+    selected && (!randomTypesMode || customTypesDraft.length > 0),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -151,10 +168,51 @@ export default function AddCaptureModal({
     if (id !== UNOWN_ID) {
       setUnownLetter(null);
     }
+
+    const knownTypes = run?.customTypesByPokemonId?.[id] ?? [];
+    setCustomTypesDraft(knownTypes);
+    setShowSecondTypeSlot(Boolean(knownTypes[1]));
+  }
+
+  function openTypePicker(slot: 0 | 1, event: React.MouseEvent<HTMLElement>) {
+    setTypePickerSlot(slot);
+    setTypePickerAnchorEl(event.currentTarget);
+  }
+
+  function closeTypePicker() {
+    setTypePickerAnchorEl(null);
+    setTypePickerSlot(null);
+  }
+
+  function setCustomType(slot: 0 | 1, typeName: string) {
+    const nextTypes = [...customTypesDraft];
+    nextTypes[slot] = typeName;
+
+    if (slot === 1) {
+      setShowSecondTypeSlot(true);
+    }
+
+    if (nextTypes[0] && nextTypes[1] && nextTypes[0] === nextTypes[1]) {
+      nextTypes.splice(1, 1);
+      setShowSecondTypeSlot(false);
+    }
+
+    setCustomTypesDraft(nextTypes.filter(Boolean));
+  }
+
+  function addSecondType() {
+    setShowSecondTypeSlot(true);
+  }
+
+  function removeSecondType() {
+    const nextTypes = [...customTypesDraft];
+    nextTypes.splice(1, 1);
+    setShowSecondTypeSlot(false);
+    setCustomTypesDraft(nextTypes.filter(Boolean));
   }
 
   function handleAdd() {
-    if (!selected) return;
+    if (!selected || !canAddCapture) return;
     const selectedSprite =
       spriteOptions.find((option) => option.url === selectedSpriteUrl) ?? null;
 
@@ -163,10 +221,12 @@ export default function AddCaptureModal({
       pokemonName: selected.name,
       pokemonNames: selected.names,
       nickname: nickname || undefined,
-      level,
       gender,
       isShiny,
       isDead: false,
+      ...(randomTypesMode && customTypesDraft.length > 0
+        ? { customTypes: customTypesDraft }
+        : {}),
       ...(selectedSprite
         ? {
             selectedSprite: {
@@ -497,6 +557,165 @@ export default function AddCaptureModal({
           </Box>
         )}
 
+        {/* Randomizer type assignment */}
+        {selected && randomTypesMode && (
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#000",
+                mb: 1,
+              }}
+            >
+              {t(tr.addCapture.randomTypes, lang)}
+            </Typography>
+
+            <Box sx={{ display: "flex", gap: 0.5, mt: 1, flexWrap: "wrap" }}>
+              <Tooltip title={t(tr.addCapture.chooseType, lang)}>
+                <Box
+                  component="button"
+                  onClick={(event) => openTypePicker(0, event)}
+                  sx={{
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: "999px",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    color: firstType ? "#fff" : "#000",
+                    textTransform: "capitalize",
+                    background: firstType
+                      ? (typeColors[firstType] ?? "#888")
+                      : "#fef3c7",
+                    border: "2px solid #000",
+                    cursor: "pointer",
+                  }}
+                >
+                  {firstType ?? t(tr.addCapture.unknownType, lang)}
+                </Box>
+              </Tooltip>
+
+              {!hasSecondTypeSlot && (
+                <Tooltip title={t(tr.addCapture.addSecondType, lang)}>
+                  <IconButton
+                    size="small"
+                    onClick={addSecondType}
+                    sx={{
+                      border: "2px solid #000",
+                      borderRadius: "999px",
+                      width: "24px",
+                      height: "24px",
+                      background: "#fff",
+                      fontWeight: 800,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    +
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              {hasSecondTypeSlot && (
+                <>
+                  <Tooltip title={t(tr.addCapture.chooseType, lang)}>
+                    <Box
+                      component="button"
+                      onClick={(event) => openTypePicker(1, event)}
+                      sx={{
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        color: secondType ? "#fff" : "#000",
+                        textTransform: "capitalize",
+                        background: secondType
+                          ? (typeColors[secondType] ?? "#888")
+                          : "#fef3c7",
+                        border: "2px solid #000",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {secondType ?? t(tr.addCapture.unknownType, lang)}
+                    </Box>
+                  </Tooltip>
+
+                  <Tooltip title={t(tr.addCapture.removeSecondType, lang)}>
+                    <IconButton
+                      size="small"
+                      onClick={removeSecondType}
+                      sx={{
+                        border: "2px solid #000",
+                        borderRadius: "999px",
+                        width: "24px",
+                        height: "24px",
+                        background: "#fff",
+                        fontWeight: 800,
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      -
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+            </Box>
+
+            {!firstType && (
+              <Typography
+                sx={{
+                  mt: 0.75,
+                  fontSize: "0.72rem",
+                  color: "#b91c1c",
+                  fontWeight: 600,
+                }}
+              >
+                {t(tr.addCapture.firstTypeRequired, lang)}
+              </Typography>
+            )}
+
+            <Menu
+              anchorEl={typePickerAnchorEl}
+              open={Boolean(typePickerAnchorEl)}
+              onClose={closeTypePicker}
+              keepMounted
+            >
+              {TYPES.map((typeName) => (
+                <MenuItem
+                  key={typeName}
+                  onClick={() => {
+                    if (typePickerSlot !== null) {
+                      setCustomType(typePickerSlot, typeName);
+                    }
+                    closeTypePicker();
+                  }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "999px",
+                      background: typeColors[typeName] ?? "#888",
+                      border: "1px solid #000",
+                    }}
+                  />
+                  {typeName}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
+        )}
+
         {/* Nickname */}
         <Box sx={{ mb: 1.5 }}>
           <Typography
@@ -542,50 +761,8 @@ export default function AddCaptureModal({
           />
         </Box>
 
-        {/* Level & Gender */}
+        {/* Gender */}
         <Box sx={{ display: "flex", gap: 1.5, mb: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography
-              component="label"
-              sx={{
-                display: "block",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#000",
-                mb: 1.5,
-              }}
-            >
-              {t(tr.addCapture.level, lang)}
-            </Typography>
-            <TextField
-              fullWidth
-              type="number"
-              value={level}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                setLevel(isNaN(val) ? 1 : Math.min(100, Math.max(1, val)));
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  background: "#fff",
-                  color: "#000",
-                  fontSize: "0.875rem",
-                  "& fieldset": {
-                    borderColor: "#000",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#000",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#3b82f6",
-                    boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
-                  },
-                },
-              }}
-            />
-          </Box>
           <Box sx={{ flex: 1 }}>
             <Typography
               component="label"
@@ -696,7 +873,7 @@ export default function AddCaptureModal({
           </Button>
           <Button
             onClick={handleAdd}
-            disabled={!selected}
+            disabled={!canAddCapture}
             sx={{
               flex: 1,
               background: "linear-gradient(to right, #3b82f6, #1d4ed8)",

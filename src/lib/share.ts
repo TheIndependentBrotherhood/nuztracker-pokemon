@@ -36,10 +36,9 @@ export async function decodeTeam(base64: string): Promise<Capture[]> {
 
 export function buildShareUrl(
   base64: string,
-  options: { showTypes?: boolean; showLevels?: boolean } = {}
+  options: { showTypes?: boolean } = {}
 ): string {
   const params = new URLSearchParams({ team: base64 });
   if (options.showTypes) params.set('showTypes', 'true');
-  if (options.showLevels) params.set('showLevels', 'true');
   return `/share/?${params.toString()}`;
 }

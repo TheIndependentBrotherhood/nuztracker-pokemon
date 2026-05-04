@@ -297,7 +297,7 @@ export default function RunPageContent({ runId }: Props) {
                 />
               </Box>
             )}
-            {tab === "pokedex" && <PokedexView />}
+            {tab === "pokedex" && <PokedexView runId={run.id} />}
           </Box>
 
           {/* Hidden export view for PNG - sprite + types in columns */}
@@ -319,11 +319,13 @@ export default function RunPageContent({ runId }: Props) {
             <TeamColumn
               team={run.team}
               pokemonData={pokemonData}
+              run={run}
               preferAnimated={false}
             />
             <TeamColumn
               team={run.team}
               pokemonData={pokemonData}
+              run={run}
               mirror
               preferAnimated={false}
             />
