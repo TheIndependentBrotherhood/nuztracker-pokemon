@@ -10,8 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tabs,
-  Tab,
 } from "@mui/material";
 import { Run } from "@/lib/types";
 import {
@@ -114,43 +112,58 @@ export default function TypeAnalysis({ run }: Props) {
     );
   }
 
+  const TABS = [
+    { key: 0, label: t(tr.typeAnalysis.tabDefense, lang) },
+    { key: 1, label: t(tr.typeAnalysis.tabAttack, lang) },
+    { key: 2, label: t(tr.typeAnalysis.tabTypes, lang) },
+    { key: 3, label: t(tr.typeAnalysis.tabCombination, lang) },
+  ];
+
   return (
     <Box>
       <Box
         sx={{
-          borderBottom: "2px solid #000",
-          background: "#fff",
+          display: "flex",
+          borderBottom: "3px solid #000",
+          background: "linear-gradient(to right, #DBEAFE, #E9D5FF)",
           borderRadius: "1rem 1rem 0 0",
+          overflow: "hidden",
         }}
       >
-        <Tabs
-          value={tabValue}
-          onChange={(_, val) => setTabValue(val)}
-          sx={{ borderBottom: "none" }}
-        >
-          <Tab
-            label={t(tr.typeAnalysis.tabDefense, lang)}
-            sx={{ fontWeight: 700, color: "#000" }}
-          />
-          <Tab
-            label={t(tr.typeAnalysis.tabAttack, lang)}
-            sx={{ fontWeight: 700, color: "#000" }}
-          />
-          <Tab
-            label={t(tr.typeAnalysis.tabCombination, lang)}
-            sx={{ fontWeight: 700, color: "#000" }}
-          />
-          <Tab
-            label={t(tr.typeAnalysis.tabTypes, lang)}
-            sx={{ fontWeight: 700, color: "#000" }}
-          />
-        </Tabs>
+        {TABS.map((tab) => (
+          <Box
+            component="button"
+            key={tab.key}
+            onClick={() => setTabValue(tab.key)}
+            sx={{
+              flex: 1,
+              py: 1.5,
+              px: 0.5,
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              transition: "all 0.3s ease",
+              borderBottom: "4px solid",
+              borderBottomColor: tabValue === tab.key ? "#000" : "transparent",
+              backgroundColor: tabValue === tab.key ? "#7dd3fc" : "transparent",
+              color: tabValue === tab.key ? "#000" : "#64748b",
+              "&:hover": {
+                color: "#000",
+                backgroundColor: tabValue === tab.key ? "#7dd3fc" : "#f0f4f8",
+              },
+              border: "none",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {tab.label}
+          </Box>
+        ))}
       </Box>
 
       {tabValue === 0 && renderDefenseTable()}
       {tabValue === 1 && renderOffenseTable()}
-      {tabValue === 2 && renderCombinationTable()}
-      {tabValue === 3 && renderTypeTable()}
+      {tabValue === 2 && renderTypeTable()}
+      {tabValue === 3 && renderCombinationTable()}
     </Box>
   );
 
@@ -1110,6 +1123,7 @@ export default function TypeAnalysis({ run }: Props) {
                   color: "#000",
                   fontWeight: 700,
                   fontSize: "0.75rem",
+                  borderLeft: "2px solid #000",
                 }}
               >
                 {t(tr.typeAnalysis.effectiveAgainst, lang)}
@@ -1121,6 +1135,7 @@ export default function TypeAnalysis({ run }: Props) {
                   color: "#000",
                   fontWeight: 700,
                   fontSize: "0.75rem",
+                  borderLeft: "2px solid #000",
                 }}
               >
                 {t(tr.typeAnalysis.weakAgainst, lang)}
@@ -1132,6 +1147,7 @@ export default function TypeAnalysis({ run }: Props) {
                   color: "#000",
                   fontWeight: 700,
                   fontSize: "0.75rem",
+                  borderLeft: "2px solid #000",
                 }}
               >
                 {t(tr.typeAnalysis.resistantTo, lang)}
@@ -1182,7 +1198,7 @@ export default function TypeAnalysis({ run }: Props) {
                       {type}
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ p: 1.5 }}>
+                  <TableCell sx={{ p: 1.5, borderLeft: "2px solid #e5e7eb" }}>
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                       {efficaceTo.map((t) => (
                         <Box
@@ -1204,7 +1220,7 @@ export default function TypeAnalysis({ run }: Props) {
                       ))}
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ p: 1.5 }}>
+                  <TableCell sx={{ p: 1.5, borderLeft: "2px solid #e5e7eb" }}>
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                       {weakTo.map((t) => (
                         <Box
@@ -1226,7 +1242,7 @@ export default function TypeAnalysis({ run }: Props) {
                       ))}
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ p: 1.5 }}>
+                  <TableCell sx={{ p: 1.5, borderLeft: "2px solid #e5e7eb" }}>
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                       {resistantTo.map((t) => (
                         <Box
