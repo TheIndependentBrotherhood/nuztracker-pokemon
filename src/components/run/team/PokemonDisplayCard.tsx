@@ -7,7 +7,7 @@ import {
   getCaptureSpriteFallbackUrl,
   getCaptureSpriteUrl,
 } from "@/lib/pokemon-api";
-import PokemonDetailModal from "./modals/PokemonDetailModal";
+import PokemonDetailModal from "../modals/PokemonDetailModal";
 import { Lang } from "@/i18n/translations";
 import {
   useCaptureDisplayLabel,

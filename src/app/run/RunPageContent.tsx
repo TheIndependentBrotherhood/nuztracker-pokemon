@@ -1,16 +1,16 @@
 "use client";
 
-import { useLayoutEffect, useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getRun } from "@/lib/storage";
 import StatsBar from "@/components/run/StatsBar";
-import MapView from "@/components/run/MapView";
-import ZoneList from "@/components/run/ZoneList";
-import TeamView from "@/components/run/TeamView";
+import MapView from "@/components/run/maps/MapView";
+import ZoneList from "@/components/run/zone/ZoneList";
+import TeamView from "@/components/run/team/TeamView";
 import TeamColumn from "@/components/share/TeamColumn";
-import TypeAnalysis from "@/components/run/TypeAnalysis";
+import TypeAnalysis from "@/components/run/team/TypeAnalysis";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
 import { fetchPokemon } from "@/lib/pokemon-api";
@@ -26,7 +26,11 @@ export default function RunPageContent() {
   const { runs, loadRuns, setCurrentRun, updateRun } = useRunStore();
   const [tab, setTab] = useState<Tab>("zones");
   const [showTypesDrawer, setShowTypesDrawer] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [pokemonData, setPokemonData] = useState<
     Record<number, PokemonApiData>
   >({});
@@ -34,10 +38,6 @@ export default function RunPageContent() {
   const tr = translations;
 
   const id = searchParams.get("id") ?? "";
-
-  useLayoutEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     loadRuns();
@@ -51,12 +51,16 @@ export default function RunPageContent() {
 
   // Load pokemon data for export display
   useEffect(() => {
-    if (!run || run.team.length === 0) {
-      setPokemonData({});
-      return;
-    }
+    let cancelled = false;
 
     const loadPokemonData = async () => {
+      if (!run || run.team.length === 0) {
+        if (!cancelled) {
+          setPokemonData({});
+        }
+        return;
+      }
+
       const dataMap: Record<number, PokemonApiData> = {};
       await Promise.all(
         run.team.map(async (pokemon) => {
@@ -70,10 +74,17 @@ export default function RunPageContent() {
           }
         }),
       );
-      setPokemonData(dataMap);
+
+      if (!cancelled) {
+        setPokemonData(dataMap);
+      }
     };
 
     loadPokemonData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [run]);
 
   if (!mounted) return null;

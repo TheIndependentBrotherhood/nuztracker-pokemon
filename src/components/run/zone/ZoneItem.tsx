@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import { Capture, Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
-import AddCaptureModal from "./modals/AddCaptureModal";
-import PokemonDetailModal from "./modals/PokemonDetailModal";
+import AddCaptureModal from "../modals/AddCaptureModal";
+import PokemonDetailModal from "../modals/PokemonDetailModal";
 import {
   getCaptureSpriteFallbackUrl,
   getCaptureSpriteUrl,
@@ -349,7 +349,12 @@ export default function ZoneItem({
         {zone.captures.length > 0 && (
           <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
             {zone.captures.map((c) => (
-              <CaptureThumbnail key={c.id} capture={c} lang={lang} runId={runId} />
+              <CaptureThumbnail
+                key={c.id}
+                capture={c}
+                lang={lang}
+                runId={runId}
+              />
             ))}
           </Box>
         )}

@@ -3,11 +3,11 @@
 import { Run } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import { Box, TextField } from "@mui/material";
-import ZoneItem from "./ZoneItem";
 import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getZonesForRegionAsync, getZoneDisplayName } from "@/lib/zones";
+import ZoneItem from "./ZoneItem";
 
 interface Props {
   run: Run;

@@ -294,7 +294,7 @@ export default function AlolaMap({
           fontWeight="700"
           style={{ userSelect: "none" }}
         >
-          ULA'ULA
+          ULA&apos;ULA
         </text>
         <text
           x="527"
