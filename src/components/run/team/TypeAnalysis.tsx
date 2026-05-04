@@ -142,6 +142,7 @@ export default function TypeAnalysis({ run }: Props) {
               fontSize: "0.75rem",
               fontWeight: 700,
               transition: "all 0.3s ease",
+              border: "none",
               borderBottom: "4px solid",
               borderBottomColor: tabValue === tab.key ? "#000" : "transparent",
               backgroundColor: tabValue === tab.key ? "#7dd3fc" : "transparent",
@@ -150,7 +151,6 @@ export default function TypeAnalysis({ run }: Props) {
                 color: "#000",
                 backgroundColor: tabValue === tab.key ? "#7dd3fc" : "#f0f4f8",
               },
-              border: "none",
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
@@ -928,18 +928,6 @@ export default function TypeAnalysis({ run }: Props) {
                   multiplier,
                   "defense",
                 );
-                const bgColor =
-                  multiplier >= 2
-                    ? "#fee2e2"
-                    : multiplier >= 0.5
-                      ? "#dcfce7"
-                      : "#cffafe";
-                const borderColor =
-                  multiplier >= 2
-                    ? "#fca5a5"
-                    : multiplier >= 0.5
-                      ? "#86efac"
-                      : "#60a5fa";
 
                 return (
                   <Box key={multiplier} sx={{ marginBottom: 1.5 }}>
@@ -965,12 +953,12 @@ export default function TypeAnalysis({ run }: Props) {
                             px: 1,
                             py: 0.5,
                             borderRadius: "0.25rem",
-                            background: bgColor,
-                            color: color,
+                            background: typeColors[type] ?? "#888",
+                            color: "#fff",
                             fontWeight: 600,
                             fontSize: "0.75rem",
                             textTransform: "capitalize",
-                            border: `1px solid ${borderColor}`,
+                            border: "1px solid #000",
                           }}
                         >
                           {type}
@@ -1005,18 +993,6 @@ export default function TypeAnalysis({ run }: Props) {
                   multiplier,
                   "attack",
                 );
-                const bgColor =
-                  multiplier >= 2
-                    ? "#dcfce7"
-                    : multiplier >= 0.5
-                      ? "#fee2e2"
-                      : "#ffe8e8";
-                const borderColor =
-                  multiplier >= 2
-                    ? "#86efac"
-                    : multiplier >= 0.5
-                      ? "#fca5a5"
-                      : "#ffcccc";
 
                 return (
                   <Box key={multiplier} sx={{ marginBottom: 1.5 }}>
@@ -1042,12 +1018,12 @@ export default function TypeAnalysis({ run }: Props) {
                             px: 1,
                             py: 0.5,
                             borderRadius: "0.25rem",
-                            background: bgColor,
-                            color: color,
+                            background: typeColors[type] ?? "#888",
+                            color: "#fff",
                             fontWeight: 600,
                             fontSize: "0.75rem",
                             textTransform: "capitalize",
-                            border: `1px solid ${borderColor}`,
+                            border: "1px solid #000",
                           }}
                         >
                           {type}

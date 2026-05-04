@@ -43,9 +43,21 @@ export async function loadTypeData(
     const response = await fetch("/data/type-charts.json");
     const data = await response.json();
 
-    const generationData = data[generation]?.effectiveness ?? {};
+    // Each generation layer is cumulative:
+    // gen1     = gen1
+    // gen2-5   = gen1 + gen2-5
+    // gen6+    = gen1 + gen2-5 + gen6+
+    const layers: ("gen1" | "gen2-5" | "gen6+")[] = ["gen1"];
+    if (generation === "gen2-5" || generation === "gen6+")
+      layers.push("gen2-5");
+    if (generation === "gen6+") layers.push("gen6+");
 
-    return generationData;
+    const merged: TypeChartData = {};
+    for (const layer of layers) {
+      Object.assign(merged, data[layer]?.effectiveness ?? {});
+    }
+
+    return merged;
   } catch (error) {
     console.error("Failed to load type data:", error);
     return {};
@@ -219,22 +231,31 @@ export function buildTypeOffensesFromJson(
 ): Record<string, number> {
   const offenses: Record<string, number> = {};
 
-  // For each defending type, calculate how much damage our attacking types do
   for (const defendType of TYPES) {
-    let maxMult = 1;
-
-    // For each attacking type, check effectiveness
-    for (const atkType of types) {
-      const attackerData = typeData[atkType];
-      if (!attackerData) continue;
-
-      // Check the attacker's strong points against this defender
-      if (attackerData.strongAgainst?.includes(defendType)) {
-        maxMult = Math.max(maxMult, 2);
-      }
+    if (types.length === 0) {
+      offenses[defendType] = 1;
+      continue;
     }
 
-    offenses[defendType] = maxMult;
+    const defenderData = typeData[defendType];
+    let maxMult = -Infinity;
+
+    for (const atkType of types) {
+      let mult = 1; // neutral by default
+
+      // Use the defender's properties as the authoritative source
+      if (defenderData?.immuneTo?.includes(atkType)) {
+        mult = 0; // Pokémon cannot hit this type
+      } else if (defenderData?.resistsAgainst?.includes(atkType)) {
+        mult = 0.5; // Not very effective
+      } else if (defenderData?.weakTo?.includes(atkType)) {
+        mult = 2; // Super effective
+      }
+
+      if (mult > maxMult) maxMult = mult;
+    }
+
+    offenses[defendType] = maxMult === -Infinity ? 1 : maxMult;
   }
 
   return offenses;
