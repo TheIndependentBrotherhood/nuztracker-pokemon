@@ -1000,8 +1000,8 @@ export default function PokemonDetailModal({
                               boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
                             }}
                           >
-                            {abilitiesCache.abilities
-                              .filter(
+                            {(() => {
+                              const filtered = abilitiesCache.abilities.filter(
                                 (a) =>
                                   !activeAbilities.includes(a.name) &&
                                   (a.name
@@ -1013,83 +1013,75 @@ export default function PokemonDetailModal({
                                     a.names?.en
                                       ?.toLowerCase()
                                       .includes(abilitySearch.toLowerCase())),
-                              )
-                              .slice(0, 8)
-                              .map((a) => {
-                                const displayName =
-                                  lang === "fr"
-                                    ? (a.names?.fr ?? a.name)
-                                    : (a.names?.en ?? a.name);
-                                const effect =
-                                  lang === "fr"
-                                    ? (a.effects?.fr ?? "")
-                                    : (a.effects?.en ?? "");
-                                return (
-                                  <Tooltip
-                                    key={a.name}
-                                    title={effect}
-                                    placement="left"
-                                  >
+                              );
+                              return (
+                                <>
+                                  {filtered.slice(0, 8).map((a) => {
+                                    const displayName =
+                                      lang === "fr"
+                                        ? (a.names?.fr ?? a.name)
+                                        : (a.names?.en ?? a.name);
+                                    const effect =
+                                      lang === "fr"
+                                        ? (a.effects?.fr ?? "")
+                                        : (a.effects?.en ?? "");
+                                    return (
+                                      <Tooltip
+                                        key={a.name}
+                                        title={effect}
+                                        placement="left"
+                                      >
+                                        <Box
+                                          component="button"
+                                          onClick={() => {
+                                            persistAbilities([
+                                              ...activeAbilities,
+                                              a.name,
+                                            ]);
+                                            setAbilitySearch("");
+                                          }}
+                                          sx={{
+                                            width: "100%",
+                                            textAlign: "left",
+                                            px: 1.5,
+                                            py: 0.75,
+                                            background: "transparent",
+                                            border: "none",
+                                            fontSize: "0.875rem",
+                                            textTransform: "capitalize",
+                                            color: "#000",
+                                            cursor: "pointer",
+                                            "&:hover": { background: "#f0f0f0" },
+                                            "&:first-of-type": {
+                                              borderTopLeftRadius: "0.75rem",
+                                              borderTopRightRadius: "0.75rem",
+                                            },
+                                            "&:last-of-type": {
+                                              borderBottomLeftRadius: "0.75rem",
+                                              borderBottomRightRadius: "0.75rem",
+                                            },
+                                          }}
+                                        >
+                                          {displayName}
+                                        </Box>
+                                      </Tooltip>
+                                    );
+                                  })}
+                                  {filtered.length === 0 && (
                                     <Box
-                                      component="button"
-                                      onClick={() => {
-                                        persistAbilities([
-                                          ...activeAbilities,
-                                          a.name,
-                                        ]);
-                                        setAbilitySearch("");
-                                      }}
                                       sx={{
-                                        width: "100%",
-                                        textAlign: "left",
                                         px: 1.5,
-                                        py: 0.75,
-                                        background: "transparent",
-                                        border: "none",
+                                        py: 1,
+                                        color: "#666",
                                         fontSize: "0.875rem",
-                                        textTransform: "capitalize",
-                                        color: "#000",
-                                        cursor: "pointer",
-                                        "&:hover": { background: "#f0f0f0" },
-                                        "&:first-of-type": {
-                                          borderTopLeftRadius: "0.75rem",
-                                          borderTopRightRadius: "0.75rem",
-                                        },
-                                        "&:last-of-type": {
-                                          borderBottomLeftRadius: "0.75rem",
-                                          borderBottomRightRadius: "0.75rem",
-                                        },
                                       }}
                                     >
-                                      {displayName}
+                                      {t(tr.pokemonDetail.noAbilityResult, lang)}
                                     </Box>
-                                  </Tooltip>
-                                );
-                              })}
-                            {abilitiesCache.abilities.filter(
-                              (a) =>
-                                !activeAbilities.includes(a.name) &&
-                                (a.name
-                                  .toLowerCase()
-                                  .includes(abilitySearch.toLowerCase()) ||
-                                  a.names?.fr
-                                    ?.toLowerCase()
-                                    .includes(abilitySearch.toLowerCase()) ||
-                                  a.names?.en
-                                    ?.toLowerCase()
-                                    .includes(abilitySearch.toLowerCase())),
-                            ).length === 0 && (
-                              <Box
-                                sx={{
-                                  px: 1.5,
-                                  py: 1,
-                                  color: "#666",
-                                  fontSize: "0.875rem",
-                                }}
-                              >
-                                {t(tr.pokemonDetail.noAbilityResult, lang)}
-                              </Box>
-                            )}
+                                  )}
+                                </>
+                              );
+                            })()}
                           </Box>
                         )}
                       </Box>
@@ -1099,7 +1091,7 @@ export default function PokemonDetailModal({
               ) : (
                 /* Non-randomizer mode: show abilities from PokeAPI */
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                  {data?.abilities.map(({ ability, is_hidden }) => {
+                  {data?.abilities?.map(({ ability, is_hidden }) => {
                     const entry = abilitiesCache.abilities.find(
                       (a) => a.name === ability.name,
                     );

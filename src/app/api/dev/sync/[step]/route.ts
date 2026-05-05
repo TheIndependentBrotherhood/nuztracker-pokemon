@@ -384,9 +384,9 @@ const WEAKNESS_MAP: Record<string, string> = {
 
 // Map of abilities that reduce damage from specific types
 const DAMAGE_REDUCTION_MAP: Record<string, Record<string, number>> = {
-  "thick-fat": { fire: 0.5, ice: 0.5 },
-  heatproof: { fire: 0.5 },
-  "purifying-salt": { ghost: 0.5 },
+  "thick-fat": { "fire": 0.5, "ice": 0.5 },
+  "heatproof": { "fire": 0.5 },
+  "purifying-salt": { "ghost": 0.5 },
 };
 
 async function syncAbilities(send: SendFn) {

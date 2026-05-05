@@ -32,7 +32,6 @@ import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
-import type { AbilityEntry } from "@/context/CacheContext";
 
 interface Props {
   run: Run;
@@ -103,11 +102,7 @@ export default function TypeAnalysis({ run }: Props) {
   ): Record<string, number> => {
     const base = getDefenses(types);
     if (abilityNames.length === 0) return base;
-    return applyAbilityModifiers(
-      base,
-      abilityNames,
-      abilitiesCache.abilities as AbilityEntry[],
-    );
+    return applyAbilityModifiers(base, abilityNames, abilitiesCache.abilities);
   };
 
   const getOffenses = (types: string[]): Record<string, number> => {
@@ -272,6 +267,8 @@ export default function TypeAnalysis({ run }: Props) {
           </TableHead>
           <TableBody>
             {TYPES.map((attackType) => {
+              // teamTypes is built by mapping over run.team in the same order,
+              // so teamTypes[i] always corresponds to run.team[i].
               const memberEffects = teamTypes.map((types, i) => {
                 if (types.length === 0) return 1;
                 const memberAbilities = run.team[i]?.abilities ?? [];
@@ -835,10 +832,9 @@ export default function TypeAnalysis({ run }: Props) {
       );
     }
 
-    const combinationDefenses = applyAbilityModifiers(
-      getDefenses(selectedTypes),
+    const combinationDefenses = getDefensesWithAbilities(
+      selectedTypes,
       selectedAbilities,
-      abilitiesCache.abilities as AbilityEntry[],
     );
     const combinationOffenses = getOffenses(selectedTypes);
 
@@ -1041,8 +1037,8 @@ export default function TypeAnalysis({ run }: Props) {
                     minWidth: 220,
                   }}
                 >
-                  {relevantAbilities
-                    .filter(
+                  {(() => {
+                    const filteredAbilities = relevantAbilities.filter(
                       (a) =>
                         !selectedAbilities.includes(a.name) &&
                         (a.name
@@ -1054,76 +1050,72 @@ export default function TypeAnalysis({ run }: Props) {
                           a.names?.en
                             ?.toLowerCase()
                             .includes(abilitySearch.toLowerCase())),
-                    )
-                    .slice(0, 8)
-                    .map((a) => {
-                      const displayName =
-                        lang === "fr"
-                          ? (a.names?.fr ?? a.name)
-                          : (a.names?.en ?? a.name);
-                      const effect =
-                        lang === "fr"
-                          ? (a.effects?.fr ?? "")
-                          : (a.effects?.en ?? "");
-                      return (
-                        <Tooltip key={a.name} title={effect} placement="left">
+                    );
+                    return (
+                      <>
+                        {filteredAbilities.slice(0, 8).map((a) => {
+                          const displayName =
+                            lang === "fr"
+                              ? (a.names?.fr ?? a.name)
+                              : (a.names?.en ?? a.name);
+                          const effect =
+                            lang === "fr"
+                              ? (a.effects?.fr ?? "")
+                              : (a.effects?.en ?? "");
+                          return (
+                            <Tooltip
+                              key={a.name}
+                              title={effect}
+                              placement="left"
+                            >
+                              <Box
+                                component="button"
+                                onClick={() => {
+                                  toggleAbilitySelection(a.name);
+                                  setAbilitySearch("");
+                                }}
+                                sx={{
+                                  width: "100%",
+                                  textAlign: "left",
+                                  px: 1.5,
+                                  py: 0.75,
+                                  background: "transparent",
+                                  border: "none",
+                                  fontSize: "0.875rem",
+                                  textTransform: "capitalize",
+                                  color: "#000",
+                                  cursor: "pointer",
+                                  "&:hover": { background: "#f0f0f0" },
+                                  "&:first-of-type": {
+                                    borderTopLeftRadius: "0.75rem",
+                                    borderTopRightRadius: "0.75rem",
+                                  },
+                                  "&:last-of-type": {
+                                    borderBottomLeftRadius: "0.75rem",
+                                    borderBottomRightRadius: "0.75rem",
+                                  },
+                                }}
+                              >
+                                {displayName}
+                              </Box>
+                            </Tooltip>
+                          );
+                        })}
+                        {filteredAbilities.length === 0 && (
                           <Box
-                            component="button"
-                            onClick={() => {
-                              toggleAbilitySelection(a.name);
-                              setAbilitySearch("");
-                            }}
                             sx={{
-                              width: "100%",
-                              textAlign: "left",
                               px: 1.5,
-                              py: 0.75,
-                              background: "transparent",
-                              border: "none",
+                              py: 1,
+                              color: "#666",
                               fontSize: "0.875rem",
-                              textTransform: "capitalize",
-                              color: "#000",
-                              cursor: "pointer",
-                              "&:hover": { background: "#f0f0f0" },
-                              "&:first-of-type": {
-                                borderTopLeftRadius: "0.75rem",
-                                borderTopRightRadius: "0.75rem",
-                              },
-                              "&:last-of-type": {
-                                borderBottomLeftRadius: "0.75rem",
-                                borderBottomRightRadius: "0.75rem",
-                              },
                             }}
                           >
-                            {displayName}
+                            {t(tr.typeAnalysis.noAbilityResult, lang)}
                           </Box>
-                        </Tooltip>
-                      );
-                    })}
-                  {relevantAbilities.filter(
-                    (a) =>
-                      !selectedAbilities.includes(a.name) &&
-                      (a.name
-                        .toLowerCase()
-                        .includes(abilitySearch.toLowerCase()) ||
-                        a.names?.fr
-                          ?.toLowerCase()
-                          .includes(abilitySearch.toLowerCase()) ||
-                        a.names?.en
-                          ?.toLowerCase()
-                          .includes(abilitySearch.toLowerCase())),
-                  ).length === 0 && (
-                    <Box
-                      sx={{
-                        px: 1.5,
-                        py: 1,
-                        color: "#666",
-                        fontSize: "0.875rem",
-                      }}
-                    >
-                      {t(tr.typeAnalysis.noAbilityResult, lang)}
-                    </Box>
-                  )}
+                        )}
+                      </>
+                    );
+                  })()}
                 </Box>
               )}
             </Box>
