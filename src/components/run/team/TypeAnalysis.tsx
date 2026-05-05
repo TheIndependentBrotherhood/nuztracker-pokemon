@@ -10,6 +10,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
+  Tooltip,
 } from "@mui/material";
 import { Run } from "@/lib/types";
 import {
@@ -21,6 +23,7 @@ import {
   loadTypeData,
   buildTypeDefensesFromJson,
   buildTypeOffensesFromJson,
+  applyAbilityModifiers,
   type EffectivenessLabelKey,
   type TypeChartData,
 } from "@/lib/type-chart";
@@ -28,6 +31,8 @@ import { fetchPokemon } from "@/lib/pokemon-api";
 import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { useCache } from "@/context/CacheContext";
+import type { AbilityEntry } from "@/context/CacheContext";
 
 interface Props {
   run: Run;
@@ -37,9 +42,12 @@ export default function TypeAnalysis({ run }: Props) {
   const [teamTypes, setTeamTypes] = useState<string[][]>([]);
   const [tabValue, setTabValue] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedAbilities, setSelectedAbilities] = useState<string[]>([]);
+  const [abilitySearch, setAbilitySearch] = useState("");
   const [typeChartData, setTypeChartData] = useState<TypeChartData>({});
   const { lang } = useLanguage();
   const tr = translations;
+  const { abilities: abilitiesCache } = useCache();
 
   useEffect(() => {
     // Load type chart data for the selected generation
@@ -87,6 +95,19 @@ export default function TypeAnalysis({ run }: Props) {
       return buildTypeDefensesFromJson(types, typeChartData);
     }
     return getTypeDefenses(types);
+  };
+
+  const getDefensesWithAbilities = (
+    types: string[],
+    abilityNames: string[],
+  ): Record<string, number> => {
+    const base = getDefenses(types);
+    if (abilityNames.length === 0) return base;
+    return applyAbilityModifiers(
+      base,
+      abilityNames,
+      abilitiesCache.abilities as AbilityEntry[],
+    );
   };
 
   const getOffenses = (types: string[]): Record<string, number> => {
@@ -251,9 +272,13 @@ export default function TypeAnalysis({ run }: Props) {
           </TableHead>
           <TableBody>
             {TYPES.map((attackType) => {
-              const memberEffects = teamTypes.map((types) => {
+              const memberEffects = teamTypes.map((types, i) => {
                 if (types.length === 0) return 1;
-                return getDefenses(types)[attackType] ?? 1;
+                const memberAbilities = run.team[i]?.abilities ?? [];
+                return (
+                  getDefensesWithAbilities(types, memberAbilities)[attackType] ??
+                  1
+                );
               });
 
               const weakCount = memberEffects.filter((e) => e > 1).length;
@@ -734,6 +759,22 @@ export default function TypeAnalysis({ run }: Props) {
       });
     };
 
+    const toggleAbilitySelection = (abilityName: string) => {
+      setSelectedAbilities((prev) =>
+        prev.includes(abilityName)
+          ? prev.filter((a) => a !== abilityName)
+          : [...prev, abilityName],
+      );
+    };
+
+    // Abilities that modify defenses (immuneTypes, weakness, damageReduction)
+    const relevantAbilities = abilitiesCache.abilities.filter(
+      (a) =>
+        (a.immuneTypes && a.immuneTypes.length > 0) ||
+        a.weakness ||
+        (a.damageReduction && Object.keys(a.damageReduction).length > 0),
+    );
+
     if (selectedTypes.length === 0) {
       return (
         <Box
@@ -794,7 +835,11 @@ export default function TypeAnalysis({ run }: Props) {
       );
     }
 
-    const combinationDefenses = getDefenses(selectedTypes);
+    const combinationDefenses = applyAbilityModifiers(
+      getDefenses(selectedTypes),
+      selectedAbilities,
+      abilitiesCache.abilities as AbilityEntry[],
+    );
     const combinationOffenses = getOffenses(selectedTypes);
 
     return (
@@ -897,6 +942,192 @@ export default function TypeAnalysis({ run }: Props) {
               </Box>
             </Box>
           )}
+
+          {/* Ability selector */}
+          <Box sx={{ marginBottom: 2 }}>
+            <Typography
+              sx={{
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                color: "#666",
+                marginBottom: 1,
+              }}
+            >
+              {t(tr.typeAnalysis.abilitiesSection, lang)}
+            </Typography>
+
+            {/* Selected abilities */}
+            {selectedAbilities.length > 0 && (
+              <Box
+                sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}
+              >
+                {selectedAbilities.map((abilityName) => {
+                  const entry = abilitiesCache.abilities.find(
+                    (a) => a.name === abilityName,
+                  );
+                  const displayName =
+                    lang === "fr"
+                      ? (entry?.names?.fr ?? abilityName)
+                      : (entry?.names?.en ?? abilityName);
+                  const effect =
+                    lang === "fr"
+                      ? (entry?.effects?.fr ?? "")
+                      : (entry?.effects?.en ?? "");
+                  return (
+                    <Tooltip key={abilityName} title={effect} placement="top">
+                      <Box
+                        onClick={() => toggleAbilitySelection(abilityName)}
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          px: 1,
+                          py: 0.25,
+                          borderRadius: "999px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          background: "#e0f2fe",
+                          border: "2px solid #0284c7",
+                          color: "#0c4a6e",
+                          cursor: "pointer",
+                          "&:after": { content: '" ✕"', opacity: 0.7 },
+                          "&:hover": { opacity: 0.8 },
+                        }}
+                      >
+                        <span style={{ textTransform: "capitalize" }}>
+                          {displayName}
+                        </span>
+                      </Box>
+                    </Tooltip>
+                  );
+                })}
+              </Box>
+            )}
+
+            {/* Ability search */}
+            <Box sx={{ position: "relative" }}>
+              <TextField
+                size="small"
+                placeholder={t(
+                  tr.typeAnalysis.abilitiesSearchPlaceholder,
+                  lang,
+                )}
+                value={abilitySearch}
+                onChange={(e) => setAbilitySearch(e.target.value)}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    background: "#fff",
+                    fontSize: "0.8rem",
+                    "& fieldset": { borderColor: "#ccc" },
+                  },
+                  width: "100%",
+                  maxWidth: 280,
+                }}
+              />
+              {abilitySearch.length >= 2 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    background: "#fff",
+                    border: "2px solid #000",
+                    borderRadius: "0.75rem",
+                    mt: 0.5,
+                    maxHeight: "160px",
+                    overflowY: "auto",
+                    zIndex: 10,
+                    boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
+                    minWidth: 220,
+                  }}
+                >
+                  {relevantAbilities
+                    .filter(
+                      (a) =>
+                        !selectedAbilities.includes(a.name) &&
+                        (a.name
+                          .toLowerCase()
+                          .includes(abilitySearch.toLowerCase()) ||
+                          a.names?.fr
+                            ?.toLowerCase()
+                            .includes(abilitySearch.toLowerCase()) ||
+                          a.names?.en
+                            ?.toLowerCase()
+                            .includes(abilitySearch.toLowerCase())),
+                    )
+                    .slice(0, 8)
+                    .map((a) => {
+                      const displayName =
+                        lang === "fr"
+                          ? (a.names?.fr ?? a.name)
+                          : (a.names?.en ?? a.name);
+                      const effect =
+                        lang === "fr"
+                          ? (a.effects?.fr ?? "")
+                          : (a.effects?.en ?? "");
+                      return (
+                        <Tooltip key={a.name} title={effect} placement="left">
+                          <Box
+                            component="button"
+                            onClick={() => {
+                              toggleAbilitySelection(a.name);
+                              setAbilitySearch("");
+                            }}
+                            sx={{
+                              width: "100%",
+                              textAlign: "left",
+                              px: 1.5,
+                              py: 0.75,
+                              background: "transparent",
+                              border: "none",
+                              fontSize: "0.875rem",
+                              textTransform: "capitalize",
+                              color: "#000",
+                              cursor: "pointer",
+                              "&:hover": { background: "#f0f0f0" },
+                              "&:first-of-type": {
+                                borderTopLeftRadius: "0.75rem",
+                                borderTopRightRadius: "0.75rem",
+                              },
+                              "&:last-of-type": {
+                                borderBottomLeftRadius: "0.75rem",
+                                borderBottomRightRadius: "0.75rem",
+                              },
+                            }}
+                          >
+                            {displayName}
+                          </Box>
+                        </Tooltip>
+                      );
+                    })}
+                  {relevantAbilities.filter(
+                    (a) =>
+                      !selectedAbilities.includes(a.name) &&
+                      (a.name
+                        .toLowerCase()
+                        .includes(abilitySearch.toLowerCase()) ||
+                        a.names?.fr
+                          ?.toLowerCase()
+                          .includes(abilitySearch.toLowerCase()) ||
+                        a.names?.en
+                          ?.toLowerCase()
+                          .includes(abilitySearch.toLowerCase())),
+                  ).length === 0 && (
+                    <Box
+                      sx={{
+                        px: 1.5,
+                        py: 1,
+                        color: "#666",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {t(tr.typeAnalysis.noAbilityResult, lang)}
+                    </Box>
+                  )}
+                </Box>
+              )}
+            </Box>
+          </Box>
 
           <Box
             sx={{
@@ -1043,7 +1274,10 @@ export default function TypeAnalysis({ run }: Props) {
             }}
           >
             <Typography
-              onClick={() => setSelectedTypes([])}
+              onClick={() => {
+                setSelectedTypes([]);
+                setSelectedAbilities([]);
+              }}
               sx={{
                 fontSize: "0.875rem",
                 color: "#0066cc",

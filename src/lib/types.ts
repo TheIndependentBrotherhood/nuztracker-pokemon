@@ -20,6 +20,8 @@ export interface Capture {
   isDead: boolean;
   /** User-discovered types for randomizer type mode (max two). */
   customTypes?: string[];
+  /** Abilities assigned to this Pokémon (max three). In randomizer mode these are user-defined. */
+  abilities?: string[];
   selectedSprite?: CaptureSelectedSprite;
   /** For Unown captures: the chosen letter form, e.g. "a"–"z", "!", "?" */
   unownLetter?: string;
@@ -78,6 +80,12 @@ export interface PokemonStat {
   stat: { name: string };
 }
 
+export interface PokemonApiAbility {
+  ability: { name: string; url: string };
+  is_hidden: boolean;
+  slot: number;
+}
+
 export interface PokemonApiData {
   id: number;
   name: string;
@@ -86,6 +94,7 @@ export interface PokemonApiData {
     front_shiny: string;
   };
   types: Array<{ type: PokemonType }>;
+  abilities: PokemonApiAbility[];
   stats: PokemonStat[];
   base_experience: number;
   height: number;

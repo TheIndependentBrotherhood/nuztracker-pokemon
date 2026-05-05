@@ -178,6 +178,14 @@ const translations = {
     unownForm: { fr: "Forme (lettre capturée)", en: "Form (captured letter)" },
     cancel: { fr: "Annuler", en: "Cancel" },
     add: { fr: "Ajouter", en: "Add" },
+    randomAbilities: { fr: "Talents (randomizer)", en: "Abilities (randomizer)" },
+    abilitiesSearchPlaceholder: { fr: "Rechercher un talent...", en: "Search for an ability..." },
+    abilitiesLimitReached: {
+      fr: "Limite de 3 talents atteinte",
+      en: "3 ability limit reached",
+    },
+    removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
+    noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
   },
 
   // ── Pokemon Detail Modal ───────────────────────────────────────────────────
@@ -215,6 +223,16 @@ const translations = {
     sprite: { fr: "Sprite", en: "Sprite" },
     close: { fr: "Fermer", en: "Close" },
     statSpeed: { fr: "Vit", en: "Spd" },
+    abilitiesSection: { fr: "Talents", en: "Abilities" },
+    abilitiesRandomizer: { fr: "Talents (randomizer)", en: "Abilities (randomizer)" },
+    abilitiesSearchPlaceholder: { fr: "Rechercher un talent...", en: "Search for an ability..." },
+    abilitiesLimitReached: {
+      fr: "Limite de 3 talents atteinte",
+      en: "3 ability limit reached",
+    },
+    removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
+    noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
+    abilitiesHidden: { fr: "Caché", en: "Hidden" },
   },
 
   // ── Zone List ──────────────────────────────────────────────────────────────
@@ -388,6 +406,11 @@ const translations = {
     resistant: { fr: "Résistant", en: "Resistant" },
     veryResistant: { fr: "Très résistant", en: "Very resistant" },
     immune: { fr: "Immunisé", en: "Immune" },
+    abilitiesSection: { fr: "Talents :", en: "Abilities:" },
+    addAbility: { fr: "+ Talent", en: "+ Ability" },
+    abilitiesSearchPlaceholder: { fr: "Rechercher un talent...", en: "Search for an ability..." },
+    noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
+    removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
   },
 
   // ── Map View ───────────────────────────────────────────────────────────────

@@ -1,3 +1,5 @@
+import type { AbilityEntry } from "@/context/CacheContext";
+
 export const TYPES = [
   "normal",
   "fighting",
@@ -360,4 +362,57 @@ export function getEffectivenessLabel(
         return { labelKey: "unknown", color: "#000000" };
     }
   }
+}
+
+// ─── Ability modifiers ────────────────────────────────────────────────────────
+
+/**
+ * Apply ability-based modifiers (immuneTypes, weakness, damageReduction,
+ * Wonder Guard) on top of a pre-computed defense map.
+ */
+export function applyAbilityModifiers(
+  defenses: Record<string, number>,
+  abilityNames: string[],
+  abilitiesCache: AbilityEntry[],
+): Record<string, number> {
+  const result = { ...defenses };
+
+  // Wonder Guard: only super-effective (≥2×) moves deal damage
+  if (abilityNames.includes("wonder-guard")) {
+    for (const type of TYPES) {
+      if ((result[type] ?? 1) < 2) {
+        result[type] = 0;
+      }
+    }
+  }
+
+  for (const abilityName of abilityNames) {
+    if (abilityName === "wonder-guard") continue;
+
+    const ability = abilitiesCache.find((a) => a.name === abilityName);
+    if (!ability) continue;
+
+    // Immunity: set the specified types' effectiveness to 0
+    if (ability.immuneTypes) {
+      for (const immuneType of ability.immuneTypes) {
+        if (immuneType !== "all-except-super-effective") {
+          result[immuneType] = 0;
+        }
+      }
+    }
+
+    // Additional weakness: multiply that type's effectiveness by 2
+    if (ability.weakness) {
+      result[ability.weakness] = (result[ability.weakness] ?? 1) * 2;
+    }
+
+    // Damage reduction: multiply by the provided factor
+    if (ability.damageReduction) {
+      for (const [type, factor] of Object.entries(ability.damageReduction)) {
+        result[type] = (result[type] ?? 1) * factor;
+      }
+    }
+  }
+
+  return result;
 }

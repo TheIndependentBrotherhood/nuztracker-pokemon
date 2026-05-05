@@ -377,6 +377,18 @@ const IMMUNITY_MAP: Record<string, string[]> = {
   "earth-eater": ["ground"],
 };
 
+// Map of abilities that add a weakness to a specific type
+const WEAKNESS_MAP: Record<string, string> = {
+  "dry-skin": "fire",
+};
+
+// Map of abilities that reduce damage from specific types
+const DAMAGE_REDUCTION_MAP: Record<string, Record<string, number>> = {
+  "thick-fat": { fire: 0.5, ice: 0.5 },
+  heatproof: { fire: 0.5 },
+  "purifying-salt": { ghost: 0.5 },
+};
+
 async function syncAbilities(send: SendFn) {
   send({
     type: "progress",
@@ -449,9 +461,14 @@ async function syncAbilities(send: SendFn) {
       entry.immuneTypes = IMMUNITY_MAP[abilityData.name];
     }
 
-    // Add special attributes for specific abilities
-    if (abilityData.name === "dry-skin") {
-      entry.weakness = "fire";
+    // Add weakness for specific abilities
+    if (abilityData.name in WEAKNESS_MAP) {
+      entry.weakness = WEAKNESS_MAP[abilityData.name];
+    }
+
+    // Add damage reduction for specific abilities
+    if (abilityData.name in DAMAGE_REDUCTION_MAP) {
+      entry.damageReduction = DAMAGE_REDUCTION_MAP[abilityData.name];
     }
 
     incoming.push(entry);
