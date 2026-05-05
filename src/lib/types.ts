@@ -60,6 +60,8 @@ export interface Run {
   randomizerOptions?: RandomizerOptions;
   /** User-discovered types for randomizer type mode, indexed by pokemon id. */
   customTypesByPokemonId?: Record<number, string[]>;
+  /** Player-defined ability panel (up to 3) per Pokémon species in randomizer mode. */
+  customAbilitiesByPokemonId?: Record<number, string[]>;
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];
