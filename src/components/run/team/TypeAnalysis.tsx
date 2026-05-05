@@ -891,9 +891,27 @@ export default function TypeAnalysis({ run }: Props) {
       );
     }
 
-    const combinationDefenses = getDefensesWithAbilities(
+    const effectivenessLabelToMultiplier: Record<EffectivenessLabelKey, number> =
+      {
+        immune: 0,
+        "4x": 4,
+        "2x": 2,
+        neutral: 1,
+        "1/2x": 0.5,
+        "1/4x": 0.25,
+      };
+
+    const rawCombinationDefenses = getDefensesWithAbilities(
       selectedTypes,
       selectedAbilities,
+    );
+    const combinationDefenses = Object.fromEntries(
+      Object.entries(rawCombinationDefenses).map(([type, multiplier]) => {
+        const label = getEffectivenessLabel(
+          multiplier,
+        ) as EffectivenessLabelKey;
+        return [type, effectivenessLabelToMultiplier[label] ?? multiplier];
+      }),
     );
     const combinationOffenses = getOffenses(selectedTypes);
 
