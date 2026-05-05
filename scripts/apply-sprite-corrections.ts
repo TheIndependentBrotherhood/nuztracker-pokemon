@@ -36,8 +36,8 @@ interface ExportPayload {
 
 interface PokemonListEntry {
   id: number;
-  name: string;
-  alternativeNames?: string[];
+  technicalName: string;
+  alternativeTechnicalNames?: string[];
   sprites?: {
     normal?: { default?: string; alternatives?: string[] };
     shiny?: { default?: string; alternatives?: string[] };
