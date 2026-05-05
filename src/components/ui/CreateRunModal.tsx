@@ -101,7 +101,6 @@ export default function CreateRunModal({ onClose }: Props) {
   const randomizerOptionsList = [
     { key: "randomizeTypes", label: t(tr.createRun.randomizeTypes, lang) },
     { key: "randomizeAbilities", label: t(tr.createRun.randomizeAbilities, lang) },
-    { key: "randomizeEncounters", label: t(tr.createRun.randomizeEncounters, lang) },
     { key: "randomizeEvolvedForms", label: t(tr.createRun.randomizeEvolvedForms, lang) },
   ];
 

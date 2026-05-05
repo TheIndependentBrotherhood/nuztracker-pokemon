@@ -29,6 +29,7 @@ import { TYPES, typeColors } from "@/lib/type-chart";
 import { isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { useCache } from "@/context/CacheContext";
 
 interface Props {
   runId: string;
@@ -75,9 +76,33 @@ export default function AddCaptureModal({
   const UNOWN_ID = 201;
   const run = runs.find((candidate) => candidate.id === runId);
   const randomTypesMode = isRandomTypesMode(run);
+  const randomAbilitiesMode = Boolean(
+    run?.isRandomMode && run.randomizerOptions?.randomizeAbilities,
+  );
+  const { abilities: abilitiesCache } = useCache();
   const firstType = customTypesDraft[0] || null;
   const secondType = customTypesDraft[1] || null;
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(secondType);
+  const [customAbilityDraft, setCustomAbilityDraft] = useState<string | null>(null);
+  // Panel of up to 3 possible abilities for the selected Pokémon species
+  const [abilityPanelDraft, setAbilityPanelDraft] = useState<string[]>([]);
+  const [abilitySearch, setAbilitySearch] = useState("");
+
+  useEffect(() => {
+    // Reset ability draft & panel when Pokémon changes; pre-fill panel from run
+    setCustomAbilityDraft(null);
+    setAbilitySearch("");
+    if (selected && run?.customAbilitiesByPokemonId) {
+      setAbilityPanelDraft(run.customAbilitiesByPokemonId[selected.id] ?? []);
+    } else {
+      setAbilityPanelDraft([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Intentionally excludes run?.customAbilitiesByPokemonId from deps:
+    // the panel should only be re-seeded when the selected Pokémon changes,
+    // not on every run state update (which would overwrite local edits mid-session).
+  }, [selected]);
+
   const canAddCapture = Boolean(
     selected && (!randomTypesMode || customTypesDraft.length > 0),
   );
@@ -216,42 +241,51 @@ export default function AddCaptureModal({
     const selectedSprite =
       spriteOptions.find((option) => option.url === selectedSpriteUrl) ?? null;
 
-    addCapture(runId, zoneId, {
-      pokemonId: selected.id,
-      pokemonName: selected.name,
-      pokemonNames: selected.names,
-      nickname: nickname || undefined,
-      gender,
-      isShiny,
-      isDead: false,
-      ...(randomTypesMode && customTypesDraft.length > 0
-        ? { customTypes: customTypesDraft }
-        : {}),
-      ...(selectedSprite
-        ? {
-            selectedSprite: {
-              url: selectedSprite.url,
-              source: selectedSprite.source,
-              label: selectedSprite.label,
-              ...(selectedSprite.unownLetter
-                ? { unownLetter: selectedSprite.unownLetter }
-                : {}),
-              ...(selectedSprite.flabebeColor
-                ? { flabebeColor: selectedSprite.flabebeColor }
-                : {}),
-            },
-          }
-        : {}),
-      ...(selected.id === UNOWN_ID
-        ? {
-            unownLetter:
-              selectedSprite?.unownLetter ?? unownLetter ?? undefined,
-          }
-        : {}),
-      ...(selectedSprite?.flabebeColor
-        ? { flabebeColor: selectedSprite.flabebeColor }
-        : {}),
-    });
+    addCapture(
+      runId,
+      zoneId,
+      {
+        pokemonId: selected.id,
+        pokemonName: selected.name,
+        pokemonNames: selected.names,
+        nickname: nickname || undefined,
+        gender,
+        isShiny,
+        isDead: false,
+        ...(customAbilityDraft ? { ability: customAbilityDraft } : {}),
+        ...(randomTypesMode && customTypesDraft.length > 0
+          ? { customTypes: customTypesDraft }
+          : {}),
+        ...(selectedSprite
+          ? {
+              selectedSprite: {
+                url: selectedSprite.url,
+                source: selectedSprite.source,
+                label: selectedSprite.label,
+                ...(selectedSprite.unownLetter
+                  ? { unownLetter: selectedSprite.unownLetter }
+                  : {}),
+                ...(selectedSprite.flabebeColor
+                  ? { flabebeColor: selectedSprite.flabebeColor }
+                  : {}),
+              },
+            }
+          : {}),
+        ...(selected.id === UNOWN_ID
+          ? {
+              unownLetter:
+                selectedSprite?.unownLetter ?? unownLetter ?? undefined,
+            }
+          : {}),
+        ...(selectedSprite?.flabebeColor
+          ? { flabebeColor: selectedSprite.flabebeColor }
+          : {}),
+      },
+      // Pass the ability panel so it gets persisted on the run
+      randomAbilitiesMode && abilityPanelDraft.length > 0
+        ? abilityPanelDraft
+        : undefined,
+    );
     onClose();
   }
 
@@ -713,6 +747,230 @@ export default function AddCaptureModal({
                 </MenuItem>
               ))}
             </Menu>
+          </Box>
+        )}
+
+        {/* Randomizer ability assignment */}
+        {selected && randomAbilitiesMode && (
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#000",
+                mb: 0.5,
+              }}
+            >
+              {t(tr.addCapture.abilityPanel, lang)}
+            </Typography>
+
+            {/* Panel chips — always shown */}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
+              {abilityPanelDraft.map((abilityName) => {
+                const entry = abilitiesCache.abilities.find(
+                  (a) => a.name === abilityName,
+                );
+                const displayName =
+                  lang === "fr"
+                    ? (entry?.names?.fr ?? abilityName)
+                    : (entry?.names?.en ?? abilityName);
+                const effect =
+                  lang === "fr"
+                    ? (entry?.effects?.fr ?? "")
+                    : (entry?.effects?.en ?? "");
+                const isSelected = customAbilityDraft === abilityName;
+                return (
+                  <Tooltip key={abilityName} title={effect} placement="top">
+                    <Box
+                      component="button"
+                      onClick={() => {
+                        setCustomAbilityDraft(isSelected ? null : abilityName);
+                        setAbilitySearch("");
+                      }}
+                      aria-pressed={isSelected}
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        background: isSelected ? "#0284c7" : "#e0f2fe",
+                        border: `2px solid ${isSelected ? "#0369a1" : "#0284c7"}`,
+                        color: isSelected ? "#fff" : "#0c4a6e",
+                        transition: "all 150ms",
+                      }}
+                    >
+                      <span style={{ textTransform: "capitalize" }}>
+                        {displayName}
+                      </span>
+                    </Box>
+                  </Tooltip>
+                );
+              })}
+              {abilityPanelDraft.length === 0 && (
+                <Typography sx={{ fontSize: "0.75rem", color: "#999", fontStyle: "italic" }}>
+                  —
+                </Typography>
+              )}
+            </Box>
+
+            {/* Hint text */}
+            <Typography sx={{ fontSize: "0.7rem", color: "#666", mb: 0.75 }}>
+              {abilityPanelDraft.length >= 3
+                ? t(tr.addCapture.abilityPanelFull, lang)
+                : t(tr.addCapture.abilityPanelHint, lang)}
+            </Typography>
+
+            {/* Search to add to panel (hidden when panel is full) */}
+            {abilityPanelDraft.length < 3 && (
+              <Box sx={{ position: "relative" }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder={t(tr.addCapture.abilitiesSearchPlaceholder, lang)}
+                  value={abilitySearch}
+                  onChange={(e) => setAbilitySearch(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      background: "#fff",
+                      color: "#000",
+                      fontSize: "0.875rem",
+                      "& fieldset": { borderColor: "#000" },
+                    },
+                  }}
+                />
+                {abilitySearch.length >= 2 && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      background: "#fff",
+                      border: "2px solid #000",
+                      borderRadius: "0.75rem",
+                      mt: 0.5,
+                      maxHeight: "160px",
+                      overflowY: "auto",
+                      zIndex: 10,
+                      boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    {(() => {
+                      const searchLower = abilitySearch.toLowerCase();
+                      const filtered = abilitiesCache.abilities.filter(
+                        (a) =>
+                          !abilityPanelDraft.includes(a.name) &&
+                          (a.name.toLowerCase().includes(searchLower) ||
+                            a.names?.fr?.toLowerCase().includes(searchLower) ||
+                            a.names?.en?.toLowerCase().includes(searchLower)),
+                      );
+                      return (
+                        <>
+                          {filtered.slice(0, 8).map((a) => {
+                            const displayName =
+                              lang === "fr"
+                                ? (a.names?.fr ?? a.name)
+                                : (a.names?.en ?? a.name);
+                            const effect =
+                              lang === "fr"
+                                ? (a.effects?.fr ?? "")
+                                : (a.effects?.en ?? "");
+                            return (
+                              <Tooltip key={a.name} title={effect} placement="left">
+                                <Box
+                                  component="button"
+                                  onClick={() => {
+                                    // Add to panel and select as captured ability
+                                    setAbilityPanelDraft((prev) =>
+                                      prev.length < 3 && !prev.includes(a.name)
+                                        ? [...prev, a.name]
+                                        : prev,
+                                    );
+                                    setCustomAbilityDraft(a.name);
+                                    setAbilitySearch("");
+                                  }}
+                                  sx={{
+                                    width: "100%",
+                                    textAlign: "left",
+                                    px: 1.5,
+                                    py: 0.75,
+                                    background: "transparent",
+                                    border: "none",
+                                    fontSize: "0.875rem",
+                                    textTransform: "capitalize",
+                                    color: "#000",
+                                    cursor: "pointer",
+                                    "&:hover": { background: "#f0f0f0" },
+                                    "&:first-of-type": {
+                                      borderTopLeftRadius: "0.75rem",
+                                      borderTopRightRadius: "0.75rem",
+                                    },
+                                    "&:last-of-type": {
+                                      borderBottomLeftRadius: "0.75rem",
+                                      borderBottomRightRadius: "0.75rem",
+                                    },
+                                  }}
+                                >
+                                  {displayName}
+                                </Box>
+                              </Tooltip>
+                            );
+                          })}
+                          {filtered.length === 0 && (
+                            <Box sx={{ px: 1.5, py: 1, color: "#666", fontSize: "0.875rem" }}>
+                              {t(tr.addCapture.noAbilityResult, lang)}
+                            </Box>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {/* Captured ability indicator */}
+            {customAbilityDraft && (
+              <Typography sx={{ fontSize: "0.7rem", color: "#0284c7", mt: 0.75, fontWeight: 600 }}>
+                ✓ {t(tr.addCapture.capturedAbility, lang)} :{" "}
+                <span style={{ textTransform: "capitalize" }}>
+                  {(() => {
+                    const entry = abilitiesCache.abilities.find(
+                      (a) => a.name === customAbilityDraft,
+                    );
+                    return lang === "fr"
+                      ? (entry?.names?.fr ?? customAbilityDraft)
+                      : (entry?.names?.en ?? customAbilityDraft);
+                  })()}
+                </span>
+                <Box
+                  component="button"
+                  onClick={() => setCustomAbilityDraft(null)}
+                  aria-label={t(tr.addCapture.removeAbility, lang)}
+                  sx={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "0.7rem",
+                    color: "#666",
+                    ml: 0.5,
+                    p: 0,
+                    "&:hover": { color: "#dc2626" },
+                  }}
+                >
+                  ✕
+                </Box>
+              </Typography>
+            )}
           </Box>
         )}
 

@@ -45,12 +45,12 @@ export interface TypeChartData {
 export interface AbilityEntry {
   id: number;
   name: string;
+  names: { fr?: string; en?: string };
   generation: string;
-  effect: string;
-  immuneTypes: string[];
-  isImmunity: boolean;
-  special?: boolean;
+  effects: { fr: string; en: string };
+  immuneTypes?: string[];
   weakness?: string;
+  damageReduction?: Record<string, number>;
 }
 
 export interface TypeSpriteEntry {
