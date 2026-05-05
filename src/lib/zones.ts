@@ -1,6 +1,5 @@
 export interface ZoneTemplate {
   id: string;
-  zoneName: string;
   zoneNames?: {
     fr?: string;
     en?: string;
@@ -63,34 +62,45 @@ export async function loadRegions(): Promise<Region[]> {
         })) || [],
     }));
 
-// Populate regionZones from the loaded regions: flatten location-areas as zones
-      mappedRegions.forEach((region) => {
-        if (region.locations && !regionZones[region.id]) {
-          const zones: ZoneTemplate[] = [];
-          region.locations.forEach((loc) => {
-            const locationLabel = loc.names?.en || loc.name;
-            if (loc.areas && loc.areas.length > 0) {
-              loc.areas.forEach((area) => {
+    // Populate regionZones from the loaded regions: flatten location-areas as zones
+    mappedRegions.forEach((region) => {
+      if (region.locations && !regionZones[region.id]) {
+        const zones: ZoneTemplate[] = [];
+        region.locations.forEach((loc) => {
+          const locationLabel = loc.names?.en || loc.name;
+          if (loc.areas && loc.areas.length > 0) {
+            // Filter areas that have both fr and en names
+            const validAreas = loc.areas.filter(
+              (area) => area.names?.fr && area.names?.en,
+            );
+
+            if (validAreas.length > 0) {
+              // Use valid areas
+              validAreas.forEach((area) => {
                 zones.push({
                   id: area.name,
-                  zoneName: area.names?.en || locationLabel,
-                  zoneNames: area.names && (area.names.fr || area.names.en)
-                    ? area.names
-                    : loc.names,
+                  zoneNames: area.names,
                   regionArea: locationLabel,
                 });
               });
             } else {
-              // Fallback: no areas, use the location itself
+              // No valid areas, fallback to location
               zones.push({
                 id: loc.name,
-                zoneName: locationLabel,
                 zoneNames: loc.names,
                 regionArea: "",
               });
             }
-          });
-          regionZones[region.id] = zones;
+          } else {
+            // Fallback: no areas, use the location itself
+            zones.push({
+              id: loc.name,
+              zoneNames: loc.names,
+              regionArea: "",
+            });
+          }
+        });
+        regionZones[region.id] = zones;
       }
     });
 
@@ -126,20 +136,31 @@ export async function getZonesForRegionAsync(
   foundRegion.locations.forEach((loc) => {
     const locationLabel = loc.names?.en || loc.name;
     if (loc.areas && loc.areas.length > 0) {
-      loc.areas.forEach((area) => {
-        templatesFromJson.push({
-          id: area.name,
-          zoneName: area.names?.en || locationLabel,
-          zoneNames: area.names && (area.names.fr || area.names.en)
-            ? area.names
-            : loc.names,
-          regionArea: locationLabel,
+      // Filter areas that have both fr and en names
+      const validAreas = loc.areas.filter(
+        (area) => area.names?.fr && area.names?.en,
+      );
+
+      if (validAreas.length > 0) {
+        // Use valid areas
+        validAreas.forEach((area) => {
+          templatesFromJson.push({
+            id: area.name,
+            zoneNames: area.names,
+            regionArea: locationLabel,
+          });
         });
-      });
+      } else {
+        // No valid areas, fallback to location
+        templatesFromJson.push({
+          id: loc.name,
+          zoneNames: loc.names,
+          regionArea: "",
+        });
+      }
     } else {
       templatesFromJson.push({
         id: loc.name,
-        zoneName: locationLabel,
         zoneNames: loc.names,
         regionArea: "",
       });
@@ -168,8 +189,8 @@ export function getZonesForRegion(region: string): ZoneTemplate[] {
 }
 
 export function getZoneDisplayName(
-  zone: { zoneName: string; zoneNames?: { fr?: string; en?: string } },
+  zone: { zoneNames?: { fr?: string; en?: string } },
   lang: "fr" | "en",
 ): string {
-  return zone.zoneNames?.[lang] ?? zone.zoneName;
+  return zone.zoneNames?.[lang] ?? zone.zoneNames?.en ?? "";
 }
