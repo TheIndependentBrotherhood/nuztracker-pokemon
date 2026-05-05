@@ -38,7 +38,6 @@ interface PokemonListEntry {
   id: number;
   name: string;
   alternativeNames?: string[];
-  sprite?: string;
   sprites?: {
     normal?: { default?: string; alternatives?: string[] };
     shiny?: { default?: string; alternatives?: string[] };
@@ -67,7 +66,6 @@ function inferVariant(
 function ensureSpriteStructure(entry: PokemonListEntry) {
   const normalDefault =
     entry.sprites?.normal?.default ??
-    entry.sprite ??
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
   const shinyDefault =
     entry.sprites?.shiny?.default ?? toPokeApiShinyUrl(normalDefault);
@@ -82,10 +80,6 @@ function ensureSpriteStructure(entry: PokemonListEntry) {
       alternatives: [...(entry.sprites?.shiny?.alternatives ?? [])],
     },
   };
-
-  if (!entry.sprite) {
-    entry.sprite = normalDefault;
-  }
 
   if (!entry.alternativeNames) {
     entry.alternativeNames = [];
