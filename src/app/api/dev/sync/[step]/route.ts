@@ -379,14 +379,15 @@ const IMMUNITY_MAP: Record<string, string[]> = {
 
 // Map of abilities that add a weakness to a specific type
 const WEAKNESS_MAP: Record<string, string> = {
-  "dry-skin": "fire",
 };
 
-// Map of abilities that reduce damage from specific types
+// Map of abilities that reduce damage from specific types (values < 1 reduce, values > 1 amplify)
 const DAMAGE_REDUCTION_MAP: Record<string, Record<string, number>> = {
   "thick-fat": { "fire": 0.5, "ice": 0.5 },
   "heatproof": { "fire": 0.5 },
   "purifying-salt": { "ghost": 0.5 },
+  // Dry Skin: fire deals 1.25× damage (water is already handled via immuneTypes → heals)
+  "dry-skin": { "fire": 1.25 },
 };
 
 async function syncAbilities(send: SendFn) {

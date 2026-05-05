@@ -1158,7 +1158,9 @@
       "immuneTypes": [
         "water"
       ],
-      "weakness": "fire"
+      "damageReduction": {
+        "fire": 1.25
+      }
     },
     {
       "id": 88,
