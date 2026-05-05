@@ -388,13 +388,35 @@ export default function PokemonDetailModal({
       delete nextCustomAbilitiesByPokemonId[capture.pokemonId];
     }
 
+    // If an ability was removed from the panel, clear it from all captures
+    // of this species that were using it — so no capture ends up with an
+    // impossible ability value (mirrors what persistCustomTypes does for types).
+    const clearAbilityIfRemoved = (c: Capture) => {
+      if (c.pokemonId !== capture.pokemonId) return c;
+      if (c.ability && !nextPanel.includes(c.ability)) {
+        const { ability: _, ...rest } = c;
+        return rest as Capture;
+      }
+      return c;
+    };
+
     updateRun({
       ...runToUpdate,
       customAbilitiesByPokemonId:
         Object.keys(nextCustomAbilitiesByPokemonId).length > 0
           ? nextCustomAbilitiesByPokemonId
           : undefined,
+      team: runToUpdate.team.map(clearAbilityIfRemoved),
+      zones: runToUpdate.zones.map((zone) => ({
+        ...zone,
+        captures: zone.captures.map(clearAbilityIfRemoved),
+      })),
     });
+
+    // Also update local draft if the currently-shown capture's ability was removed
+    if (abilityDraft && !nextPanel.includes(abilityDraft)) {
+      setAbilityDraft(null);
+    }
   }
 
   return (
