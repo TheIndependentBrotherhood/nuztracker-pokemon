@@ -7,7 +7,7 @@ export default function AbilitiesPage() {
     <SyncPanel
       step="abilities"
       title="⚡ Abilities"
-      outputFile="abilities-immunity.json"
+      outputFile="abilities.json"
       description="Synchronise les capacités et immunités depuis PokeAPI."
     />
   );

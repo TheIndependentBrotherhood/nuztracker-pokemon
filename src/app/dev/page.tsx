@@ -37,7 +37,7 @@ const STEPS = [
   {
     key: "abilities",
     label: "⚡ Abilities",
-    file: "abilities-immunity.json",
+    file: "abilities.json",
     description: "Source: PokeAPI. Synchronise les capacités et immunités.",
     duration: "~5s",
   },

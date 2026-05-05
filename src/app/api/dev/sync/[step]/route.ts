@@ -397,7 +397,7 @@ async function syncAbilities(send: SendFn) {
   });
 
   const current = readCurrentFile<{ abilities: unknown[] }>(
-    "abilities-immunity.json",
+    "abilities.json",
   );
   const currentByName = new Map(
     ((current?.abilities ?? []) as { name: string }[]).map((a) => [a.name, a]),

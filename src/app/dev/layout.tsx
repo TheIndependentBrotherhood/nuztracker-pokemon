@@ -12,7 +12,7 @@ const STEPS = [
   {
     key: "abilities",
     label: "⚡ Abilities",
-    file: "abilities-immunity.json",
+    file: "abilities.json",
   },
   {
     key: "animated-sprites",

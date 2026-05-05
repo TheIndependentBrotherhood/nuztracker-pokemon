@@ -146,11 +146,9 @@ export function CacheProvider({ children }: { children: React.ReactNode }) {
             throw new Error(`Failed to fetch type-sprites.json: ${r.status}`);
           return r.json() as Promise<TypeSpritesCache>;
         }),
-        fetch("/data/abilities-immunity.json").then((r) => {
+        fetch("/data/abilities.json").then((r) => {
           if (!r.ok)
-            throw new Error(
-              `Failed to fetch abilities-immunity.json: ${r.status}`,
-            );
+            throw new Error(`Failed to fetch abilities.json: ${r.status}`);
           return r.json() as Promise<AbilitiesCache>;
         }),
       ]);
@@ -185,10 +183,7 @@ export function CacheProvider({ children }: { children: React.ReactNode }) {
         );
       }
       if (abilitiesResult.status === "rejected") {
-        console.error(
-          "Failed to load abilities-immunity.json:",
-          abilitiesResult.reason,
-        );
+        console.error("Failed to load abilities.json:", abilitiesResult.reason);
       }
 
       if (!cancelled) {
