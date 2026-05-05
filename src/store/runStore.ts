@@ -58,7 +58,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
     const zoneTemplates = getZonesForRegion(data.region);
     const zones: Zone[] = zoneTemplates.map((zt) => ({
       id: zt.id,
-      zoneName: zt.zoneName,
+      zoneName: zt.zoneNames?.en ?? zt.regionArea ?? "Unknown",
       zoneNames: zt.zoneNames,
       regionArea: zt.regionArea,
       status: "not-visited" as const,

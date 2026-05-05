@@ -51,7 +51,11 @@ export default function ZoneList({ run }: Props) {
             ? { ...currentZone }
             : {
                 id: expectedZone.id,
-                zoneName: expectedZone.zoneName,
+                zoneName:
+                  expectedZone.zoneNames?.en ??
+                  expectedZone.regionArea ??
+                  "Unknown",
+                zoneNames: expectedZone.zoneNames,
                 regionArea: expectedZone.regionArea,
                 status: "not-visited" as const,
                 captures: [],

@@ -159,10 +159,15 @@ export default function StatsBar({
     let exportElement: HTMLElement | null = null;
     let originalWidth = "";
     let originalHeight = "";
-    const replacedSprites: Array<{ node: HTMLImageElement; originalSrc: string }> = [];
+    const replacedSprites: Array<{
+      node: HTMLImageElement;
+      originalSrc: string;
+    }> = [];
 
     try {
-      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => resolve(null)),
+      );
 
       const element = document.getElementById("team-export-target");
       if (!element) {
@@ -181,7 +186,10 @@ export default function StatsBar({
         if (!fallbackSrc) return;
 
         if (spriteNode.src !== fallbackSrc) {
-          replacedSprites.push({ node: spriteNode, originalSrc: spriteNode.src });
+          replacedSprites.push({
+            node: spriteNode,
+            originalSrc: spriteNode.src,
+          });
           spriteNode.src = fallbackSrc;
         }
       });
@@ -443,7 +451,7 @@ export default function StatsBar({
           value={`${displayVisited}/${displayTotal}`}
           label={t(tr.statsBar.zones, lang)}
           color="#E3F2FD"
-          hoverContent={zonesHoverContent}
+          hoverContent={run.isShinyHuntMode ? zonesHoverContent : undefined}
         />
         <StatCard
           value={captured}
@@ -553,7 +561,9 @@ export default function StatsBar({
           )}
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
-            <Typography sx={{ fontSize: "0.875rem", color: "#000", fontWeight: 700 }}>
+            <Typography
+              sx={{ fontSize: "0.875rem", color: "#000", fontWeight: 700 }}
+            >
               {t(tr.statsBar.showTypesLabel, lang)}
             </Typography>
             <Box sx={{ display: "flex", gap: 1 }}>
@@ -593,7 +603,9 @@ export default function StatsBar({
 
           {dialogShowTypes && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
-              <Typography sx={{ fontSize: "0.875rem", color: "#000", fontWeight: 700 }}>
+              <Typography
+                sx={{ fontSize: "0.875rem", color: "#000", fontWeight: 700 }}
+              >
                 {t(tr.statsBar.tightTypesLabel, lang)}
               </Typography>
               <Box sx={{ display: "flex", gap: 1 }}>
@@ -665,7 +677,9 @@ export default function StatsBar({
             {t(tr.statsBar.cancel, lang)}
           </Button>
           <Button
-            onClick={exportMode === "png" ? performExportPng : performGenerateUrl}
+            onClick={
+              exportMode === "png" ? performExportPng : performGenerateUrl
+            }
             disabled={exporting}
             sx={{
               border: "3px solid #000",
