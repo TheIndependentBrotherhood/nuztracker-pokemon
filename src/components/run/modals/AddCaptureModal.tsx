@@ -85,6 +85,12 @@ export default function AddCaptureModal({
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(secondType);
   const [customAbilityDraft, setCustomAbilityDraft] = useState<string | null>(null);
   const [abilitySearch, setAbilitySearch] = useState("");
+
+  useEffect(() => {
+    setCustomAbilitiesDraft([]);
+    setAbilitySearch("");
+  }, [selected]);
+
   const canAddCapture = Boolean(
     selected && (!randomTypesMode || customTypesDraft.length > 0),
   );
