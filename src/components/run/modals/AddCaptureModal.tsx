@@ -252,9 +252,7 @@ export default function AddCaptureModal({
         gender,
         isShiny,
         isDead: false,
-        ...(randomAbilitiesMode && customAbilityDraft
-          ? { ability: customAbilityDraft }
-          : {}),
+        ...(customAbilityDraft ? { ability: customAbilityDraft } : {}),
         ...(randomTypesMode && customTypesDraft.length > 0
           ? { customTypes: customTypesDraft }
           : {}),
