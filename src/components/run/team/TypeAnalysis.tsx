@@ -369,7 +369,7 @@ export default function TypeAnalysis({ run }: Props) {
                     const tooltipContent =
                       abilityModified !== null && memberAbility
                         ? tr.typeAnalysis.abilityModifiesMatchup[lang](
-                            abilityDisplayName ?? memberAbility,
+                            abilityDisplayName ?? "",
                           )
                         : "";
 
@@ -1034,6 +1034,7 @@ export default function TypeAnalysis({ run }: Props) {
                     <Tooltip key={abilityName} title={effect} placement="top">
                       <Box
                         component="button"
+                        type="button"
                         onClick={() => toggleAbilitySelection(abilityName)}
                         aria-label={`${displayName} — ${t(tr.typeAnalysis.removeAbility, lang)}`}
                         sx={{
