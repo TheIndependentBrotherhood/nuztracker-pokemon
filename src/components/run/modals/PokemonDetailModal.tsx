@@ -162,6 +162,8 @@ export default function PokemonDetailModal({
   const firstType = activeCustomTypes[0] || null;
   const secondType = activeCustomTypes[1] || null;
   const activeAbility = abilityDraft;
+  // Synthetic id used by PokedexView — there is no real capture to update.
+  const isPokedexCapture = capture.id.startsWith("pokedex-");
   // The ability panel for this Pokémon species (from the run, not the capture)
   const abilityPanel: string[] =
     runToUpdate?.customAbilitiesByPokemonId?.[capture.pokemonId] ?? [];
@@ -368,7 +370,8 @@ export default function PokemonDetailModal({
 
   function persistAbility(nextAbility: string | null) {
     setAbilityDraft(nextAbility);
-    if (!runToUpdate) return;
+    // Pokédex entries use a synthetic id — there is no real capture to update.
+    if (!runToUpdate || isPokedexCapture) return;
 
     updateCaptureInRun((target) => ({
       ...target,
@@ -1136,7 +1139,8 @@ export default function PokemonDetailModal({
                   )}
 
                   {/* ── Captured ability (selected from panel) ─────────── */}
-                  <Typography
+                  {/* Only shown for real captures (not for Pokédex entries which have no saved ability) */}
+                  {!isPokedexCapture && <Typography
                     sx={{
                       fontSize: "0.7rem",
                       fontWeight: 600,
@@ -1147,10 +1151,10 @@ export default function PokemonDetailModal({
                     }}
                   >
                     {t(tr.pokemonDetail.capturedAbility, lang)}
-                  </Typography>
+                  </Typography>}
 
                   {/* Currently selected ability chip */}
-                  {activeAbility && (() => {
+                  {!isPokedexCapture && activeAbility && (() => {
                     const entry = abilitiesCache.abilities.find(
                       (a) => a.name === activeAbility,
                     );
@@ -1213,7 +1217,7 @@ export default function PokemonDetailModal({
                   })()}
 
                   {/* If no captured ability: pick from panel or free search */}
-                  {!activeAbility && runToUpdate && (
+                  {!isPokedexCapture && !activeAbility && runToUpdate && (
                     <Box sx={{ position: "relative" }}>
                       <TextField
                         fullWidth

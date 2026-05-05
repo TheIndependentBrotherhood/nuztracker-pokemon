@@ -806,15 +806,17 @@ export default function TypeAnalysis({ run }: Props) {
 
   function renderCombinationTable() {
     const toggleTypeSelection = (type: string) => {
-      setSelectedTypes((prev) => {
-        if (prev.includes(type)) {
-          return prev.filter((t) => t !== type);
-        }
-        if (prev.length < 2) {
-          return [...prev, type];
-        }
-        return prev;
-      });
+      const next = selectedTypes.includes(type)
+        ? selectedTypes.filter((t) => t !== type)
+        : selectedTypes.length < 2
+          ? [...selectedTypes, type]
+          : selectedTypes;
+      setSelectedTypes(next);
+      // If the last type was removed, clear any selected ability too so the
+      // next combination doesn't start with stale ability modifiers.
+      if (next.length === 0) {
+        setSelectedAbilities([]);
+      }
     };
 
     const toggleAbilitySelection = (abilityName: string) => {
