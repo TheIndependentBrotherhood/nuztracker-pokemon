@@ -20,6 +20,8 @@ export interface Capture {
   isDead: boolean;
   /** User-discovered types for randomizer type mode (max two). */
   customTypes?: string[];
+  /** The single ability of this captured Pokémon. In randomizer mode this is user-defined; in classic mode it is the ability observed in-game. */
+  ability?: string;
   selectedSprite?: CaptureSelectedSprite;
   /** For Unown captures: the chosen letter form, e.g. "a"–"z", "!", "?" */
   unownLetter?: string;
@@ -58,6 +60,8 @@ export interface Run {
   randomizerOptions?: RandomizerOptions;
   /** User-discovered types for randomizer type mode, indexed by pokemon id. */
   customTypesByPokemonId?: Record<number, string[]>;
+  /** Player-defined ability panel (up to 3) per Pokémon species in randomizer mode. */
+  customAbilitiesByPokemonId?: Record<number, string[]>;
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];
@@ -78,6 +82,12 @@ export interface PokemonStat {
   stat: { name: string };
 }
 
+export interface PokemonApiAbility {
+  ability: { name: string; url: string };
+  is_hidden: boolean;
+  slot: number;
+}
+
 export interface PokemonApiData {
   id: number;
   name: string;
@@ -86,6 +96,7 @@ export interface PokemonApiData {
     front_shiny: string;
   };
   types: Array<{ type: PokemonType }>;
+  abilities: PokemonApiAbility[];
   stats: PokemonStat[];
   base_experience: number;
   height: number;

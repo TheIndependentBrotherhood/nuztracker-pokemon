@@ -28,6 +28,7 @@ interface RunStore {
     runId: string,
     zoneId: string,
     capture: Omit<Capture, "id" | "createdAt">,
+    abilityPanel?: string[],
   ) => void;
   removeCapture: (runId: string, zoneId: string, captureId: string) => void;
   setSelectedZone: (zoneId: string | null) => void;
@@ -112,7 +113,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
     get().updateRun(updatedRun);
   },
 
-  addCapture: (runId, zoneId, captureData) => {
+  addCapture: (runId, zoneId, captureData, abilityPanel) => {
     const run = get().runs.find((r) => r.id === runId);
     if (!run) return;
     const zone = run.zones.find((z) => z.id === zoneId);
@@ -135,11 +136,22 @@ export const useRunStore = create<RunStore>((set, get) => ({
       nextCustomTypesByPokemonId[captureData.pokemonId] =
         captureData.customTypes;
     }
+    const nextCustomAbilitiesByPokemonId = {
+      ...(run.customAbilitiesByPokemonId ?? {}),
+    };
+    if (abilityPanel && abilityPanel.length > 0) {
+      // Cap at 3 to enforce the panel limit regardless of caller
+      nextCustomAbilitiesByPokemonId[captureData.pokemonId] = abilityPanel.slice(0, 3);
+    }
     const updatedRun = {
       ...run,
       customTypesByPokemonId:
         Object.keys(nextCustomTypesByPokemonId).length > 0
           ? nextCustomTypesByPokemonId
+          : undefined,
+      customAbilitiesByPokemonId:
+        Object.keys(nextCustomAbilitiesByPokemonId).length > 0
+          ? nextCustomAbilitiesByPokemonId
           : undefined,
       zones: run.zones.map((z) =>
         z.id === zoneId

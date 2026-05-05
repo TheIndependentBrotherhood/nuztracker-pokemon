@@ -627,6 +627,10 @@
       "effects": {
         "fr": "Ce Pokémon subit deux fois moins de dégâts des capacités de type Feu et Glace.",
         "en": "This Pokémon takes half as much damage from Fire- and Ice-type moves."
+      },
+      "damageReduction": {
+        "fire": 0.5,
+        "ice": 0.5
       }
     },
     {
@@ -1121,6 +1125,9 @@
       "effects": {
         "fr": "Ce Pokémon subit la moitié des dégâts des capacités de type Feu et brûlures.",
         "en": "This Pokémon takes half as much damage from Fire-type moves and burns."
+      },
+      "damageReduction": {
+        "fire": 0.5
       }
     },
     {
@@ -1151,7 +1158,9 @@
       "immuneTypes": [
         "water"
       ],
-      "weakness": "fire"
+      "damageReduction": {
+        "fire": 1.25
+      }
     },
     {
       "id": 88,
@@ -3562,6 +3571,9 @@
       "effects": {
         "fr": "Le sel pur du Pokémon le protège des conditions de statut et divise par deux les dégâts subis par les capacités de type Spectre.",
         "en": "The Pokémon’s pure salt protects it from status conditions and halves the damage taken from Ghost-type moves."
+      },
+      "damageReduction": {
+        "ghost": 0.5
       }
     },
     {

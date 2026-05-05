@@ -178,6 +178,14 @@ const translations = {
     unownForm: { fr: "Forme (lettre capturée)", en: "Form (captured letter)" },
     cancel: { fr: "Annuler", en: "Cancel" },
     add: { fr: "Ajouter", en: "Add" },
+    randomAbilities: { fr: "Talent (randomizer)", en: "Ability (randomizer)" },
+    abilityPanel: { fr: "Panel de talents", en: "Ability panel" },
+    abilityPanelFull: { fr: "Panel complet (3/3) — choisissez un talent ci-dessous", en: "Panel full (3/3) — pick a talent below" },
+    abilityPanelHint: { fr: "Choisissez un talent ou ajoutez-en un au panel :", en: "Pick a talent or add one to the panel:" },
+    capturedAbility: { fr: "Talent capturé", en: "Captured talent" },
+    abilitiesSearchPlaceholder: { fr: "Rechercher un talent...", en: "Search for an ability..." },
+    removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
+    noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
   },
 
   // ── Pokemon Detail Modal ───────────────────────────────────────────────────
@@ -215,6 +223,17 @@ const translations = {
     sprite: { fr: "Sprite", en: "Sprite" },
     close: { fr: "Fermer", en: "Close" },
     statSpeed: { fr: "Vit", en: "Spd" },
+    abilitiesSection: { fr: "Talent", en: "Ability" },
+    abilitiesRandomizer: { fr: "Talent (randomizer)", en: "Ability (randomizer)" },
+    abilityPanel: { fr: "Panel de talents (randomizer)", en: "Ability panel (randomizer)" },
+    abilityPanelHint: { fr: "Jusqu'à 3 talents possibles pour ce Pokémon", en: "Up to 3 possible talents for this Pokémon" },
+    capturedAbility: { fr: "Talent capturé", en: "Captured talent" },
+    addToPanel: { fr: "Ajouter au panel", en: "Add to panel" },
+    removeFromPanel: { fr: "Retirer du panel", en: "Remove from panel" },
+    abilitiesSearchPlaceholder: { fr: "Rechercher un talent...", en: "Search for an ability..." },
+    removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
+    noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
+    abilitiesHidden: { fr: "Caché", en: "Hidden" },
   },
 
   // ── Zone List ──────────────────────────────────────────────────────────────
@@ -388,6 +407,15 @@ const translations = {
     resistant: { fr: "Résistant", en: "Resistant" },
     veryResistant: { fr: "Très résistant", en: "Very resistant" },
     immune: { fr: "Immunisé", en: "Immune" },
+    abilitiesSection: { fr: "Talents :", en: "Abilities:" },
+    addAbility: { fr: "+ Talent", en: "+ Ability" },
+    abilitiesSearchPlaceholder: { fr: "Rechercher un talent...", en: "Search for an ability..." },
+    noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
+    removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
+    abilityModifiesMatchup: {
+      fr: (name: string) => `Talent ${name} modifie ce matchup`,
+      en: (name: string) => `Ability ${name} modifies this matchup`,
+    },
   },
 
   // ── Map View ───────────────────────────────────────────────────────────────
