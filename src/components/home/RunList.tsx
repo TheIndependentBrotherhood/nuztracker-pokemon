@@ -95,6 +95,14 @@ export default function RunList({ runs }: RunListProps) {
           run.zones.length > 0 ? (visitedCount / run.zones.length) * 100 : 0;
         const status = statusConfig[run.status] ?? statusConfig["in-progress"];
 
+        // Apply shiny hunt mode doubling
+        const displayVisited = run.isShinyHuntMode
+          ? visitedCount * 2
+          : visitedCount;
+        const displayTotal = run.isShinyHuntMode
+          ? run.zones.length * 2
+          : run.zones.length;
+
         return (
           <Grid key={run.id}>
             <Box
@@ -229,7 +237,7 @@ export default function RunList({ runs }: RunListProps) {
                           color: "#10b981",
                         }}
                       >
-                        {visitedCount}/{run.zones.length}
+                        {displayVisited}/{displayTotal}
                       </Typography>
                     </Box>
                   </Grid>

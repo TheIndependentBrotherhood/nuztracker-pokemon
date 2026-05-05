@@ -121,6 +121,33 @@ export default function StatsBar({
   const captured = run.zones.filter(
     (z: Zone) => z.status === "captured",
   ).length;
+
+  // Zones with regular captures and shiny captures (for stats calculation)
+  const zonesWithRegularCaptures = run.zones.filter((z: Zone) =>
+    z.captures.some((c: Capture) => !c.isShiny),
+  ).length;
+  const zonesWithShinyCaptures = run.zones.filter((z: Zone) =>
+    z.captures.some((c: Capture) => c.isShiny),
+  ).length;
+
+  // In shiny hunt mode, displayed captured count includes both regular and shiny
+  let displayCaptured = captured;
+  let displayMissed = visited - captured;
+  if (run.isShinyHuntMode) {
+    displayCaptured = zonesWithRegularCaptures + zonesWithShinyCaptures;
+    displayMissed =
+      run.zones.filter((z: Zone) => z.status !== "not-visited").length * 2 -
+      displayCaptured;
+  }
+
+  // Display values (x2 total if shiny hunt mode)
+  let displayVisited = visited;
+  if (run.isShinyHuntMode) {
+    // In shiny hunt mode, count both normal and shiny captures
+    displayVisited = zonesWithRegularCaptures + zonesWithShinyCaptures;
+  }
+  const displayTotal = run.isShinyHuntMode ? total * 2 : total;
+
   const missed = visited - captured;
   const captureRate = visited > 0 ? Math.round((captured / visited) * 100) : 0;
   const progress = total > 0 ? (visited / total) * 100 : 0;
@@ -273,20 +300,6 @@ export default function StatsBar({
     },
   ];
 
-  // Zones with regular captures
-  const zonesWithRegularCaptures = run.zones.filter((z: Zone) =>
-    z.captures.some((c: Capture) => !c.isShiny),
-  ).length;
-
-  // Zones with shiny captures
-  const zonesWithShinyCaptures = run.zones.filter((z: Zone) =>
-    z.captures.some((c: Capture) => c.isShiny),
-  ).length;
-
-  // Display values (x2 total if shiny hunt mode)
-  const displayVisited = visited;
-  const displayTotal = run.isShinyHuntMode ? total * 2 : total;
-
   // Zones hover content (regular and shiny)
   const zonesHoverContent = (
     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6 }}>
@@ -374,7 +387,7 @@ export default function StatsBar({
             mb: 1,
           }}
         >
-          {missed}
+          {displayMissed}
         </Typography>
         <Typography
           sx={{
@@ -454,7 +467,7 @@ export default function StatsBar({
           hoverContent={run.isShinyHuntMode ? zonesHoverContent : undefined}
         />
         <StatCard
-          value={captured}
+          value={displayCaptured}
           label={t(tr.statsBar.caught, lang)}
           color="#E8F5E9"
           hoverContent={captureesHoverContent}

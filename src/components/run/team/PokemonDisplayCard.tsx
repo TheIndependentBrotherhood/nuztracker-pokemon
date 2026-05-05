@@ -168,6 +168,7 @@ export default function PokemonDisplayCard({
               sx={{
                 opacity: 0,
                 transition: "opacity 200ms ease",
+                zIndex: 10,
                 ...action.sx,
               }}
               title={action.title}

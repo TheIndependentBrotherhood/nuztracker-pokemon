@@ -29,70 +29,117 @@ function CaptureThumbnail({
   capture,
   lang,
   runId,
+  zoneId,
 }: {
   capture: Capture;
   lang: "fr" | "en";
   runId: string;
+  zoneId: string;
 }) {
   const displayName = useCaptureDisplayName(capture, lang);
   const displayLabel = useCaptureDisplayLabel(capture, lang);
+  const { removeCapture } = useRunStore();
   const [showPokemonDetail, setShowPokemonDetail] = useState(false);
+  const tr = translations;
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeCapture(runId, zoneId, capture.id);
+  };
 
   return (
     <>
       <Box
-        component="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowPokemonDetail(true);
+        sx={{
+          position: "relative",
+          display: "inline-block",
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
+      >
+        <Box
+          component="button"
+          onClick={(e) => {
             e.stopPropagation();
             setShowPokemonDetail(true);
-          }
-        }}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          background: "rgba(51, 65, 85, 0.4)",
-          border: "1px solid rgba(71, 85, 99, 0.3)",
-          borderRadius: "0.5rem",
-          px: 1,
-          py: 0.25,
-          cursor: "pointer",
-          transition: "all 150ms ease",
-          "&:hover": {
-            background: "rgba(51, 65, 85, 0.55)",
-            borderColor: "rgba(71, 85, 99, 0.45)",
-          },
-        }}
-        aria-label={displayName}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={getCaptureSpriteUrl(capture, true)}
-          alt={displayName}
-          onError={(event) => {
-            const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
-            if (event.currentTarget.src !== fallbackUrl) {
-              event.currentTarget.src = fallbackUrl;
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowPokemonDetail(true);
             }
           }}
-          style={{
-            width: "46px",
-            height: "46px",
-            objectFit: "contain",
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            background: "rgba(51, 65, 85, 0.4)",
+            border: "1px solid rgba(71, 85, 99, 0.3)",
+            borderRadius: "0.5rem",
+            px: 1,
+            py: 0.25,
+            cursor: "pointer",
+            transition: "all 150ms ease",
+            "&:hover": {
+              background: "rgba(51, 65, 85, 0.55)",
+              borderColor: "rgba(71, 85, 99, 0.45)",
+            },
           }}
-        />
-        <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
-          {displayLabel}
-        </Typography>
-        {capture.isShiny && (
-          <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
-        )}
+          aria-label={displayName}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getCaptureSpriteUrl(capture, true)}
+            alt={displayName}
+            onError={(event) => {
+              const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
+              if (event.currentTarget.src !== fallbackUrl) {
+                event.currentTarget.src = fallbackUrl;
+              }
+            }}
+            style={{
+              width: "46px",
+              height: "46px",
+              objectFit: "contain",
+            }}
+          />
+          <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
+            {displayLabel}
+          </Typography>
+          {capture.isShiny && (
+            <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
+          )}
+        </Box>
+
+        {/* Croix de suppression */}
+        <Box
+          component="button"
+          onClick={handleDelete}
+          sx={{
+            position: "absolute",
+            top: "-6px",
+            right: "-6px",
+            width: "18px",
+            height: "18px",
+            borderRadius: "999px",
+            background: "#ef4444",
+            border: "1px solid #dc2626",
+            color: "#fff",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            transition: "all 150ms",
+            "&:hover": {
+              background: "#dc2626",
+              transform: "scale(1.2)",
+            },
+          }}
+          aria-label={lang === "fr" ? "Supprimer" : "Delete"}
+        >
+          ✕
+        </Box>
       </Box>
 
       {showPokemonDetail && (
@@ -323,7 +370,10 @@ export default function ZoneItem({
                   color: "#1d4ed8",
                   background: "rgba(59, 130, 246, 0.12)",
                   px: 1,
-                  py: 0.35,
+                  height: "1.75rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   borderRadius: "0.5rem",
                   transition: "all 200ms ease",
                   border: "1px solid rgba(59, 130, 246, 0.35)",
@@ -352,6 +402,7 @@ export default function ZoneItem({
                 capture={c}
                 lang={lang}
                 runId={runId}
+                zoneId={zone.id}
               />
             ))}
           </Box>

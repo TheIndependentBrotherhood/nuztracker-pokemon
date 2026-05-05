@@ -35,6 +35,7 @@ export interface RandomizerOptions {
   randomizeAbilities: boolean;
   randomizeEncounters: boolean;
   randomizeEvolvedForms: boolean;
+  infiniteEvolution?: boolean;
 }
 
 export interface Zone {

@@ -384,3 +384,101 @@ export function getCaptureSpriteFallbackUrl(
     capture.unownLetter,
   );
 }
+
+// ── Evolution chain functions ──────────────────────────────────────────────
+
+export interface PokemonEvolution {
+  id: number;
+  name: string;
+  names?: PokemonNames;
+}
+
+/**
+ * Fetch the evolution chain for a given Pokémon
+ */
+export async function getEvolutionChain(
+  pokemonId: number,
+): Promise<PokemonEvolution[]> {
+  try {
+    const pokemon = await fetchPokemon(pokemonId);
+    const speciesUrl = (pokemon as any).species?.url;
+
+    if (!speciesUrl) return [];
+
+    const speciesRes = await fetch(speciesUrl);
+    if (!speciesRes.ok) return [];
+
+    const species = (await speciesRes.json()) as any;
+    const evolutionChainUrl = species.evolution_chain?.url;
+
+    if (!evolutionChainUrl) return [];
+
+    const chainRes = await fetch(evolutionChainUrl);
+    if (!chainRes.ok) return [];
+
+    const chain = (await chainRes.json()) as any;
+
+    // Extract all Pokémon in the evolution chain
+    const evolutions: PokemonEvolution[] = [];
+    const visitChain = (node: any) => {
+      if (node.species?.url) {
+        const speciesId = getPokemonIdFromUrl(node.species.url);
+        evolutions.push({
+          id: speciesId,
+          name: node.species.name,
+        });
+      }
+
+      if (node.evolves_to && Array.isArray(node.evolves_to)) {
+        node.evolves_to.forEach((child: any) => visitChain(child));
+      }
+    };
+
+    visitChain(chain.chain);
+    return evolutions;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get available evolutions for a capture based on game mode
+ * @param capture The capture to evolve
+ * @param run The run configuration (for mode detection)
+ * @returns Array of possible evolutions
+ */
+export async function getAvailableEvolutions(
+  capture: Capture,
+  run?: {
+    isRandomMode: boolean;
+    randomizerOptions?: { randomizeEvolvedForms?: boolean } & any;
+  },
+): Promise<PokemonEvolution[]> {
+  const chain = await getEvolutionChain(capture.pokemonId);
+
+  if (!chain || chain.length === 0) return [];
+
+  // Remove current pokémon from the list
+  const otherEvolutions = chain.filter((e) => e.id !== capture.pokemonId);
+
+  if (!run) return otherEvolutions;
+
+  // Normal mode: only allow evolutions in the same family (chain)
+  if (!run.isRandomMode) {
+    return otherEvolutions;
+  }
+
+  // Randomizer mode with evolution enabled
+  if (run.randomizerOptions?.randomizeEvolvedForms) {
+    // If infinite evolution is enabled, return all pokémon
+    if ((run.randomizerOptions as any).infiniteEvolution) {
+      // This would need to load all pokémon, for now just return chain
+      return otherEvolutions;
+    }
+
+    // Normal randomizer evolution: same as regular evolution
+    return otherEvolutions;
+  }
+
+  return [];
+}
