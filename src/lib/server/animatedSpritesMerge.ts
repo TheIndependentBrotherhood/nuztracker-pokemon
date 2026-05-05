@@ -112,7 +112,6 @@ export interface MergePokemonListEntry {
   technicalName: string;
   alternativeTechnicalNames?: string[];
   generation: number;
-  sprite?: string;
   sprites?: {
     normal?: {
       default?: string;
@@ -438,7 +437,6 @@ function getTechnicalNames(entry: {
 function ensureSpriteStructure(entry: MergePokemonListEntry) {
   const baseDefault =
     entry.sprites?.normal?.default ??
-    entry.sprite ??
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
   const shinyDefault = baseDefault.replace(
     "/sprites/pokemon/",
@@ -457,10 +455,6 @@ function ensureSpriteStructure(entry: MergePokemonListEntry) {
       excludeUrls: [...(entry.sprites?.shiny?.excludeUrls ?? [])],
     },
   };
-
-  if (!entry.sprite) {
-    entry.sprite = baseDefault;
-  }
 }
 
 export async function mergeAnimatedSpritesIntoPokemonList(
