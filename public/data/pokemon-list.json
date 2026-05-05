@@ -22087,7 +22087,7 @@
     {
       "id": 744,
       "technicalName": "rockruff",
-      "alternativeTechnicalNames": [],
+      "alternativeTechnicalNames": ["rockruff-own-tempo"],
       "names": {
         "fr": "Rocabot",
         "en": "Rockruff"
@@ -23029,8 +23029,8 @@
     },
     {
       "id": 778,
-      "technicalName": "mimikyu-disguised",
-      "alternativeTechnicalNames": [],
+      "technicalName": "mimikyu",
+      "alternativeTechnicalNames": ["mimikyu-disguised", "mimikyu-busted", "mimikyu-totem-disguised", "mimikyu-totem-busted"],
       "names": {
         "fr": "Mimiqui",
         "en": "Mimikyu"
@@ -23043,6 +23043,9 @@
         "normal": {
           "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/778.png",
           "alternatives": [
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10143.png",
+            "https://www.smogon.com/forums/attachments/778_2-gif.170150/",
+            "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/466b4053-236a-4647-a8f7-ca9a821dc7d1/db7anad-aea9c2b9-c9da-49d0-82ba-d33e9f998fee.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi80NjZiNDA1My0yMzZhLTQ2NDctYThmNy1jYTlhODIxZGM3ZDEvZGI3YW5hZC1hZWE5YzJiOS1jOWRhLTQ5ZDAtODJiYS1kMzNlOWY5OThmZWUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.mgCThaU7H1YTiXiX3qD0Hm0sFqCqo8JL_PweAGseJQU",
             "https://www.smogon.com/forums/attachments/778_1-gif.170148/",
             "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/466b4053-236a-4647-a8f7-ca9a821dc7d1/dazn3nh-ecccccf6-478a-41cf-93d0-217c8eaa654d.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi80NjZiNDA1My0yMzZhLTQ2NDctYThmNy1jYTlhODIxZGM3ZDEvZGF6bjNuaC1lY2NjY2NmNi00NzhhLTQxY2YtOTNkMC0yMTdjOGVhYTY1NGQuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.q9Vdb63ux5VlbLK8h-CeVn9YWtrod1MkcxLenra9wqU",
             "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/466b4053-236a-4647-a8f7-ca9a821dc7d1/dbslg21-b875adf5-722b-4974-b6b5-97ca5420e54c.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi80NjZiNDA1My0yMzZhLTQ2NDctYThmNy1jYTlhODIxZGM3ZDEvZGJzbGcyMS1iODc1YWRmNS03MjJiLTQ5NzQtYjZiNS05N2NhNTQyMGU1NGMuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.h6-Yf4f-zxZJWfkca5p0AgZqxg491fqOhkQtEKjMhNM",
@@ -23053,6 +23056,8 @@
         "shiny": {
           "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/778.png",
           "alternatives": [
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10143.png",
+            "https://www.smogon.com/forums/attachments/778_2s-gif.170151/",
             "https://www.smogon.com/forums/attachments/778_1s-gif.633990/"
           ],
           "excludeUrls": []
@@ -24939,7 +24944,7 @@
     {
       "id": 845,
       "technicalName": "cramorant",
-      "alternativeTechnicalNames": [],
+      "alternativeTechnicalNames": ["cramorant-gulping", "cramorant-gorging"],
       "names": {
         "fr": "Nigosier",
         "en": "Cramorant"
@@ -24951,12 +24956,18 @@
       "sprites": {
         "normal": {
           "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/845.png",
-          "alternatives": [],
+          "alternatives": [
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10182.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10183.png"
+          ],
           "excludeUrls": []
         },
         "shiny": {
           "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/845.png",
-          "alternatives": [],
+          "alternatives": [
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10182.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10183.png"
+          ],
           "excludeUrls": []
         }
       }
@@ -32224,7 +32235,7 @@
     {
       "id": 10092,
       "technicalName": "raticate-alola",
-      "alternativeTechnicalNames": [],
+      "alternativeTechnicalNames": ["raticate-totem-alola"],
       "names": {
         "fr": "Rattatac",
         "en": "Raticate"
@@ -33277,8 +33288,8 @@
     },
     {
       "id": 10136,
-      "technicalName": "minior-red",
-      "alternativeTechnicalNames": [],
+      "technicalName": "minior",
+      "alternativeTechnicalNames": ["minior-red-meteor", "minior-orange-meteor", "minior-yellow-meteor", "minior-green-meteor", "minior-blue-meteor", "minior-indigo-meteor", "minior-violet-meteor", "minior-red", "minior-orange", "minior-yellow", "minior-green", "minior-blue", "minior-indigo", "minior-violet"],
       "names": {
         "fr": "Météno",
         "en": "Minior"
@@ -33291,6 +33302,18 @@
         "normal": {
           "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10136.png",
           "alternatives": [
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10130.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10131.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10132.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10133.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10134.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10135.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10137.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10138.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10139.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10140.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10141.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10142.png",
             "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/b4f53ec3-b5bb-42db-9868-be27f9fe2abb/dbptkl8-85807ca5-17e6-404f-b2d5-07be39e859c6.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9iNGY1M2VjMy1iNWJiLTQyZGItOTg2OC1iZTI3ZjlmZTJhYmIvZGJwdGtsOC04NTgwN2NhNS0xN2U2LTQwNGYtYjJkNS0wN2JlMzllODU5YzYuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.pJqMaF80iBT8TjDc2TsvLl98CHEOHZam6n5I8po-IWQ"
           ],
           "excludeUrls": []
@@ -33298,201 +33321,25 @@
         "shiny": {
           "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10136.png",
           "alternatives": [
-            "https://www.smogon.com/forums/attachments/774_6s-gif.274553/"
-          ],
-          "excludeUrls": []
-        }
-      }
-    },
-    {
-      "id": 10137,
-      "technicalName": "minior-orange",
-      "alternativeTechnicalNames": [],
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": ["rock", "flying"],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10137.png",
-      "isLegendary": false,
-      "generation": 7,
-      "sprites": {
-        "normal": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10137.png",
-          "alternatives": [],
-          "excludeUrls": []
-        },
-        "shiny": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10137.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/774_5s-gif.274551/"
-          ],
-          "excludeUrls": []
-        }
-      }
-    },
-    {
-      "id": 10138,
-      "technicalName": "minior-yellow",
-      "alternativeTechnicalNames": [],
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": ["rock", "flying"],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10138.png",
-      "isLegendary": false,
-      "generation": 7,
-      "sprites": {
-        "normal": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10138.png",
-          "alternatives": [],
-          "excludeUrls": []
-        },
-        "shiny": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10138.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/774_8s-gif.274557/"
-          ],
-          "excludeUrls": []
-        }
-      }
-    },
-    {
-      "id": 10139,
-      "technicalName": "minior-green",
-      "alternativeTechnicalNames": [],
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": ["rock", "flying"],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10139.png",
-      "isLegendary": false,
-      "generation": 7,
-      "sprites": {
-        "normal": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10139.png",
-          "alternatives": [],
-          "excludeUrls": []
-        },
-        "shiny": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10139.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/774_3s-gif.274547/"
-          ],
-          "excludeUrls": []
-        }
-      }
-    },
-    {
-      "id": 10140,
-      "technicalName": "minior-blue",
-      "alternativeTechnicalNames": [],
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": ["rock", "flying"],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10140.png",
-      "isLegendary": false,
-      "generation": 7,
-      "sprites": {
-        "normal": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10140.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/774_combo_front-gif.181327/"
-          ],
-          "excludeUrls": []
-        },
-        "shiny": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10140.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/774_2s-gif.274545/"
-          ],
-          "excludeUrls": []
-        }
-      }
-    },
-    {
-      "id": 10141,
-      "technicalName": "minior-indigo",
-      "alternativeTechnicalNames": [],
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": ["rock", "flying"],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10141.png",
-      "isLegendary": false,
-      "generation": 7,
-      "sprites": {
-        "normal": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10141.png",
-          "alternatives": [],
-          "excludeUrls": []
-        },
-        "shiny": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10141.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/774_4s-gif.274549/"
-          ],
-          "excludeUrls": []
-        }
-      }
-    },
-    {
-      "id": 10142,
-      "technicalName": "minior-violet",
-      "alternativeTechnicalNames": [],
-      "names": {
-        "fr": "Météno",
-        "en": "Minior"
-      },
-      "types": ["rock", "flying"],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10142.png",
-      "isLegendary": false,
-      "generation": 7,
-      "sprites": {
-        "normal": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10142.png",
-          "alternatives": [],
-          "excludeUrls": []
-        },
-        "shiny": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10142.png",
-          "alternatives": [
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10130.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10131.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10132.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10133.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10134.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10135.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10137.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10138.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10139.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10140.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10141.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10142.png",
+            "https://www.smogon.com/forums/attachments/774_6s-gif.274553/",
+            "https://www.smogon.com/forums/attachments/774_5s-gif.274551/",
+            "https://www.smogon.com/forums/attachments/774_8s-gif.274557/",
+            "https://www.smogon.com/forums/attachments/774_3s-gif.274547/",
+            "https://www.smogon.com/forums/attachments/774_2s-gif.274545/",
+            "https://www.smogon.com/forums/attachments/774_4s-gif.274549/",
             "https://www.smogon.com/forums/attachments/774_7s-gif.274555/"
-          ],
-          "excludeUrls": []
-        }
-      }
-    },
-    {
-      "id": 10143,
-      "technicalName": "mimikyu-busted",
-      "alternativeTechnicalNames": [],
-      "names": {
-        "fr": "Mimiqui",
-        "en": "Mimikyu"
-      },
-      "types": ["ghost", "fairy"],
-      "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10143.png",
-      "isLegendary": false,
-      "generation": 7,
-      "sprites": {
-        "normal": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10143.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/778_2-gif.170150/",
-            "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/466b4053-236a-4647-a8f7-ca9a821dc7d1/db7anad-aea9c2b9-c9da-49d0-82ba-d33e9f998fee.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi80NjZiNDA1My0yMzZhLTQ2NDctYThmNy1jYTlhODIxZGM3ZDEvZGI3YW5hZC1hZWE5YzJiOS1jOWRhLTQ5ZDAtODJiYS1kMzNlOWY5OThmZWUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.mgCThaU7H1YTiXiX3qD0Hm0sFqCqo8JL_PweAGseJQU"
-          ],
-          "excludeUrls": []
-        },
-        "shiny": {
-          "default": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10143.png",
-          "alternatives": [
-            "https://www.smogon.com/forums/attachments/778_2s-gif.170151/"
           ],
           "excludeUrls": []
         }

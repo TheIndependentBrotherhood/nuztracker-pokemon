@@ -1919,7 +1919,103 @@
           }
         }
       }
+    },
+    {
+      "id": 10002,
+      "name": "shadow",
+      "sprites": {
+        "gen3": {
+          "colosseum": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "emerald": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "firered-leafgreen": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "ruby-sapphire": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "xd": {
+            "name_icon": null,
+            "symbol_icon": null
+          }
+        },
+        "gen4": {
+          "diamond-pearl": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "heartgold-soulsilver": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "platinum": {
+            "name_icon": null,
+            "symbol_icon": null
+          }
+        },
+        "gen9": {
+          "scarlet-violet": {
+            "name_icon": null,
+            "symbol_icon": null
+          }
+        },
+        "gen5": {
+          "black-2-white-2": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "black-white": {
+            "name_icon": null,
+            "symbol_icon": null
+          }
+        },
+        "gen6": {
+          "omega-ruby-alpha-sapphire": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "x-y": {
+            "name_icon": null,
+            "symbol_icon": null
+          }
+        },
+        "gen7": {
+          "lets-go-pikachu-lets-go-eevee": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "sun-moon": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "ultra-sun-ultra-moon": {
+            "name_icon": null,
+            "symbol_icon": null
+          }
+        },
+        "gen8": {
+          "brilliant-diamond-shining-pearl": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "legends-arceus": {
+            "name_icon": null,
+            "symbol_icon": null
+          },
+          "sword-shield": {
+            "name_icon": null,
+            "symbol_icon": null
+          }
+        }
+      }
     }
   ],
-  "generatedAt": "2026-05-04T15:30:32.862Z"
+  "generatedAt": "2026-05-05T00:00:51.539Z"
 }

@@ -449,6 +449,11 @@ async function syncAbilities(send: SendFn) {
       entry.immuneTypes = IMMUNITY_MAP[abilityData.name];
     }
 
+    // Add special attributes for specific abilities
+    if (abilityData.name === "dry-skin") {
+      entry.weakness = "fire";
+    }
+
     incoming.push(entry);
 
     if ((i + 1) % 50 === 0) {
