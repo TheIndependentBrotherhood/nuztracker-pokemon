@@ -1,4 +1,5 @@
 import type { AbilityEntry } from "@/context/CacheContext";
+import { publicPath } from "@/lib/base-path";
 
 export const TYPES = [
   "normal",
@@ -42,7 +43,7 @@ export async function loadTypeData(
   generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
 ): Promise<TypeChartData> {
   try {
-    const response = await fetch("/data/type-charts.json");
+    const response = await fetch(publicPath("/data/type-charts.json"));
     const data = await response.json();
 
     // Each generation layer is cumulative:

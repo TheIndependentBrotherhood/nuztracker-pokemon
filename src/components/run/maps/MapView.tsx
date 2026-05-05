@@ -39,7 +39,7 @@ export default function MapView({ run }: Props) {
     if (!zones) return null;
     const template = zones.find((z) => z.id === zoneId);
     if (!template) return null;
-    return template.zoneNames?.[lang] ?? template.zoneName ?? null;
+    return template.zoneNames?.[lang] ?? null;
   }
 
   function handleZoneClick(zoneId: string) {

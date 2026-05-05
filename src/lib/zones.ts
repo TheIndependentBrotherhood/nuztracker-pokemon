@@ -1,3 +1,5 @@
+import { publicPath } from "@/lib/base-path";
+
 export interface ZoneTemplate {
   id: string;
   zoneNames?: {
@@ -46,7 +48,7 @@ export async function loadRegions(): Promise<Region[]> {
   if (cachedRegions) return cachedRegions;
 
   try {
-    const response = await fetch("/data/regions.json");
+    const response = await fetch(publicPath("/data/regions.json"));
     const data = await response.json();
 
     // Map JSON regions to our Region interface

@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { publicPath } from "@/lib/base-path";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -508,7 +509,7 @@ export default function DevSpritesPage() {
   useEffect(() => {
     async function load() {
       try {
-        const listRes = await fetch("/data/pokemon-list.json");
+        const listRes = await fetch(publicPath("/data/pokemon-list.json"));
         if (!listRes.ok) throw new Error("Failed to fetch data files");
 
         const list: { pokemon: PokemonListEntry[] } = await listRes.json();

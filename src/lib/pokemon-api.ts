@@ -1,5 +1,6 @@
 import { Capture, PokemonApiData } from "./types";
 import { Lang } from "@/i18n/translations";
+import { publicPath } from "@/lib/base-path";
 
 const BASE_URL = "https://pokeapi.co/api/v2";
 const UNOWN_ID = 201;
@@ -110,7 +111,7 @@ export async function searchPokemon(
   // Attempt to use the pre-generated static cache
   try {
     if (!pokemonListJsonCache) {
-      const res = await fetch("/data/pokemon-list.json");
+      const res = await fetch(publicPath("/data/pokemon-list.json"));
       if (res.ok) {
         const data = (await res.json()) as {
           pokemon?: {
@@ -308,7 +309,7 @@ export async function getAvailableCaptureSpriteOptions(params: {
   // Load alternatives from pokemon-list.json (merged source)
   if (!pokemonListJsonCache) {
     try {
-      const res = await fetch("/data/pokemon-list.json");
+      const res = await fetch(publicPath("/data/pokemon-list.json"));
       if (res.ok) {
         const data = (await res.json()) as {
           pokemon?: Array<{

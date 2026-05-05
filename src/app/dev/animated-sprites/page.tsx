@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SyncPanel from "@/components/dev/SyncPanel";
+import { publicPath } from "@/lib/base-path";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -293,7 +294,7 @@ export default function AnimatedSpritesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/data/pokemon-list.json")
+    fetch(publicPath("/data/pokemon-list.json"))
       .then((r) => (r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`)))
       .then((data: { pokemon?: PokemonListEntry[] }) => {
         setReport(buildMissingReportFromPokemonList(data.pokemon ?? []));

@@ -18,6 +18,7 @@ import PokemonDetailModal from "@/components/run/modals/PokemonDetailModal";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useRunStore } from "@/store/runStore";
+import { publicPath } from "@/lib/base-path";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -62,7 +63,7 @@ export default function PokedexView({ runId }: Props) {
 
     const loadPokedexEntries = async () => {
       try {
-        const response = await fetch("/data/pokemon-list.json");
+        const response = await fetch(publicPath("/data/pokemon-list.json"));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = (await response.json()) as {
           pokemon?: PokemonListEntry[];
