@@ -819,9 +819,7 @@ export default function TypeAnalysis({ run }: Props) {
 
     const toggleAbilitySelection = (abilityName: string) => {
       setSelectedAbilities((prev) =>
-        prev.includes(abilityName)
-          ? prev.filter((a) => a !== abilityName)
-          : [...prev, abilityName],
+        prev.includes(abilityName) ? [] : [abilityName],
       );
     };
 
