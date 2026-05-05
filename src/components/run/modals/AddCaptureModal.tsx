@@ -83,7 +83,7 @@ export default function AddCaptureModal({
   const firstType = customTypesDraft[0] || null;
   const secondType = customTypesDraft[1] || null;
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(secondType);
-  const [customAbilitiesDraft, setCustomAbilitiesDraft] = useState<string[]>([]);
+  const [customAbilityDraft, setCustomAbilityDraft] = useState<string | null>(null);
   const [abilitySearch, setAbilitySearch] = useState("");
   const canAddCapture = Boolean(
     selected && (!randomTypesMode || customTypesDraft.length > 0),
@@ -98,6 +98,10 @@ export default function AddCaptureModal({
         setSelectedSpriteUrl(null);
         return;
       }
+
+      // Reset ability draft when Pokémon changes
+      setCustomAbilityDraft(null);
+      setAbilitySearch("");
 
       setLoadingSpriteOptions(true);
       const options = await getAvailableCaptureSpriteOptions({
@@ -231,8 +235,8 @@ export default function AddCaptureModal({
       gender,
       isShiny,
       isDead: false,
-      ...(randomAbilitiesMode && customAbilitiesDraft.length > 0
-        ? { abilities: customAbilitiesDraft }
+      ...(randomAbilitiesMode && customAbilityDraft
+        ? { ability: customAbilityDraft }
         : {}),
       ...(randomTypesMode && customTypesDraft.length > 0
         ? { customTypes: customTypesDraft }
@@ -744,22 +748,22 @@ export default function AddCaptureModal({
               {t(tr.addCapture.randomAbilities, lang)}
             </Typography>
 
-            {/* Selected abilities */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
-              {customAbilitiesDraft.map((abilityName) => {
-                const entry = abilitiesCache.abilities.find(
-                  (a) => a.name === abilityName,
-                );
-                const displayName =
-                  lang === "fr"
-                    ? (entry?.names?.fr ?? abilityName)
-                    : (entry?.names?.en ?? abilityName);
-                const effect =
-                  lang === "fr"
-                    ? (entry?.effects?.fr ?? "")
-                    : (entry?.effects?.en ?? "");
-                return (
-                  <Tooltip key={abilityName} title={effect} placement="top">
+            {/* Currently selected ability chip */}
+            {customAbilityDraft && (() => {
+              const entry = abilitiesCache.abilities.find(
+                (a) => a.name === customAbilityDraft,
+              );
+              const displayName =
+                lang === "fr"
+                  ? (entry?.names?.fr ?? customAbilityDraft)
+                  : (entry?.names?.en ?? customAbilityDraft);
+              const effect =
+                lang === "fr"
+                  ? (entry?.effects?.fr ?? "")
+                  : (entry?.effects?.en ?? "");
+              return (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
+                  <Tooltip title={effect} placement="top">
                     <Box
                       sx={{
                         display: "inline-flex",
@@ -780,11 +784,10 @@ export default function AddCaptureModal({
                       </span>
                       <Box
                         component="button"
-                        onClick={() =>
-                          setCustomAbilitiesDraft((prev) =>
-                            prev.filter((n) => n !== abilityName),
-                          )
-                        }
+                        onClick={() => {
+                          setCustomAbilityDraft(null);
+                          setAbilitySearch("");
+                        }}
                         aria-label={t(tr.addCapture.removeAbility, lang)}
                         sx={{
                           background: "none",
@@ -801,17 +804,12 @@ export default function AddCaptureModal({
                       </Box>
                     </Box>
                   </Tooltip>
-                );
-              })}
-            </Box>
+                </Box>
+              );
+            })()}
 
-            {customAbilitiesDraft.length >= 3 ? (
-              <Typography
-                sx={{ fontSize: "0.72rem", color: "#b91c1c", fontWeight: 600 }}
-              >
-                {t(tr.addCapture.abilitiesLimitReached, lang)}
-              </Typography>
-            ) : (
+            {/* Search field – hidden once an ability is selected */}
+            {!customAbilityDraft && (
               <Box sx={{ position: "relative" }}>
                 <TextField
                   fullWidth
@@ -851,16 +849,15 @@ export default function AddCaptureModal({
                     {(() => {
                       const filtered = abilitiesCache.abilities.filter(
                         (a) =>
-                          !customAbilitiesDraft.includes(a.name) &&
-                          (a.name
+                          a.name
                             .toLowerCase()
                             .includes(abilitySearch.toLowerCase()) ||
-                            a.names?.fr
-                              ?.toLowerCase()
-                              .includes(abilitySearch.toLowerCase()) ||
-                            a.names?.en
-                              ?.toLowerCase()
-                              .includes(abilitySearch.toLowerCase())),
+                          a.names?.fr
+                            ?.toLowerCase()
+                            .includes(abilitySearch.toLowerCase()) ||
+                          a.names?.en
+                            ?.toLowerCase()
+                            .includes(abilitySearch.toLowerCase()),
                       );
                       return (
                         <>
@@ -882,10 +879,7 @@ export default function AddCaptureModal({
                                 <Box
                                   component="button"
                                   onClick={() => {
-                                    setCustomAbilitiesDraft((prev) => [
-                                      ...prev,
-                                      a.name,
-                                    ]);
+                                    setCustomAbilityDraft(a.name);
                                     setAbilitySearch("");
                                   }}
                                   sx={{

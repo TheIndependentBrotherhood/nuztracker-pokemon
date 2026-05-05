@@ -271,7 +271,8 @@ export default function TypeAnalysis({ run }: Props) {
               // so teamTypes[i] always corresponds to run.team[i].
               const memberEffects = teamTypes.map((types, i) => {
                 if (types.length === 0) return 1;
-                const memberAbilities = run.team[i]?.abilities ?? [];
+                const memberAbility = run.team[i]?.ability;
+                const memberAbilities = memberAbility ? [memberAbility] : [];
                 return (
                   getDefensesWithAbilities(types, memberAbilities)[attackType] ??
                   1

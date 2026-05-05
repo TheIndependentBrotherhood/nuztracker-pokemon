@@ -20,8 +20,8 @@ export interface Capture {
   isDead: boolean;
   /** User-discovered types for randomizer type mode (max two). */
   customTypes?: string[];
-  /** Abilities assigned to this Pokémon (max three). In randomizer mode these are user-defined. */
-  abilities?: string[];
+  /** The single ability of this captured Pokémon. In randomizer mode this is user-defined; in classic mode it is the ability observed in-game. */
+  ability?: string;
   selectedSprite?: CaptureSelectedSprite;
   /** For Unown captures: the chosen letter form, e.g. "a"–"z", "!", "?" */
   unownLetter?: string;

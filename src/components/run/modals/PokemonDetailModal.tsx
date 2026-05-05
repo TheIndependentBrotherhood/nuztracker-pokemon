@@ -131,7 +131,7 @@ export default function PokemonDetailModal({
   const [typePickerAnchorEl, setTypePickerAnchorEl] =
     useState<HTMLElement | null>(null);
   const [typePickerSlot, setTypePickerSlot] = useState<0 | 1 | null>(null);
-  const [abilitiesDraft, setAbilitiesDraft] = useState<string[] | null>(null);
+  const [abilityDraft, setAbilityDraft] = useState<string | null | undefined>(undefined);
   const [abilitySearch, setAbilitySearch] = useState("");
   const { lang } = useLanguage();
   const { runs, updateRun } = useRunStore();
@@ -158,7 +158,7 @@ export default function PokemonDetailModal({
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(activeCustomTypes[1]);
   const firstType = activeCustomTypes[0] || null;
   const secondType = activeCustomTypes[1] || null;
-  const activeAbilities = abilitiesDraft ?? capture.abilities ?? [];
+  const activeAbility = abilityDraft !== undefined ? abilityDraft : (capture.ability ?? null);
 
   useEffect(() => {
     fetchPokemon(capture.pokemonId)
@@ -360,13 +360,13 @@ export default function PokemonDetailModal({
     persistCustomTypes(nextTypes);
   }
 
-  function persistAbilities(nextAbilities: string[]) {
-    setAbilitiesDraft(nextAbilities);
+  function persistAbility(nextAbility: string | null) {
+    setAbilityDraft(nextAbility);
     if (!runToUpdate) return;
 
     updateCaptureInRun((target) => ({
       ...target,
-      abilities: nextAbilities.length > 0 ? nextAbilities : undefined,
+      ability: nextAbility ?? undefined,
     }));
   }
 
@@ -882,24 +882,22 @@ export default function PokemonDetailModal({
 
               {isRandomAbilitiesMode ? (
                 <>
-                  {/* Selected abilities chips */}
-                  <Box
-                    sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}
-                  >
-                    {activeAbilities.map((abilityName) => {
-                      const entry = abilitiesCache.abilities.find(
-                        (a) => a.name === abilityName,
-                      );
-                      const displayName =
-                        lang === "fr"
-                          ? (entry?.names?.fr ?? abilityName)
-                          : (entry?.names?.en ?? abilityName);
-                      const effect =
-                        lang === "fr"
-                          ? (entry?.effects?.fr ?? "")
-                          : (entry?.effects?.en ?? "");
-                      return (
-                        <Tooltip key={abilityName} title={effect} placement="top">
+                  {/* Currently selected ability chip */}
+                  {activeAbility && (() => {
+                    const entry = abilitiesCache.abilities.find(
+                      (a) => a.name === activeAbility,
+                    );
+                    const displayName =
+                      lang === "fr"
+                        ? (entry?.names?.fr ?? activeAbility)
+                        : (entry?.names?.en ?? activeAbility);
+                    const effect =
+                      lang === "fr"
+                        ? (entry?.effects?.fr ?? "")
+                        : (entry?.effects?.en ?? "");
+                    return (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
+                        <Tooltip title={effect} placement="top">
                           <Box
                             sx={{
                               display: "inline-flex",
@@ -921,13 +919,10 @@ export default function PokemonDetailModal({
                             {runToUpdate && (
                               <Box
                                 component="button"
-                                onClick={() =>
-                                  persistAbilities(
-                                    activeAbilities.filter(
-                                      (n) => n !== abilityName,
-                                    ),
-                                  )
-                                }
+                                onClick={() => {
+                                  persistAbility(null);
+                                  setAbilitySearch("");
+                                }}
                                 aria-label={t(
                                   tr.pokemonDetail.removeAbility,
                                   lang,
@@ -948,148 +943,133 @@ export default function PokemonDetailModal({
                             )}
                           </Box>
                         </Tooltip>
-                      );
-                    })}
-                  </Box>
-
-                  {activeAbilities.length >= 3 ? (
-                    <Typography
-                      sx={{
-                        fontSize: "0.72rem",
-                        color: "#b91c1c",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {t(tr.pokemonDetail.abilitiesLimitReached, lang)}
-                    </Typography>
-                  ) : (
-                    runToUpdate && (
-                      <Box sx={{ position: "relative" }}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          placeholder={t(
-                            tr.pokemonDetail.abilitiesSearchPlaceholder,
-                            lang,
-                          )}
-                          value={abilitySearch}
-                          onChange={(e) => setAbilitySearch(e.target.value)}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              background: "#fff",
-                              color: "#000",
-                              fontSize: "0.875rem",
-                              "& fieldset": { borderColor: "#000" },
-                            },
-                          }}
-                        />
-                        {abilitySearch.length >= 2 && (
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              top: "100%",
-                              left: 0,
-                              right: 0,
-                              background: "#fff",
-                              border: "2px solid #000",
-                              borderRadius: "0.75rem",
-                              mt: 0.5,
-                              maxHeight: "160px",
-                              overflowY: "auto",
-                              zIndex: 20,
-                              boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
-                            }}
-                          >
-                            {(() => {
-                              const filtered = abilitiesCache.abilities.filter(
-                                (a) =>
-                                  !activeAbilities.includes(a.name) &&
-                                  (a.name
-                                    .toLowerCase()
-                                    .includes(abilitySearch.toLowerCase()) ||
-                                    a.names?.fr
-                                      ?.toLowerCase()
-                                      .includes(abilitySearch.toLowerCase()) ||
-                                    a.names?.en
-                                      ?.toLowerCase()
-                                      .includes(abilitySearch.toLowerCase())),
-                              );
-                              return (
-                                <>
-                                  {filtered.slice(0, 8).map((a) => {
-                                    const displayName =
-                                      lang === "fr"
-                                        ? (a.names?.fr ?? a.name)
-                                        : (a.names?.en ?? a.name);
-                                    const effect =
-                                      lang === "fr"
-                                        ? (a.effects?.fr ?? "")
-                                        : (a.effects?.en ?? "");
-                                    return (
-                                      <Tooltip
-                                        key={a.name}
-                                        title={effect}
-                                        placement="left"
-                                      >
-                                        <Box
-                                          component="button"
-                                          onClick={() => {
-                                            persistAbilities([
-                                              ...activeAbilities,
-                                              a.name,
-                                            ]);
-                                            setAbilitySearch("");
-                                          }}
-                                          sx={{
-                                            width: "100%",
-                                            textAlign: "left",
-                                            px: 1.5,
-                                            py: 0.75,
-                                            background: "transparent",
-                                            border: "none",
-                                            fontSize: "0.875rem",
-                                            textTransform: "capitalize",
-                                            color: "#000",
-                                            cursor: "pointer",
-                                            "&:hover": { background: "#f0f0f0" },
-                                            "&:first-of-type": {
-                                              borderTopLeftRadius: "0.75rem",
-                                              borderTopRightRadius: "0.75rem",
-                                            },
-                                            "&:last-of-type": {
-                                              borderBottomLeftRadius: "0.75rem",
-                                              borderBottomRightRadius: "0.75rem",
-                                            },
-                                          }}
-                                        >
-                                          {displayName}
-                                        </Box>
-                                      </Tooltip>
-                                    );
-                                  })}
-                                  {filtered.length === 0 && (
-                                    <Box
-                                      sx={{
-                                        px: 1.5,
-                                        py: 1,
-                                        color: "#666",
-                                        fontSize: "0.875rem",
-                                      }}
-                                    >
-                                      {t(tr.pokemonDetail.noAbilityResult, lang)}
-                                    </Box>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </Box>
-                        )}
                       </Box>
-                    )
+                    );
+                  })()}
+
+                  {/* Search field – hidden once an ability is selected */}
+                  {!activeAbility && runToUpdate && (
+                    <Box sx={{ position: "relative" }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder={t(
+                          tr.pokemonDetail.abilitiesSearchPlaceholder,
+                          lang,
+                        )}
+                        value={abilitySearch}
+                        onChange={(e) => setAbilitySearch(e.target.value)}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            background: "#fff",
+                            color: "#000",
+                            fontSize: "0.875rem",
+                            "& fieldset": { borderColor: "#000" },
+                          },
+                        }}
+                      />
+                      {abilitySearch.length >= 2 && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            background: "#fff",
+                            border: "2px solid #000",
+                            borderRadius: "0.75rem",
+                            mt: 0.5,
+                            maxHeight: "160px",
+                            overflowY: "auto",
+                            zIndex: 20,
+                            boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          {(() => {
+                            const filtered = abilitiesCache.abilities.filter(
+                              (a) =>
+                                a.name
+                                  .toLowerCase()
+                                  .includes(abilitySearch.toLowerCase()) ||
+                                a.names?.fr
+                                  ?.toLowerCase()
+                                  .includes(abilitySearch.toLowerCase()) ||
+                                a.names?.en
+                                  ?.toLowerCase()
+                                  .includes(abilitySearch.toLowerCase()),
+                            );
+                            return (
+                              <>
+                                {filtered.slice(0, 8).map((a) => {
+                                  const displayName =
+                                    lang === "fr"
+                                      ? (a.names?.fr ?? a.name)
+                                      : (a.names?.en ?? a.name);
+                                  const effect =
+                                    lang === "fr"
+                                      ? (a.effects?.fr ?? "")
+                                      : (a.effects?.en ?? "");
+                                  return (
+                                    <Tooltip
+                                      key={a.name}
+                                      title={effect}
+                                      placement="left"
+                                    >
+                                      <Box
+                                        component="button"
+                                        onClick={() => {
+                                          persistAbility(a.name);
+                                          setAbilitySearch("");
+                                        }}
+                                        sx={{
+                                          width: "100%",
+                                          textAlign: "left",
+                                          px: 1.5,
+                                          py: 0.75,
+                                          background: "transparent",
+                                          border: "none",
+                                          fontSize: "0.875rem",
+                                          textTransform: "capitalize",
+                                          color: "#000",
+                                          cursor: "pointer",
+                                          "&:hover": { background: "#f0f0f0" },
+                                          "&:first-of-type": {
+                                            borderTopLeftRadius: "0.75rem",
+                                            borderTopRightRadius: "0.75rem",
+                                          },
+                                          "&:last-of-type": {
+                                            borderBottomLeftRadius: "0.75rem",
+                                            borderBottomRightRadius: "0.75rem",
+                                          },
+                                        }}
+                                      >
+                                        {displayName}
+                                      </Box>
+                                    </Tooltip>
+                                  );
+                                })}
+                                {filtered.length === 0 && (
+                                  <Box
+                                    sx={{
+                                      px: 1.5,
+                                      py: 1,
+                                      color: "#666",
+                                      fontSize: "0.875rem",
+                                    }}
+                                  >
+                                    {t(tr.pokemonDetail.noAbilityResult, lang)}
+                                  </Box>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </Box>
+                      )}
+                    </Box>
                   )}
                 </>
               ) : (
-                /* Non-randomizer mode: show abilities from PokeAPI */
+                /* Non-randomizer mode: show abilities from PokeAPI (the full panel of possible abilities) */
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                   {data?.abilities?.map(({ ability, is_hidden }) => {
                     const entry = abilitiesCache.abilities.find(
