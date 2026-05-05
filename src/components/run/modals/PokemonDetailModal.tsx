@@ -131,7 +131,9 @@ export default function PokemonDetailModal({
   const [typePickerAnchorEl, setTypePickerAnchorEl] =
     useState<HTMLElement | null>(null);
   const [typePickerSlot, setTypePickerSlot] = useState<0 | 1 | null>(null);
-  const [abilityDraft, setAbilityDraft] = useState<string | null | undefined>(undefined);
+  const [abilityDraft, setAbilityDraft] = useState<string | null>(
+    capture.ability ?? null,
+  );
   const [abilitySearch, setAbilitySearch] = useState("");
   const { lang } = useLanguage();
   const { runs, updateRun } = useRunStore();
@@ -158,7 +160,7 @@ export default function PokemonDetailModal({
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(activeCustomTypes[1]);
   const firstType = activeCustomTypes[0] || null;
   const secondType = activeCustomTypes[1] || null;
-  const activeAbility = abilityDraft !== undefined ? abilityDraft : (capture.ability ?? null);
+  const activeAbility = abilityDraft;
 
   useEffect(() => {
     fetchPokemon(capture.pokemonId)
