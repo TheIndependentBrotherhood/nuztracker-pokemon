@@ -59,6 +59,7 @@ export async function loadRegions(): Promise<Region[]> {
           id: loc.id,
           name: loc.name,
           names: loc.names,
+          areas: loc.areas || [],
         })) || [],
     }));
 
@@ -68,35 +69,41 @@ export async function loadRegions(): Promise<Region[]> {
         const zones: ZoneTemplate[] = [];
         region.locations.forEach((loc) => {
           const locationLabel = loc.names?.en || loc.name;
-          if (loc.areas && loc.areas.length > 0) {
-            // Filter areas that have both fr and en names
-            const validAreas = loc.areas.filter(
-              (area) => area.names?.fr && area.names?.en,
-            );
 
-            if (validAreas.length > 0) {
-              // Use valid areas
-              validAreas.forEach((area) => {
-                zones.push({
-                  id: area.name,
-                  zoneNames: area.names,
-                  regionArea: locationLabel,
-                });
-              });
-            } else {
-              // No valid areas, fallback to location
-              zones.push({
-                id: loc.name,
-                zoneNames: loc.names,
-                regionArea: "",
-              });
-            }
-          } else {
-            // Fallback: no areas, use the location itself
+          // If location has no areas, skip it with a warning
+          if (!loc.areas || loc.areas.length === 0) {
+            console.warn(
+              `Location "${loc.name}" in region "${region.id}" has no areas`,
+            );
+            return;
+          }
+
+          // Filter areas that have at least one translation (fr or en)
+          const areasWithTranslations = loc.areas.filter(
+            (area) => area.names?.fr || area.names?.en,
+          );
+
+          if (areasWithTranslations.length === 0) {
+            // No areas have translations, use the location itself once
             zones.push({
               id: loc.name,
               zoneNames: loc.names,
               regionArea: "",
+            });
+          } else {
+            // Add only areas with translations
+            areasWithTranslations.forEach((area) => {
+              // Generate names from area.name if translations are missing
+              const generatedNames = {
+                fr: area.names?.fr || area.name.split("-").join(" "),
+                en: area.names?.en || area.name.split("-").join(" "),
+              };
+
+              zones.push({
+                id: area.name,
+                zoneNames: generatedNames,
+                regionArea: locationLabel,
+              });
             });
           }
         });
@@ -135,34 +142,39 @@ export async function getZonesForRegionAsync(
   const templatesFromJson: ZoneTemplate[] = [];
   foundRegion.locations.forEach((loc) => {
     const locationLabel = loc.names?.en || loc.name;
-    if (loc.areas && loc.areas.length > 0) {
-      // Filter areas that have both fr and en names
-      const validAreas = loc.areas.filter(
-        (area) => area.names?.fr && area.names?.en,
-      );
 
-      if (validAreas.length > 0) {
-        // Use valid areas
-        validAreas.forEach((area) => {
-          templatesFromJson.push({
-            id: area.name,
-            zoneNames: area.names,
-            regionArea: locationLabel,
-          });
-        });
-      } else {
-        // No valid areas, fallback to location
-        templatesFromJson.push({
-          id: loc.name,
-          zoneNames: loc.names,
-          regionArea: "",
-        });
-      }
-    } else {
+    // If location has no areas, skip it with a warning
+    if (!loc.areas || loc.areas.length === 0) {
+      console.warn(`Location "${loc.name}" in region "${region}" has no areas`);
+      return;
+    }
+
+    // Filter areas that have at least one translation (fr or en)
+    const areasWithTranslations = loc.areas.filter(
+      (area) => area.names?.fr || area.names?.en,
+    );
+
+    if (areasWithTranslations.length === 0) {
+      // No areas have translations, use the location itself once
       templatesFromJson.push({
         id: loc.name,
         zoneNames: loc.names,
         regionArea: "",
+      });
+    } else {
+      // Add only areas with translations
+      areasWithTranslations.forEach((area) => {
+        // Generate names from area.name if translations are missing
+        const generatedNames = {
+          fr: area.names?.fr || area.name.split("-").join(" "),
+          en: area.names?.en || area.name.split("-").join(" "),
+        };
+
+        templatesFromJson.push({
+          id: area.name,
+          zoneNames: generatedNames,
+          regionArea: locationLabel,
+        });
       });
     }
   });
