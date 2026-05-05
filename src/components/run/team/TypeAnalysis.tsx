@@ -269,21 +269,33 @@ export default function TypeAnalysis({ run }: Props) {
             {TYPES.map((attackType) => {
               // teamTypes is built by mapping over run.team in the same order,
               // so teamTypes[i] always corresponds to run.team[i].
-              const memberEffects = teamTypes.map((types, i) => {
+              // Use BASE defenses (no ability) for bucket display, as requested.
+              const memberBaseEffects = teamTypes.map((types) => {
                 if (types.length === 0) return 1;
-                const memberAbility = run.team[i]?.ability;
-                const memberAbilities = memberAbility ? [memberAbility] : [];
-                return (
-                  getDefensesWithAbilities(types, memberAbilities)[attackType] ??
-                  1
-                );
+                return getDefenses(types)[attackType] ?? 1;
               });
 
-              const weakCount = memberEffects.filter((e) => e > 1).length;
-              const resistCount = memberEffects.filter(
+              // Also compute ability-modified value per member, to detect changes.
+              const memberAbilityEffects = teamTypes.map((types, i) => {
+                if (types.length === 0) return null;
+                const memberAbility = run.team[i]?.ability;
+                if (!memberAbility) return null; // no ability
+                const modified =
+                  getDefensesWithAbilities(types, [memberAbility])[attackType] ??
+                  1;
+                // Return null if ability doesn't change this matchup
+                return modified !== (getDefenses(types)[attackType] ?? 1)
+                  ? modified
+                  : null;
+              });
+
+              const weakCount = memberBaseEffects.filter((e) => e > 1).length;
+              const resistCount = memberBaseEffects.filter(
                 (e) => e < 1 && e !== 0,
               ).length;
-              const immunityCount = memberEffects.filter((e) => e === 0).length;
+              const immunityCount = memberBaseEffects.filter(
+                (e) => e === 0,
+              ).length;
 
               return (
                 <TableRow
@@ -313,7 +325,7 @@ export default function TypeAnalysis({ run }: Props) {
                       {attackType}
                     </Box>
                   </TableCell>
-                  {memberEffects.map((eff, i) => {
+                  {memberBaseEffects.map((eff, i) => {
                     const bg =
                       eff === 0
                         ? "#60a5fa"
@@ -341,26 +353,74 @@ export default function TypeAnalysis({ run }: Props) {
                                   ? "4"
                                   : `${eff}`;
 
+                    const abilityModified = memberAbilityEffects[i];
+                    const memberAbility = run.team[i]?.ability;
+                    const abilityEntry = memberAbility
+                      ? abilitiesCache.abilities.find(
+                          (a) => a.name === memberAbility,
+                        )
+                      : null;
+                    const abilityDisplayName = abilityEntry
+                      ? lang === "fr"
+                        ? (abilityEntry.names?.fr ?? memberAbility)
+                        : (abilityEntry.names?.en ?? memberAbility)
+                      : memberAbility;
+
+                    const tooltipContent =
+                      abilityModified !== null && memberAbility
+                        ? tr.typeAnalysis.abilityModifiesMatchup[lang](
+                            abilityDisplayName ?? memberAbility,
+                          )
+                        : "";
+
                     return (
                       <TableCell key={i} sx={{ p: 1, textAlign: "center" }}>
-                        <Box
-                          sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "0.5rem",
-                            textAlign: "center",
-                            color: "#000",
-                            fontWeight: 700,
-                            border: "2px solid #000",
-                            background: bg,
-                            fontSize: "11px",
-                          }}
+                        <Tooltip
+                          title={tooltipContent}
+                          placement="top"
+                          disableHoverListener={!tooltipContent}
+                          disableFocusListener={!tooltipContent}
+                          disableTouchListener={!tooltipContent}
                         >
-                          {label}
-                        </Box>
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              position: "relative",
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "0.5rem",
+                              textAlign: "center",
+                              color: "#000",
+                              fontWeight: 700,
+                              border: abilityModified !== null
+                                ? "2px dashed #7c3aed"
+                                : "2px solid #000",
+                              background: bg,
+                              fontSize: "11px",
+                              cursor: tooltipContent ? "help" : "default",
+                            }}
+                          >
+                            {label}
+                            {abilityModified !== null && (
+                              <Box
+                                component="span"
+                                sx={{
+                                  position: "absolute",
+                                  top: "-5px",
+                                  right: "-5px",
+                                  fontSize: "8px",
+                                  lineHeight: 1,
+                                  color: "#7c3aed",
+                                }}
+                                aria-hidden="true"
+                              >
+                                ✦
+                              </Box>
+                            )}
+                          </Box>
+                        </Tooltip>
                       </TableCell>
                     );
                   })}
@@ -973,7 +1033,9 @@ export default function TypeAnalysis({ run }: Props) {
                   return (
                     <Tooltip key={abilityName} title={effect} placement="top">
                       <Box
+                        component="button"
                         onClick={() => toggleAbilitySelection(abilityName)}
+                        aria-label={`${displayName} — ${t(tr.typeAnalysis.removeAbility, lang)}`}
                         sx={{
                           display: "inline-flex",
                           alignItems: "center",

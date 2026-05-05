@@ -412,6 +412,10 @@ const translations = {
     abilitiesSearchPlaceholder: { fr: "Rechercher un talent...", en: "Search for an ability..." },
     noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
     removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
+    abilityModifiesMatchup: {
+      fr: (name: string) => `Talent ${name} modifie ce matchup`,
+      en: (name: string) => `Ability ${name} modifies this matchup`,
+    },
   },
 
   // ── Map View ───────────────────────────────────────────────────────────────
