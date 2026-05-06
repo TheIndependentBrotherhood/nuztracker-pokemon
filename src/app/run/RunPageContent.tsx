@@ -14,10 +14,10 @@ import TeamColumn from "@/components/share/TeamColumn";
 import TypeAnalysis from "@/components/run/team/TypeAnalysis";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
-import { fetchPokemon } from "@/lib/pokemon-api";
-import { PokemonApiData } from "@/lib/types";
+import { PokemonData } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { getPokemonById } from "@/lib/pokemon-data";
 
 type Tab = "zones" | "team" | "pokedex";
 
@@ -39,9 +39,9 @@ export default function RunPageContent({ runId }: Props) {
     () => new URLSearchParams(window.location.search).get("id") ?? "",
     () => "",
   );
-  const [pokemonData, setPokemonData] = useState<
-    Record<number, PokemonApiData>
-  >({});
+  const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
+    {},
+  );
   const [exportShowTypes, setExportShowTypes] = useState(true);
   const [exportTightTypes, setExportTightTypes] = useState(false);
   const { lang } = useLanguage();
@@ -71,14 +71,17 @@ export default function RunPageContent({ runId }: Props) {
         return;
       }
 
-      const dataMap: Record<number, PokemonApiData> = {};
+      const dataMap: Record<number, PokemonData> = {};
       await Promise.all(
-        run.team.map(async (pokemon) => {
+        run.team.map(async (pokemonCaptured) => {
           try {
-            dataMap[pokemon.pokemonId] = await fetchPokemon(pokemon.pokemonId);
+            const data = await getPokemonById(pokemonCaptured.pokemon.id);
+            if (data) {
+              dataMap[pokemonCaptured.pokemon.id] = data;
+            }
           } catch (error) {
             console.error(
-              `Failed to fetch pokemon ${pokemon.pokemonId}:`,
+              `Failed to fetch pokemon ${pokemonCaptured.pokemon.id}:`,
               error,
             );
           }

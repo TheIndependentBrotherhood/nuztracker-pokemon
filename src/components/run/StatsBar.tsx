@@ -14,10 +14,6 @@ import {
 import { Run, Zone, Capture } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
 import StyledTextField from "@/components/ui/StyledTextField";
-import {
-  getCaptureSpriteFallbackUrl,
-  getCaptureSpriteUrl,
-} from "@/lib/pokemon-api";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -37,14 +33,14 @@ interface Props {
 }
 
 function TeamPreviewPokemonTile({
-  pokemon,
+  pokemonCaptured,
   lang,
 }: {
-  pokemon: Capture;
+  pokemonCaptured: Capture;
   lang: "fr" | "en";
 }) {
-  const displayName = useCaptureDisplayName(pokemon, lang);
-  const displayLabel = useCaptureDisplayLabel(pokemon, lang);
+  const displayName = useCaptureDisplayName(pokemonCaptured, lang);
+  const displayLabel = useCaptureDisplayLabel(pokemonCaptured, lang);
 
   return (
     <Box
@@ -58,13 +54,11 @@ function TeamPreviewPokemonTile({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={getCaptureSpriteUrl(pokemon, true)}
+        src={pokemonCaptured.selectedSprite?.url ?? (pokemonCaptured.isShiny ? pokemonCaptured.pokemon.sprites.shiny.default : pokemonCaptured.pokemon.sprites.normal.default)}
         alt={displayName}
         onError={(event) => {
-          const fallbackUrl = getCaptureSpriteFallbackUrl(pokemon);
-          if (event.currentTarget.src !== fallbackUrl) {
-            event.currentTarget.src = fallbackUrl;
-          }
+          const fallbackUrl = pokemonCaptured.isShiny ? pokemonCaptured.pokemon.sprites.shiny.default : pokemonCaptured.pokemon.sprites.normal.default;
+          event.currentTarget.src = fallbackUrl;
         }}
         style={{
           width: "80px",
@@ -148,7 +142,6 @@ export default function StatsBar({
   }
   const displayTotal = run.isShinyHuntMode ? total * 2 : total;
 
-  const missed = visited - captured;
   const captureRate = visited > 0 ? Math.round((captured / visited) * 100) : 0;
   const progress = total > 0 ? (visited / total) * 100 : 0;
 
@@ -414,10 +407,10 @@ export default function StatsBar({
         rowGap: 1.5,
       }}
     >
-      {run.team.map((pokemon: Capture) => (
+      {run.team.map((pokemonCaptured: Capture) => (
         <TeamPreviewPokemonTile
-          key={pokemon.id}
-          pokemon={pokemon}
+          key={pokemonCaptured.pokemon.id}
+          pokemonCaptured={pokemonCaptured}
           lang={lang}
         />
       ))}

@@ -3,11 +3,6 @@
 import { useEffect, useState } from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
 import { Capture } from "@/lib/types";
-import {
-  fetchPokemon,
-  getCaptureSpriteFallbackUrl,
-  getCaptureSpriteUrl,
-} from "@/lib/pokemon-api";
 import { useRunStore } from "@/store/runStore";
 import { getCaptureTypesForRun } from "@/lib/capture-types";
 import { typeColors } from "@/lib/type-chart";
@@ -87,9 +82,9 @@ export default function PokemonDisplayCard({
 
     const loadTypes = async () => {
       try {
-        const data = await fetchPokemon(capture.pokemonId);
         if (!cancelled) {
-          setFallbackTypes(data.types.map((entry) => entry.type.name));
+          if (capture.pokemon && capture.pokemon.types)
+            setFallbackTypes(capture.pokemon.types);
         }
       } catch {
         if (!cancelled) {
@@ -103,7 +98,7 @@ export default function PokemonDisplayCard({
     return () => {
       cancelled = true;
     };
-  }, [capture.pokemonId]);
+  }, [capture]);
 
   return (
     <>
@@ -191,10 +186,17 @@ export default function PokemonDisplayCard({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={getCaptureSpriteUrl(capture, true)}
+              src={
+                capture.selectedSprite?.url ||
+                (capture.isShiny
+                  ? capture.pokemon.sprites.shiny.default
+                  : capture.pokemon.sprites.normal.default)
+              }
               alt={pokemonDisplayName}
               onError={(event) => {
-                const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
+                const fallbackUrl = capture.isShiny
+                  ? capture.pokemon.sprites.shiny.default
+                  : capture.pokemon.sprites.normal.default;
                 if (event.currentTarget.src !== fallbackUrl) {
                   event.currentTarget.src = fallbackUrl;
                 }
@@ -278,7 +280,7 @@ export default function PokemonDisplayCard({
       {showDetail && (
         <PokemonDetailModal
           key={capture.id}
-          capture={capture}
+          pokemonCaptured={capture}
           runId={runId}
           onClose={() => setShowDetail(false)}
         />

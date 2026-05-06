@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Typography } from "@mui/material";
-import { Capture, Run } from "@/lib/types";
+import { Capture } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -31,21 +31,6 @@ export default function TeamPokemonCard({
   const [evolvedCapture, setEvolvedCapture] = useState<Capture | null>(null);
 
   const run = runs.find((r) => r.id === runId);
-
-  // Determine if evolution is available
-  const canEvolve =
-    !run?.isRandomMode ||
-    (run?.isRandomMode && run?.randomizerOptions?.randomizeEvolvedForms);
-
-  function handleRemove(e: React.MouseEvent) {
-    e.stopPropagation();
-    const run = runs.find((r) => r.id === runId);
-    if (!run || !capture) return;
-    updateTeam(
-      runId,
-      run.team.filter((c) => c.id !== capture.id),
-    );
-  }
 
   if (!capture) {
     return (
@@ -91,39 +76,36 @@ export default function TeamPokemonCard({
           effectAllowed: "move",
         }}
         actions={[
-          ...(canEvolve
-            ? [
-                {
-                  icon: "⬆",
-                  title: t(tr.pokemonCard.evolveButton, lang),
-                  onClick: () => setShowEvolution(true),
-                  sx: {
-                    position: "absolute",
-                    top: 3,
-                    left: 3,
-                    width: "1.75rem",
-                    height: "1.75rem",
-                    minWidth: "1.75rem",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.9rem",
-                    color: "#10b981",
-                    background: "rgba(255, 255, 255, 0.9)",
-                    borderRadius: "0.25rem",
-                    border: "1px solid rgba(16, 185, 129, 0.3)",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    zIndex: 10,
-                    "&:hover": {
-                      color: "#047857",
-                      background: "rgba(255, 255, 255, 0.95)",
-                      borderColor: "rgba(16, 185, 129, 0.5)",
-                    },
-                  },
-                },
-              ]
-            : []),
+          {
+            icon: "⬆",
+            title: t(tr.pokemonCard.evolveButton, lang),
+            className: "evolve-btn",
+            onClick: () => setShowEvolution(true),
+            sx: {
+              position: "absolute",
+              top: 3,
+              left: 3,
+              width: "1.75rem",
+              height: "1.75rem",
+              minWidth: "1.75rem",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.9rem",
+              color: "#10b981",
+              background: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "0.25rem",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              cursor: "pointer",
+              fontWeight: 600,
+              zIndex: 10,
+              "&:hover": {
+                color: "#047857",
+                background: "rgba(255, 255, 255, 0.95)",
+                borderColor: "rgba(16, 185, 129, 0.5)",
+              },
+            },
+          },
           {
             icon: "✕",
             title: t(tr.pokemonCard.removeFromTeam, lang),
@@ -166,10 +148,8 @@ export default function TeamPokemonCard({
 
       {showEvolution && run && (
         <EvolutionModal
-          capture={capture}
+          pokemonCaptured={capture}
           run={run}
-          runId={runId}
-          zoneId="" // Not used in EvolutionModal for team
           onClose={() => setShowEvolution(false)}
           onEvolveComplete={(evolved) => {
             setEvolvedCapture(evolved);
@@ -181,7 +161,7 @@ export default function TeamPokemonCard({
 
       {showDetail && evolvedCapture && (
         <PokemonDetailModal
-          capture={evolvedCapture}
+          pokemonCaptured={evolvedCapture}
           runId={runId}
           onClose={() => {
             setShowDetail(false);

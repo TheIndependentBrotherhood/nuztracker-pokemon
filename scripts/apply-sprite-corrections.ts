@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { PokemonData } from "../src/lib/types";
 
 type SpriteVariant = "normal" | "shiny";
 
@@ -34,19 +35,9 @@ interface ExportPayload {
   deletedSprites?: ExportedDeletedSprite[];
 }
 
-interface PokemonListEntry {
-  id: number;
-  technicalName: string;
-  alternativeTechnicalNames?: string[];
-  sprites?: {
-    normal?: { default?: string; alternatives?: string[] };
-    shiny?: { default?: string; alternatives?: string[] };
-  };
-}
-
 interface PokemonListFile {
   generatedAt?: string;
-  pokemon: PokemonListEntry[];
+  pokemon: PokemonData[];
 }
 
 function toPokeApiShinyUrl(url: string): string {
@@ -63,7 +54,7 @@ function inferVariant(
   return url.includes("/shiny/") ? "shiny" : "normal";
 }
 
-function ensureSpriteStructure(entry: PokemonListEntry) {
+function ensureSpriteStructure(entry: PokemonData) {
   const normalDefault =
     entry.sprites?.normal?.default ??
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;
@@ -81,17 +72,17 @@ function ensureSpriteStructure(entry: PokemonListEntry) {
     },
   };
 
-  if (!entry.alternativeNames) {
-    entry.alternativeNames = [];
+  if (!entry.alternativeTechnicalNames) {
+    entry.alternativeTechnicalNames = [];
   }
 }
 
-function getTechnicalNames(entry: PokemonListEntry): string[] {
-  return [entry.name, ...(entry.alternativeNames ?? [])];
+function getTechnicalNames(entry: PokemonData): string[] {
+  return [entry.technicalName, ...(entry.alternativeTechnicalNames ?? [])];
 }
 
 function addAlternative(
-  entry: PokemonListEntry,
+  entry: PokemonData,
   variant: SpriteVariant,
   url: string,
 ): boolean {
@@ -106,7 +97,7 @@ function addAlternative(
 }
 
 function removeUrlFromAllAlternatives(
-  list: PokemonListEntry[],
+  list: PokemonData[],
   url: string,
 ): number {
   let removedCount = 0;

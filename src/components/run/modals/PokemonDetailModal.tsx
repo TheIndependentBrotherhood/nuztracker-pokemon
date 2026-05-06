@@ -12,15 +12,13 @@ import {
   MenuItem,
   Tooltip,
 } from "@mui/material";
-import { Capture, PokemonApiData } from "@/lib/types";
+import { Capture, PokemonData } from "@/lib/types";
 import {
-  fetchPokemon,
+  getPokemonById,
   getAvailableCaptureSpriteOptions,
   getCaptureSpriteOptionMeta,
-  getCaptureSpriteFallbackUrl,
-  getCaptureSpriteUrl,
   type CaptureSpriteOption,
-} from "@/lib/pokemon-api";
+} from "@/lib/pokemon-data";
 import { typeColors } from "@/lib/type-chart";
 import { TYPES } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
@@ -33,7 +31,7 @@ import { useRunStore } from "@/store/runStore";
 import { useCache } from "@/context/CacheContext";
 
 interface Props {
-  capture: Capture;
+  pokemonCaptured: Capture;
   runId?: string;
   onClose: () => void;
 }
@@ -109,14 +107,13 @@ function StatBar({
   );
 }
 
-export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
-  const UNOWN_ID = 201;
-  const [data, setData] = useState<PokemonApiData | null>(null);
+export default function PokemonDetailModal({ pokemonCaptured, runId, onClose }: Props) {
+  const [data, setData] = useState<PokemonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(false);
   const [spriteOptions, setSpriteOptions] = useState<CaptureSpriteOption[]>([]);
   const [selectedSpriteUrl, setSelectedSpriteUrl] = useState<string | null>(
-    capture.selectedSprite?.url ?? null,
+    pokemonCaptured.selectedSprite?.url ?? null,
   );
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameDraft, setNicknameDraft] = useState("");
@@ -128,7 +125,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
     useState<HTMLElement | null>(null);
   const [typePickerSlot, setTypePickerSlot] = useState<0 | 1 | null>(null);
   const [abilityDraft, setAbilityDraft] = useState<string | null>(
-    capture.ability ?? null,
+    pokemonCaptured.ability ?? null,
   );
   const [abilitySearch, setAbilitySearch] = useState("");
   const [panelSearch, setPanelSearch] = useState("");
@@ -136,15 +133,15 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
   const { runs, updateRun } = useRunStore();
   const { abilities: abilitiesCache } = useCache();
   const tr = translations;
-  const pokemonDisplayName = useCaptureDisplayName(capture, lang);
-  const pokemonDisplayLabel = useCaptureDisplayLabel(capture, lang);
+  const pokemonDisplayName = useCaptureDisplayName(pokemonCaptured, lang);
+  const pokemonDisplayLabel = useCaptureDisplayLabel(pokemonCaptured, lang);
   const baseStatTotal = data
     ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
     : 0;
   const runToUpdate = runId ? runs.find((r) => r.id === runId) : null;
-  const currentNickname = capture.nickname ?? "";
+  const currentNickname = pokemonCaptured.nickname ?? "";
   const runCustomTypes =
-    runToUpdate?.customTypesByPokemonId?.[capture.pokemonId];
+    runToUpdate?.customTypesByPokemonId?.[pokemonCaptured.pokemon.id];
   const isRandomTypeMode = Boolean(
     runToUpdate?.isRandomMode && runToUpdate.randomizerOptions?.randomizeTypes,
   );
@@ -152,23 +149,23 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
     runToUpdate?.isRandomMode &&
     runToUpdate.randomizerOptions?.randomizeAbilities,
   );
-  const persistedCustomTypes = capture.customTypes ?? runCustomTypes ?? [];
+  const persistedCustomTypes = pokemonCaptured.customTypes ?? runCustomTypes ?? [];
   const activeCustomTypes = customTypesDraft ?? persistedCustomTypes;
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(activeCustomTypes[1]);
   const firstType = activeCustomTypes[0] || null;
   const secondType = activeCustomTypes[1] || null;
   const activeAbility = abilityDraft;
   // Synthetic id used by PokedexView — there is no real capture to update.
-  const isPokedexCapture = capture.id.startsWith("pokedex-");
+  const isPokedexCapture = pokemonCaptured.id.startsWith("pokedex-");
   // The ability panel for this Pokémon species (from the run, not the capture)
   const abilityPanel: string[] =
-    runToUpdate?.customAbilitiesByPokemonId?.[capture.pokemonId] ?? [];
+    runToUpdate?.customAbilitiesByPokemonId?.[pokemonCaptured.pokemon.id] ?? [];
 
   useEffect(() => {
-    fetchPokemon(capture.pokemonId)
+    getPokemonById(pokemonCaptured.pokemon.id)
       .then(setData)
       .finally(() => setLoading(false));
-  }, [capture.pokemonId]);
+  }, [pokemonCaptured.pokemon.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -176,9 +173,8 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
     async function loadSpriteOptions() {
       setLoadingSpriteOptions(true);
       const options = await getAvailableCaptureSpriteOptions({
-        pokemonId: capture.pokemonId,
-        pokemonName: capture.pokemonName,
-        isShiny: capture.isShiny,
+        pokemonId: pokemonCaptured.pokemon.id,
+        isShiny: pokemonCaptured.isShiny,
       });
 
       if (cancelled) return;
@@ -187,10 +183,10 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
       setSelectedSpriteUrl((prev) => {
         if (prev && options.some((option) => option.url === prev)) return prev;
         if (
-          capture.selectedSprite?.url &&
-          options.some((option) => option.url === capture.selectedSprite?.url)
+          pokemonCaptured.selectedSprite?.url &&
+          options.some((option) => option.url === pokemonCaptured.selectedSprite?.url)
         ) {
-          return capture.selectedSprite.url;
+          return pokemonCaptured.selectedSprite.url;
         }
         return options[0]?.url ?? null;
       });
@@ -203,15 +199,14 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
       cancelled = true;
     };
   }, [
-    capture.isShiny,
-    capture.pokemonId,
-    capture.pokemonName,
-    capture.selectedSprite?.url,
+    pokemonCaptured.isShiny,
+    pokemonCaptured.pokemon.id,
+    pokemonCaptured.selectedSprite?.url,
   ]);
 
   const genderSymbol =
-    capture.gender === "male" ? "♂" : capture.gender === "female" ? "♀" : null;
-  const genderColor = capture.gender === "male" ? "#60a5fa" : "#ec4899";
+    pokemonCaptured.gender === "male" ? "♂" : pokemonCaptured.gender === "female" ? "♀" : null;
+  const genderColor = pokemonCaptured.gender === "male" ? "#60a5fa" : "#ec4899";
 
   function updateCaptureInRun(updater: (target: Capture) => Capture) {
     if (!runToUpdate) return;
@@ -219,12 +214,12 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
     const updatedRun = {
       ...runToUpdate,
       team: runToUpdate.team.map((teamCapture) =>
-        teamCapture.id === capture.id ? updater(teamCapture) : teamCapture,
+        teamCapture.id === pokemonCaptured.id ? updater(teamCapture) : teamCapture,
       ),
       zones: runToUpdate.zones.map((zone) => ({
         ...zone,
         captures: zone.captures.map((zoneCapture) =>
-          zoneCapture.id === capture.id ? updater(zoneCapture) : zoneCapture,
+          zoneCapture.id === pokemonCaptured.id ? updater(zoneCapture) : zoneCapture,
         ),
       })),
     };
@@ -239,7 +234,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
     const nextNickname =
       normalizedNickname.length > 0 ? normalizedNickname : undefined;
 
-    if (nextNickname === capture.nickname) {
+    if (nextNickname === pokemonCaptured.nickname) {
       setIsEditingNickname(false);
       return;
     }
@@ -261,19 +256,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
         url: selectedOption.url,
         source: selectedOption.source,
         label: selectedOption.label,
-        ...(selectedOption.unownLetter
-          ? { unownLetter: selectedOption.unownLetter }
-          : {}),
-        ...(selectedOption.flabebeColor
-          ? { flabebeColor: selectedOption.flabebeColor }
-          : {}),
       },
-      ...(capture.pokemonId === UNOWN_ID && selectedOption.unownLetter
-        ? { unownLetter: selectedOption.unownLetter }
-        : {}),
-      ...(selectedOption.flabebeColor
-        ? { flabebeColor: selectedOption.flabebeColor }
-        : {}),
     }));
   }
 
@@ -297,9 +280,9 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
       ...(runToUpdate.customTypesByPokemonId ?? {}),
     };
     if (compactTypes.length > 0) {
-      customTypesByPokemonId[capture.pokemonId] = compactTypes;
+      customTypesByPokemonId[pokemonCaptured.pokemon.id] = compactTypes;
     } else {
-      delete customTypesByPokemonId[capture.pokemonId];
+      delete customTypesByPokemonId[pokemonCaptured.pokemon.id];
     }
 
     const nextRun = {
@@ -309,7 +292,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
           ? customTypesByPokemonId
           : undefined,
       team: runToUpdate.team.map((teamCapture) =>
-        teamCapture.pokemonId === capture.pokemonId
+        teamCapture.pokemon.id === pokemonCaptured.pokemon.id
           ? {
               ...teamCapture,
               customTypes: compactTypes.length > 0 ? compactTypes : undefined,
@@ -319,7 +302,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
       zones: runToUpdate.zones.map((zone) => ({
         ...zone,
         captures: zone.captures.map((zoneCapture) =>
-          zoneCapture.pokemonId === capture.pokemonId
+          zoneCapture.pokemon.id === pokemonCaptured.pokemon.id
             ? {
                 ...zoneCapture,
                 customTypes: compactTypes.length > 0 ? compactTypes : undefined,
@@ -382,19 +365,18 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
       ...(runToUpdate.customAbilitiesByPokemonId ?? {}),
     };
     if (nextPanel.length > 0) {
-      nextCustomAbilitiesByPokemonId[capture.pokemonId] = nextPanel;
+      nextCustomAbilitiesByPokemonId[pokemonCaptured.pokemon.id] = nextPanel;
     } else {
-      delete nextCustomAbilitiesByPokemonId[capture.pokemonId];
+      delete nextCustomAbilitiesByPokemonId[pokemonCaptured.pokemon.id];
     }
 
     // If an ability was removed from the panel, clear it from all captures
     // of this species that were using it — so no capture ends up with an
     // impossible ability value (mirrors what persistCustomTypes does for types).
     const clearAbilityIfRemoved = (c: Capture) => {
-      if (c.pokemonId !== capture.pokemonId) return c;
+      if (c.pokemon.id !== pokemonCaptured.pokemon.id) return c;
       if (c.ability && !nextPanel.includes(c.ability)) {
-        const { ability: _, ...rest } = c;
-        return rest as Capture;
+        return { ...c, ability: undefined };
       }
       return c;
     };
@@ -467,13 +449,18 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
             <Box sx={{ display: "flex", gap: 2, mb: 2.5 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={selectedSpriteUrl ?? getCaptureSpriteUrl(capture, true)}
+                src={
+                  pokemonCaptured.selectedSprite?.url ??
+                  (pokemonCaptured.isShiny
+                    ? pokemonCaptured.pokemon.sprites.shiny.default
+                    : pokemonCaptured.pokemon.sprites.normal.default)
+                }
                 alt={pokemonDisplayName}
                 onError={(event) => {
-                  const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
-                  if (event.currentTarget.src !== fallbackUrl) {
-                    event.currentTarget.src = fallbackUrl;
-                  }
+                  const fallbackUrl = pokemonCaptured.isShiny
+                    ? pokemonCaptured.pokemon.sprites.shiny.default
+                    : pokemonCaptured.pokemon.sprites.normal.default;
+                  event.currentTarget.src = fallbackUrl;
                 }}
                 style={{
                   width: "96px",
@@ -606,7 +593,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                         </>
                       )}
                     </Box>
-                    {capture.isShiny && (
+                    {pokemonCaptured.isShiny && (
                       <span style={{ fontSize: "1rem" }}>✨</span>
                     )}
                     {genderSymbol && (
@@ -735,9 +722,9 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                       )}
                     </>
                   ) : (
-                    data.types.map(({ type }) => (
+                    data.types.map((type) => (
                       <Box
-                        key={type.name}
+                        key={type}
                         sx={{
                           px: 1,
                           py: 0.25,
@@ -746,11 +733,11 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                           fontWeight: 600,
                           color: "#fff",
                           textTransform: "capitalize",
-                          background: typeColors[type.name] ?? "#888",
+                          background: typeColors[type] ?? "#888",
                           border: "2px solid #000",
                         }}
                       >
-                        {type.name}
+                        {type}
                       </Box>
                     ))
                   )}

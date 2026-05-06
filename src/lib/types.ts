@@ -1,19 +1,13 @@
 export interface CaptureSelectedSprite {
   url: string;
-  source: "deviantart" | "animated-catalog" | "static";
+  source: "alternatives" | "default";
   label?: string;
   unownLetter?: string;
-  flabebeColor?: "red" | "orange" | "yellow" | "blue" | "white";
 }
 
 export interface Capture {
   id: string;
-  pokemonId: number;
-  pokemonName: string;
-  pokemonNames?: {
-    fr?: string;
-    en?: string;
-  };
+  pokemon: PokemonData;
   nickname?: string;
   gender: "male" | "female" | "unknown";
   isShiny: boolean;
@@ -23,10 +17,6 @@ export interface Capture {
   /** The single ability of this captured Pokémon. In randomizer mode this is user-defined; in classic mode it is the ability observed in-game. */
   ability?: string;
   selectedSprite?: CaptureSelectedSprite;
-  /** For Unown captures: the chosen letter form, e.g. "a"–"z", "!", "?" */
-  unownLetter?: string;
-  /** For Flabebe captures: the chosen flower color form. */
-  flabebeColor?: "red" | "orange" | "yellow" | "blue" | "white";
   createdAt: number;
 }
 
@@ -35,7 +25,6 @@ export interface RandomizerOptions {
   randomizeAbilities: boolean;
   randomizeEncounters: boolean;
   randomizeEvolvedForms: boolean;
-  infiniteEvolution?: boolean;
 }
 
 export interface Zone {
@@ -73,35 +62,32 @@ export interface Run {
 
 export type ZoneStatus = "not-visited" | "visited" | "captured";
 
-export interface PokemonType {
-  name: string;
-  url: string;
-}
-
 export interface PokemonStat {
   base_stat: number;
   stat: { name: string };
 }
 
-export interface PokemonApiAbility {
+export interface PokemonAbility {
   ability: { name: string; url: string };
   is_hidden: boolean;
   slot: number;
 }
 
-export interface PokemonApiData {
+export interface PokemonData {
   id: number;
-  name: string;
-  sprites: {
-    front_default: string;
-    front_shiny: string;
-  };
-  types: Array<{ type: PokemonType }>;
-  abilities: PokemonApiAbility[];
+  technicalName: string;
+  alternativeTechnicalNames?: string[];
+  names?: { fr?: string; en?: string };
+  generation: number;
+  types: string[];
+  abilities: PokemonAbility[];
   stats: PokemonStat[];
-  base_experience: number;
   height: number;
   weight: number;
+  sprites: {
+    normal: { default: string; alternatives: string[]; excludeUrls?: string[] };
+    shiny: { default: string; alternatives: string[]; excludeUrls?: string[] };
+  };
 }
 
 export interface TypeEffectiveness {

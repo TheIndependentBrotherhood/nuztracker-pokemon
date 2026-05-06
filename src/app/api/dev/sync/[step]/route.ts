@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import path from "path";
 import fs from "fs";
 import { mergeAnimatedSpritesIntoPokemonList } from "@/lib/server/animatedSpritesMerge";
+import { PokemonAbility, PokemonData, PokemonStat } from "@/lib/types";
 
 export const dynamic = "force-static";
 
@@ -378,16 +379,15 @@ const IMMUNITY_MAP: Record<string, string[]> = {
 };
 
 // Map of abilities that add a weakness to a specific type
-const WEAKNESS_MAP: Record<string, string> = {
-};
+const WEAKNESS_MAP: Record<string, string> = {};
 
 // Map of abilities that reduce damage from specific types (values < 1 reduce, values > 1 amplify)
 const DAMAGE_REDUCTION_MAP: Record<string, Record<string, number>> = {
-  "thick-fat": { "fire": 0.5, "ice": 0.5 },
-  "heatproof": { "fire": 0.5 },
-  "purifying-salt": { "ghost": 0.5 },
+  "thick-fat": { fire: 0.5, ice: 0.5 },
+  heatproof: { fire: 0.5 },
+  "purifying-salt": { ghost: 0.5 },
   // Dry Skin: fire deals 1.25× damage (water is already handled via immuneTypes → heals)
-  "dry-skin": { "fire": 1.25 },
+  "dry-skin": { fire: 1.25 },
 };
 
 async function syncAbilities(send: SendFn) {
@@ -409,9 +409,7 @@ async function syncAbilities(send: SendFn) {
     total: abilityList.results.length,
   });
 
-  const current = readCurrentFile<{ abilities: unknown[] }>(
-    "abilities.json",
-  );
+  const current = readCurrentFile<{ abilities: unknown[] }>("abilities.json");
   const currentByName = new Map(
     ((current?.abilities ?? []) as { name: string }[]).map((a) => [a.name, a]),
   );
@@ -520,32 +518,19 @@ async function syncPokemonList(send: SendFn) {
   send({ type: "progress", message: "Fetching Pokémon list from PokeAPI…" });
   const POKEAPI = "https://pokeapi.co/api/v2";
 
-  type CurrentPokemonEntry = {
-    id: number;
-    technicalName: string;
-    alternativeTechnicalNames?: string[];
-    types?: string[];
-    generation?: number;
-    isLegendary?: boolean;
-    sprites?: {
-      normal?: { default?: string; alternatives?: string[] };
-      shiny?: { default?: string; alternatives?: string[] };
-    };
-  };
-
   const getTechnicalNames = (pokemon: {
     technicalName: string;
     alternativeTechnicalNames?: string[];
   }) => [pokemon.technicalName, ...(pokemon.alternativeTechnicalNames ?? [])];
 
-  const current = readCurrentFile<{ pokemon: CurrentPokemonEntry[] }>(
+  const current = readCurrentFile<{ pokemon: PokemonData[] }>(
     "pokemon-list.json",
   );
   const currentPokemon = current?.pokemon ?? [];
   const currentByCanonicalName = new Map(
     currentPokemon.map((p) => [p.technicalName, p]),
   );
-  const currentByAnyName = new Map<string, CurrentPokemonEntry>();
+  const currentByAnyName = new Map<string, PokemonData>();
   for (const pokemon of currentPokemon) {
     for (const technicalName of getTechnicalNames(pokemon)) {
       currentByAnyName.set(technicalName, pokemon);
@@ -564,7 +549,7 @@ async function syncPokemonList(send: SendFn) {
     total: listData.results.length,
   });
 
-  const incomingByCanonicalName = new Map<string, Record<string, unknown>>();
+  const incomingByCanonicalName = new Map<string, PokemonData>();
   for (let i = 0; i < listData.results.length; i++) {
     const p = listData.results[i];
 
@@ -572,13 +557,15 @@ async function syncPokemonList(send: SendFn) {
       id: number;
       name: string;
       types: { type: { name: string } }[];
+      abilities: PokemonAbility[];
+      stats: PokemonStat[];
+      height: number;
+      weight: number;
       sprites: { front_default: string | null };
       species: { url: string };
     }>(`${POKEAPI}/pokemon/${p.name}`);
 
     const species = await fetchJson<{
-      is_legendary: boolean;
-      is_mythical: boolean;
       generation: { name: string };
       names: { language: { name: string }; name: string }[];
     }>(details.species.url);
@@ -611,21 +598,7 @@ async function syncPokemonList(send: SendFn) {
 
     const existing = currentByAnyName.get(p.name);
     const canonicalName = existing?.technicalName ?? details.name;
-    const previousEntry = incomingByCanonicalName.get(canonicalName) as
-      | {
-          id: number;
-          technicalName: string;
-          alternativeTechnicalNames?: string[];
-          names: Record<string, string>;
-          types: string[];
-          isLegendary: boolean;
-          generation: number;
-          sprites: {
-            normal: { default: string; alternatives: string[] };
-            shiny: { default: string; alternatives: string[] };
-          };
-        }
-      | undefined;
+    const previousEntry = incomingByCanonicalName.get(canonicalName);
     const alternativeTechnicalNames = Array.from(
       new Set([
         ...(existing?.alternativeTechnicalNames ?? []),
@@ -635,40 +608,35 @@ async function syncPokemonList(send: SendFn) {
     ).sort((a, b) => a.localeCompare(b));
 
     incomingByCanonicalName.set(canonicalName, {
-      id: existing?.id ?? previousEntry?.id ?? details.id,
+      id: details.id,
       technicalName: canonicalName,
       alternativeTechnicalNames,
       names,
-      types:
-        existing?.types ??
-        previousEntry?.types ??
-        details.types.map((t) => t.type.name),
-      isLegendary:
-        (existing?.isLegendary ??
-          previousEntry?.isLegendary ??
-          species.is_legendary) ||
-        species.is_mythical,
-      generation:
-        existing?.generation ?? previousEntry?.generation ?? generation,
+      types: details.types.map((t) => t.type.name),
+      generation: generation,
+      abilities: details.abilities,
+      height: details.height,
+      weight: details.weight,
+      stats: details.stats,
       sprites: {
         normal: {
-          default:
-            existing?.sprites?.normal?.default ??
-            previousEntry?.sprites.normal.default ??
-            staticNormalUrl,
+          default: staticNormalUrl,
           alternatives:
             existing?.sprites?.normal?.alternatives ??
             previousEntry?.sprites.normal.alternatives ??
             [],
+          excludeUrls: existing?.sprites?.normal?.excludeUrls ??
+            previousEntry?.sprites.normal.excludeUrls ??
+            [],
         },
         shiny: {
-          default:
-            existing?.sprites?.shiny?.default ??
-            previousEntry?.sprites.shiny.default ??
-            staticShinyUrl,
+          default: staticShinyUrl,
           alternatives:
             existing?.sprites?.shiny?.alternatives ??
             previousEntry?.sprites.shiny.alternatives ??
+            [],
+          excludeUrls: existing?.sprites?.shiny?.excludeUrls ??
+            previousEntry?.sprites.shiny.excludeUrls ??
             [],
         },
       },
@@ -690,23 +658,8 @@ async function syncPokemonList(send: SendFn) {
   const modified: unknown[] = [];
   const deleted: unknown[] = [];
 
-  for (const p of incoming as {
-    technicalName: string;
-    id: number;
-    alternativeTechnicalNames?: string[];
-    types?: string[];
-    generation?: number;
-    isLegendary?: boolean;
-  }[]) {
-    const cur = currentByCanonicalName.get(p.technicalName) as
-      | {
-          id: number;
-          alternativeTechnicalNames?: string[];
-          types: string[];
-          generation: number;
-          isLegendary: boolean;
-        }
-      | undefined;
+  for (const p of incoming) {
+    const cur = currentByCanonicalName.get(p.technicalName);
     if (!cur) {
       added.push(p);
     } else {
@@ -721,7 +674,10 @@ async function syncPokemonList(send: SendFn) {
         cur.id !== p.id ||
         cur.types?.join(",") !== p.types?.join(",") ||
         cur.generation !== p.generation ||
-        cur.isLegendary !== p.isLegendary ||
+        cur.height !== p.height ||
+        cur.weight !== p.weight ||
+        cur.abilities?.join(",") !== p.abilities?.join(",") ||
+        cur.stats?.join(",") !== p.stats?.join(",") ||
         currentAlternativeTechnicalNames.join(",") !==
           incomingAlternativeTechnicalNames.join(",");
       if (coreChanged) {
@@ -925,22 +881,10 @@ async function syncRegions(send: SendFn) {
 // ─── animated-sprites sync ───────────────────────────────────────────────────
 
 async function syncAnimatedSprites(send: SendFn) {
-  type PokemonListEntry = {
-    id: number;
-    technicalName: string;
-    alternativeTechnicalNames?: string[];
-    generation: number;
-    sprite?: string;
-    sprites?: {
-      normal?: { default?: string; alternatives?: string[] };
-      shiny?: { default?: string; alternatives?: string[] };
-    };
-  };
-
   const current = readCurrentFile<{
     generatedAt?: string;
     totalCount?: number;
-    pokemon: PokemonListEntry[];
+    pokemon: PokemonData[];
   }>("pokemon-list.json");
 
   if (!current?.pokemon?.length) {
@@ -971,12 +915,12 @@ async function syncAnimatedSprites(send: SendFn) {
     incoming.pokemon.map((pokemon) => [pokemon.technicalName, pokemon]),
   );
 
-  const added: PokemonListEntry[] = [];
+  const added: PokemonData[] = [];
   const modified: Array<{
-    current: PokemonListEntry;
-    incoming: PokemonListEntry;
+    current: PokemonData;
+    incoming: PokemonData;
   }> = [];
-  const deleted: PokemonListEntry[] = [];
+  const deleted: PokemonData[] = [];
 
   for (const pokemon of incoming.pokemon) {
     const currentPokemon = currentByName.get(pokemon.technicalName);

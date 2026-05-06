@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Lang } from "@/i18n/translations";
-import { getLocalizedPokemonName, PokemonNames } from "@/lib/pokemon-api";
-import { Capture } from "@/lib/types";
+import { getLocalizedPokemonName, PokemonNames } from "@/lib/pokemon-data";
+import { Capture, PokemonData } from "@/lib/types";
 import { publicPath } from "@/lib/base-path";
 
 let pokemonNamesCache: Map<number, PokemonNames> | null = null;
@@ -14,7 +14,7 @@ async function loadPokemonNamesCache(): Promise<Map<number, PokemonNames>> {
     pokemonNamesPromise = fetch(publicPath("/data/pokemon-list.json"))
       .then((response) => response.json())
       .then(
-        (data: { pokemon?: Array<{ id: number; names?: PokemonNames }> }) => {
+        (data: { pokemon?: Array<PokemonData> }) => {
           const nextCache = new Map<number, PokemonNames>();
 
           for (const pokemon of data.pokemon ?? []) {
@@ -33,29 +33,8 @@ async function loadPokemonNamesCache(): Promise<Map<number, PokemonNames>> {
   return pokemonNamesPromise;
 }
 
-const UNOWN_POKEMON_ID = 201;
-const FLABEBE_POKEMON_ID = 669;
-
-function formatUnownLetter(letter: string): string {
-  if (letter === "!") return "!";
-  if (letter === "?") return "?";
-  return letter.toUpperCase();
-}
-
-function formatFlabebeColor(color: string): string {
-  const normalized = color.trim().toLowerCase();
-  if (!normalized) return "";
-  return normalized[0].toUpperCase() + normalized.slice(1);
-}
-
 export function getCaptureDisplayName(capture: Capture, lang: Lang): string {
-  const base = getLocalizedPokemonName(capture, lang);
-  if (capture.pokemonId === UNOWN_POKEMON_ID && capture.unownLetter) {
-    return `${base} (${formatUnownLetter(capture.unownLetter)})`;
-  }
-  if (capture.pokemonId === FLABEBE_POKEMON_ID && capture.flabebeColor) {
-    return `${base} (${formatFlabebeColor(capture.flabebeColor)})`;
-  }
+  const base = getLocalizedPokemonName(capture.pokemon, lang);
   return base;
 }
 
@@ -64,7 +43,7 @@ export function getCaptureDisplayLabel(capture: Capture, lang: Lang): string {
 }
 
 export function useCaptureDisplayName(capture: Capture, lang: Lang): string {
-  const cacheKey = `${capture.pokemonId}-${lang}`;
+  const cacheKey = `${capture.pokemon.id}-${lang}`;
   const [resolvedName, setResolvedName] = useState<{
     key: string;
     value: string;
@@ -72,7 +51,7 @@ export function useCaptureDisplayName(capture: Capture, lang: Lang): string {
   const storedName = getCaptureDisplayName(capture, lang);
 
   useEffect(() => {
-    if (capture.pokemonNames?.[lang]) {
+    if (capture.pokemon.names?.[lang]) {
       return;
     }
 
@@ -81,9 +60,9 @@ export function useCaptureDisplayName(capture: Capture, lang: Lang): string {
     loadPokemonNamesCache().then((cache) => {
       if (cancelled) return;
 
-      const names = cache.get(capture.pokemonId);
+      const names = cache.get(capture.pokemon.id);
       const nextResolvedName =
-        names?.[lang] ?? names?.en ?? names?.fr ?? capture.pokemonName;
+        names?.[lang] ?? names?.en ?? names?.fr ?? capture.pokemon.technicalName;
 
       setResolvedName({
         key: cacheKey,
@@ -96,9 +75,9 @@ export function useCaptureDisplayName(capture: Capture, lang: Lang): string {
     };
   }, [
     cacheKey,
-    capture.pokemonId,
-    capture.pokemonName,
-    capture.pokemonNames,
+    capture.pokemon.id,
+    capture.pokemon.technicalName,
+    capture.pokemon.names,
     lang,
   ]);
 

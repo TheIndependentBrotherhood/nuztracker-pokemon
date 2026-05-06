@@ -10,8 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Capture, PokemonApiData } from "@/lib/types";
-import { fetchPokemon, getCaptureSpriteFallbackUrl } from "@/lib/pokemon-api";
+import { Capture, PokemonData } from "@/lib/types";
 import { typeColors } from "@/lib/type-chart";
 import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import PokemonDetailModal from "@/components/run/modals/PokemonDetailModal";
@@ -19,20 +18,9 @@ import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useRunStore } from "@/store/runStore";
 import { publicPath } from "@/lib/base-path";
+import { getDefaultSprite, getPokemonById } from "@/lib/pokemon-data";
 
 const ITEMS_PER_PAGE = 20;
-
-interface PokemonListEntry {
-  id: number;
-  technicalName: string;
-  alternativeTechnicalNames?: string[];
-  names?: { fr?: string; en?: string };
-  types: string[];
-  sprites: {
-    normal: { default: string; alternatives: string[] };
-    shiny: { default: string; alternatives: string[] };
-  };
-}
 
 type SortOption = "dex" | "name" | "bst";
 type SortDir = "asc" | "desc";
@@ -50,10 +38,10 @@ export default function PokedexView({ runId }: Props) {
   const [sortBy, setSortBy] = useState<SortOption>("dex");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [currentPage, setCurrentPage] = useState(0);
-  const [pokedexEntries, setPokedexEntries] = useState<PokemonListEntry[]>([]);
-  const [pokemonData, setPokemonData] = useState<
-    Record<number, PokemonApiData>
-  >({});
+  const [pokedexEntries, setPokedexEntries] = useState<PokemonData[]>([]);
+  const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
+    {},
+  );
   const [selectedCapture, setSelectedCapture] = useState<Capture | null>(null);
   const run = runId ? runs.find((candidate) => candidate.id === runId) : null;
   const randomTypesMode = isRandomTypesMode(run);
@@ -66,7 +54,7 @@ export default function PokedexView({ runId }: Props) {
         const response = await fetch(publicPath("/data/pokemon-list.json"));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = (await response.json()) as {
-          pokemon?: PokemonListEntry[];
+          pokemon?: PokemonData[];
         };
 
         if (!cancelled) {
@@ -100,11 +88,14 @@ export default function PokedexView({ runId }: Props) {
         return;
       }
 
-      const dataMap: Record<number, PokemonApiData> = {};
+      const dataMap: Record<number, PokemonData> = {};
       await Promise.all(
         pokedexEntries.map(async (entry) => {
           try {
-            dataMap[entry.id] = await fetchPokemon(entry.id);
+            const data = await getPokemonById(entry.id);
+            if (data) {
+              dataMap[entry.id] = data;
+            }
           } catch (error) {
             // Keep list usable even when some details fail to load
             console.error(`Failed to fetch pokemon ${entry.id}:`, error);
@@ -296,11 +287,11 @@ export default function PokedexView({ runId }: Props) {
               ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
               : null;
             const fallbackTypes =
-              data?.types?.map((tValue) => tValue.type.name) ?? entry.types;
+              data?.types ?? entry.types;
             const rowCapture: Capture = {
               id: `pokedex-${entry.id}`,
               pokemonId: entry.id,
-              pokemonName: entry.technicalName,
+              pokemonName: entry.names[lang as "en" | "fr"] ?? entry.technicalName,
               pokemonNames: entry.names,
               customTypes: run?.customTypesByPokemonId?.[entry.id],
               gender: "unknown",
@@ -357,10 +348,10 @@ export default function PokedexView({ runId }: Props) {
                 <img
                   src={entry.sprites.normal.default}
                   alt={displayLabel}
-                  onError={(event) => {
-                    const fallbackUrl = getCaptureSpriteFallbackUrl(rowCapture);
-                    if (event.currentTarget.src !== fallbackUrl) {
-                      event.currentTarget.src = fallbackUrl;
+                  onError={async (event) => {
+                    const defaultSprite = await getDefaultSprite(entry.id);
+                    if (defaultSprite && event.currentTarget.src !== defaultSprite) {
+                      event.currentTarget.src = defaultSprite;
                     }
                   }}
                   style={{

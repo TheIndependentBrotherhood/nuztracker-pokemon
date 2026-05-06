@@ -27,11 +27,11 @@ import {
   type EffectivenessLabelKey,
   type TypeChartData,
 } from "@/lib/type-chart";
-import { fetchPokemon } from "@/lib/pokemon-api";
 import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
+import { getLocalizedPokemonName, getPokemonById } from "@/lib/pokemon-data";
 
 interface Props {
   run: Run;
@@ -72,12 +72,14 @@ export default function TypeAnalysis({ run }: Props) {
       const types = await Promise.all(
         run.team.map(async (c) => {
           try {
-            const data = await fetchPokemon(c.pokemonId);
-            return getCaptureTypesForRun(
-              c,
-              run,
-              data.types.map((t) => t.type.name),
-            );
+            if (c.pokemon && c.pokemon.types) {
+              return getCaptureTypesForRun(
+                c,
+                run,
+                c.pokemon.types,
+              );
+            }
+            return [];
           } catch {
             return [];
           }
@@ -227,7 +229,7 @@ export default function TypeAnalysis({ run }: Props) {
                     fontSize: "0.75rem",
                   }}
                 >
-                  {(c.nickname || c.pokemonName).slice(0, 6)}
+                  {(c.nickname || getLocalizedPokemonName(c.pokemon, lang)).slice(0, 6)}
                 </TableCell>
               ))}
               <TableCell
@@ -281,8 +283,9 @@ export default function TypeAnalysis({ run }: Props) {
                 const memberAbility = run.team[i]?.ability;
                 if (!memberAbility) return null; // no ability
                 const modified =
-                  getDefensesWithAbilities(types, [memberAbility])[attackType] ??
-                  1;
+                  getDefensesWithAbilities(types, [memberAbility])[
+                    attackType
+                  ] ?? 1;
                 // Return null if ability doesn't change this matchup
                 return modified !== (getDefenses(types)[attackType] ?? 1)
                   ? modified
@@ -394,9 +397,10 @@ export default function TypeAnalysis({ run }: Props) {
                               textAlign: "center",
                               color: "#000",
                               fontWeight: 700,
-                              border: abilityModified !== null
-                                ? "2px dashed #7c3aed"
-                                : "2px solid #000",
+                              border:
+                                abilityModified !== null
+                                  ? "2px dashed #7c3aed"
+                                  : "2px solid #000",
                               background: bg,
                               fontSize: "11px",
                               cursor: tooltipContent ? "help" : "default",
@@ -571,7 +575,7 @@ export default function TypeAnalysis({ run }: Props) {
                     fontSize: "0.75rem",
                   }}
                 >
-                  {(c.nickname || c.pokemonName).slice(0, 6)}
+                  {(c.nickname || getLocalizedPokemonName(c.pokemon, lang)).slice(0, 6)}
                 </TableCell>
               ))}
               <TableCell
@@ -893,21 +897,23 @@ export default function TypeAnalysis({ run }: Props) {
       );
     }
 
-    const effectivenessLabelToMultiplier: Record<EffectivenessLabelKey, number> =
-      {
-        immune: 0,
-        veryWeak: 4,
-        weak: 2,
-        neutral: 1,
-        resistant: 0.5,
-        veryResistant: 0.25,
-        hyperEffective: 4,
-        superEffective: 2,
-        notVeryEffective: 0.5,
-        veryNotEffective: 0.25,
-        noEffect: 0,
-        unknown: 1,
-      };
+    const effectivenessLabelToMultiplier: Record<
+      EffectivenessLabelKey,
+      number
+    > = {
+      immune: 0,
+      veryWeak: 4,
+      weak: 2,
+      neutral: 1,
+      resistant: 0.5,
+      veryResistant: 0.25,
+      hyperEffective: 4,
+      superEffective: 2,
+      notVeryEffective: 0.5,
+      veryNotEffective: 0.25,
+      noEffect: 0,
+      unknown: 1,
+    };
 
     const rawCombinationDefenses = getDefensesWithAbilities(
       selectedTypes,
@@ -1040,9 +1046,7 @@ export default function TypeAnalysis({ run }: Props) {
 
             {/* Selected abilities */}
             {selectedAbilities.length > 0 && (
-              <Box
-                sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
                 {selectedAbilities.map((abilityName) => {
                   const entry = abilitiesCache.abilities.find(
                     (a) => a.name === abilityName,

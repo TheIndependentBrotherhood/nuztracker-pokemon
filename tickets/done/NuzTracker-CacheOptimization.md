@@ -36,7 +36,6 @@ Listing complet de tous les Pokémon disponibles (Gen 1-9).
       "name": "bulbasaur",
       "types": ["grass", "poison"],
       "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/pokemon/1.png",
-      "isLegendary": false,
       "generation": 1
     },
     {
@@ -44,7 +43,6 @@ Listing complet de tous les Pokémon disponibles (Gen 1-9).
       "name": "pikachu",
       "types": ["electric"],
       "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/pokemon/25.png",
-      "isLegendary": false,
       "generation": 1
     },
     ...
@@ -62,7 +60,7 @@ const getPokemonById = (id: number) =>
   pokemonList.pokemon.find((p) => p.id === id);
 
 // Search par nom
-const searchPokemon = (name: string) =>
+const searchPokemonByName = (name: string) =>
   pokemonList.pokemon.filter((p) => p.name.includes(name.toLowerCase()));
 ```
 
@@ -465,7 +463,6 @@ async function generatePokemonList() {
         types: details.types.map((t: any) => t.type.name),
         sprite: details.sprites.front_default,
         generation: Math.ceil(details.id / 151), // Estimation simple
-        isLegendary: false, // À améliorer via autre API call
       });
     }
 

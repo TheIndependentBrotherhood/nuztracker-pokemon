@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import SyncPanel from "@/components/dev/SyncPanel";
 import { publicPath } from "@/lib/base-path";
+import { PokemonData } from "@/lib/types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -27,16 +28,6 @@ interface MissingReport {
   generatedAt: string;
   summaryByGeneration: Record<string, GenSummary>;
   byGeneration: Record<string, GenData>;
-}
-
-interface PokemonListEntry {
-  id: number;
-  technicalName: string;
-  generation: number;
-  sprites?: {
-    normal?: { alternatives?: string[] };
-    shiny?: { alternatives?: string[] };
-  };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -70,7 +61,7 @@ function isAnimatedUrl(url: string): boolean {
 }
 
 function buildMissingReportFromPokemonList(
-  pokemon: PokemonListEntry[],
+  pokemon: PokemonData[],
 ): MissingReport {
   const byGeneration: Record<string, GenData> = Object.fromEntries(
     GEN_ORDER.map((gen) => [
@@ -296,7 +287,7 @@ export default function AnimatedSpritesPage() {
   useEffect(() => {
     fetch(publicPath("/data/pokemon-list.json"))
       .then((r) => (r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`)))
-      .then((data: { pokemon?: PokemonListEntry[] }) => {
+      .then((data: { pokemon?: PokemonData[] }) => {
         setReport(buildMissingReportFromPokemonList(data.pokemon ?? []));
       })
       .catch((e: unknown) => setError(String(e)));

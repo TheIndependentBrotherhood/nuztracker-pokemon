@@ -1,17 +1,13 @@
 "use client";
 
 import { Box } from "@mui/material";
-import { Capture, PokemonApiData, Run } from "@/lib/types";
-import {
-  getCaptureSpriteFallbackUrl,
-  getCaptureSpriteUrl,
-} from "@/lib/pokemon-api";
+import { Capture, PokemonData, Run } from "@/lib/types";
 import { typeColors } from "@/lib/type-chart";
 import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 
 interface Props {
   team: Capture[];
-  pokemonData: Record<number, PokemonApiData>;
+  pokemonData: Record<number, PokemonData>;
   run?: Run;
   showTypes?: boolean;
   tightTypes?: boolean;
@@ -42,8 +38,8 @@ export default function TeamColumn({
       }}
     >
       {team.map((capture) => {
-        const data = pokemonData[capture.pokemonId];
-        const fallbackTypes = data?.types?.map((t) => t.type.name) ?? [];
+        const data = pokemonData[capture.pokemon.id];
+        const fallbackTypes = data?.types ?? [];
         const resolvedTypes = getCaptureTypesForRun(
           capture,
           run,
@@ -85,11 +81,12 @@ export default function TeamColumn({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getCaptureSpriteUrl(capture)}
-                data-export-fallback-src={getCaptureSpriteFallbackUrl(capture)}
-                alt={capture.pokemonName}
+                src={capture.selectedSprite?.url || (capture.isShiny ? capture.pokemon.sprites.shiny.default : capture.pokemon.sprites.normal.default)}
+                alt={capture.pokemon.technicalName}
                 onError={(event) => {
-                  const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
+                  const fallbackUrl = capture.isShiny
+                    ? capture.pokemon.sprites.shiny.default
+                    : capture.pokemon.sprites.normal.default;
                   if (event.currentTarget.src !== fallbackUrl) {
                     event.currentTarget.src = fallbackUrl;
                   }

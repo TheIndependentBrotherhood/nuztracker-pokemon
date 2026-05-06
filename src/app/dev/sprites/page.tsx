@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { publicPath } from "@/lib/base-path";
+import { PokemonData } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,16 +41,6 @@ interface SpriteMap {
     unmatchedSprites: number;
   };
   mapping: Record<string, SpriteEntry[]>;
-}
-
-interface PokemonListEntry {
-  id: number;
-  name: string;
-  names: { fr: string; en: string };
-  sprites: {
-    normal: { default: string; alternatives: string[] };
-    shiny: { default: string; alternatives: string[] };
-  };
 }
 
 type SpriteCorrections = Record<string, string>;
@@ -478,7 +469,7 @@ export default function DevSpritesPage() {
   );
   const [spriteMap, setSpriteMap] = useState<SpriteMap | null>(null);
   const [pokemonNames, setPokemonNames] = useState<
-    Record<string, PokemonListEntry>
+    Record<string, PokemonData>
   >({});
   const [spriteCorrections, setSpriteCorrections] = useState<SpriteCorrections>(
     {},
@@ -512,7 +503,7 @@ export default function DevSpritesPage() {
         const listRes = await fetch(publicPath("/data/pokemon-list.json"));
         if (!listRes.ok) throw new Error("Failed to fetch data files");
 
-        const list: { pokemon: PokemonListEntry[] } = await listRes.json();
+        const list: { pokemon: PokemonData[] } = await listRes.json();
 
         const mergedMapping: Record<string, SpriteEntry[]> = {};
 
@@ -535,27 +526,27 @@ export default function DevSpritesPage() {
           const shinyDefault =
             p.sprites?.shiny?.default ?? toPokeApiShinyUrl(normalDefault);
 
-          pushSprite(p.name, {
-            alt: `Static fallback ${p.name}`,
-            sourceName: `pokemon-list-static-${p.name}`,
-            normalizedSource: `pokemon-list-static-${p.name}`,
+          pushSprite(p.technicalName, {
+            alt: `Static fallback ${p.technicalName}`,
+            sourceName: `pokemon-list-static-${p.technicalName}`,
+            normalizedSource: `pokemon-list-static-${p.technicalName}`,
             file: getFileNameFromUrl(normalDefault),
             url: normalDefault,
             dexId: p.id,
-            candidates: [p.name],
+            candidates: [p.technicalName],
             spriteVariant: "normal",
             provider: "pokemon-list-static",
             isStaticFallback: true,
           });
 
-          pushSprite(p.name, {
-            alt: `Static shiny fallback ${p.name}`,
-            sourceName: `pokemon-list-static-shiny-${p.name}`,
-            normalizedSource: `pokemon-list-static-shiny-${p.name}`,
+          pushSprite(p.technicalName, {
+            alt: `Static shiny fallback ${p.technicalName}`,
+            sourceName: `pokemon-list-static-shiny-${p.technicalName}`,
+            normalizedSource: `pokemon-list-static-shiny-${p.technicalName}`,
             file: getFileNameFromUrl(shinyDefault),
             url: shinyDefault,
             dexId: p.id,
-            candidates: [p.name],
+            candidates: [p.technicalName],
             spriteVariant: "shiny",
             provider: "pokemon-list-static",
             isStaticFallback: true,
@@ -563,28 +554,28 @@ export default function DevSpritesPage() {
 
           // Also add alternatives from new format
           for (const altUrl of p.sprites?.normal?.alternatives ?? []) {
-            pushSprite(p.name, {
-              alt: `Alternative ${p.name}`,
-              sourceName: `pokemon-list-alt-${p.name}`,
-              normalizedSource: `pokemon-list-alt-${p.name}`,
+            pushSprite(p.technicalName, {
+              alt: `Alternative ${p.technicalName}`,
+              sourceName: `pokemon-list-alt-${p.technicalName}`,
+              normalizedSource: `pokemon-list-alt-${p.technicalName}`,
               file: getFileNameFromUrl(altUrl),
               url: altUrl,
               dexId: p.id,
-              candidates: [p.name],
+              candidates: [p.technicalName],
               spriteVariant: "normal",
               provider: "animated-catalog",
               isStaticFallback: false,
             });
           }
           for (const altUrl of p.sprites?.shiny?.alternatives ?? []) {
-            pushSprite(p.name, {
-              alt: `Alternative shiny ${p.name}`,
-              sourceName: `pokemon-list-alt-shiny-${p.name}`,
-              normalizedSource: `pokemon-list-alt-shiny-${p.name}`,
+            pushSprite(p.technicalName, {
+              alt: `Alternative shiny ${p.technicalName}`,
+              sourceName: `pokemon-list-alt-shiny-${p.technicalName}`,
+              normalizedSource: `pokemon-list-alt-shiny-${p.technicalName}`,
               file: getFileNameFromUrl(altUrl),
               url: altUrl,
               dexId: p.id,
-              candidates: [p.name],
+              candidates: [p.technicalName],
               spriteVariant: "shiny",
               provider: "animated-catalog",
               isStaticFallback: false,
@@ -608,9 +599,9 @@ export default function DevSpritesPage() {
 
         setSpriteMap(mergedSpriteMap);
 
-        const nameMap: Record<string, PokemonListEntry> = {};
+        const nameMap: Record<string, PokemonData> = {};
         for (const p of list.pokemon) {
-          nameMap[p.name] = p;
+          nameMap[p.technicalName] = p;
         }
         setPokemonNames(nameMap);
 

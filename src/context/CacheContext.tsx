@@ -14,7 +14,6 @@ export interface CachedPokemon {
     normal: { default: string; alternatives: string[] };
     shiny: { default: string; alternatives: string[] };
   };
-  isLegendary: boolean;
   generation: number;
 }
 

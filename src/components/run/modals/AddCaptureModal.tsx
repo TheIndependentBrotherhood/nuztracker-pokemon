@@ -17,15 +17,12 @@ import {
 import { useRunStore } from "@/store/runStore";
 import {
   getAvailableCaptureSpriteOptions,
-  searchPokemon,
-  getPokemonIdFromUrl,
-  getSpriteFallbackUrl,
-  getSpriteUrl,
-  fetchPokemon,
+  getLocalizedPokemonName,
+  getPokemonById,
+  searchPokemonByName,
   type CaptureSpriteOption,
-  type PokemonSearchResult,
-} from "@/lib/pokemon-api";
-import { Capture, PokemonApiData } from "@/lib/types";
+} from "@/lib/pokemon-data";
+import { Capture, PokemonData } from "@/lib/types";
 import { TYPES, typeColors } from "@/lib/type-chart";
 import { isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -52,17 +49,12 @@ export default function AddCaptureModal({
   const tr = translations;
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<PokemonSearchResult[]>([]);
-  const [selected, setSelected] = useState<{
-    name: string;
-    id: number;
-    names?: { fr?: string; en?: string };
-  } | null>(null);
-  const [pokemonData, setPokemonData] = useState<PokemonApiData | null>(null);
+  const [results, setResults] = useState<PokemonData[]>([]);
+  const [selected, setSelected] = useState<PokemonData | null>(null);
+  const [pokemonData, setPokemonData] = useState<PokemonData | null>(null);
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
   const [isShiny, setIsShiny] = useState(forceShiny);
-  const [unownLetter, setUnownLetter] = useState<string | null>(null);
   const [spriteOptions, setSpriteOptions] = useState<CaptureSpriteOption[]>([]);
   const [selectedSpriteUrl, setSelectedSpriteUrl] = useState<string | null>(
     null,
@@ -94,22 +86,25 @@ export default function AddCaptureModal({
 
   useEffect(() => {
     // Reset ability draft & panel when Pokémon changes; pre-fill panel from run
-    setCustomAbilityDraft(null);
-    setAbilitySearch("");
-    if (selected && run?.customAbilitiesByPokemonId) {
-      setAbilityPanelDraft(run.customAbilitiesByPokemonId[selected.id] ?? []);
-    } else {
-      setAbilityPanelDraft([]);
-    }
-
     // Load pokemon data
-    if (selected) {
-      fetchPokemon(selected.id)
-        .then(setPokemonData)
-        .catch(() => setPokemonData(null));
-    } else {
-      setPokemonData(null);
-    }
+    // Defer all setState calls to avoid cascading renders
+    queueMicrotask(() => {
+      setCustomAbilityDraft(null);
+      setAbilitySearch("");
+      if (selected && run?.customAbilitiesByPokemonId) {
+        setAbilityPanelDraft(run.customAbilitiesByPokemonId[selected.id] ?? []);
+      } else {
+        setAbilityPanelDraft([]);
+      }
+
+      if (selected) {
+        getPokemonById(selected.id)
+          .then(setPokemonData)
+          .catch(() => setPokemonData(null));
+      } else {
+        setPokemonData(null);
+      }
+    });
   }, [selected, run?.customAbilitiesByPokemonId]);
 
   const canAddCapture = Boolean(
@@ -131,7 +126,6 @@ export default function AddCaptureModal({
       setLoadingSpriteOptions(true);
       const options = await getAvailableCaptureSpriteOptions({
         pokemonId: selected.id,
-        pokemonName: selected.name,
         isShiny,
       });
 
@@ -144,13 +138,6 @@ export default function AddCaptureModal({
             ? prev
             : (options[0]?.url ?? null);
 
-        if (selected.id === UNOWN_ID) {
-          const selectedOption = options.find(
-            (option) => option.url === nextSelectedUrl,
-          );
-          setUnownLetter(selectedOption?.unownLetter ?? null);
-        }
-
         return nextSelectedUrl;
       });
       setLoadingSpriteOptions(false);
@@ -161,6 +148,16 @@ export default function AddCaptureModal({
     return () => {
       cancelled = true;
     };
+  }, [selected, isShiny]);
+
+  useEffect(() => {
+    const loadDefaultSpriteUrl = async () => {
+      if (!selected) {
+        return;
+      }
+    };
+
+    void loadDefaultSpriteUrl();
   }, [selected, isShiny]);
 
   useEffect(() => {
@@ -179,7 +176,7 @@ export default function AddCaptureModal({
         setSearching(true);
       }
 
-      const r = await searchPokemon(query, lang);
+      const r = await searchPokemonByName(query);
 
       if (cancelled) return;
 
@@ -194,18 +191,14 @@ export default function AddCaptureModal({
     };
   }, [query, lang]);
 
-  async function handleSelect(item: PokemonSearchResult) {
-    const id = getPokemonIdFromUrl(item.url);
-    setSelected({ name: item.technicalName, id, names: item.names });
-    setQuery(item.displayName);
+  async function handleSelect(pokemon: PokemonData) {
+    setSelected(pokemon);
+    setQuery(getLocalizedPokemonName(pokemon, lang));
     setResults([]);
     setSelectedSpriteUrl(null);
     setSpriteOptions([]);
-    if (id !== UNOWN_ID) {
-      setUnownLetter(null);
-    }
 
-    const knownTypes = run?.customTypesByPokemonId?.[id] ?? [];
+    const knownTypes = run?.customTypesByPokemonId?.[pokemon.id] ?? [];
     setCustomTypesDraft(knownTypes);
     setShowSecondTypeSlot(Boolean(knownTypes[1]));
   }
@@ -256,9 +249,7 @@ export default function AddCaptureModal({
       runId,
       zoneId,
       {
-        pokemonId: selected.id,
-        pokemonName: selected.name,
-        pokemonNames: selected.names,
+        pokemon: selected,
         nickname: nickname || undefined,
         gender,
         isShiny,
@@ -273,23 +264,8 @@ export default function AddCaptureModal({
                 url: selectedSprite.url,
                 source: selectedSprite.source,
                 label: selectedSprite.label,
-                ...(selectedSprite.unownLetter
-                  ? { unownLetter: selectedSprite.unownLetter }
-                  : {}),
-                ...(selectedSprite.flabebeColor
-                  ? { flabebeColor: selectedSprite.flabebeColor }
-                  : {}),
               },
             }
-          : {}),
-        ...(selected.id === UNOWN_ID
-          ? {
-              unownLetter:
-                selectedSprite?.unownLetter ?? unownLetter ?? undefined,
-            }
-          : {}),
-        ...(selectedSprite?.flabebeColor
-          ? { flabebeColor: selectedSprite.flabebeColor }
           : {}),
       },
       // Pass the ability panel so it gets persisted on the run
@@ -400,24 +376,16 @@ export default function AddCaptureModal({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={
-                  selectedSpriteUrl ??
-                  getSpriteUrl(
-                    selected.id,
-                    isShiny,
-                    true,
-                    unownLetter ?? undefined,
-                  )
+                  isShiny
+                    ? selected.sprites.shiny.default
+                    : selected.sprites.normal.default
                 }
-                alt={`${isShiny ? "Shiny " : ""}${selected.name} sprite`}
+                alt={`${isShiny ? "Shiny " : ""}${getLocalizedPokemonName(selected, lang)} sprite`}
                 onError={(event) => {
-                  const fallbackUrl = getSpriteFallbackUrl(
-                    selected.id,
-                    isShiny,
-                    unownLetter ?? undefined,
-                  );
-                  if (event.currentTarget.src !== fallbackUrl) {
-                    event.currentTarget.src = fallbackUrl;
-                  }
+                  const fallbackUrl = isShiny
+                    ? selected.sprites.shiny.default
+                    : selected.sprites.normal.default;
+                  event.currentTarget.src = fallbackUrl;
                 }}
                 style={{
                   width: "48px",
@@ -448,7 +416,7 @@ export default function AddCaptureModal({
             >
               {results.map((r) => (
                 <Box
-                  key={r.url}
+                  key={r.technicalName}
                   component="button"
                   onClick={() => handleSelect(r)}
                   sx={{
@@ -476,7 +444,7 @@ export default function AddCaptureModal({
                     },
                   }}
                 >
-                  {`${r.displayName} (${r.technicalName})`}
+                  {`${getLocalizedPokemonName(r, lang)} (${r.technicalName})`}
                 </Box>
               ))}
             </Box>
@@ -525,11 +493,9 @@ export default function AddCaptureModal({
                   {spriteOptions.map((option) => {
                     const isSelectedSprite = selectedSpriteUrl === option.url;
                     const sourceTitle =
-                      option.source === "deviantart"
-                        ? "DeviantArt"
-                        : option.source === "animated-catalog"
-                          ? "Animated"
-                          : "Static";
+                      option.source === "alternatives"
+                        ? "Alternative"
+                        : "Default";
 
                     return (
                       <Box
@@ -537,9 +503,6 @@ export default function AddCaptureModal({
                         component="button"
                         onClick={() => {
                           setSelectedSpriteUrl(option.url);
-                          if (selected.id === UNOWN_ID) {
-                            setUnownLetter(option.unownLetter ?? null);
-                          }
                         }}
                         title={`${sourceTitle} • ${option.label}`}
                         sx={{

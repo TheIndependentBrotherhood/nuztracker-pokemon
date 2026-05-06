@@ -1,3 +1,5 @@
+import { PokemonData } from "../types";
+
 interface SheetSourceConfig {
   key: string;
   generation: number;
@@ -107,29 +109,10 @@ interface AnimatedSpriteRecord {
   };
 }
 
-export interface MergePokemonListEntry {
-  id: number;
-  technicalName: string;
-  alternativeTechnicalNames?: string[];
-  generation: number;
-  sprites?: {
-    normal?: {
-      default?: string;
-      alternatives?: string[];
-      excludeUrls?: string[];
-    };
-    shiny?: {
-      default?: string;
-      alternatives?: string[];
-      excludeUrls?: string[];
-    };
-  };
-}
-
 interface MergePokemonListFile {
   generatedAt?: string;
   totalCount?: number;
-  pokemon: MergePokemonListEntry[];
+  pokemon: PokemonData[];
 }
 
 interface ProgressReporter {
@@ -434,7 +417,7 @@ function getTechnicalNames(entry: {
   return [entry.technicalName, ...(entry.alternativeTechnicalNames ?? [])];
 }
 
-function ensureSpriteStructure(entry: MergePokemonListEntry) {
+function ensureSpriteStructure(entry: PokemonData) {
   const baseDefault =
     entry.sprites?.normal?.default ??
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`;

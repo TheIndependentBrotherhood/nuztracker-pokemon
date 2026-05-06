@@ -12,48 +12,40 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { Capture, Run } from "@/lib/types";
+import { Capture, PokemonData, Run } from "@/lib/types";
 import {
   getAvailableEvolutions,
-  fetchPokemon,
-  getCaptureSpriteUrl,
-  getCaptureSpriteFallbackUrl,
-  type PokemonEvolution,
-} from "@/lib/pokemon-api";
+} from "@/lib/pokemon-data";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 
 interface Props {
-  capture: Capture;
+  pokemonCaptured: Capture;
   run: Run;
-  runId: string;
-  zoneId: string;
   onClose: () => void;
   onEvolveComplete?: (evolvedCapture: Capture) => void;
 }
 
 export default function EvolutionModal({
-  capture,
+  pokemonCaptured,
   run,
-  runId,
-  zoneId,
   onClose,
   onEvolveComplete,
 }: Props) {
   const { updateRun } = useRunStore();
   const { lang } = useLanguage();
   const tr = translations;
-  const [evolutions, setEvolutions] = useState<PokemonEvolution[]>([]);
+  const [evolutions, setEvolutions] = useState<PokemonData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvolution, setSelectedEvolution] =
-    useState<PokemonEvolution | null>(null);
+    useState<PokemonData | null>(null);
 
   useEffect(() => {
     async function loadEvolutions() {
       setLoading(true);
       try {
-        const available = await getAvailableEvolutions(capture, run);
+        const available = await getAvailableEvolutions(pokemonCaptured.pokemon, run);
         setEvolutions(available);
       } catch (error) {
         console.error("Failed to load evolutions:", error);
@@ -64,33 +56,28 @@ export default function EvolutionModal({
     }
 
     loadEvolutions();
-  }, [capture, run]);
+  }, [pokemonCaptured, run]);
 
   const handleEvolve = async () => {
     if (!selectedEvolution) return;
 
     try {
-      // Fetch the new pokemon data
-      const newPokemon = await fetchPokemon(selectedEvolution.id);
-
       // Create the evolved capture
       const evolvedCapture = {
-        ...capture,
-        pokemonId: selectedEvolution.id,
-        pokemonName: selectedEvolution.name,
-        pokemonNames: selectedEvolution.names,
+        ...pokemonCaptured,
+        pokemon: selectedEvolution,
       };
 
       // Update the run with the evolved capture
       const updatedRun = {
         ...run,
         team: run.team.map((teamCapture) =>
-          teamCapture.id === capture.id ? evolvedCapture : teamCapture,
+          teamCapture.id === pokemonCaptured.id ? evolvedCapture : teamCapture,
         ),
         zones: run.zones.map((zone) => ({
           ...zone,
           captures: zone.captures.map((zoneCapture) =>
-            zoneCapture.id === capture.id ? evolvedCapture : zoneCapture,
+            zoneCapture.id === pokemonCaptured.id ? evolvedCapture : zoneCapture,
           ),
         })),
       };
@@ -151,7 +138,7 @@ export default function EvolutionModal({
         </Typography>
         <Grid container spacing={1.5}>
           {evolutions.map((evolution) => (
-            <Grid item xs={6} key={evolution.id}>
+            <Grid key={evolution.id} size={{ xs: 6 }}>
               <Box
                 component="button"
                 onClick={() => setSelectedEvolution(evolution)}
@@ -183,8 +170,12 @@ export default function EvolutionModal({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${evolution.id}.png`}
-                  alt={evolution.name}
+                  src={
+                    pokemonCaptured.isShiny
+                      ? evolution.sprites.shiny.default
+                      : evolution.sprites.normal.default
+                  }
+                  alt={evolution.technicalName}
                   style={{
                     width: "64px",
                     height: "64px",
@@ -202,7 +193,7 @@ export default function EvolutionModal({
                     textTransform: "capitalize",
                   }}
                 >
-                  {evolution.names?.[lang] || evolution.name}
+                  {evolution.names?.[lang] || evolution.technicalName}
                 </Typography>
               </Box>
             </Grid>

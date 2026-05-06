@@ -6,10 +6,6 @@ import { Capture, Zone } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "../modals/AddCaptureModal";
 import PokemonDetailModal from "../modals/PokemonDetailModal";
-import {
-  getCaptureSpriteFallbackUrl,
-  getCaptureSpriteUrl,
-} from "@/lib/pokemon-api";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import {
@@ -40,7 +36,6 @@ function CaptureThumbnail({
   const displayLabel = useCaptureDisplayLabel(capture, lang);
   const { removeCapture } = useRunStore();
   const [showPokemonDetail, setShowPokemonDetail] = useState(false);
-  const tr = translations;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,10 +83,12 @@ function CaptureThumbnail({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={getCaptureSpriteUrl(capture, true)}
+            src={capture.selectedSprite?.url || (capture.isShiny ? capture.pokemon.sprites.shiny.default : capture.pokemon.sprites.normal.default)}
             alt={displayName}
             onError={(event) => {
-              const fallbackUrl = getCaptureSpriteFallbackUrl(capture);
+              const fallbackUrl = capture.isShiny
+                ? capture.pokemon.sprites.shiny.default
+                : capture.pokemon.sprites.normal.default;
               if (event.currentTarget.src !== fallbackUrl) {
                 event.currentTarget.src = fallbackUrl;
               }

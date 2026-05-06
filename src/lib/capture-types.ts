@@ -5,12 +5,12 @@ export function isRandomTypesMode(run: Run | null | undefined): boolean {
 }
 
 export function getCaptureTypesForRun(
-  capture: Pick<Capture, "pokemonId" | "customTypes">,
+  pokemonCaptured: Capture,
   run: Run | null | undefined,
   fallbackTypes: string[] = [],
 ): string[] {
-  if (capture.customTypes && capture.customTypes.length > 0) {
-    return capture.customTypes.filter(Boolean);
+  if (pokemonCaptured.customTypes && pokemonCaptured.customTypes.length > 0) {
+    return pokemonCaptured.customTypes.filter(Boolean);
   }
 
   if (!isRandomTypesMode(run)) {
@@ -18,8 +18,8 @@ export function getCaptureTypesForRun(
   }
 
   const knownTypes =
-    capture.customTypes ??
-    run?.customTypesByPokemonId?.[capture.pokemonId] ??
+    pokemonCaptured.customTypes ??
+    run?.customTypesByPokemonId?.[pokemonCaptured.pokemon.id] ??
     [];
 
   return knownTypes.filter(Boolean);

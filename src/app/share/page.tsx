@@ -3,27 +3,25 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Box } from "@mui/material";
-import { Capture, PokemonApiData, Run } from "@/lib/types";
+import { Capture, PokemonData, Run } from "@/lib/types";
 import { decodeTeam } from "@/lib/share";
-import { fetchPokemon } from "@/lib/pokemon-api";
+import { getPokemonById } from "@/lib/pokemon-data";
 import TeamColumn from "@/components/share/TeamColumn";
 
 function ShareContent() {
   const searchParams = useSearchParams();
   const showTypes = searchParams.get("showTypes") !== "false";
-  const tightTypes =
-    showTypes && searchParams.get("tightTypes") === "true";
+  const tightTypes = showTypes && searchParams.get("tightTypes") === "true";
   const [team, setTeam] = useState<Capture[]>([]);
   const [shareRun, setShareRun] = useState<Run | undefined>(undefined);
-  const [pokemonData, setPokemonData] = useState<
-    Record<number, PokemonApiData>
-  >({});
+  const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const encoded = searchParams.get("team");
     if (!encoded) {
-      setLoading(false);
       return;
     }
     decodeTeam(encoded).then(async (captures) => {
@@ -35,7 +33,7 @@ function ShareContent() {
         const customTypesByPokemonId: Record<number, string[]> = {};
         for (const capture of captures) {
           if (capture.customTypes && capture.customTypes.length > 0) {
-            customTypesByPokemonId[capture.pokemonId] = capture.customTypes;
+            customTypesByPokemonId[capture.pokemon.id] = capture.customTypes;
           }
         }
 
@@ -65,11 +63,14 @@ function ShareContent() {
       }
 
       // Fetch pokemon data for types
-      const dataMap: Record<number, PokemonApiData> = {};
+      const dataMap: Record<number, PokemonData> = {};
       await Promise.all(
         captures.map(async (c) => {
           try {
-            dataMap[c.pokemonId] = await fetchPokemon(c.pokemonId);
+            const data = await getPokemonById(c.pokemon.id);
+            if (data) {
+              dataMap[c.pokemon.id] = data;
+            }
           } catch {
             // silently fail
           }
