@@ -54,10 +54,17 @@ function TeamPreviewPokemonTile({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={pokemonCaptured.selectedSprite?.url ?? (pokemonCaptured.isShiny ? pokemonCaptured.pokemon.sprites.shiny.default : pokemonCaptured.pokemon.sprites.normal.default)}
+        src={
+          pokemonCaptured.selectedSprite?.url ??
+          (pokemonCaptured.isShiny
+            ? pokemonCaptured.pokemon.sprites.shiny.default
+            : pokemonCaptured.pokemon.sprites.normal.default)
+        }
         alt={displayName}
         onError={(event) => {
-          const fallbackUrl = pokemonCaptured.isShiny ? pokemonCaptured.pokemon.sprites.shiny.default : pokemonCaptured.pokemon.sprites.normal.default;
+          const fallbackUrl = pokemonCaptured.isShiny
+            ? pokemonCaptured.pokemon.sprites.shiny.default
+            : pokemonCaptured.pokemon.sprites.normal.default;
           event.currentTarget.src = fallbackUrl;
         }}
         style={{
@@ -151,6 +158,13 @@ export default function StatsBar({
       acc + z.captures.filter((c: Capture) => c.isDead).length,
     0,
   );
+
+  // Get last 3 dead pokémons for RIP export (sorted by death time, most recent first)
+  const deadPokemon = run.zones
+    .flatMap((z: Zone) => z.captures)
+    .filter((c: Capture) => c.isDead)
+    .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
+  const lastThreeDeadPokemon = deadPokemon.slice(-3);
 
   // Export handlers for team stats card
   async function handleOpenExportPng() {
@@ -278,6 +292,108 @@ export default function StatsBar({
     }
   }
 
+  // Export handlers for RIP
+  async function handleOpenExportRipPng() {
+    setExporting(true);
+    setExportError("");
+
+    let exportElement: HTMLElement | null = null;
+    let originalWidth = "";
+    let originalHeight = "";
+    const replacedSprites: Array<{
+      node: HTMLImageElement;
+      originalSrc: string;
+    }> = [];
+
+    try {
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => resolve(null)),
+      );
+
+      const element = document.getElementById("rip-export-target");
+      if (!element) {
+        setExportError(t(tr.statsBar.ripViewElementNotFound, lang));
+        return;
+      }
+      exportElement = element;
+
+      // Always use canvas-safe fallback sprite URLs during PNG capture
+      const spriteNodes = element.querySelectorAll<HTMLImageElement>(
+        "img[data-export-fallback-src]",
+      );
+      spriteNodes.forEach((spriteNode) => {
+        const fallbackSrc = spriteNode.getAttribute("data-export-fallback-src");
+        if (!fallbackSrc) return;
+
+        if (spriteNode.src !== fallbackSrc) {
+          replacedSprites.push({
+            node: spriteNode,
+            originalSrc: spriteNode.src,
+          });
+          spriteNode.src = fallbackSrc;
+        }
+      });
+
+      // Save original dimensions
+      originalWidth = element.style.width;
+      originalHeight = element.style.height;
+
+      // Apply export dimensions to the element
+      const ripExportWidth = 560;
+      const ripExportHeight = 200;
+      element.style.width = `${ripExportWidth}px`;
+      element.style.height = `${ripExportHeight}px`;
+
+      const { default: html2canvas } = await import("html2canvas");
+
+      const canvas = await html2canvas(element, {
+        width: ripExportWidth,
+        height: ripExportHeight,
+        scale: 1,
+        backgroundColor: "rgba(0, 0, 0, 0)",
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 15000,
+      });
+
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `rip-${new Date().getTime()}.png`;
+      link.click();
+    } catch (error) {
+      console.error("RIP PNG export error:", error);
+      setExportError(t(tr.statsBar.failedToExportPng, lang));
+    } finally {
+      if (exportElement) {
+        exportElement.style.width = originalWidth;
+        exportElement.style.height = originalHeight;
+      }
+      replacedSprites.forEach(({ node, originalSrc }) => {
+        node.src = originalSrc;
+      });
+      setExporting(false);
+    }
+  }
+
+  async function handleOpenGenerateRipUrl() {
+    try {
+      const encoded = await encodeTeam(lastThreeDeadPokemon);
+      const shareUrl = buildShareUrl(encoded, {
+        showTypes: false,
+        tightTypes: false,
+        isRip: true,
+      });
+      const link = document.createElement("a");
+      link.href = shareUrl;
+      link.target = "_blank";
+      link.click();
+    } catch (error) {
+      console.error("RIP URL generation error:", error);
+      setExportError(t(tr.statsBar.failedToGenerateShareUrl, lang));
+    }
+  }
+
   const teamActions = [
     {
       icon: "🖼️",
@@ -292,6 +408,41 @@ export default function StatsBar({
       disabled: run.team.length === 0,
     },
   ];
+
+  const ripActions = [
+    {
+      icon: "🖼️",
+      title: t(tr.statsBar.exportRipAsPng, lang),
+      onClick: handleOpenExportRipPng,
+      disabled: exporting || deadCount === 0,
+    },
+    {
+      icon: "🔗",
+      title: t(tr.statsBar.generateRipShareUrl, lang),
+      onClick: handleOpenGenerateRipUrl,
+      disabled: deadCount === 0,
+    },
+  ];
+
+  // RIP hover content (3 last dead pokémons)
+  const ripHoverContent = (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+      }}
+    >
+      {lastThreeDeadPokemon.map((pokemonCaptured: Capture, index: number) => (
+        <TeamPreviewPokemonTile
+          key={`rip-${index}-${pokemonCaptured.id}`}
+          pokemonCaptured={pokemonCaptured}
+          lang={lang}
+        />
+      ))}
+    </Box>
+  );
 
   // Zones hover content (regular and shiny)
   const zonesHoverContent = (
@@ -469,6 +620,8 @@ export default function StatsBar({
           value={deadCount}
           label={t(tr.statsBar.dead, lang)}
           color="#FEE2E2"
+          hoverContent={deadCount > 0 ? ripHoverContent : undefined}
+          actions={ripActions}
         />
         <StatCard
           value={`${run.team.length}/6`}

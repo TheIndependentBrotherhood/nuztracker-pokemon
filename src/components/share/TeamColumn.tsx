@@ -13,6 +13,7 @@ interface Props {
   tightTypes?: boolean;
   mirror?: boolean;
   fullHeight?: boolean;
+  isRipMode?: boolean;
 }
 
 export default function TeamColumn({
@@ -23,6 +24,7 @@ export default function TeamColumn({
   tightTypes = false,
   mirror = false,
   fullHeight = false,
+  isRipMode = false,
 }: Props) {
   const randomTypesMode = isRandomTypesMode(run);
 
@@ -30,11 +32,13 @@ export default function TeamColumn({
     <Box
       sx={{
         display: "flex",
-        flexDirection: "column",
-        width: "fit-content",
-        height: fullHeight ? "100%" : "auto",
-        gap: 0,
+        flexDirection: isRipMode ? "row" : "column",
+        width: isRipMode ? "fit-content" : "fit-content",
+        height: fullHeight ? "100%" : isRipMode ? "200px" : "auto",
+        gap: isRipMode ? 2 : 0,
         p: 0,
+        alignItems: isRipMode ? "center" : "flex-start",
+        justifyContent: isRipMode ? "center" : "flex-start",
       }}
     >
       {team.map((capture) => {
@@ -57,15 +61,23 @@ export default function TeamColumn({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              flexDirection: mirror ? "row-reverse" : "row",
-              height: fullHeight ? "calc(100% / 6)" : "180px",
-              width: "auto",
-              minHeight: "120px",
-              minWidth: "200px",
-              mr: mirror ? 0 : 0.5,
-              ml: mirror ? 0.5 : 0,
-              p: 1,
-              py: 2,
+              flexDirection: isRipMode
+                ? "column"
+                : mirror
+                  ? "row-reverse"
+                  : "row",
+              height: isRipMode
+                ? "auto"
+                : fullHeight
+                  ? "calc(100% / 6)"
+                  : "180px",
+              width: isRipMode ? "auto" : "auto",
+              minHeight: isRipMode ? "auto" : "120px",
+              minWidth: isRipMode ? "auto" : "200px",
+              mr: !isRipMode && mirror ? 0 : !isRipMode ? 0.5 : 0,
+              ml: !isRipMode && mirror ? 0.5 : 0,
+              p: isRipMode ? 0 : 1,
+              py: isRipMode ? 0 : 2,
             }}
           >
             {/* Sprite */}
@@ -74,8 +86,8 @@ export default function TeamColumn({
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                width: "120px",
-                height: "120px",
+                width: isRipMode ? "80px" : "120px",
+                height: isRipMode ? "80px" : "120px",
                 flexShrink: 0,
               }}
             >
@@ -102,16 +114,16 @@ export default function TeamColumn({
                   }
                 }}
                 style={{
-                  width: "96px",
-                  height: "96px",
+                  width: isRipMode ? "64px" : "96px",
+                  height: isRipMode ? "64px" : "96px",
                   objectFit: "contain",
                   imageRendering: "pixelated",
                 }}
               />
             </Box>
 
-            {/* Types - stacked vertically */}
-            {showTypes && (
+            {/* Types - stacked vertically (hidden in RIP mode) */}
+            {showTypes && !isRipMode && (
               <Box
                 sx={{
                   display: "flex",

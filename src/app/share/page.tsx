@@ -12,6 +12,7 @@ function ShareContent() {
   const searchParams = useSearchParams();
   const showTypes = searchParams.get("showTypes") !== "false";
   const tightTypes = showTypes && searchParams.get("tightTypes") === "true";
+  const isRipMode = searchParams.get("isRip") === "true";
   const [team, setTeam] = useState<Capture[]>([]);
   const [shareRun, setShareRun] = useState<Run | undefined>(undefined);
   const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
@@ -119,30 +120,45 @@ function ShareContent() {
         height: "100vh",
         backgroundColor: "rgba(0, 0, 0, 0)",
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: isRipMode ? "center" : "space-between",
+        alignItems: isRipMode ? "center" : "stretch",
         overflow: "hidden",
       }}
     >
-      {/* Left column */}
-      <TeamColumn
-        team={team}
-        pokemonData={pokemonData}
-        run={shareRun}
-        showTypes={showTypes}
-        tightTypes={tightTypes}
-        fullHeight
-      />
+      {isRipMode ? (
+        /* RIP mode - single horizontal line */
+        <TeamColumn
+          team={team}
+          pokemonData={pokemonData}
+          run={shareRun}
+          showTypes={showTypes}
+          tightTypes={tightTypes}
+          isRipMode
+        />
+      ) : (
+        <>
+          {/* Left column */}
+          <TeamColumn
+            team={team}
+            pokemonData={pokemonData}
+            run={shareRun}
+            showTypes={showTypes}
+            tightTypes={tightTypes}
+            fullHeight
+          />
 
-      {/* Right column - mirror */}
-      <TeamColumn
-        team={team}
-        pokemonData={pokemonData}
-        run={shareRun}
-        showTypes={showTypes}
-        tightTypes={tightTypes}
-        mirror
-        fullHeight
-      />
+          {/* Right column - mirror */}
+          <TeamColumn
+            team={team}
+            pokemonData={pokemonData}
+            run={shareRun}
+            showTypes={showTypes}
+            tightTypes={tightTypes}
+            mirror
+            fullHeight
+          />
+        </>
+      )}
     </Box>
   );
 }

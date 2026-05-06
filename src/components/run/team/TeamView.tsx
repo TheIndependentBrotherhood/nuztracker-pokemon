@@ -184,7 +184,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           ...zone,
           captures: zone.captures.map((capture) =>
             capture.id === capturedPokemonId
-              ? { ...capture, isDead: true }
+              ? { ...capture, isDead: true, diedAt: Date.now() }
               : capture,
           ),
         })),
@@ -200,7 +200,9 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
         zones: run.zones.map((zone) => ({
           ...zone,
           captures: zone.captures.map((capture) =>
-            capture.id === pokemonId ? { ...capture, isDead: true } : capture,
+            capture.id === pokemonId
+              ? { ...capture, isDead: true, diedAt: Date.now() }
+              : capture,
           ),
         })),
       };
@@ -251,7 +253,11 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
         ...zone,
         captures: zone.captures.map((capture) =>
           capture.id === captureId
-            ? { ...capture, isDead: !capture.isDead }
+            ? {
+                ...capture,
+                isDead: !capture.isDead,
+                diedAt: !capture.isDead ? Date.now() : undefined,
+              }
             : capture,
         ),
       })),
@@ -261,10 +267,11 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
     updateRun(updatedRun);
   };
 
-  // Get all dead pokémons
+  // Get all dead pokémons (sorted by death time, most recent first)
   const deadPokemon = run.zones
     .flatMap((z) => z.captures)
-    .filter((c) => c.isDead);
+    .filter((c) => c.isDead)
+    .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
 
   return (
     <Box

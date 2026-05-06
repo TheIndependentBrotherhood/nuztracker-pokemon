@@ -18,6 +18,8 @@ export interface Capture {
   ability?: string;
   selectedSprite?: CaptureSelectedSprite;
   createdAt: number;
+  /** Timestamp when the Pokémon died (marked as RIP) */
+  diedAt?: number;
 }
 
 export interface RandomizerOptions {

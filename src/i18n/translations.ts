@@ -380,6 +380,18 @@ const translations = {
       fr: "Exporter l'image PNG",
       en: "Export PNG image",
     },
+    exportRipAsPng: {
+      fr: "Exporter les RIP en PNG",
+      en: "Export RIP as PNG",
+    },
+    generateRipShareUrl: {
+      fr: "Partager les RIP",
+      en: "Share RIP",
+    },
+    ripViewElementNotFound: {
+      fr: "Élément des RIP introuvable",
+      en: "RIP view element not found",
+    },
     generate: { fr: "Générer", en: "Generate" },
     width: { fr: "Largeur (px)", en: "Width (px)" },
     height: { fr: "Hauteur (px)", en: "Height (px)" },

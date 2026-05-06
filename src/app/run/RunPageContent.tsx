@@ -345,6 +345,66 @@ export default function RunPageContent({ runId }: Props) {
               mirror
             />
           </Box>
+
+          {/* Hidden export view for RIP PNG */}
+          <Box
+            id="rip-export-target"
+            sx={{
+              position: "fixed",
+              left: "-9999px",
+              top: 0,
+              width: "560px",
+              height: "200px",
+              background: "transparent",
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2,
+              padding: "0",
+            }}
+          >
+            {(() => {
+              const deadPokemon = run.zones
+                .flatMap((z) => z.captures)
+                .filter((c) => c.isDead)
+                .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
+              const lastThreeDeadPokemon = deadPokemon.slice(-3);
+
+              return lastThreeDeadPokemon.map((pokemonCaptured) => (
+                <Box
+                  key={pokemonCaptured.id}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    position: "relative",
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={
+                      pokemonCaptured.selectedSprite?.url ??
+                      (pokemonCaptured.isShiny
+                        ? pokemonCaptured.pokemon.sprites.shiny.default
+                        : pokemonCaptured.pokemon.sprites.normal.default)
+                    }
+                    alt={pokemonCaptured.pokemon.technicalName}
+                    data-export-fallback-src={
+                      pokemonCaptured.isShiny
+                        ? pokemonCaptured.pokemon.sprites.shiny.default
+                        : pokemonCaptured.pokemon.sprites.normal.default
+                    }
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      imageRendering: "pixelated",
+                    }}
+                  />
+                </Box>
+              ));
+            })()}
+          </Box>
         </Box>
 
         {/* Right: Map or Analysis with simultaneous transitions */}

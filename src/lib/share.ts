@@ -1,19 +1,19 @@
-import { Capture } from './types';
+import { Capture } from "./types";
 
 export async function encodeTeam(captures: Capture[]): Promise<string> {
   const json = JSON.stringify(captures);
   const encoder = new TextEncoder();
   const data = encoder.encode(json);
-  
-  const pako = await import('pako');
+
+  const pako = await import("pako");
   const compressed = pako.gzip(data);
-  
+
   const chunkSize = 0x8000;
   const parts: string[] = [];
   for (let i = 0; i < compressed.length; i += chunkSize) {
     parts.push(String.fromCharCode(...compressed.subarray(i, i + chunkSize)));
   }
-  return btoa(parts.join(''));
+  return btoa(parts.join(""));
 }
 
 export async function decodeTeam(base64: string): Promise<Capture[]> {
@@ -23,8 +23,8 @@ export async function decodeTeam(base64: string): Promise<Capture[]> {
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
     }
-    
-    const pako = await import('pako');
+
+    const pako = await import("pako");
     const decompressed = pako.ungzip(bytes);
     const decoder = new TextDecoder();
     const json = decoder.decode(decompressed);
@@ -36,7 +36,7 @@ export async function decodeTeam(base64: string): Promise<Capture[]> {
 
 export function buildShareUrl(
   base64: string,
-  options: { showTypes?: boolean; tightTypes?: boolean } = {}
+  options: { showTypes?: boolean; tightTypes?: boolean; isRip?: boolean } = {},
 ): string {
   const params = new URLSearchParams({ team: base64 });
   if (typeof options?.showTypes === "boolean") {
@@ -44,6 +44,9 @@ export function buildShareUrl(
   }
   if (typeof options?.tightTypes === "boolean") {
     params.set("tightTypes", String(options.tightTypes));
+  }
+  if (typeof options?.isRip === "boolean") {
+    params.set("isRip", String(options.isRip));
   }
   return `/share/?${params.toString()}`;
 }

@@ -83,7 +83,12 @@ function CaptureThumbnail({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={capture.selectedSprite?.url || (capture.isShiny ? capture.pokemon.sprites.shiny.default : capture.pokemon.sprites.normal.default)}
+            src={
+              capture.selectedSprite?.url ||
+              (capture.isShiny
+                ? capture.pokemon.sprites.shiny.default
+                : capture.pokemon.sprites.normal.default)
+            }
             alt={displayName}
             onError={(event) => {
               const fallbackUrl = capture.isShiny
@@ -411,6 +416,7 @@ export default function ZoneItem({
           runId={runId}
           zoneId={zone.id}
           zoneName={zone.zoneName}
+          zoneNames={zone.zoneNames}
           forceShiny={
             isShinyHuntMode &&
             zone.captures.length === 1 &&

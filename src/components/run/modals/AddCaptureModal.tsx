@@ -28,11 +28,13 @@ import { isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
+import { getZoneDisplayName } from "@/lib/zones";
 
 interface Props {
   runId: string;
   zoneId: string;
   zoneName: string;
+  zoneNames?: { fr?: string; en?: string };
   forceShiny?: boolean;
   onClose: () => void;
 }
@@ -41,12 +43,18 @@ export default function AddCaptureModal({
   runId,
   zoneId,
   zoneName,
+  zoneNames,
   forceShiny = false,
   onClose,
 }: Props) {
   const { addCapture, runs } = useRunStore();
   const { lang } = useLanguage();
   const tr = translations;
+
+  // Use translated zone name if available, otherwise fallback to zoneName
+  const displayZoneName = zoneNames
+    ? getZoneDisplayName({ zoneNames }, lang)
+    : zoneName;
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PokemonData[]>([]);
@@ -320,7 +328,7 @@ export default function AddCaptureModal({
             {t(tr.addCapture.title, lang)}
           </Typography>
           <Typography sx={{ color: "#666", fontSize: "0.875rem", mt: 0.25 }}>
-            📍 {zoneName}
+            📍 {displayZoneName}
           </Typography>
         </Box>
 
