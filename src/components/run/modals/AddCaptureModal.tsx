@@ -193,7 +193,7 @@ export default function AddCaptureModal({
 
   async function handleSelect(pokemon: PokemonData) {
     setSelected(pokemon);
-    setQuery(getLocalizedPokemonName(pokemon, lang));
+    setQuery("");
     setResults([]);
     setSelectedSpriteUrl(null);
     setSpriteOptions([]);
