@@ -369,7 +369,7 @@ export default function RunPageContent({ runId }: Props) {
                 .flatMap((z) => z.captures)
                 .filter((c) => c.isDead)
                 .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
-              const lastThreeDeadPokemon = deadPokemon.slice(-3);
+              const lastThreeDeadPokemon = deadPokemon.slice(0,3);
 
               return lastThreeDeadPokemon.map((pokemonCaptured) => (
                 <Box

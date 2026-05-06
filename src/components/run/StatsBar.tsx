@@ -164,7 +164,7 @@ export default function StatsBar({
     .flatMap((z: Zone) => z.captures)
     .filter((c: Capture) => c.isDead)
     .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
-  const lastThreeDeadPokemon = deadPokemon.slice(-3);
+  const lastThreeDeadPokemon = deadPokemon.slice(0,3);
 
   // Export handlers for team stats card
   async function handleOpenExportPng() {
