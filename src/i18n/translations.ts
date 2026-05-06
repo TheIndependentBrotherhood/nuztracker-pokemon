@@ -174,6 +174,10 @@ const translations = {
       fr: "Choisis au moins un type pour cette capture.",
       en: "Choose at least one type for this capture.",
     },
+    abilityRequired: {
+      fr: "Choisis un talent pour cette capture.",
+      en: "Choose an ability for this capture.",
+    },
     sprite: { fr: "Sprite", en: "Sprite" },
     unownForm: { fr: "Forme (lettre capturée)", en: "Form (captured letter)" },
     cancel: { fr: "Annuler", en: "Cancel" },
@@ -309,6 +313,23 @@ const translations = {
   // ── Pokemon Card ───────────────────────────────────────────────────────────
   pokemonCard: {
     removeFromTeam: { fr: "Retirer de l'équipe", en: "Remove from team" },
+    evolveButton: { fr: "Évoluer", en: "Evolve" },
+  },
+
+  // ── Evolution Modal ────────────────────────────────────────────────────────
+  evolution: {
+    title: { fr: "Évolution", en: "Evolution" },
+    selectEvolution: {
+      fr: "Sélectionnez l'évolution :",
+      en: "Select an evolution:",
+    },
+    noEvolutionsAvailable: {
+      fr: "Pas d'évolutions disponibles",
+      en: "No evolutions available",
+    },
+    evolveButton: { fr: "Évoluer", en: "Evolve" },
+    cancelButton: { fr: "Annuler", en: "Cancel" },
+    closeButton: { fr: "Fermer", en: "Close" },
   },
 
   // ── Captured Pokemon Card ──────────────────────────────────────────────────

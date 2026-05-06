@@ -113,7 +113,9 @@ export default function AddCaptureModal({
   }, [selected, run?.customAbilitiesByPokemonId]);
 
   const canAddCapture = Boolean(
-    selected && (!randomTypesMode || customTypesDraft.length > 0),
+    selected &&
+    customAbilityDraft !== null &&
+    (!randomTypesMode || customTypesDraft.length > 0),
   );
 
   useEffect(() => {
@@ -870,6 +872,19 @@ export default function AddCaptureModal({
                       })}
                     </Box>
 
+                    {!customAbilityDraft && (
+                      <Typography
+                        sx={{
+                          mt: 0.75,
+                          fontSize: "0.72rem",
+                          color: "#b91c1c",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {t(tr.addCapture.abilityRequired, lang)}
+                      </Typography>
+                    )}
+
                     {/* Captured ability label and chip */}
                     {customAbilityDraft && (
                       <Box sx={{ mt: 1.5 }}>
@@ -988,6 +1003,19 @@ export default function AddCaptureModal({
                       </Typography>
                     )}
                   </Box>
+
+                  {!customAbilityDraft && (
+                    <Typography
+                      sx={{
+                        mt: 0.75,
+                        fontSize: "0.72rem",
+                        color: "#b91c1c",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {t(tr.addCapture.abilityRequired, lang)}
+                    </Typography>
+                  )}
 
                   {/* Hint text */}
                   <Typography

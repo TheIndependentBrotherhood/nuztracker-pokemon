@@ -95,7 +95,7 @@ export default function TeamPokemonCard({
             ? [
                 {
                   icon: "⬆",
-                  title: lang === "fr" ? "Évoluer" : "Evolve",
+                  title: t(tr.pokemonCard.evolveButton, lang),
                   onClick: () => setShowEvolution(true),
                   sx: {
                     position: "absolute",

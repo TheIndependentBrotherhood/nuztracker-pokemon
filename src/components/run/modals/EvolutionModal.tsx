@@ -22,6 +22,7 @@ import {
 } from "@/lib/pokemon-api";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
 
 interface Props {
   capture: Capture;
@@ -42,6 +43,7 @@ export default function EvolutionModal({
 }: Props) {
   const { updateRun } = useRunStore();
   const { lang } = useLanguage();
+  const tr = translations;
   const [evolutions, setEvolutions] = useState<PokemonEvolution[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvolution, setSelectedEvolution] =
@@ -109,7 +111,7 @@ export default function EvolutionModal({
   if (loading) {
     return (
       <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{lang === "fr" ? "Évolution" : "Evolution"}</DialogTitle>
+        <DialogTitle>{t(tr.evolution.title, lang)}</DialogTitle>
         <DialogContent
           sx={{
             display: "flex",
@@ -127,18 +129,14 @@ export default function EvolutionModal({
   if (evolutions.length === 0) {
     return (
       <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{lang === "fr" ? "Évolution" : "Evolution"}</DialogTitle>
+        <DialogTitle>{t(tr.evolution.title, lang)}</DialogTitle>
         <DialogContent>
           <Typography sx={{ py: 2, textAlign: "center", color: "#666" }}>
-            {lang === "fr"
-              ? "Pas d'évolutions disponibles"
-              : "No evolutions available"}
+            {t(tr.evolution.noEvolutionsAvailable, lang)}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>
-            {lang === "fr" ? "Fermer" : "Close"}
-          </Button>
+          <Button onClick={onClose}>{t(tr.evolution.closeButton, lang)}</Button>
         </DialogActions>
       </Dialog>
     );
@@ -146,12 +144,10 @@ export default function EvolutionModal({
 
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{lang === "fr" ? "Évolution" : "Evolution"}</DialogTitle>
+      <DialogTitle>{t(tr.evolution.title, lang)}</DialogTitle>
       <DialogContent>
         <Typography sx={{ fontSize: "0.875rem", color: "#666", mb: 2 }}>
-          {lang === "fr"
-            ? "Sélectionnez l'évolution :"
-            : "Select an evolution:"}
+          {t(tr.evolution.selectEvolution, lang)}
         </Typography>
         <Grid container spacing={1.5}>
           {evolutions.map((evolution) => (
@@ -215,7 +211,7 @@ export default function EvolutionModal({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} sx={{ height: "2rem", px: 2 }}>
-          {lang === "fr" ? "Annuler" : "Cancel"}
+          {t(tr.evolution.cancelButton, lang)}
         </Button>
         <Button
           onClick={handleEvolve}
@@ -223,7 +219,7 @@ export default function EvolutionModal({
           variant="contained"
           sx={{ height: "2rem", px: 2 }}
         >
-          {lang === "fr" ? "Évoluer" : "Evolve"}
+          {t(tr.evolution.evolveButton, lang)}
         </Button>
       </DialogActions>
     </Dialog>
