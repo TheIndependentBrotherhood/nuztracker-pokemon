@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Lang } from "@/i18n/translations";
 import { getLocalizedPokemonName, PokemonNames } from "@/lib/pokemon-api";
 import { Capture } from "@/lib/types";
+import { publicPath } from "@/lib/base-path";
 
 let pokemonNamesCache: Map<number, PokemonNames> | null = null;
 let pokemonNamesPromise: Promise<Map<number, PokemonNames>> | null = null;
@@ -10,7 +11,7 @@ async function loadPokemonNamesCache(): Promise<Map<number, PokemonNames>> {
   if (pokemonNamesCache) return pokemonNamesCache;
 
   if (!pokemonNamesPromise) {
-    pokemonNamesPromise = fetch("/data/pokemon-list.json")
+    pokemonNamesPromise = fetch(publicPath("/data/pokemon-list.json"))
       .then((response) => response.json())
       .then(
         (data: { pokemon?: Array<{ id: number; names?: PokemonNames }> }) => {

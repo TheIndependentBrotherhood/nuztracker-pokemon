@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { publicPath } from "@/lib/base-path";
 
 // ─── Data shape types ─────────────────────────────────────────────────────────
 
@@ -126,27 +127,27 @@ export function CacheProvider({ children }: { children: React.ReactNode }) {
 
     async function loadAll() {
       const results = await Promise.allSettled([
-        fetch("/data/pokemon-list.json").then((r) => {
+        fetch(publicPath("/data/pokemon-list.json")).then((r) => {
           if (!r.ok)
             throw new Error(`Failed to fetch pokemon-list.json: ${r.status}`);
           return r.json() as Promise<PokemonListCache>;
         }),
-        fetch("/data/regions.json").then((r) => {
+        fetch(publicPath("/data/regions.json")).then((r) => {
           if (!r.ok)
             throw new Error(`Failed to fetch regions.json: ${r.status}`);
           return r.json() as Promise<RegionsCache>;
         }),
-        fetch("/data/type-charts.json").then((r) => {
+        fetch(publicPath("/data/type-charts.json")).then((r) => {
           if (!r.ok)
             throw new Error(`Failed to fetch type-charts.json: ${r.status}`);
           return r.json() as Promise<TypeChartsCache>;
         }),
-        fetch("/data/type-sprites.json").then((r) => {
+        fetch(publicPath("/data/type-sprites.json")).then((r) => {
           if (!r.ok)
             throw new Error(`Failed to fetch type-sprites.json: ${r.status}`);
           return r.json() as Promise<TypeSpritesCache>;
         }),
-        fetch("/data/abilities.json").then((r) => {
+        fetch(publicPath("/data/abilities.json")).then((r) => {
           if (!r.ok)
             throw new Error(`Failed to fetch abilities.json: ${r.status}`);
           return r.json() as Promise<AbilitiesCache>;
