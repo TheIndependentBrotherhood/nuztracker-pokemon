@@ -107,7 +107,11 @@ function StatBar({
   );
 }
 
-export default function PokemonDetailModal({ pokemonCaptured, runId, onClose }: Props) {
+export default function PokemonDetailModal({
+  pokemonCaptured,
+  runId,
+  onClose,
+}: Props) {
   const [data, setData] = useState<PokemonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(false);
@@ -149,7 +153,8 @@ export default function PokemonDetailModal({ pokemonCaptured, runId, onClose }: 
     runToUpdate?.isRandomMode &&
     runToUpdate.randomizerOptions?.randomizeAbilities,
   );
-  const persistedCustomTypes = pokemonCaptured.customTypes ?? runCustomTypes ?? [];
+  const persistedCustomTypes =
+    pokemonCaptured.customTypes ?? runCustomTypes ?? [];
   const activeCustomTypes = customTypesDraft ?? persistedCustomTypes;
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(activeCustomTypes[1]);
   const firstType = activeCustomTypes[0] || null;
@@ -184,7 +189,9 @@ export default function PokemonDetailModal({ pokemonCaptured, runId, onClose }: 
         if (prev && options.some((option) => option.url === prev)) return prev;
         if (
           pokemonCaptured.selectedSprite?.url &&
-          options.some((option) => option.url === pokemonCaptured.selectedSprite?.url)
+          options.some(
+            (option) => option.url === pokemonCaptured.selectedSprite?.url,
+          )
         ) {
           return pokemonCaptured.selectedSprite.url;
         }
@@ -205,7 +212,11 @@ export default function PokemonDetailModal({ pokemonCaptured, runId, onClose }: 
   ]);
 
   const genderSymbol =
-    pokemonCaptured.gender === "male" ? "♂" : pokemonCaptured.gender === "female" ? "♀" : null;
+    pokemonCaptured.gender === "male"
+      ? "♂"
+      : pokemonCaptured.gender === "female"
+        ? "♀"
+        : null;
   const genderColor = pokemonCaptured.gender === "male" ? "#60a5fa" : "#ec4899";
 
   function updateCaptureInRun(updater: (target: Capture) => Capture) {
@@ -214,12 +225,16 @@ export default function PokemonDetailModal({ pokemonCaptured, runId, onClose }: 
     const updatedRun = {
       ...runToUpdate,
       team: runToUpdate.team.map((teamCapture) =>
-        teamCapture.id === pokemonCaptured.id ? updater(teamCapture) : teamCapture,
+        teamCapture.id === pokemonCaptured.id
+          ? updater(teamCapture)
+          : teamCapture,
       ),
       zones: runToUpdate.zones.map((zone) => ({
         ...zone,
         captures: zone.captures.map((zoneCapture) =>
-          zoneCapture.id === pokemonCaptured.id ? updater(zoneCapture) : zoneCapture,
+          zoneCapture.id === pokemonCaptured.id
+            ? updater(zoneCapture)
+            : zoneCapture,
         ),
       })),
     };

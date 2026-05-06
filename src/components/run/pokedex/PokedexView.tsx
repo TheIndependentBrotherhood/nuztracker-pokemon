@@ -290,9 +290,7 @@ export default function PokedexView({ runId }: Props) {
               data?.types ?? entry.types;
             const rowCapture: Capture = {
               id: `pokedex-${entry.id}`,
-              pokemonId: entry.id,
-              pokemonName: entry.names[lang as "en" | "fr"] ?? entry.technicalName,
-              pokemonNames: entry.names,
+              pokemon: entry,
               customTypes: run?.customTypesByPokemonId?.[entry.id],
               gender: "unknown",
               isShiny: false,
@@ -490,7 +488,7 @@ export default function PokedexView({ runId }: Props) {
       {selectedCapture && (
         <PokemonDetailModal
           key={selectedCapture.id}
-          capture={selectedCapture}
+          pokemonCaptured={selectedCapture}
           runId={runId}
           onClose={() => setSelectedCapture(null)}
         />

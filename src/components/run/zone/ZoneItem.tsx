@@ -142,7 +142,7 @@ function CaptureThumbnail({
       {showPokemonDetail && (
         <PokemonDetailModal
           key={capture.id}
-          capture={capture}
+          pokemonCaptured={capture}
           runId={runId}
           onClose={() => setShowPokemonDetail(false)}
         />
