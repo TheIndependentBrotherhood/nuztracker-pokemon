@@ -182,14 +182,22 @@ export async function getAvailableCaptureSpriteOptions(params: {
     }
   }
 
-  const cachedEntry = pokemonListJsonCache?.find(
-    (p) => p.id === pokemonId,
-  );
+  const cachedEntry = pokemonListJsonCache?.find((p) => p.id === pokemonId);
 
   const spriteSlot = isShiny
     ? cachedEntry?.sprites?.shiny
     : cachedEntry?.sprites?.normal;
 
+  // Add default sprite first
+  if (spriteSlot?.default) {
+    pushUnique({
+      url: spriteSlot.default,
+      source: "default",
+      label: "Default",
+    });
+  }
+
+  // Add alternative sprites
   for (const altUrl of spriteSlot?.alternatives ?? []) {
     pushUnique({
       url: altUrl,
@@ -206,9 +214,7 @@ export async function getAvailableCaptureSpriteOptions(params: {
 /**
  * Get the evolution chain for a given Pokémon
  */
-export async function getEvolutionChain(
-  pId: number,
-): Promise<PokemonData[]> {
+export async function getEvolutionChain(pId: number): Promise<PokemonData[]> {
   try {
     const evolutions: PokemonData[] = [];
     return evolutions;

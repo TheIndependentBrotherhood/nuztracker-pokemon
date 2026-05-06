@@ -81,7 +81,17 @@ export default function TeamColumn({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={capture.selectedSprite?.url || (capture.isShiny ? capture.pokemon.sprites.shiny.default : capture.pokemon.sprites.normal.default)}
+                src={
+                  capture.selectedSprite?.url ||
+                  (capture.isShiny
+                    ? capture.pokemon.sprites.shiny.default
+                    : capture.pokemon.sprites.normal.default)
+                }
+                data-export-fallback-src={
+                  capture.isShiny
+                    ? capture.pokemon.sprites.shiny.default
+                    : capture.pokemon.sprites.normal.default
+                }
                 alt={capture.pokemon.technicalName}
                 onError={(event) => {
                   const fallbackUrl = capture.isShiny
