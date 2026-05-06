@@ -758,21 +758,6 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
               </Box>
             </Box>
 
-            {/* Sprite selection */}
-            {isRandomTypeMode && (
-              <Typography
-                sx={{
-                  fontSize: "0.68rem",
-                  color: "#475569",
-                  fontWeight: 600,
-                  mt: -1.5,
-                  mb: 1.5,
-                }}
-              >
-                {t(tr.pokemonDetail.randomTypes, lang)}
-              </Typography>
-            )}
-
             <Menu
               anchorEl={typePickerAnchorEl}
               open={Boolean(typePickerAnchorEl)}
@@ -913,9 +898,7 @@ export default function PokemonDetailModal({ capture, runId, onClose }: Props) {
                   mb: 1,
                 }}
               >
-                {isRandomAbilitiesMode
-                  ? t(tr.pokemonDetail.abilityPanel, lang)
-                  : t(tr.pokemonDetail.abilitiesSection, lang)}
+                {t(tr.pokemonDetail.abilityPanel, lang)}
               </Typography>
 
               {isRandomAbilitiesMode ? (

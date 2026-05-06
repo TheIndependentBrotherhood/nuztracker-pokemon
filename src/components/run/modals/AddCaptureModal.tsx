@@ -486,298 +486,662 @@ export default function AddCaptureModal({
           )}
         </Box>
 
-        {/* Sprite selection */}
         {selected && (
-          <Box sx={{ mb: 2 }}>
-            <Typography
-              component="label"
-              sx={{
-                display: "block",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#000",
-                mb: 1,
-              }}
-            >
-              {t(tr.addCapture.sprite, lang)}
-            </Typography>
-
-            {loadingSpriteOptions ? (
-              <Typography sx={{ fontSize: "0.75rem", color: "#666" }}>
-                {t(tr.addCapture.loadingSprites, lang)}
-              </Typography>
-            ) : (
-              <Box
+          <>
+            {/* Sprite selection */}
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                component="label"
                 sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                  gap: 0.75,
-                  maxHeight: "220px",
-                  overflowY: "auto",
-                  pr: 0.25,
+                  display: "block",
+                  fontSize: "0.75rem",
+                  fontWeight: 500,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  color: "#000",
+                  mb: 1,
                 }}
               >
-                {spriteOptions.map((option) => {
-                  const isSelectedSprite = selectedSpriteUrl === option.url;
-                  const sourceTitle =
-                    option.source === "deviantart"
-                      ? "DeviantArt"
-                      : option.source === "animated-catalog"
-                        ? "Animated"
-                        : "Static";
+                {t(tr.addCapture.sprite, lang)}
+              </Typography>
 
-                  return (
-                    <Box
-                      key={option.url}
-                      component="button"
-                      onClick={() => {
-                        setSelectedSpriteUrl(option.url);
-                        if (selected.id === UNOWN_ID) {
-                          setUnownLetter(option.unownLetter ?? null);
-                        }
-                      }}
-                      title={`${sourceTitle} • ${option.label}`}
-                      sx={{
-                        background: isSelectedSprite ? "#3b82f6" : "#fff",
-                        border: isSelectedSprite
-                          ? "2px solid #1d4ed8"
-                          : "2px solid #000",
-                        borderRadius: "0.5rem",
-                        color: isSelectedSprite ? "#fff" : "#000",
-                        cursor: "pointer",
-                        p: 0.5,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 0.25,
-                        minHeight: "90px",
-                        transition: "all 150ms",
-                        "&:hover": {
-                          background: isSelectedSprite ? "#2563eb" : "#f0f0f0",
-                        },
-                      }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={option.url}
-                        alt={option.label}
-                        width={56}
-                        height={56}
-                        style={{
-                          objectFit: "contain",
-                          imageRendering: "pixelated",
-                        }}
-                        loading="lazy"
-                      />
-                      <Typography
-                        sx={{
-                          fontSize: "0.62rem",
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          textAlign: "center",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {sourceTitle}
-                      </Typography>
-                    </Box>
-                  );
-                })}
-              </Box>
-            )}
-          </Box>
-        )}
-
-        {/* Randomizer type assignment */}
-        {selected && randomTypesMode && (
-          <Box sx={{ mb: 2 }}>
-            <Typography
-              component="label"
-              sx={{
-                display: "block",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#000",
-                mb: 1,
-              }}
-            >
-              {t(tr.addCapture.randomTypes, lang)}
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 0.5, mt: 1, flexWrap: "wrap" }}>
-              <Tooltip title={t(tr.addCapture.chooseType, lang)}>
+              {loadingSpriteOptions ? (
+                <Typography sx={{ fontSize: "0.75rem", color: "#666" }}>
+                  {t(tr.addCapture.loadingSprites, lang)}
+                </Typography>
+              ) : (
                 <Box
-                  component="button"
-                  onClick={(event) => openTypePicker(0, event)}
                   sx={{
-                    px: 1,
-                    py: 0.25,
-                    borderRadius: "999px",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    color: firstType ? "#fff" : "#000",
-                    textTransform: "capitalize",
-                    background: firstType
-                      ? (typeColors[firstType] ?? "#888")
-                      : "#fef3c7",
-                    border: "2px solid #000",
-                    cursor: "pointer",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                    gap: 0.75,
+                    maxHeight: "220px",
+                    overflowY: "auto",
+                    pr: 0.25,
                   }}
                 >
-                  {firstType ?? t(tr.addCapture.unknownType, lang)}
+                  {spriteOptions.map((option) => {
+                    const isSelectedSprite = selectedSpriteUrl === option.url;
+                    const sourceTitle =
+                      option.source === "deviantart"
+                        ? "DeviantArt"
+                        : option.source === "animated-catalog"
+                          ? "Animated"
+                          : "Static";
+
+                    return (
+                      <Box
+                        key={option.url}
+                        component="button"
+                        onClick={() => {
+                          setSelectedSpriteUrl(option.url);
+                          if (selected.id === UNOWN_ID) {
+                            setUnownLetter(option.unownLetter ?? null);
+                          }
+                        }}
+                        title={`${sourceTitle} • ${option.label}`}
+                        sx={{
+                          background: isSelectedSprite ? "#3b82f6" : "#fff",
+                          border: isSelectedSprite
+                            ? "2px solid #1d4ed8"
+                            : "2px solid #000",
+                          borderRadius: "0.5rem",
+                          color: isSelectedSprite ? "#fff" : "#000",
+                          cursor: "pointer",
+                          p: 0.5,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 0.25,
+                          minHeight: "90px",
+                          transition: "all 150ms",
+                          "&:hover": {
+                            background: isSelectedSprite
+                              ? "#2563eb"
+                              : "#f0f0f0",
+                          },
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={option.url}
+                          alt={option.label}
+                          width={56}
+                          height={56}
+                          style={{
+                            objectFit: "contain",
+                            imageRendering: "pixelated",
+                          }}
+                          loading="lazy"
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: "0.62rem",
+                            fontWeight: 700,
+                            lineHeight: 1,
+                            textAlign: "center",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {sourceTitle}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
                 </Box>
-              </Tooltip>
-
-              {!hasSecondTypeSlot && (
-                <Tooltip title={t(tr.addCapture.addSecondType, lang)}>
-                  <IconButton
-                    size="small"
-                    onClick={addSecondType}
-                    sx={{
-                      border: "2px solid #000",
-                      borderRadius: "999px",
-                      width: "24px",
-                      height: "24px",
-                      background: "#fff",
-                      fontWeight: 800,
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    +
-                  </IconButton>
-                </Tooltip>
               )}
+            </Box>
 
-              {hasSecondTypeSlot && (
-                <>
+            {/* Randomizer type assignment */}
+            {randomTypesMode && (
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  component="label"
+                  sx={{
+                    display: "block",
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#000",
+                    mb: 1,
+                  }}
+                >
+                  {t(tr.addCapture.randomTypes, lang)}
+                </Typography>
+
+                <Box
+                  sx={{ display: "flex", gap: 0.5, mt: 1, flexWrap: "wrap" }}
+                >
                   <Tooltip title={t(tr.addCapture.chooseType, lang)}>
                     <Box
                       component="button"
-                      onClick={(event) => openTypePicker(1, event)}
+                      onClick={(event) => openTypePicker(0, event)}
                       sx={{
                         px: 1,
                         py: 0.25,
                         borderRadius: "999px",
                         fontSize: "0.75rem",
                         fontWeight: 700,
-                        color: secondType ? "#fff" : "#000",
+                        color: firstType ? "#fff" : "#000",
                         textTransform: "capitalize",
-                        background: secondType
-                          ? (typeColors[secondType] ?? "#888")
+                        background: firstType
+                          ? (typeColors[firstType] ?? "#888")
                           : "#fef3c7",
                         border: "2px solid #000",
                         cursor: "pointer",
                       }}
                     >
-                      {secondType ?? t(tr.addCapture.unknownType, lang)}
+                      {firstType ?? t(tr.addCapture.unknownType, lang)}
                     </Box>
                   </Tooltip>
 
-                  <Tooltip title={t(tr.addCapture.removeSecondType, lang)}>
-                    <IconButton
-                      size="small"
-                      onClick={removeSecondType}
+                  {!hasSecondTypeSlot && (
+                    <Tooltip title={t(tr.addCapture.addSecondType, lang)}>
+                      <IconButton
+                        size="small"
+                        onClick={addSecondType}
+                        sx={{
+                          border: "2px solid #000",
+                          borderRadius: "999px",
+                          width: "24px",
+                          height: "24px",
+                          background: "#fff",
+                          fontWeight: 800,
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        +
+                      </IconButton>
+                    </Tooltip>
+                  )}
+
+                  {hasSecondTypeSlot && (
+                    <>
+                      <Tooltip title={t(tr.addCapture.chooseType, lang)}>
+                        <Box
+                          component="button"
+                          onClick={(event) => openTypePicker(1, event)}
+                          sx={{
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: "999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            color: secondType ? "#fff" : "#000",
+                            textTransform: "capitalize",
+                            background: secondType
+                              ? (typeColors[secondType] ?? "#888")
+                              : "#fef3c7",
+                            border: "2px solid #000",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {secondType ?? t(tr.addCapture.unknownType, lang)}
+                        </Box>
+                      </Tooltip>
+
+                      <Tooltip title={t(tr.addCapture.removeSecondType, lang)}>
+                        <IconButton
+                          size="small"
+                          onClick={removeSecondType}
+                          sx={{
+                            border: "2px solid #000",
+                            borderRadius: "999px",
+                            width: "24px",
+                            height: "24px",
+                            background: "#fff",
+                            fontWeight: 800,
+                            fontSize: "0.75rem",
+                          }}
+                        >
+                          -
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  )}
+                </Box>
+
+                {!firstType && (
+                  <Typography
+                    sx={{
+                      mt: 0.75,
+                      fontSize: "0.72rem",
+                      color: "#b91c1c",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t(tr.addCapture.firstTypeRequired, lang)}
+                  </Typography>
+                )}
+
+                <Menu
+                  anchorEl={typePickerAnchorEl}
+                  open={Boolean(typePickerAnchorEl)}
+                  onClose={closeTypePicker}
+                  keepMounted
+                >
+                  {TYPES.map((typeName) => (
+                    <MenuItem
+                      key={typeName}
+                      onClick={() => {
+                        if (typePickerSlot !== null) {
+                          setCustomType(typePickerSlot, typeName);
+                        }
+                        closeTypePicker();
+                      }}
                       sx={{
-                        border: "2px solid #000",
-                        borderRadius: "999px",
-                        width: "24px",
-                        height: "24px",
-                        background: "#fff",
-                        fontWeight: 800,
-                        fontSize: "0.75rem",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        textTransform: "capitalize",
                       }}
                     >
-                      -
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-            </Box>
-
-            {!firstType && (
-              <Typography
-                sx={{
-                  mt: 0.75,
-                  fontSize: "0.72rem",
-                  color: "#b91c1c",
-                  fontWeight: 600,
-                }}
-              >
-                {t(tr.addCapture.firstTypeRequired, lang)}
-              </Typography>
+                      <Box
+                        sx={{
+                          width: "10px",
+                          height: "10px",
+                          borderRadius: "999px",
+                          background: typeColors[typeName] ?? "#888",
+                          border: "1px solid #000",
+                        }}
+                      />
+                      {typeName}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Box>
             )}
 
-            <Menu
-              anchorEl={typePickerAnchorEl}
-              open={Boolean(typePickerAnchorEl)}
-              onClose={closeTypePicker}
-              keepMounted
-            >
-              {TYPES.map((typeName) => (
-                <MenuItem
-                  key={typeName}
-                  onClick={() => {
-                    if (typePickerSlot !== null) {
-                      setCustomType(typePickerSlot, typeName);
-                    }
-                    closeTypePicker();
-                  }}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "999px",
-                      background: typeColors[typeName] ?? "#888",
-                      border: "1px solid #000",
-                    }}
-                  />
-                  {typeName}
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-        )}
-
-        {/* Display pokemon abilities in classic mode (clickable to select) */}
-        {selected &&
-          !randomAbilitiesMode &&
-          pokemonData &&
-          pokemonData.abilities.length > 0 &&
-          abilityPanelDraft.length === 0 && (
+            {/* Ability panel */}
             <Box sx={{ mb: 2 }}>
-              <Box
-                sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}
+              <Typography
+                component="label"
+                sx={{
+                  display: "block",
+                  fontSize: "0.75rem",
+                  fontWeight: 500,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  color: "#000",
+                  mb: 0.5,
+                }}
               >
-                {pokemonData.abilities.map((abilityEntry) => {
-                  const abilityName = abilityEntry.ability.name;
-                  const cachedEntry = abilitiesCache.abilities.find(
-                    (a) => a.name === abilityName,
-                  );
-                  const displayName =
-                    lang === "fr"
-                      ? (cachedEntry?.names?.fr ?? abilityName)
-                      : (cachedEntry?.names?.en ?? abilityName);
-                  const effect =
-                    lang === "fr"
-                      ? (cachedEntry?.effects?.fr ?? "")
-                      : (cachedEntry?.effects?.en ?? "");
-                  const isSelected = customAbilityDraft === abilityName;
-                  return (
-                    <Tooltip key={abilityName} title={effect} placement="top">
+                {t(tr.addCapture.abilityPanel, lang)}
+              </Typography>
+              {/* Display pokemon abilities in classic mode (clickable to select) */}
+              {!randomAbilitiesMode &&
+                pokemonData &&
+                pokemonData.abilities.length > 0 &&
+                abilityPanelDraft.length === 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        mb: 1.5,
+                      }}
+                    >
+                      {pokemonData.abilities.map((abilityEntry) => {
+                        const abilityName = abilityEntry.ability.name;
+                        const cachedEntry = abilitiesCache.abilities.find(
+                          (a) => a.name === abilityName,
+                        );
+                        const displayName =
+                          lang === "fr"
+                            ? (cachedEntry?.names?.fr ?? abilityName)
+                            : (cachedEntry?.names?.en ?? abilityName);
+                        const effect =
+                          lang === "fr"
+                            ? (cachedEntry?.effects?.fr ?? "")
+                            : (cachedEntry?.effects?.en ?? "");
+                        const isSelected = customAbilityDraft === abilityName;
+                        return (
+                          <Tooltip
+                            key={abilityName}
+                            title={effect}
+                            placement="top"
+                          >
+                            <Box
+                              component="button"
+                              onClick={() => setCustomAbilityDraft(abilityName)}
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                                px: 1,
+                                py: 0.25,
+                                borderRadius: "999px",
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                textTransform: "capitalize",
+                                background: isSelected
+                                  ? abilityEntry.is_hidden
+                                    ? "#d97706"
+                                    : "#0284c7"
+                                  : abilityEntry.is_hidden
+                                    ? "#fef3c7"
+                                    : "#e0f2fe",
+                                border: `2px solid ${
+                                  isSelected
+                                    ? abilityEntry.is_hidden
+                                      ? "#92400e"
+                                      : "#0c4a6e"
+                                    : abilityEntry.is_hidden
+                                      ? "#d97706"
+                                      : "#0284c7"
+                                }`,
+                                color: isSelected
+                                  ? "#fff"
+                                  : abilityEntry.is_hidden
+                                    ? "#92400e"
+                                    : "#0c4a6e",
+                                cursor: "pointer",
+                                transition: "all 150ms",
+                                "&:hover": {
+                                  background: isSelected
+                                    ? abilityEntry.is_hidden
+                                      ? "#b45309"
+                                      : "#1d4ed8"
+                                    : abilityEntry.is_hidden
+                                      ? "#fde68a"
+                                      : "#bfdbfe",
+                                  transform: "scale(1.05)",
+                                },
+                              }}
+                            >
+                              {displayName}
+                              {abilityEntry.is_hidden && (
+                                <span
+                                  title={
+                                    lang === "fr"
+                                      ? "Talent caché"
+                                      : "Hidden ability"
+                                  }
+                                  style={{ fontSize: "0.65rem" }}
+                                >
+                                  ✦
+                                </span>
+                              )}
+                            </Box>
+                          </Tooltip>
+                        );
+                      })}
+                    </Box>
+
+                    {/* Captured ability label and chip */}
+                    {customAbilityDraft && (
+                      <Box sx={{ mt: 1.5 }}>
+                        <Typography
+                          sx={{
+                            fontSize: "0.7rem",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                            color: "#666",
+                            mb: 0.5,
+                          }}
+                        >
+                          {t(tr.addCapture.capturedAbility, lang)}
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: "999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            background: "#0284c7",
+                            border: "2px solid #0369a1",
+                            color: "#fff",
+                          }}
+                        >
+                          <span style={{ textTransform: "capitalize" }}>
+                            ✓{" "}
+                            {(() => {
+                              const entry = abilitiesCache.abilities.find(
+                                (a) => a.name === customAbilityDraft,
+                              );
+                              return lang === "fr"
+                                ? (entry?.names?.fr ?? customAbilityDraft)
+                                : (entry?.names?.en ?? customAbilityDraft);
+                            })()}
+                          </span>
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                )}
+
+              {/* Display pokemon abilities in randomizer mode (clickable with panel add button) */}
+              {/* Randomizer ability assignment */}
+              {randomAbilitiesMode && (
+                <>
+                  {/* Panel chips — always shown */}
+                  <Box
+                    sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}
+                  >
+                    {abilityPanelDraft.map((abilityName) => {
+                      const entry = abilitiesCache.abilities.find(
+                        (a) => a.name === abilityName,
+                      );
+                      const displayName =
+                        lang === "fr"
+                          ? (entry?.names?.fr ?? abilityName)
+                          : (entry?.names?.en ?? abilityName);
+                      const effect =
+                        lang === "fr"
+                          ? (entry?.effects?.fr ?? "")
+                          : (entry?.effects?.en ?? "");
+                      const isSelected = customAbilityDraft === abilityName;
+                      return (
+                        <Tooltip
+                          key={abilityName}
+                          title={effect}
+                          placement="top"
+                        >
+                          <Box
+                            component="button"
+                            onClick={() => {
+                              setCustomAbilityDraft(
+                                isSelected ? null : abilityName,
+                              );
+                              setAbilitySearch("");
+                            }}
+                            aria-pressed={isSelected}
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: "999px",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              background: isSelected ? "#0284c7" : "#e0f2fe",
+                              border: `2px solid ${isSelected ? "#0369a1" : "#0284c7"}`,
+                              color: isSelected ? "#fff" : "#0c4a6e",
+                              transition: "all 150ms",
+                            }}
+                          >
+                            <span style={{ textTransform: "capitalize" }}>
+                              {displayName}
+                            </span>
+                          </Box>
+                        </Tooltip>
+                      );
+                    })}
+                    {abilityPanelDraft.length === 0 && (
+                      <Typography
+                        sx={{
+                          fontSize: "0.75rem",
+                          color: "#999",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        —
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Hint text */}
+                  <Typography
+                    sx={{ fontSize: "0.7rem", color: "#666", mb: 0.75 }}
+                  >
+                    {abilityPanelDraft.length >= 3
+                      ? t(tr.addCapture.abilityPanelFull, lang)
+                      : t(tr.addCapture.abilityPanelHint, lang)}
+                  </Typography>
+
+                  {/* Search to add to panel (hidden when panel is full) */}
+                  {abilityPanelDraft.length < 3 && (
+                    <Box sx={{ position: "relative" }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder={t(
+                          tr.addCapture.abilitiesSearchPlaceholder,
+                          lang,
+                        )}
+                        value={abilitySearch}
+                        onChange={(e) => setAbilitySearch(e.target.value)}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            background: "#fff",
+                            color: "#000",
+                            fontSize: "0.875rem",
+                            "& fieldset": { borderColor: "#000" },
+                          },
+                        }}
+                      />
+                      {abilitySearch.length >= 2 && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            background: "#fff",
+                            border: "2px solid #000",
+                            borderRadius: "0.75rem",
+                            mt: 0.5,
+                            maxHeight: "160px",
+                            overflowY: "auto",
+                            zIndex: 10,
+                            boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          {(() => {
+                            const searchLower = abilitySearch.toLowerCase();
+                            const filtered = abilitiesCache.abilities.filter(
+                              (a) =>
+                                !abilityPanelDraft.includes(a.name) &&
+                                (a.name.toLowerCase().includes(searchLower) ||
+                                  a.names?.fr
+                                    ?.toLowerCase()
+                                    .includes(searchLower) ||
+                                  a.names?.en
+                                    ?.toLowerCase()
+                                    .includes(searchLower)),
+                            );
+                            return (
+                              <>
+                                {filtered.slice(0, 8).map((a) => {
+                                  const displayName =
+                                    lang === "fr"
+                                      ? (a.names?.fr ?? a.name)
+                                      : (a.names?.en ?? a.name);
+                                  const effect =
+                                    lang === "fr"
+                                      ? (a.effects?.fr ?? "")
+                                      : (a.effects?.en ?? "");
+                                  return (
+                                    <Tooltip
+                                      key={a.name}
+                                      title={effect}
+                                      placement="left"
+                                    >
+                                      <Box
+                                        component="button"
+                                        onClick={() => {
+                                          // Add to panel and select as captured ability
+                                          setAbilityPanelDraft((prev) =>
+                                            prev.length < 3 &&
+                                            !prev.includes(a.name)
+                                              ? [...prev, a.name]
+                                              : prev,
+                                          );
+                                          setCustomAbilityDraft(a.name);
+                                          setAbilitySearch("");
+                                        }}
+                                        sx={{
+                                          width: "100%",
+                                          textAlign: "left",
+                                          px: 1.5,
+                                          py: 0.75,
+                                          background: "transparent",
+                                          border: "none",
+                                          fontSize: "0.875rem",
+                                          textTransform: "capitalize",
+                                          color: "#000",
+                                          cursor: "pointer",
+                                          "&:hover": { background: "#f0f0f0" },
+                                          "&:first-of-type": {
+                                            borderTopLeftRadius: "0.75rem",
+                                            borderTopRightRadius: "0.75rem",
+                                          },
+                                          "&:last-of-type": {
+                                            borderBottomLeftRadius: "0.75rem",
+                                            borderBottomRightRadius: "0.75rem",
+                                          },
+                                        }}
+                                      >
+                                        {displayName}
+                                      </Box>
+                                    </Tooltip>
+                                  );
+                                })}
+                                {filtered.length === 0 && (
+                                  <Box
+                                    sx={{
+                                      px: 1.5,
+                                      py: 1,
+                                      color: "#666",
+                                      fontSize: "0.875rem",
+                                    }}
+                                  >
+                                    {t(tr.addCapture.noAbilityResult, lang)}
+                                  </Box>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+
+                  {/* Captured ability label and chip */}
+                  {customAbilityDraft && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <Typography
+                        sx={{
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          color: "#666",
+                          mb: 0.5,
+                        }}
+                      >
+                        {t(tr.addCapture.capturedAbility, lang)}
+                      </Typography>
                       <Box
-                        component="button"
-                        onClick={() => setCustomAbilityDraft(abilityName)}
                         sx={{
                           display: "inline-flex",
                           alignItems: "center",
@@ -787,576 +1151,166 @@ export default function AddCaptureModal({
                           borderRadius: "999px",
                           fontSize: "0.75rem",
                           fontWeight: 600,
-                          textTransform: "capitalize",
-                          background: isSelected
-                            ? abilityEntry.is_hidden
-                              ? "#d97706"
-                              : "#0284c7"
-                            : abilityEntry.is_hidden
-                              ? "#fef3c7"
-                              : "#e0f2fe",
-                          border: `2px solid ${
-                            isSelected
-                              ? abilityEntry.is_hidden
-                                ? "#92400e"
-                                : "#0c4a6e"
-                              : abilityEntry.is_hidden
-                                ? "#d97706"
-                                : "#0284c7"
-                          }`,
-                          color: isSelected
-                            ? "#fff"
-                            : abilityEntry.is_hidden
-                              ? "#92400e"
-                              : "#0c4a6e",
-                          cursor: "pointer",
-                          transition: "all 150ms",
-                          "&:hover": {
-                            background: isSelected
-                              ? abilityEntry.is_hidden
-                                ? "#b45309"
-                                : "#1d4ed8"
-                              : abilityEntry.is_hidden
-                                ? "#fde68a"
-                                : "#bfdbfe",
-                            transform: "scale(1.05)",
-                          },
+                          background: "#0284c7",
+                          border: "2px solid #0369a1",
+                          color: "#fff",
                         }}
                       >
-                        {displayName}
-                        {abilityEntry.is_hidden && (
-                          <span
-                            title={
-                              lang === "fr" ? "Talent caché" : "Hidden ability"
-                            }
-                            style={{ fontSize: "0.65rem" }}
-                          >
-                            ✦
-                          </span>
-                        )}
+                        <span style={{ textTransform: "capitalize" }}>
+                          ✓{" "}
+                          {(() => {
+                            const entry = abilitiesCache.abilities.find(
+                              (a) => a.name === customAbilityDraft,
+                            );
+                            return lang === "fr"
+                              ? (entry?.names?.fr ?? customAbilityDraft)
+                              : (entry?.names?.en ?? customAbilityDraft);
+                          })()}
+                        </span>
                       </Box>
-                    </Tooltip>
-                  );
-                })}
-              </Box>
+                    </Box>
+                  )}
+                </>
+              )}
+            </Box>
 
-              {/* Captured ability label */}
+            {/* Nickname */}
+            <Box sx={{ mb: 1.5 }}>
               <Typography
+                component="label"
                 sx={{
-                  fontSize: "0.7rem",
-                  fontWeight: 600,
+                  display: "block",
+                  fontSize: "0.75rem",
+                  fontWeight: 500,
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  color: "#666",
-                  mb: 0.5,
+                  color: "#000",
+                  mb: 1.5,
                 }}
               >
-                {t(tr.addCapture.capturedAbility, lang)}
+                {t(tr.addCapture.nickname, lang)}
               </Typography>
-
-              {/* Captured ability chip */}
-              {customAbilityDraft && (
-                <Typography
-                  sx={{
-                    fontSize: "0.7rem",
-                    color: "#0284c7",
-                    fontWeight: 600,
-                  }}
-                >
-                  <span style={{ textTransform: "capitalize" }}>
-                    ✓{" "}
-                    {(() => {
-                      const entry = abilitiesCache.abilities.find(
-                        (a) => a.name === customAbilityDraft,
-                      );
-                      return lang === "fr"
-                        ? (entry?.names?.fr ?? customAbilityDraft)
-                        : (entry?.names?.en ?? customAbilityDraft);
-                    })()}
-                  </span>
-                </Typography>
-              )}
-            </Box>
-          )}
-
-        {/* Display ability panel in classic mode (if custom panel exists) */}
-        {selected && !randomAbilitiesMode && abilityPanelDraft.length > 0 && (
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}>
-              {abilityPanelDraft.map((abilityName) => {
-                const entry = abilitiesCache.abilities.find(
-                  (a) => a.name === abilityName,
-                );
-                const displayName =
-                  lang === "fr"
-                    ? (entry?.names?.fr ?? abilityName)
-                    : (entry?.names?.en ?? abilityName);
-                const effect =
-                  lang === "fr"
-                    ? (entry?.effects?.fr ?? "")
-                    : (entry?.effects?.en ?? "");
-                const isSelected = customAbilityDraft === abilityName;
-                return (
-                  <Tooltip key={abilityName} title={effect} placement="top">
-                    <Box
-                      component="button"
-                      onClick={() => setCustomAbilityDraft(abilityName)}
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        px: 1,
-                        py: 0.25,
-                        borderRadius: "999px",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        textTransform: "capitalize",
-                        background: isSelected ? "#0369a1" : "#0284c7",
-                        border: `2px solid ${isSelected ? "#082f49" : "#0369a1"}`,
-                        color: "#fff",
-                        cursor: "pointer",
-                        transition: "all 150ms",
-                        "&:hover": {
-                          background: "#0369a1",
-                          transform: "scale(1.05)",
-                        },
-                      }}
-                    >
-                      {displayName}
-                    </Box>
-                  </Tooltip>
-                );
-              })}
-            </Box>
-
-            {/* Captured ability label */}
-            <Typography
-              sx={{
-                fontSize: "0.7rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#666",
-                mb: 0.5,
-              }}
-            >
-              {t(tr.addCapture.capturedAbility, lang)}
-            </Typography>
-
-            {/* Captured ability chip */}
-            {customAbilityDraft && (
-              <Typography
+              <TextField
+                fullWidth
+                placeholder={t(tr.addCapture.nicknamePlaceholder, lang)}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
                 sx={{
-                  fontSize: "0.7rem",
-                  color: "#0284c7",
-                  fontWeight: 600,
-                }}
-              >
-                <span style={{ textTransform: "capitalize" }}>
-                  ✓{" "}
-                  {(() => {
-                    const entry = abilitiesCache.abilities.find(
-                      (a) => a.name === customAbilityDraft,
-                    );
-                    return lang === "fr"
-                      ? (entry?.names?.fr ?? customAbilityDraft)
-                      : (entry?.names?.en ?? customAbilityDraft);
-                  })()}
-                </span>
-              </Typography>
-            )}
-          </Box>
-        )}
-
-        {/* Display pokemon abilities in randomizer mode (clickable with panel add button) */}
-        {/* Randomizer ability assignment */}
-        {selected && randomAbilitiesMode && (
-          <Box sx={{ mb: 2 }}>
-            <Typography
-              component="label"
-              sx={{
-                display: "block",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#000",
-                mb: 0.5,
-              }}
-            >
-              {t(tr.addCapture.abilityPanel, lang)}
-            </Typography>
-
-            {/* Panel chips — always shown */}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
-              {abilityPanelDraft.map((abilityName) => {
-                const entry = abilitiesCache.abilities.find(
-                  (a) => a.name === abilityName,
-                );
-                const displayName =
-                  lang === "fr"
-                    ? (entry?.names?.fr ?? abilityName)
-                    : (entry?.names?.en ?? abilityName);
-                const effect =
-                  lang === "fr"
-                    ? (entry?.effects?.fr ?? "")
-                    : (entry?.effects?.en ?? "");
-                const isSelected = customAbilityDraft === abilityName;
-                return (
-                  <Tooltip key={abilityName} title={effect} placement="top">
-                    <Box
-                      component="button"
-                      onClick={() => {
-                        setCustomAbilityDraft(isSelected ? null : abilityName);
-                        setAbilitySearch("");
-                      }}
-                      aria-pressed={isSelected}
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        px: 1,
-                        py: 0.25,
-                        borderRadius: "999px",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        background: isSelected ? "#0284c7" : "#e0f2fe",
-                        border: `2px solid ${isSelected ? "#0369a1" : "#0284c7"}`,
-                        color: isSelected ? "#fff" : "#0c4a6e",
-                        transition: "all 150ms",
-                      }}
-                    >
-                      <span style={{ textTransform: "capitalize" }}>
-                        {displayName}
-                      </span>
-                    </Box>
-                  </Tooltip>
-                );
-              })}
-              {abilityPanelDraft.length === 0 && (
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
+                  "& .MuiOutlinedInput-root": {
+                    background: "#fff",
+                    color: "#000",
+                    fontSize: "0.875rem",
+                    "& fieldset": {
+                      borderColor: "#000",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#000",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#3b82f6",
+                      boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
+                    },
+                  },
+                  "& .MuiOutlinedInput-input::placeholder": {
                     color: "#999",
-                    fontStyle: "italic",
-                  }}
-                >
-                  —
-                </Typography>
-              )}
+                    opacity: 1,
+                  },
+                }}
+              />
             </Box>
 
-            {/* Hint text */}
-            <Typography sx={{ fontSize: "0.7rem", color: "#666", mb: 0.75 }}>
-              {abilityPanelDraft.length >= 3
-                ? t(tr.addCapture.abilityPanelFull, lang)
-                : t(tr.addCapture.abilityPanelHint, lang)}
-            </Typography>
-
-            {/* Search to add to panel (hidden when panel is full) */}
-            {abilityPanelDraft.length < 3 && (
-              <Box sx={{ position: "relative" }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder={t(
-                    tr.addCapture.abilitiesSearchPlaceholder,
-                    lang,
-                  )}
-                  value={abilitySearch}
-                  onChange={(e) => setAbilitySearch(e.target.value)}
+            {/* Gender */}
+            <Box sx={{ display: "flex", gap: 1.5, mb: 2 }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography
+                  component="label"
                   sx={{
-                    "& .MuiOutlinedInput-root": {
-                      background: "#fff",
+                    display: "block",
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#000",
+                    mb: 1.5,
+                  }}
+                >
+                  {t(tr.addCapture.gender, lang)}
+                </Typography>
+                <Select
+                  fullWidth
+                  value={gender}
+                  onChange={(e) =>
+                    setGender(e.target.value as Capture["gender"])
+                  }
+                  sx={{
+                    background: "#fff",
+                    color: "#000",
+                    fontSize: "0.875rem",
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#000",
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#000",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#3b82f6",
+                      boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
+                    },
+                    "& .MuiSvgIcon-root": {
                       color: "#000",
-                      fontSize: "0.875rem",
-                      "& fieldset": { borderColor: "#000" },
+                    },
+                  }}
+                >
+                  <MenuItem value="unknown">
+                    {t(tr.addCapture.genderUnknown, lang)}
+                  </MenuItem>
+                  <MenuItem value="male">
+                    {t(tr.addCapture.genderMale, lang)}
+                  </MenuItem>
+                  <MenuItem value="female">
+                    {t(tr.addCapture.genderFemale, lang)}
+                  </MenuItem>
+                </Select>
+              </Box>
+            </Box>
+
+            {/* Shiny toggle */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isShiny}
+                  onChange={(e) => !forceShiny && setIsShiny(e.target.checked)}
+                  disabled={forceShiny}
+                  sx={{
+                    "& .MuiSwitch-switchBase": {
+                      color: "#ccc",
+                      "&.Mui-checked": {
+                        color: "#3b82f6",
+                      },
+                    },
+                    "& .MuiSwitch-track": {
+                      background: "#ddd",
                     },
                   }}
                 />
-                {abilitySearch.length >= 2 && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      background: "#fff",
-                      border: "2px solid #000",
-                      borderRadius: "0.75rem",
-                      mt: 0.5,
-                      maxHeight: "160px",
-                      overflowY: "auto",
-                      zIndex: 10,
-                      boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
-                    }}
-                  >
-                    {(() => {
-                      const searchLower = abilitySearch.toLowerCase();
-                      const filtered = abilitiesCache.abilities.filter(
-                        (a) =>
-                          !abilityPanelDraft.includes(a.name) &&
-                          (a.name.toLowerCase().includes(searchLower) ||
-                            a.names?.fr?.toLowerCase().includes(searchLower) ||
-                            a.names?.en?.toLowerCase().includes(searchLower)),
-                      );
-                      return (
-                        <>
-                          {filtered.slice(0, 8).map((a) => {
-                            const displayName =
-                              lang === "fr"
-                                ? (a.names?.fr ?? a.name)
-                                : (a.names?.en ?? a.name);
-                            const effect =
-                              lang === "fr"
-                                ? (a.effects?.fr ?? "")
-                                : (a.effects?.en ?? "");
-                            return (
-                              <Tooltip
-                                key={a.name}
-                                title={effect}
-                                placement="left"
-                              >
-                                <Box
-                                  component="button"
-                                  onClick={() => {
-                                    // Add to panel and select as captured ability
-                                    setAbilityPanelDraft((prev) =>
-                                      prev.length < 3 && !prev.includes(a.name)
-                                        ? [...prev, a.name]
-                                        : prev,
-                                    );
-                                    setCustomAbilityDraft(a.name);
-                                    setAbilitySearch("");
-                                  }}
-                                  sx={{
-                                    width: "100%",
-                                    textAlign: "left",
-                                    px: 1.5,
-                                    py: 0.75,
-                                    background: "transparent",
-                                    border: "none",
-                                    fontSize: "0.875rem",
-                                    textTransform: "capitalize",
-                                    color: "#000",
-                                    cursor: "pointer",
-                                    "&:hover": { background: "#f0f0f0" },
-                                    "&:first-of-type": {
-                                      borderTopLeftRadius: "0.75rem",
-                                      borderTopRightRadius: "0.75rem",
-                                    },
-                                    "&:last-of-type": {
-                                      borderBottomLeftRadius: "0.75rem",
-                                      borderBottomRightRadius: "0.75rem",
-                                    },
-                                  }}
-                                >
-                                  {displayName}
-                                </Box>
-                              </Tooltip>
-                            );
-                          })}
-                          {filtered.length === 0 && (
-                            <Box
-                              sx={{
-                                px: 1.5,
-                                py: 1,
-                                color: "#666",
-                                fontSize: "0.875rem",
-                              }}
-                            >
-                              {t(tr.addCapture.noAbilityResult, lang)}
-                            </Box>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </Box>
-                )}
-              </Box>
-            )}
-
-            {/* Captured ability label and chip */}
-            {customAbilityDraft && (
-              <Box sx={{ mt: 1.5 }}>
-                <Typography
-                  sx={{
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    color: "#666",
-                    mb: 0.5,
-                  }}
-                >
-                  {t(tr.addCapture.capturedAbility, lang)}
+              }
+              label={
+                <Typography sx={{ fontSize: "0.875rem", color: "#000" }}>
+                  {t(tr.addCapture.isShiny, lang)}
+                  {forceShiny && (
+                    <Typography
+                      component="span"
+                      sx={{ fontSize: "0.75rem", color: "#f59e0b", ml: 0.5 }}
+                    >
+                      ✨
+                    </Typography>
+                  )}
                 </Typography>
-                <Box
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    px: 1,
-                    py: 0.25,
-                    borderRadius: "999px",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    background: "#0284c7",
-                    border: "2px solid #0369a1",
-                    color: "#fff",
-                  }}
-                >
-                  <span style={{ textTransform: "capitalize" }}>
-                    ✓{" "}
-                    {(() => {
-                      const entry = abilitiesCache.abilities.find(
-                        (a) => a.name === customAbilityDraft,
-                      );
-                      return lang === "fr"
-                        ? (entry?.names?.fr ?? customAbilityDraft)
-                        : (entry?.names?.en ?? customAbilityDraft);
-                    })()}
-                  </span>
-                </Box>
-              </Box>
-            )}
-          </Box>
-        )}
-
-        {/* Nickname */}
-        <Box sx={{ mb: 1.5 }}>
-          <Typography
-            component="label"
-            sx={{
-              display: "block",
-              fontSize: "0.75rem",
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "#000",
-              mb: 1.5,
-            }}
-          >
-            {t(tr.addCapture.nickname, lang)}
-          </Typography>
-          <TextField
-            fullWidth
-            placeholder={t(tr.addCapture.nicknamePlaceholder, lang)}
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                background: "#fff",
-                color: "#000",
-                fontSize: "0.875rem",
-                "& fieldset": {
-                  borderColor: "#000",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#000",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#3b82f6",
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
-                },
-              },
-              "& .MuiOutlinedInput-input::placeholder": {
-                color: "#999",
-                opacity: 1,
-              },
-            }}
-          />
-        </Box>
-
-        {/* Gender */}
-        <Box sx={{ display: "flex", gap: 1.5, mb: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography
-              component="label"
-              sx={{
-                display: "block",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                color: "#000",
-                mb: 1.5,
-              }}
-            >
-              {t(tr.addCapture.gender, lang)}
-            </Typography>
-            <Select
-              fullWidth
-              value={gender}
-              onChange={(e) => setGender(e.target.value as Capture["gender"])}
-              sx={{
-                background: "#fff",
-                color: "#000",
-                fontSize: "0.875rem",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#000",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#000",
-                },
-                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#3b82f6",
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.1)",
-                },
-                "& .MuiSvgIcon-root": {
-                  color: "#000",
-                },
-              }}
-            >
-              <MenuItem value="unknown">
-                {t(tr.addCapture.genderUnknown, lang)}
-              </MenuItem>
-              <MenuItem value="male">
-                {t(tr.addCapture.genderMale, lang)}
-              </MenuItem>
-              <MenuItem value="female">
-                {t(tr.addCapture.genderFemale, lang)}
-              </MenuItem>
-            </Select>
-          </Box>
-        </Box>
-
-        {/* Shiny toggle */}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={isShiny}
-              onChange={(e) => !forceShiny && setIsShiny(e.target.checked)}
-              disabled={forceShiny}
-              sx={{
-                "& .MuiSwitch-switchBase": {
-                  color: "#ccc",
-                  "&.Mui-checked": {
-                    color: "#3b82f6",
-                  },
-                },
-                "& .MuiSwitch-track": {
-                  background: "#ddd",
-                },
-              }}
+              }
+              sx={{ mb: selected?.id === UNOWN_ID ? 1.5 : 2.5, ml: 0 }}
             />
-          }
-          label={
-            <Typography sx={{ fontSize: "0.875rem", color: "#000" }}>
-              {t(tr.addCapture.isShiny, lang)}
-              {forceShiny && (
-                <Typography
-                  component="span"
-                  sx={{ fontSize: "0.75rem", color: "#f59e0b", ml: 0.5 }}
-                >
-                  ✨
-                </Typography>
-              )}
-            </Typography>
-          }
-          sx={{ mb: selected?.id === UNOWN_ID ? 1.5 : 2.5, ml: 0 }}
-        />
+          </>
+        )}
 
         <Box sx={{ display: "flex", gap: 1.5 }}>
           <Button

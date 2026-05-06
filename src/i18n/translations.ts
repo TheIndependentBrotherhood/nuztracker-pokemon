@@ -162,7 +162,7 @@ const translations = {
       fr: "Chargement des sprites...",
       en: "Loading sprites...",
     },
-    randomTypes: { fr: "Types (randomizer)", en: "Types (randomizer)" },
+    randomTypes: { fr: "Types", en: "Types" },
     chooseType: { fr: "Choisir un type", en: "Choose a type" },
     unknownType: { fr: "???", en: "???" },
     addSecondType: { fr: "Ajouter un second type", en: "Add second type" },
@@ -178,7 +178,6 @@ const translations = {
     unownForm: { fr: "Forme (lettre capturée)", en: "Form (captured letter)" },
     cancel: { fr: "Annuler", en: "Cancel" },
     add: { fr: "Ajouter", en: "Add" },
-    randomAbilities: { fr: "Talent (randomizer)", en: "Ability (randomizer)" },
     abilityPanel: { fr: "Panel de talents", en: "Ability panel" },
     abilityPanelFull: {
       fr: "Panel complet (3/3) — choisissez un talent ci-dessous",
@@ -204,7 +203,6 @@ const translations = {
       fr: "Chargement des sprites...",
       en: "Loading sprites...",
     },
-    randomTypes: { fr: "Types (randomizer)", en: "Types (randomizer)" },
     chooseType: { fr: "Choisir un type", en: "Choose a type" },
     unknownType: { fr: "???", en: "???" },
     addSecondType: { fr: "Ajouter un second type", en: "Add second type" },
@@ -233,13 +231,9 @@ const translations = {
     close: { fr: "Fermer", en: "Close" },
     statSpeed: { fr: "Vit", en: "Spd" },
     abilitiesSection: { fr: "Talent", en: "Ability" },
-    abilitiesRandomizer: {
-      fr: "Talent (randomizer)",
-      en: "Ability (randomizer)",
-    },
     abilityPanel: {
-      fr: "Panel de talents (randomizer)",
-      en: "Ability panel (randomizer)",
+      fr: "Panel de talents",
+      en: "Ability panel",
     },
     abilityPanelHint: {
       fr: "Jusqu'à 3 talents possibles pour ce Pokémon",
