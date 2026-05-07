@@ -139,9 +139,19 @@ export default function ZoneList({ run }: Props) {
 
   const confirmRemoveZone = () => {
     if (zoneToDelete) {
+      // Get the zone to be deleted
+      const zoneToRemove = run.zones.find((z) => z.id === zoneToDelete);
+
+      // Get all capture IDs from the zone to remove team members
+      const captureIdsToRemove = new Set(
+        zoneToRemove?.captures.map((c) => c.id) || [],
+      );
+
+      // Remove the zone and filter out team members from this zone
       updateRun({
         ...run,
         zones: run.zones.filter((z) => z.id !== zoneToDelete),
+        team: run.team.filter((member) => !captureIdsToRemove.has(member.id)),
       });
       setZoneToDelete(null);
     }
