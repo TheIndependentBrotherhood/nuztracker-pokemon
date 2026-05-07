@@ -475,6 +475,10 @@ const translations = {
     veryResistant: { fr: "Très résistant", en: "Very resistant" },
     immune: { fr: "Immunisé", en: "Immune" },
     abilitiesSection: { fr: "Talents :", en: "Abilities:" },
+    abilitiesDescription: {
+      fr: "(affectant les types - faiblesse, immunité, résistance)",
+      en: "(affecting types - weakness, immunity, resistance)",
+    },
     addAbility: { fr: "+ Talent", en: "+ Ability" },
     abilitiesSearchPlaceholder: {
       fr: "Rechercher un talent...",

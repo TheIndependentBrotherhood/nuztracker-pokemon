@@ -73,11 +73,7 @@ export default function TypeAnalysis({ run }: Props) {
         run.team.map(async (c) => {
           try {
             if (c.pokemon && c.pokemon.types) {
-              return getCaptureTypesForRun(
-                c,
-                run,
-                c.pokemon.types,
-              );
+              return getCaptureTypesForRun(c, run, c.pokemon.types);
             }
             return [];
           } catch {
@@ -229,7 +225,9 @@ export default function TypeAnalysis({ run }: Props) {
                     fontSize: "0.75rem",
                   }}
                 >
-                  {(c.nickname || getLocalizedPokemonName(c.pokemon, lang)).slice(0, 6)}
+                  {(
+                    c.nickname || getLocalizedPokemonName(c.pokemon, lang)
+                  ).slice(0, 6)}
                 </TableCell>
               ))}
               <TableCell
@@ -575,7 +573,9 @@ export default function TypeAnalysis({ run }: Props) {
                     fontSize: "0.75rem",
                   }}
                 >
-                  {(c.nickname || getLocalizedPokemonName(c.pokemon, lang)).slice(0, 6)}
+                  {(
+                    c.nickname || getLocalizedPokemonName(c.pokemon, lang)
+                  ).slice(0, 6)}
                 </TableCell>
               ))}
               <TableCell
@@ -1033,16 +1033,26 @@ export default function TypeAnalysis({ run }: Props) {
 
           {/* Ability selector */}
           <Box sx={{ marginBottom: 2 }}>
-            <Typography
-              sx={{
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                color: "#666",
-                marginBottom: 1,
-              }}
-            >
-              {t(tr.typeAnalysis.abilitiesSection, lang)}
-            </Typography>
+            <Box sx={{ marginBottom: 0.75 }}>
+              <Typography
+                sx={{
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: "#666",
+                }}
+              >
+                {t(tr.typeAnalysis.abilitiesSection, lang)}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.7rem",
+                  color: "#999",
+                  fontStyle: "italic",
+                }}
+              >
+                {t(tr.typeAnalysis.abilitiesDescription, lang)}
+              </Typography>
+            </Box>
 
             {/* Selected abilities */}
             {selectedAbilities.length > 0 && (
