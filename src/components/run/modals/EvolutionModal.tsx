@@ -11,10 +11,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  Pagination,
 } from "@mui/material";
 import { Capture, PokemonData, Run } from "@/lib/types";
 import {
   getAvailableEvolutions,
+  getLocalizedPokemonName,
 } from "@/lib/pokemon-data";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
@@ -40,13 +43,20 @@ export default function EvolutionModal({
   const [loading, setLoading] = useState(true);
   const [selectedEvolution, setSelectedEvolution] =
     useState<PokemonData | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 16;
 
   useEffect(() => {
     async function loadEvolutions() {
       setLoading(true);
       try {
-        const available = await getAvailableEvolutions(pokemonCaptured.pokemon, run);
+        const available = await getAvailableEvolutions(
+          pokemonCaptured.pokemon,
+          run,
+        );
         setEvolutions(available);
+        setCurrentPage(1);
       } catch (error) {
         console.error("Failed to load evolutions:", error);
         setEvolutions([]);
@@ -57,6 +67,42 @@ export default function EvolutionModal({
 
     loadEvolutions();
   }, [pokemonCaptured, run]);
+
+  // Filter evolutions based on search query
+  const filteredEvolutions = evolutions.filter((evolution) => {
+    const nameEn =
+      evolution.names?.en?.toLowerCase() ??
+      evolution.technicalName.toLowerCase();
+    const nameFr = evolution.names?.fr?.toLowerCase() ?? "";
+    const technicalName = evolution.technicalName.toLowerCase();
+    const searchLower = searchQuery.toLowerCase();
+
+    return (
+      nameEn.includes(searchLower) ||
+      nameFr.includes(searchLower) ||
+      technicalName.includes(searchLower)
+    );
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredEvolutions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedEvolutions = filteredEvolutions.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    page: number,
+  ) => {
+    setCurrentPage(page);
+  };
 
   const handleEvolve = async () => {
     if (!selectedEvolution) return;
@@ -77,7 +123,9 @@ export default function EvolutionModal({
         zones: run.zones.map((zone) => ({
           ...zone,
           captures: zone.captures.map((zoneCapture) =>
-            zoneCapture.id === pokemonCaptured.id ? evolvedCapture : zoneCapture,
+            zoneCapture.id === pokemonCaptured.id
+              ? evolvedCapture
+              : zoneCapture,
           ),
         })),
       };
@@ -136,9 +184,26 @@ export default function EvolutionModal({
         <Typography sx={{ fontSize: "0.875rem", color: "#666", mb: 2 }}>
           {t(tr.evolution.selectEvolution, lang)}
         </Typography>
+
+        {/* Search bar */}
+        <TextField
+          placeholder={t(tr.evolution.searchPlaceholder, lang)}
+          value={searchQuery}
+          onChange={handleSearchChange}
+          fullWidth
+          size="small"
+          sx={{ mb: 2 }}
+          slotProps={{
+            input: {
+              style: { fontSize: "0.875rem" },
+            },
+          }}
+        />
+
+        {/* Grid of evolutions */}
         <Grid container spacing={1.5}>
-          {evolutions.map((evolution) => (
-            <Grid key={evolution.id} size={{ xs: 6 }}>
+          {paginatedEvolutions.map((evolution) => (
+            <Grid key={evolution.id} size={{ xs: 3 }}>
               <Box
                 component="button"
                 onClick={() => setSelectedEvolution(evolution)}
@@ -193,12 +258,62 @@ export default function EvolutionModal({
                     textTransform: "capitalize",
                   }}
                 >
-                  {evolution.names?.[lang] || evolution.technicalName}
+                  {getLocalizedPokemonName(evolution, lang)}
                 </Typography>
               </Box>
             </Grid>
           ))}
         </Grid>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              size="small"
+            />
+          </Box>
+        )}
+
+        {/* Results info */}
+        {filteredEvolutions.length > 0 && (
+          <Typography
+            sx={{
+              fontSize: "0.75rem",
+              color: "#999",
+              mt: 2,
+              textAlign: "center",
+            }}
+          >
+            {filteredEvolutions.length}{" "}
+            {t(
+              filteredEvolutions.length === 1
+                ? tr.evolution.resultSingular
+                : tr.evolution.resultPlural,
+              lang,
+            )}
+          </Typography>
+        )}
+
+        {searchQuery && filteredEvolutions.length === 0 && (
+          <Typography
+            sx={{
+              fontSize: "0.875rem",
+              color: "#999",
+              mt: 2,
+              textAlign: "center",
+            }}
+          >
+            {(() => {
+              const noResultsEntry = t(tr.evolution.noResults, lang);
+              return typeof noResultsEntry === "function"
+                ? noResultsEntry(searchQuery)
+                : noResultsEntry;
+            })()}
+          </Typography>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} sx={{ height: "2rem", px: 2 }}>

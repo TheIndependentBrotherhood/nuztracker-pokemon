@@ -16,6 +16,7 @@ export async function generateStaticParams() {
     { step: "pokemon-list" },
     { step: "regions" },
     { step: "animated-sprites" },
+    { step: "evolution-chains" },
   ];
 }
 
@@ -74,6 +75,9 @@ export async function POST(
           break;
         case "animated-sprites":
           await syncAnimatedSprites(send);
+          break;
+        case "evolution-chains":
+          await syncEvolutionChains(send);
           break;
         default:
           send({ type: "error", message: `Unknown step: ${step}` });
@@ -625,7 +629,8 @@ async function syncPokemonList(send: SendFn) {
             existing?.sprites?.normal?.alternatives ??
             previousEntry?.sprites.normal.alternatives ??
             [],
-          excludeUrls: existing?.sprites?.normal?.excludeUrls ??
+          excludeUrls:
+            existing?.sprites?.normal?.excludeUrls ??
             previousEntry?.sprites.normal.excludeUrls ??
             [],
         },
@@ -635,7 +640,8 @@ async function syncPokemonList(send: SendFn) {
             existing?.sprites?.shiny?.alternatives ??
             previousEntry?.sprites.shiny.alternatives ??
             [],
-          excludeUrls: existing?.sprites?.shiny?.excludeUrls ??
+          excludeUrls:
+            existing?.sprites?.shiny?.excludeUrls ??
             previousEntry?.sprites.shiny.excludeUrls ??
             [],
         },
@@ -946,6 +952,171 @@ async function syncAnimatedSprites(send: SendFn) {
     modified,
     deleted,
     incoming,
+  });
+}
+
+// ─── evolution-chains sync ───────────────────────────────────────────────────
+
+interface EvolutionStage {
+  id: number;
+  technicalName: string;
+}
+
+interface EvolutionChain {
+  base: EvolutionStage;
+  stage2?: EvolutionStage;
+  stage3?: EvolutionStage;
+}
+
+async function syncEvolutionChains(send: SendFn) {
+  send({ type: "progress", message: "🔄 Loading Pokémon list…" });
+
+  const pokemonList = readCurrentFile<{
+    pokemon: Array<{ id: number; technicalName: string }>;
+  }>("pokemon-list.json");
+
+  if (!pokemonList?.pokemon) {
+    throw new Error("pokemon-list.json is missing or invalid");
+  }
+
+  const pokemonMap = new Map(
+    pokemonList.pokemon.map((p) => [p.technicalName.toLowerCase(), p.id]),
+  );
+
+  send({
+    type: "progress",
+    message: "📊 Fetching evolution chains from PokeAPI…",
+  });
+
+  const countResponse = await fetchJson<{ count: number }>(
+    "https://pokeapi.co/api/v2/evolution-chain/?limit=1",
+  );
+  const totalChains = countResponse.count;
+
+  send({
+    type: "progress",
+    message: `📋 Found ${totalChains} evolution chains – processing…`,
+    current: 0,
+    total: totalChains,
+  });
+
+  const incomingChains: EvolutionChain[] = [];
+
+  for (let offset = 0; offset < totalChains; offset += 20) {
+    const response = await fetchJson<{ results: Array<{ url: string }> }>(
+      `https://pokeapi.co/api/v2/evolution-chain/?offset=${offset}&limit=20`,
+      50,
+    );
+
+    for (const result of response.results) {
+      try {
+        const chainData = await fetchJson<{
+          chain: {
+            species: { name: string };
+            evolves_to: Array<{
+              species: { name: string };
+              evolves_to: Array<{ species: { name: string } }>;
+            }>;
+          };
+        }>(result.url, 30);
+
+        const baseName = chainData.chain.species.name;
+        const baseId = pokemonMap.get(baseName.toLowerCase());
+
+        if (baseId === undefined) {
+          continue;
+        }
+
+        const chain: EvolutionChain = {
+          base: { id: baseId, technicalName: baseName },
+        };
+
+        // Stage 2
+        if (
+          chainData.chain.evolves_to &&
+          chainData.chain.evolves_to.length > 0
+        ) {
+          const stage2Name = chainData.chain.evolves_to[0].species.name;
+          const stage2Id = pokemonMap.get(stage2Name.toLowerCase());
+
+          if (stage2Id !== undefined) {
+            chain.stage2 = { id: stage2Id, technicalName: stage2Name };
+
+            // Stage 3
+            if (
+              chainData.chain.evolves_to[0].evolves_to &&
+              chainData.chain.evolves_to[0].evolves_to.length > 0
+            ) {
+              const stage3Name =
+                chainData.chain.evolves_to[0].evolves_to[0].species.name;
+              const stage3Id = pokemonMap.get(stage3Name.toLowerCase());
+
+              if (stage3Id !== undefined) {
+                chain.stage3 = { id: stage3Id, technicalName: stage3Name };
+              }
+            }
+          }
+        }
+
+        incomingChains.push(chain);
+      } catch (error) {
+        console.error("Error processing evolution chain:", error);
+      }
+    }
+
+    send({
+      type: "progress",
+      message: `⚙️ Processed ${Math.min(offset + 20, totalChains)}/${totalChains} chains`,
+      current: Math.min(offset + 20, totalChains),
+      total: totalChains,
+    });
+  }
+
+  const current =
+    readCurrentFile<EvolutionChain[]>("evolution-chains.json") ?? [];
+  const currentByBaseName = new Map(
+    current.map((c) => [c.base.technicalName, c]),
+  );
+  const incomingByBaseName = new Map(
+    incomingChains.map((c) => [c.base.technicalName, c]),
+  );
+
+  const added: unknown[] = [];
+  const modified: unknown[] = [];
+  const deleted: unknown[] = [];
+
+  for (const chain of incomingChains) {
+    if (!currentByBaseName.has(chain.base.technicalName)) {
+      added.push(chain);
+    } else {
+      const curr = currentByBaseName.get(chain.base.technicalName)!;
+      if (JSON.stringify(curr) !== JSON.stringify(chain)) {
+        modified.push({ current: curr, incoming: chain });
+      }
+    }
+  }
+
+  for (const chain of current) {
+    if (!incomingByBaseName.has(chain.base.technicalName)) {
+      deleted.push(chain);
+    }
+  }
+
+  send({
+    type: "progress",
+    message: `✅ Diff computed: +${added.length} | ~${modified.length} | -${deleted.length}`,
+  });
+
+  send({
+    type: "diff",
+    added,
+    modified,
+    deleted,
+    incoming: {
+      chains: incomingChains,
+      generatedAt: new Date().toISOString(),
+      totalCount: incomingChains.length,
+    },
   });
 }
 

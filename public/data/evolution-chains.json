@@ -1,0 +1,4892 @@
+{
+  "chains": [
+    {
+      "base": {
+        "id": 1,
+        "technicalName": "bulbasaur"
+      },
+      "stage2": {
+        "id": 2,
+        "technicalName": "ivysaur"
+      },
+      "stage3": {
+        "id": 3,
+        "technicalName": "venusaur"
+      }
+    },
+    {
+      "base": {
+        "id": 4,
+        "technicalName": "charmander"
+      },
+      "stage2": {
+        "id": 5,
+        "technicalName": "charmeleon"
+      },
+      "stage3": {
+        "id": 6,
+        "technicalName": "charizard"
+      }
+    },
+    {
+      "base": {
+        "id": 7,
+        "technicalName": "squirtle"
+      },
+      "stage2": {
+        "id": 8,
+        "technicalName": "wartortle"
+      },
+      "stage3": {
+        "id": 9,
+        "technicalName": "blastoise"
+      }
+    },
+    {
+      "base": {
+        "id": 10,
+        "technicalName": "caterpie"
+      },
+      "stage2": {
+        "id": 11,
+        "technicalName": "metapod"
+      },
+      "stage3": {
+        "id": 12,
+        "technicalName": "butterfree"
+      }
+    },
+    {
+      "base": {
+        "id": 13,
+        "technicalName": "weedle"
+      },
+      "stage2": {
+        "id": 14,
+        "technicalName": "kakuna"
+      },
+      "stage3": {
+        "id": 15,
+        "technicalName": "beedrill"
+      }
+    },
+    {
+      "base": {
+        "id": 16,
+        "technicalName": "pidgey"
+      },
+      "stage2": {
+        "id": 17,
+        "technicalName": "pidgeotto"
+      },
+      "stage3": {
+        "id": 18,
+        "technicalName": "pidgeot"
+      }
+    },
+    {
+      "base": {
+        "id": 19,
+        "technicalName": "rattata"
+      },
+      "stage2": {
+        "id": 20,
+        "technicalName": "raticate"
+      }
+    },
+    {
+      "base": {
+        "id": 21,
+        "technicalName": "spearow"
+      },
+      "stage2": {
+        "id": 22,
+        "technicalName": "fearow"
+      }
+    },
+    {
+      "base": {
+        "id": 23,
+        "technicalName": "ekans"
+      },
+      "stage2": {
+        "id": 24,
+        "technicalName": "arbok"
+      }
+    },
+    {
+      "base": {
+        "id": 172,
+        "technicalName": "pichu"
+      },
+      "stage2": {
+        "id": 25,
+        "technicalName": "pikachu"
+      },
+      "stage3": {
+        "id": 26,
+        "technicalName": "raichu"
+      }
+    },
+    {
+      "base": {
+        "id": 27,
+        "technicalName": "sandshrew"
+      },
+      "stage2": {
+        "id": 28,
+        "technicalName": "sandslash"
+      }
+    },
+    {
+      "base": {
+        "id": 29,
+        "technicalName": "nidoran-f"
+      },
+      "stage2": {
+        "id": 30,
+        "technicalName": "nidorina"
+      },
+      "stage3": {
+        "id": 31,
+        "technicalName": "nidoqueen"
+      }
+    },
+    {
+      "base": {
+        "id": 32,
+        "technicalName": "nidoran-m"
+      },
+      "stage2": {
+        "id": 33,
+        "technicalName": "nidorino"
+      },
+      "stage3": {
+        "id": 34,
+        "technicalName": "nidoking"
+      }
+    },
+    {
+      "base": {
+        "id": 173,
+        "technicalName": "cleffa"
+      },
+      "stage2": {
+        "id": 35,
+        "technicalName": "clefairy"
+      },
+      "stage3": {
+        "id": 36,
+        "technicalName": "clefable"
+      }
+    },
+    {
+      "base": {
+        "id": 37,
+        "technicalName": "vulpix"
+      },
+      "stage2": {
+        "id": 38,
+        "technicalName": "ninetales"
+      }
+    },
+    {
+      "base": {
+        "id": 174,
+        "technicalName": "igglybuff"
+      },
+      "stage2": {
+        "id": 39,
+        "technicalName": "jigglypuff"
+      },
+      "stage3": {
+        "id": 40,
+        "technicalName": "wigglytuff"
+      }
+    },
+    {
+      "base": {
+        "id": 41,
+        "technicalName": "zubat"
+      },
+      "stage2": {
+        "id": 42,
+        "technicalName": "golbat"
+      },
+      "stage3": {
+        "id": 169,
+        "technicalName": "crobat"
+      }
+    },
+    {
+      "base": {
+        "id": 43,
+        "technicalName": "oddish"
+      },
+      "stage2": {
+        "id": 44,
+        "technicalName": "gloom"
+      },
+      "stage3": {
+        "id": 45,
+        "technicalName": "vileplume"
+      }
+    },
+    {
+      "base": {
+        "id": 46,
+        "technicalName": "paras"
+      },
+      "stage2": {
+        "id": 47,
+        "technicalName": "parasect"
+      }
+    },
+    {
+      "base": {
+        "id": 48,
+        "technicalName": "venonat"
+      },
+      "stage2": {
+        "id": 49,
+        "technicalName": "venomoth"
+      }
+    },
+    {
+      "base": {
+        "id": 50,
+        "technicalName": "diglett"
+      },
+      "stage2": {
+        "id": 51,
+        "technicalName": "dugtrio"
+      }
+    },
+    {
+      "base": {
+        "id": 52,
+        "technicalName": "meowth"
+      },
+      "stage2": {
+        "id": 53,
+        "technicalName": "persian"
+      }
+    },
+    {
+      "base": {
+        "id": 54,
+        "technicalName": "psyduck"
+      },
+      "stage2": {
+        "id": 55,
+        "technicalName": "golduck"
+      }
+    },
+    {
+      "base": {
+        "id": 56,
+        "technicalName": "mankey"
+      },
+      "stage2": {
+        "id": 57,
+        "technicalName": "primeape"
+      },
+      "stage3": {
+        "id": 979,
+        "technicalName": "annihilape"
+      }
+    },
+    {
+      "base": {
+        "id": 58,
+        "technicalName": "growlithe"
+      },
+      "stage2": {
+        "id": 59,
+        "technicalName": "arcanine"
+      }
+    },
+    {
+      "base": {
+        "id": 60,
+        "technicalName": "poliwag"
+      },
+      "stage2": {
+        "id": 61,
+        "technicalName": "poliwhirl"
+      },
+      "stage3": {
+        "id": 62,
+        "technicalName": "poliwrath"
+      }
+    },
+    {
+      "base": {
+        "id": 63,
+        "technicalName": "abra"
+      },
+      "stage2": {
+        "id": 64,
+        "technicalName": "kadabra"
+      },
+      "stage3": {
+        "id": 65,
+        "technicalName": "alakazam"
+      }
+    },
+    {
+      "base": {
+        "id": 66,
+        "technicalName": "machop"
+      },
+      "stage2": {
+        "id": 67,
+        "technicalName": "machoke"
+      },
+      "stage3": {
+        "id": 68,
+        "technicalName": "machamp"
+      }
+    },
+    {
+      "base": {
+        "id": 69,
+        "technicalName": "bellsprout"
+      },
+      "stage2": {
+        "id": 70,
+        "technicalName": "weepinbell"
+      },
+      "stage3": {
+        "id": 71,
+        "technicalName": "victreebel"
+      }
+    },
+    {
+      "base": {
+        "id": 72,
+        "technicalName": "tentacool"
+      },
+      "stage2": {
+        "id": 73,
+        "technicalName": "tentacruel"
+      }
+    },
+    {
+      "base": {
+        "id": 74,
+        "technicalName": "geodude"
+      },
+      "stage2": {
+        "id": 75,
+        "technicalName": "graveler"
+      },
+      "stage3": {
+        "id": 76,
+        "technicalName": "golem"
+      }
+    },
+    {
+      "base": {
+        "id": 77,
+        "technicalName": "ponyta"
+      },
+      "stage2": {
+        "id": 78,
+        "technicalName": "rapidash"
+      }
+    },
+    {
+      "base": {
+        "id": 79,
+        "technicalName": "slowpoke"
+      },
+      "stage2": {
+        "id": 80,
+        "technicalName": "slowbro"
+      }
+    },
+    {
+      "base": {
+        "id": 81,
+        "technicalName": "magnemite"
+      },
+      "stage2": {
+        "id": 82,
+        "technicalName": "magneton"
+      },
+      "stage3": {
+        "id": 462,
+        "technicalName": "magnezone"
+      }
+    },
+    {
+      "base": {
+        "id": 83,
+        "technicalName": "farfetchd"
+      },
+      "stage2": {
+        "id": 865,
+        "technicalName": "sirfetchd"
+      }
+    },
+    {
+      "base": {
+        "id": 84,
+        "technicalName": "doduo"
+      },
+      "stage2": {
+        "id": 85,
+        "technicalName": "dodrio"
+      }
+    },
+    {
+      "base": {
+        "id": 86,
+        "technicalName": "seel"
+      },
+      "stage2": {
+        "id": 87,
+        "technicalName": "dewgong"
+      }
+    },
+    {
+      "base": {
+        "id": 88,
+        "technicalName": "grimer"
+      },
+      "stage2": {
+        "id": 89,
+        "technicalName": "muk"
+      }
+    },
+    {
+      "base": {
+        "id": 90,
+        "technicalName": "shellder"
+      },
+      "stage2": {
+        "id": 91,
+        "technicalName": "cloyster"
+      }
+    },
+    {
+      "base": {
+        "id": 92,
+        "technicalName": "gastly"
+      },
+      "stage2": {
+        "id": 93,
+        "technicalName": "haunter"
+      },
+      "stage3": {
+        "id": 94,
+        "technicalName": "gengar"
+      }
+    },
+    {
+      "base": {
+        "id": 95,
+        "technicalName": "onix"
+      },
+      "stage2": {
+        "id": 208,
+        "technicalName": "steelix"
+      }
+    },
+    {
+      "base": {
+        "id": 96,
+        "technicalName": "drowzee"
+      },
+      "stage2": {
+        "id": 97,
+        "technicalName": "hypno"
+      }
+    },
+    {
+      "base": {
+        "id": 98,
+        "technicalName": "krabby"
+      },
+      "stage2": {
+        "id": 99,
+        "technicalName": "kingler"
+      }
+    },
+    {
+      "base": {
+        "id": 100,
+        "technicalName": "voltorb"
+      },
+      "stage2": {
+        "id": 101,
+        "technicalName": "electrode"
+      }
+    },
+    {
+      "base": {
+        "id": 102,
+        "technicalName": "exeggcute"
+      },
+      "stage2": {
+        "id": 103,
+        "technicalName": "exeggutor"
+      }
+    },
+    {
+      "base": {
+        "id": 104,
+        "technicalName": "cubone"
+      },
+      "stage2": {
+        "id": 105,
+        "technicalName": "marowak"
+      }
+    },
+    {
+      "base": {
+        "id": 236,
+        "technicalName": "tyrogue"
+      },
+      "stage2": {
+        "id": 106,
+        "technicalName": "hitmonlee"
+      }
+    },
+    {
+      "base": {
+        "id": 108,
+        "technicalName": "lickitung"
+      },
+      "stage2": {
+        "id": 463,
+        "technicalName": "lickilicky"
+      }
+    },
+    {
+      "base": {
+        "id": 109,
+        "technicalName": "koffing"
+      },
+      "stage2": {
+        "id": 110,
+        "technicalName": "weezing"
+      }
+    },
+    {
+      "base": {
+        "id": 111,
+        "technicalName": "rhyhorn"
+      },
+      "stage2": {
+        "id": 112,
+        "technicalName": "rhydon"
+      },
+      "stage3": {
+        "id": 464,
+        "technicalName": "rhyperior"
+      }
+    },
+    {
+      "base": {
+        "id": 440,
+        "technicalName": "happiny"
+      },
+      "stage2": {
+        "id": 113,
+        "technicalName": "chansey"
+      },
+      "stage3": {
+        "id": 242,
+        "technicalName": "blissey"
+      }
+    },
+    {
+      "base": {
+        "id": 114,
+        "technicalName": "tangela"
+      },
+      "stage2": {
+        "id": 465,
+        "technicalName": "tangrowth"
+      }
+    },
+    {
+      "base": {
+        "id": 115,
+        "technicalName": "kangaskhan"
+      }
+    },
+    {
+      "base": {
+        "id": 116,
+        "technicalName": "horsea"
+      },
+      "stage2": {
+        "id": 117,
+        "technicalName": "seadra"
+      },
+      "stage3": {
+        "id": 230,
+        "technicalName": "kingdra"
+      }
+    },
+    {
+      "base": {
+        "id": 118,
+        "technicalName": "goldeen"
+      },
+      "stage2": {
+        "id": 119,
+        "technicalName": "seaking"
+      }
+    },
+    {
+      "base": {
+        "id": 120,
+        "technicalName": "staryu"
+      },
+      "stage2": {
+        "id": 121,
+        "technicalName": "starmie"
+      }
+    },
+    {
+      "base": {
+        "id": 439,
+        "technicalName": "mime-jr"
+      },
+      "stage2": {
+        "id": 122,
+        "technicalName": "mr-mime"
+      },
+      "stage3": {
+        "id": 866,
+        "technicalName": "mr-rime"
+      }
+    },
+    {
+      "base": {
+        "id": 123,
+        "technicalName": "scyther"
+      },
+      "stage2": {
+        "id": 212,
+        "technicalName": "scizor"
+      }
+    },
+    {
+      "base": {
+        "id": 238,
+        "technicalName": "smoochum"
+      },
+      "stage2": {
+        "id": 124,
+        "technicalName": "jynx"
+      }
+    },
+    {
+      "base": {
+        "id": 239,
+        "technicalName": "elekid"
+      },
+      "stage2": {
+        "id": 125,
+        "technicalName": "electabuzz"
+      },
+      "stage3": {
+        "id": 466,
+        "technicalName": "electivire"
+      }
+    },
+    {
+      "base": {
+        "id": 240,
+        "technicalName": "magby"
+      },
+      "stage2": {
+        "id": 126,
+        "technicalName": "magmar"
+      },
+      "stage3": {
+        "id": 467,
+        "technicalName": "magmortar"
+      }
+    },
+    {
+      "base": {
+        "id": 127,
+        "technicalName": "pinsir"
+      }
+    },
+    {
+      "base": {
+        "id": 128,
+        "technicalName": "tauros"
+      }
+    },
+    {
+      "base": {
+        "id": 129,
+        "technicalName": "magikarp"
+      },
+      "stage2": {
+        "id": 130,
+        "technicalName": "gyarados"
+      }
+    },
+    {
+      "base": {
+        "id": 131,
+        "technicalName": "lapras"
+      }
+    },
+    {
+      "base": {
+        "id": 132,
+        "technicalName": "ditto"
+      }
+    },
+    {
+      "base": {
+        "id": 133,
+        "technicalName": "eevee"
+      },
+      "stage2": {
+        "id": 134,
+        "technicalName": "vaporeon"
+      }
+    },
+    {
+      "base": {
+        "id": 137,
+        "technicalName": "porygon"
+      },
+      "stage2": {
+        "id": 233,
+        "technicalName": "porygon2"
+      },
+      "stage3": {
+        "id": 474,
+        "technicalName": "porygon-z"
+      }
+    },
+    {
+      "base": {
+        "id": 138,
+        "technicalName": "omanyte"
+      },
+      "stage2": {
+        "id": 139,
+        "technicalName": "omastar"
+      }
+    },
+    {
+      "base": {
+        "id": 140,
+        "technicalName": "kabuto"
+      },
+      "stage2": {
+        "id": 141,
+        "technicalName": "kabutops"
+      }
+    },
+    {
+      "base": {
+        "id": 142,
+        "technicalName": "aerodactyl"
+      }
+    },
+    {
+      "base": {
+        "id": 446,
+        "technicalName": "munchlax"
+      },
+      "stage2": {
+        "id": 143,
+        "technicalName": "snorlax"
+      }
+    },
+    {
+      "base": {
+        "id": 144,
+        "technicalName": "articuno"
+      }
+    },
+    {
+      "base": {
+        "id": 145,
+        "technicalName": "zapdos"
+      }
+    },
+    {
+      "base": {
+        "id": 146,
+        "technicalName": "moltres"
+      }
+    },
+    {
+      "base": {
+        "id": 147,
+        "technicalName": "dratini"
+      },
+      "stage2": {
+        "id": 148,
+        "technicalName": "dragonair"
+      },
+      "stage3": {
+        "id": 149,
+        "technicalName": "dragonite"
+      }
+    },
+    {
+      "base": {
+        "id": 150,
+        "technicalName": "mewtwo"
+      }
+    },
+    {
+      "base": {
+        "id": 151,
+        "technicalName": "mew"
+      }
+    },
+    {
+      "base": {
+        "id": 152,
+        "technicalName": "chikorita"
+      },
+      "stage2": {
+        "id": 153,
+        "technicalName": "bayleef"
+      },
+      "stage3": {
+        "id": 154,
+        "technicalName": "meganium"
+      }
+    },
+    {
+      "base": {
+        "id": 155,
+        "technicalName": "cyndaquil"
+      },
+      "stage2": {
+        "id": 156,
+        "technicalName": "quilava"
+      },
+      "stage3": {
+        "id": 157,
+        "technicalName": "typhlosion"
+      }
+    },
+    {
+      "base": {
+        "id": 158,
+        "technicalName": "totodile"
+      },
+      "stage2": {
+        "id": 159,
+        "technicalName": "croconaw"
+      },
+      "stage3": {
+        "id": 160,
+        "technicalName": "feraligatr"
+      }
+    },
+    {
+      "base": {
+        "id": 161,
+        "technicalName": "sentret"
+      },
+      "stage2": {
+        "id": 162,
+        "technicalName": "furret"
+      }
+    },
+    {
+      "base": {
+        "id": 163,
+        "technicalName": "hoothoot"
+      },
+      "stage2": {
+        "id": 164,
+        "technicalName": "noctowl"
+      }
+    },
+    {
+      "base": {
+        "id": 165,
+        "technicalName": "ledyba"
+      },
+      "stage2": {
+        "id": 166,
+        "technicalName": "ledian"
+      }
+    },
+    {
+      "base": {
+        "id": 167,
+        "technicalName": "spinarak"
+      },
+      "stage2": {
+        "id": 168,
+        "technicalName": "ariados"
+      }
+    },
+    {
+      "base": {
+        "id": 170,
+        "technicalName": "chinchou"
+      },
+      "stage2": {
+        "id": 171,
+        "technicalName": "lanturn"
+      }
+    },
+    {
+      "base": {
+        "id": 175,
+        "technicalName": "togepi"
+      },
+      "stage2": {
+        "id": 176,
+        "technicalName": "togetic"
+      },
+      "stage3": {
+        "id": 468,
+        "technicalName": "togekiss"
+      }
+    },
+    {
+      "base": {
+        "id": 177,
+        "technicalName": "natu"
+      },
+      "stage2": {
+        "id": 178,
+        "technicalName": "xatu"
+      }
+    },
+    {
+      "base": {
+        "id": 179,
+        "technicalName": "mareep"
+      },
+      "stage2": {
+        "id": 180,
+        "technicalName": "flaaffy"
+      },
+      "stage3": {
+        "id": 181,
+        "technicalName": "ampharos"
+      }
+    },
+    {
+      "base": {
+        "id": 298,
+        "technicalName": "azurill"
+      },
+      "stage2": {
+        "id": 183,
+        "technicalName": "marill"
+      },
+      "stage3": {
+        "id": 184,
+        "technicalName": "azumarill"
+      }
+    },
+    {
+      "base": {
+        "id": 438,
+        "technicalName": "bonsly"
+      },
+      "stage2": {
+        "id": 185,
+        "technicalName": "sudowoodo"
+      }
+    },
+    {
+      "base": {
+        "id": 187,
+        "technicalName": "hoppip"
+      },
+      "stage2": {
+        "id": 188,
+        "technicalName": "skiploom"
+      },
+      "stage3": {
+        "id": 189,
+        "technicalName": "jumpluff"
+      }
+    },
+    {
+      "base": {
+        "id": 190,
+        "technicalName": "aipom"
+      },
+      "stage2": {
+        "id": 424,
+        "technicalName": "ambipom"
+      }
+    },
+    {
+      "base": {
+        "id": 191,
+        "technicalName": "sunkern"
+      },
+      "stage2": {
+        "id": 192,
+        "technicalName": "sunflora"
+      }
+    },
+    {
+      "base": {
+        "id": 193,
+        "technicalName": "yanma"
+      },
+      "stage2": {
+        "id": 469,
+        "technicalName": "yanmega"
+      }
+    },
+    {
+      "base": {
+        "id": 194,
+        "technicalName": "wooper"
+      },
+      "stage2": {
+        "id": 195,
+        "technicalName": "quagsire"
+      }
+    },
+    {
+      "base": {
+        "id": 198,
+        "technicalName": "murkrow"
+      },
+      "stage2": {
+        "id": 430,
+        "technicalName": "honchkrow"
+      }
+    },
+    {
+      "base": {
+        "id": 200,
+        "technicalName": "misdreavus"
+      },
+      "stage2": {
+        "id": 429,
+        "technicalName": "mismagius"
+      }
+    },
+    {
+      "base": {
+        "id": 201,
+        "technicalName": "unown"
+      }
+    },
+    {
+      "base": {
+        "id": 360,
+        "technicalName": "wynaut"
+      },
+      "stage2": {
+        "id": 202,
+        "technicalName": "wobbuffet"
+      }
+    },
+    {
+      "base": {
+        "id": 203,
+        "technicalName": "girafarig"
+      },
+      "stage2": {
+        "id": 981,
+        "technicalName": "farigiraf"
+      }
+    },
+    {
+      "base": {
+        "id": 204,
+        "technicalName": "pineco"
+      },
+      "stage2": {
+        "id": 205,
+        "technicalName": "forretress"
+      }
+    },
+    {
+      "base": {
+        "id": 206,
+        "technicalName": "dunsparce"
+      }
+    },
+    {
+      "base": {
+        "id": 207,
+        "technicalName": "gligar"
+      },
+      "stage2": {
+        "id": 472,
+        "technicalName": "gliscor"
+      }
+    },
+    {
+      "base": {
+        "id": 209,
+        "technicalName": "snubbull"
+      },
+      "stage2": {
+        "id": 210,
+        "technicalName": "granbull"
+      }
+    },
+    {
+      "base": {
+        "id": 211,
+        "technicalName": "qwilfish"
+      },
+      "stage2": {
+        "id": 904,
+        "technicalName": "overqwil"
+      }
+    },
+    {
+      "base": {
+        "id": 213,
+        "technicalName": "shuckle"
+      }
+    },
+    {
+      "base": {
+        "id": 214,
+        "technicalName": "heracross"
+      }
+    },
+    {
+      "base": {
+        "id": 215,
+        "technicalName": "sneasel"
+      },
+      "stage2": {
+        "id": 461,
+        "technicalName": "weavile"
+      }
+    },
+    {
+      "base": {
+        "id": 216,
+        "technicalName": "teddiursa"
+      },
+      "stage2": {
+        "id": 217,
+        "technicalName": "ursaring"
+      },
+      "stage3": {
+        "id": 901,
+        "technicalName": "ursaluna"
+      }
+    },
+    {
+      "base": {
+        "id": 218,
+        "technicalName": "slugma"
+      },
+      "stage2": {
+        "id": 219,
+        "technicalName": "magcargo"
+      }
+    },
+    {
+      "base": {
+        "id": 220,
+        "technicalName": "swinub"
+      },
+      "stage2": {
+        "id": 221,
+        "technicalName": "piloswine"
+      },
+      "stage3": {
+        "id": 473,
+        "technicalName": "mamoswine"
+      }
+    },
+    {
+      "base": {
+        "id": 222,
+        "technicalName": "corsola"
+      },
+      "stage2": {
+        "id": 864,
+        "technicalName": "cursola"
+      }
+    },
+    {
+      "base": {
+        "id": 223,
+        "technicalName": "remoraid"
+      },
+      "stage2": {
+        "id": 224,
+        "technicalName": "octillery"
+      }
+    },
+    {
+      "base": {
+        "id": 225,
+        "technicalName": "delibird"
+      }
+    },
+    {
+      "base": {
+        "id": 458,
+        "technicalName": "mantyke"
+      },
+      "stage2": {
+        "id": 226,
+        "technicalName": "mantine"
+      }
+    },
+    {
+      "base": {
+        "id": 227,
+        "technicalName": "skarmory"
+      }
+    },
+    {
+      "base": {
+        "id": 228,
+        "technicalName": "houndour"
+      },
+      "stage2": {
+        "id": 229,
+        "technicalName": "houndoom"
+      }
+    },
+    {
+      "base": {
+        "id": 231,
+        "technicalName": "phanpy"
+      },
+      "stage2": {
+        "id": 232,
+        "technicalName": "donphan"
+      }
+    },
+    {
+      "base": {
+        "id": 234,
+        "technicalName": "stantler"
+      },
+      "stage2": {
+        "id": 899,
+        "technicalName": "wyrdeer"
+      }
+    },
+    {
+      "base": {
+        "id": 235,
+        "technicalName": "smeargle"
+      }
+    },
+    {
+      "base": {
+        "id": 241,
+        "technicalName": "miltank"
+      }
+    },
+    {
+      "base": {
+        "id": 243,
+        "technicalName": "raikou"
+      }
+    },
+    {
+      "base": {
+        "id": 244,
+        "technicalName": "entei"
+      }
+    },
+    {
+      "base": {
+        "id": 245,
+        "technicalName": "suicune"
+      }
+    },
+    {
+      "base": {
+        "id": 246,
+        "technicalName": "larvitar"
+      },
+      "stage2": {
+        "id": 247,
+        "technicalName": "pupitar"
+      },
+      "stage3": {
+        "id": 248,
+        "technicalName": "tyranitar"
+      }
+    },
+    {
+      "base": {
+        "id": 249,
+        "technicalName": "lugia"
+      }
+    },
+    {
+      "base": {
+        "id": 250,
+        "technicalName": "ho-oh"
+      }
+    },
+    {
+      "base": {
+        "id": 251,
+        "technicalName": "celebi"
+      }
+    },
+    {
+      "base": {
+        "id": 252,
+        "technicalName": "treecko"
+      },
+      "stage2": {
+        "id": 253,
+        "technicalName": "grovyle"
+      },
+      "stage3": {
+        "id": 254,
+        "technicalName": "sceptile"
+      }
+    },
+    {
+      "base": {
+        "id": 255,
+        "technicalName": "torchic"
+      },
+      "stage2": {
+        "id": 256,
+        "technicalName": "combusken"
+      },
+      "stage3": {
+        "id": 257,
+        "technicalName": "blaziken"
+      }
+    },
+    {
+      "base": {
+        "id": 258,
+        "technicalName": "mudkip"
+      },
+      "stage2": {
+        "id": 259,
+        "technicalName": "marshtomp"
+      },
+      "stage3": {
+        "id": 260,
+        "technicalName": "swampert"
+      }
+    },
+    {
+      "base": {
+        "id": 261,
+        "technicalName": "poochyena"
+      },
+      "stage2": {
+        "id": 262,
+        "technicalName": "mightyena"
+      }
+    },
+    {
+      "base": {
+        "id": 263,
+        "technicalName": "zigzagoon"
+      },
+      "stage2": {
+        "id": 264,
+        "technicalName": "linoone"
+      },
+      "stage3": {
+        "id": 862,
+        "technicalName": "obstagoon"
+      }
+    },
+    {
+      "base": {
+        "id": 265,
+        "technicalName": "wurmple"
+      },
+      "stage2": {
+        "id": 266,
+        "technicalName": "silcoon"
+      },
+      "stage3": {
+        "id": 267,
+        "technicalName": "beautifly"
+      }
+    },
+    {
+      "base": {
+        "id": 270,
+        "technicalName": "lotad"
+      },
+      "stage2": {
+        "id": 271,
+        "technicalName": "lombre"
+      },
+      "stage3": {
+        "id": 272,
+        "technicalName": "ludicolo"
+      }
+    },
+    {
+      "base": {
+        "id": 273,
+        "technicalName": "seedot"
+      },
+      "stage2": {
+        "id": 274,
+        "technicalName": "nuzleaf"
+      },
+      "stage3": {
+        "id": 275,
+        "technicalName": "shiftry"
+      }
+    },
+    {
+      "base": {
+        "id": 276,
+        "technicalName": "taillow"
+      },
+      "stage2": {
+        "id": 277,
+        "technicalName": "swellow"
+      }
+    },
+    {
+      "base": {
+        "id": 278,
+        "technicalName": "wingull"
+      },
+      "stage2": {
+        "id": 279,
+        "technicalName": "pelipper"
+      }
+    },
+    {
+      "base": {
+        "id": 280,
+        "technicalName": "ralts"
+      },
+      "stage2": {
+        "id": 281,
+        "technicalName": "kirlia"
+      },
+      "stage3": {
+        "id": 282,
+        "technicalName": "gardevoir"
+      }
+    },
+    {
+      "base": {
+        "id": 283,
+        "technicalName": "surskit"
+      },
+      "stage2": {
+        "id": 284,
+        "technicalName": "masquerain"
+      }
+    },
+    {
+      "base": {
+        "id": 285,
+        "technicalName": "shroomish"
+      },
+      "stage2": {
+        "id": 286,
+        "technicalName": "breloom"
+      }
+    },
+    {
+      "base": {
+        "id": 287,
+        "technicalName": "slakoth"
+      },
+      "stage2": {
+        "id": 288,
+        "technicalName": "vigoroth"
+      },
+      "stage3": {
+        "id": 289,
+        "technicalName": "slaking"
+      }
+    },
+    {
+      "base": {
+        "id": 290,
+        "technicalName": "nincada"
+      },
+      "stage2": {
+        "id": 291,
+        "technicalName": "ninjask"
+      }
+    },
+    {
+      "base": {
+        "id": 293,
+        "technicalName": "whismur"
+      },
+      "stage2": {
+        "id": 294,
+        "technicalName": "loudred"
+      },
+      "stage3": {
+        "id": 295,
+        "technicalName": "exploud"
+      }
+    },
+    {
+      "base": {
+        "id": 296,
+        "technicalName": "makuhita"
+      },
+      "stage2": {
+        "id": 297,
+        "technicalName": "hariyama"
+      }
+    },
+    {
+      "base": {
+        "id": 299,
+        "technicalName": "nosepass"
+      },
+      "stage2": {
+        "id": 476,
+        "technicalName": "probopass"
+      }
+    },
+    {
+      "base": {
+        "id": 300,
+        "technicalName": "skitty"
+      },
+      "stage2": {
+        "id": 301,
+        "technicalName": "delcatty"
+      }
+    },
+    {
+      "base": {
+        "id": 302,
+        "technicalName": "sableye"
+      }
+    },
+    {
+      "base": {
+        "id": 303,
+        "technicalName": "mawile"
+      }
+    },
+    {
+      "base": {
+        "id": 304,
+        "technicalName": "aron"
+      },
+      "stage2": {
+        "id": 305,
+        "technicalName": "lairon"
+      },
+      "stage3": {
+        "id": 306,
+        "technicalName": "aggron"
+      }
+    },
+    {
+      "base": {
+        "id": 307,
+        "technicalName": "meditite"
+      },
+      "stage2": {
+        "id": 308,
+        "technicalName": "medicham"
+      }
+    },
+    {
+      "base": {
+        "id": 309,
+        "technicalName": "electrike"
+      },
+      "stage2": {
+        "id": 310,
+        "technicalName": "manectric"
+      }
+    },
+    {
+      "base": {
+        "id": 311,
+        "technicalName": "plusle"
+      }
+    },
+    {
+      "base": {
+        "id": 312,
+        "technicalName": "minun"
+      }
+    },
+    {
+      "base": {
+        "id": 313,
+        "technicalName": "volbeat"
+      }
+    },
+    {
+      "base": {
+        "id": 314,
+        "technicalName": "illumise"
+      }
+    },
+    {
+      "base": {
+        "id": 406,
+        "technicalName": "budew"
+      },
+      "stage2": {
+        "id": 315,
+        "technicalName": "roselia"
+      },
+      "stage3": {
+        "id": 407,
+        "technicalName": "roserade"
+      }
+    },
+    {
+      "base": {
+        "id": 316,
+        "technicalName": "gulpin"
+      },
+      "stage2": {
+        "id": 317,
+        "technicalName": "swalot"
+      }
+    },
+    {
+      "base": {
+        "id": 318,
+        "technicalName": "carvanha"
+      },
+      "stage2": {
+        "id": 319,
+        "technicalName": "sharpedo"
+      }
+    },
+    {
+      "base": {
+        "id": 320,
+        "technicalName": "wailmer"
+      },
+      "stage2": {
+        "id": 321,
+        "technicalName": "wailord"
+      }
+    },
+    {
+      "base": {
+        "id": 322,
+        "technicalName": "numel"
+      },
+      "stage2": {
+        "id": 323,
+        "technicalName": "camerupt"
+      }
+    },
+    {
+      "base": {
+        "id": 324,
+        "technicalName": "torkoal"
+      }
+    },
+    {
+      "base": {
+        "id": 325,
+        "technicalName": "spoink"
+      },
+      "stage2": {
+        "id": 326,
+        "technicalName": "grumpig"
+      }
+    },
+    {
+      "base": {
+        "id": 327,
+        "technicalName": "spinda"
+      }
+    },
+    {
+      "base": {
+        "id": 328,
+        "technicalName": "trapinch"
+      },
+      "stage2": {
+        "id": 329,
+        "technicalName": "vibrava"
+      },
+      "stage3": {
+        "id": 330,
+        "technicalName": "flygon"
+      }
+    },
+    {
+      "base": {
+        "id": 331,
+        "technicalName": "cacnea"
+      },
+      "stage2": {
+        "id": 332,
+        "technicalName": "cacturne"
+      }
+    },
+    {
+      "base": {
+        "id": 333,
+        "technicalName": "swablu"
+      },
+      "stage2": {
+        "id": 334,
+        "technicalName": "altaria"
+      }
+    },
+    {
+      "base": {
+        "id": 335,
+        "technicalName": "zangoose"
+      }
+    },
+    {
+      "base": {
+        "id": 336,
+        "technicalName": "seviper"
+      }
+    },
+    {
+      "base": {
+        "id": 337,
+        "technicalName": "lunatone"
+      }
+    },
+    {
+      "base": {
+        "id": 338,
+        "technicalName": "solrock"
+      }
+    },
+    {
+      "base": {
+        "id": 339,
+        "technicalName": "barboach"
+      },
+      "stage2": {
+        "id": 340,
+        "technicalName": "whiscash"
+      }
+    },
+    {
+      "base": {
+        "id": 341,
+        "technicalName": "corphish"
+      },
+      "stage2": {
+        "id": 342,
+        "technicalName": "crawdaunt"
+      }
+    },
+    {
+      "base": {
+        "id": 343,
+        "technicalName": "baltoy"
+      },
+      "stage2": {
+        "id": 344,
+        "technicalName": "claydol"
+      }
+    },
+    {
+      "base": {
+        "id": 345,
+        "technicalName": "lileep"
+      },
+      "stage2": {
+        "id": 346,
+        "technicalName": "cradily"
+      }
+    },
+    {
+      "base": {
+        "id": 347,
+        "technicalName": "anorith"
+      },
+      "stage2": {
+        "id": 348,
+        "technicalName": "armaldo"
+      }
+    },
+    {
+      "base": {
+        "id": 349,
+        "technicalName": "feebas"
+      },
+      "stage2": {
+        "id": 350,
+        "technicalName": "milotic"
+      }
+    },
+    {
+      "base": {
+        "id": 351,
+        "technicalName": "castform"
+      }
+    },
+    {
+      "base": {
+        "id": 352,
+        "technicalName": "kecleon"
+      }
+    },
+    {
+      "base": {
+        "id": 353,
+        "technicalName": "shuppet"
+      },
+      "stage2": {
+        "id": 354,
+        "technicalName": "banette"
+      }
+    },
+    {
+      "base": {
+        "id": 355,
+        "technicalName": "duskull"
+      },
+      "stage2": {
+        "id": 356,
+        "technicalName": "dusclops"
+      },
+      "stage3": {
+        "id": 477,
+        "technicalName": "dusknoir"
+      }
+    },
+    {
+      "base": {
+        "id": 357,
+        "technicalName": "tropius"
+      }
+    },
+    {
+      "base": {
+        "id": 433,
+        "technicalName": "chingling"
+      },
+      "stage2": {
+        "id": 358,
+        "technicalName": "chimecho"
+      }
+    },
+    {
+      "base": {
+        "id": 359,
+        "technicalName": "absol"
+      }
+    },
+    {
+      "base": {
+        "id": 361,
+        "technicalName": "snorunt"
+      },
+      "stage2": {
+        "id": 362,
+        "technicalName": "glalie"
+      }
+    },
+    {
+      "base": {
+        "id": 363,
+        "technicalName": "spheal"
+      },
+      "stage2": {
+        "id": 364,
+        "technicalName": "sealeo"
+      },
+      "stage3": {
+        "id": 365,
+        "technicalName": "walrein"
+      }
+    },
+    {
+      "base": {
+        "id": 366,
+        "technicalName": "clamperl"
+      },
+      "stage2": {
+        "id": 367,
+        "technicalName": "huntail"
+      }
+    },
+    {
+      "base": {
+        "id": 369,
+        "technicalName": "relicanth"
+      }
+    },
+    {
+      "base": {
+        "id": 370,
+        "technicalName": "luvdisc"
+      }
+    },
+    {
+      "base": {
+        "id": 371,
+        "technicalName": "bagon"
+      },
+      "stage2": {
+        "id": 372,
+        "technicalName": "shelgon"
+      },
+      "stage3": {
+        "id": 373,
+        "technicalName": "salamence"
+      }
+    },
+    {
+      "base": {
+        "id": 374,
+        "technicalName": "beldum"
+      },
+      "stage2": {
+        "id": 375,
+        "technicalName": "metang"
+      },
+      "stage3": {
+        "id": 376,
+        "technicalName": "metagross"
+      }
+    },
+    {
+      "base": {
+        "id": 377,
+        "technicalName": "regirock"
+      }
+    },
+    {
+      "base": {
+        "id": 378,
+        "technicalName": "regice"
+      }
+    },
+    {
+      "base": {
+        "id": 379,
+        "technicalName": "registeel"
+      }
+    },
+    {
+      "base": {
+        "id": 380,
+        "technicalName": "latias"
+      }
+    },
+    {
+      "base": {
+        "id": 381,
+        "technicalName": "latios"
+      }
+    },
+    {
+      "base": {
+        "id": 382,
+        "technicalName": "kyogre"
+      }
+    },
+    {
+      "base": {
+        "id": 383,
+        "technicalName": "groudon"
+      }
+    },
+    {
+      "base": {
+        "id": 384,
+        "technicalName": "rayquaza"
+      }
+    },
+    {
+      "base": {
+        "id": 385,
+        "technicalName": "jirachi"
+      }
+    },
+    {
+      "base": {
+        "id": 387,
+        "technicalName": "turtwig"
+      },
+      "stage2": {
+        "id": 388,
+        "technicalName": "grotle"
+      },
+      "stage3": {
+        "id": 389,
+        "technicalName": "torterra"
+      }
+    },
+    {
+      "base": {
+        "id": 390,
+        "technicalName": "chimchar"
+      },
+      "stage2": {
+        "id": 391,
+        "technicalName": "monferno"
+      },
+      "stage3": {
+        "id": 392,
+        "technicalName": "infernape"
+      }
+    },
+    {
+      "base": {
+        "id": 393,
+        "technicalName": "piplup"
+      },
+      "stage2": {
+        "id": 394,
+        "technicalName": "prinplup"
+      },
+      "stage3": {
+        "id": 395,
+        "technicalName": "empoleon"
+      }
+    },
+    {
+      "base": {
+        "id": 396,
+        "technicalName": "starly"
+      },
+      "stage2": {
+        "id": 397,
+        "technicalName": "staravia"
+      },
+      "stage3": {
+        "id": 398,
+        "technicalName": "staraptor"
+      }
+    },
+    {
+      "base": {
+        "id": 399,
+        "technicalName": "bidoof"
+      },
+      "stage2": {
+        "id": 400,
+        "technicalName": "bibarel"
+      }
+    },
+    {
+      "base": {
+        "id": 401,
+        "technicalName": "kricketot"
+      },
+      "stage2": {
+        "id": 402,
+        "technicalName": "kricketune"
+      }
+    },
+    {
+      "base": {
+        "id": 403,
+        "technicalName": "shinx"
+      },
+      "stage2": {
+        "id": 404,
+        "technicalName": "luxio"
+      },
+      "stage3": {
+        "id": 405,
+        "technicalName": "luxray"
+      }
+    },
+    {
+      "base": {
+        "id": 408,
+        "technicalName": "cranidos"
+      },
+      "stage2": {
+        "id": 409,
+        "technicalName": "rampardos"
+      }
+    },
+    {
+      "base": {
+        "id": 410,
+        "technicalName": "shieldon"
+      },
+      "stage2": {
+        "id": 411,
+        "technicalName": "bastiodon"
+      }
+    },
+    {
+      "base": {
+        "id": 412,
+        "technicalName": "burmy"
+      }
+    },
+    {
+      "base": {
+        "id": 415,
+        "technicalName": "combee"
+      },
+      "stage2": {
+        "id": 416,
+        "technicalName": "vespiquen"
+      }
+    },
+    {
+      "base": {
+        "id": 417,
+        "technicalName": "pachirisu"
+      }
+    },
+    {
+      "base": {
+        "id": 418,
+        "technicalName": "buizel"
+      },
+      "stage2": {
+        "id": 419,
+        "technicalName": "floatzel"
+      }
+    },
+    {
+      "base": {
+        "id": 420,
+        "technicalName": "cherubi"
+      },
+      "stage2": {
+        "id": 421,
+        "technicalName": "cherrim"
+      }
+    },
+    {
+      "base": {
+        "id": 422,
+        "technicalName": "shellos"
+      },
+      "stage2": {
+        "id": 423,
+        "technicalName": "gastrodon"
+      }
+    },
+    {
+      "base": {
+        "id": 425,
+        "technicalName": "drifloon"
+      },
+      "stage2": {
+        "id": 426,
+        "technicalName": "drifblim"
+      }
+    },
+    {
+      "base": {
+        "id": 427,
+        "technicalName": "buneary"
+      },
+      "stage2": {
+        "id": 428,
+        "technicalName": "lopunny"
+      }
+    },
+    {
+      "base": {
+        "id": 431,
+        "technicalName": "glameow"
+      },
+      "stage2": {
+        "id": 432,
+        "technicalName": "purugly"
+      }
+    },
+    {
+      "base": {
+        "id": 434,
+        "technicalName": "stunky"
+      },
+      "stage2": {
+        "id": 435,
+        "technicalName": "skuntank"
+      }
+    },
+    {
+      "base": {
+        "id": 436,
+        "technicalName": "bronzor"
+      },
+      "stage2": {
+        "id": 437,
+        "technicalName": "bronzong"
+      }
+    },
+    {
+      "base": {
+        "id": 441,
+        "technicalName": "chatot"
+      }
+    },
+    {
+      "base": {
+        "id": 442,
+        "technicalName": "spiritomb"
+      }
+    },
+    {
+      "base": {
+        "id": 443,
+        "technicalName": "gible"
+      },
+      "stage2": {
+        "id": 444,
+        "technicalName": "gabite"
+      },
+      "stage3": {
+        "id": 445,
+        "technicalName": "garchomp"
+      }
+    },
+    {
+      "base": {
+        "id": 447,
+        "technicalName": "riolu"
+      },
+      "stage2": {
+        "id": 448,
+        "technicalName": "lucario"
+      }
+    },
+    {
+      "base": {
+        "id": 449,
+        "technicalName": "hippopotas"
+      },
+      "stage2": {
+        "id": 450,
+        "technicalName": "hippowdon"
+      }
+    },
+    {
+      "base": {
+        "id": 451,
+        "technicalName": "skorupi"
+      },
+      "stage2": {
+        "id": 452,
+        "technicalName": "drapion"
+      }
+    },
+    {
+      "base": {
+        "id": 453,
+        "technicalName": "croagunk"
+      },
+      "stage2": {
+        "id": 454,
+        "technicalName": "toxicroak"
+      }
+    },
+    {
+      "base": {
+        "id": 455,
+        "technicalName": "carnivine"
+      }
+    },
+    {
+      "base": {
+        "id": 456,
+        "technicalName": "finneon"
+      },
+      "stage2": {
+        "id": 457,
+        "technicalName": "lumineon"
+      }
+    },
+    {
+      "base": {
+        "id": 459,
+        "technicalName": "snover"
+      },
+      "stage2": {
+        "id": 460,
+        "technicalName": "abomasnow"
+      }
+    },
+    {
+      "base": {
+        "id": 479,
+        "technicalName": "rotom"
+      }
+    },
+    {
+      "base": {
+        "id": 480,
+        "technicalName": "uxie"
+      }
+    },
+    {
+      "base": {
+        "id": 481,
+        "technicalName": "mesprit"
+      }
+    },
+    {
+      "base": {
+        "id": 482,
+        "technicalName": "azelf"
+      }
+    },
+    {
+      "base": {
+        "id": 483,
+        "technicalName": "dialga"
+      }
+    },
+    {
+      "base": {
+        "id": 484,
+        "technicalName": "palkia"
+      }
+    },
+    {
+      "base": {
+        "id": 485,
+        "technicalName": "heatran"
+      }
+    },
+    {
+      "base": {
+        "id": 486,
+        "technicalName": "regigigas"
+      }
+    },
+    {
+      "base": {
+        "id": 488,
+        "technicalName": "cresselia"
+      }
+    },
+    {
+      "base": {
+        "id": 489,
+        "technicalName": "phione"
+      },
+      "stage2": {
+        "id": 490,
+        "technicalName": "manaphy"
+      }
+    },
+    {
+      "base": {
+        "id": 491,
+        "technicalName": "darkrai"
+      }
+    },
+    {
+      "base": {
+        "id": 493,
+        "technicalName": "arceus"
+      }
+    },
+    {
+      "base": {
+        "id": 494,
+        "technicalName": "victini"
+      }
+    },
+    {
+      "base": {
+        "id": 495,
+        "technicalName": "snivy"
+      },
+      "stage2": {
+        "id": 496,
+        "technicalName": "servine"
+      },
+      "stage3": {
+        "id": 497,
+        "technicalName": "serperior"
+      }
+    },
+    {
+      "base": {
+        "id": 498,
+        "technicalName": "tepig"
+      },
+      "stage2": {
+        "id": 499,
+        "technicalName": "pignite"
+      },
+      "stage3": {
+        "id": 500,
+        "technicalName": "emboar"
+      }
+    },
+    {
+      "base": {
+        "id": 501,
+        "technicalName": "oshawott"
+      },
+      "stage2": {
+        "id": 502,
+        "technicalName": "dewott"
+      },
+      "stage3": {
+        "id": 503,
+        "technicalName": "samurott"
+      }
+    },
+    {
+      "base": {
+        "id": 504,
+        "technicalName": "patrat"
+      },
+      "stage2": {
+        "id": 505,
+        "technicalName": "watchog"
+      }
+    },
+    {
+      "base": {
+        "id": 506,
+        "technicalName": "lillipup"
+      },
+      "stage2": {
+        "id": 507,
+        "technicalName": "herdier"
+      },
+      "stage3": {
+        "id": 508,
+        "technicalName": "stoutland"
+      }
+    },
+    {
+      "base": {
+        "id": 509,
+        "technicalName": "purrloin"
+      },
+      "stage2": {
+        "id": 510,
+        "technicalName": "liepard"
+      }
+    },
+    {
+      "base": {
+        "id": 511,
+        "technicalName": "pansage"
+      },
+      "stage2": {
+        "id": 512,
+        "technicalName": "simisage"
+      }
+    },
+    {
+      "base": {
+        "id": 513,
+        "technicalName": "pansear"
+      },
+      "stage2": {
+        "id": 514,
+        "technicalName": "simisear"
+      }
+    },
+    {
+      "base": {
+        "id": 515,
+        "technicalName": "panpour"
+      },
+      "stage2": {
+        "id": 516,
+        "technicalName": "simipour"
+      }
+    },
+    {
+      "base": {
+        "id": 517,
+        "technicalName": "munna"
+      },
+      "stage2": {
+        "id": 518,
+        "technicalName": "musharna"
+      }
+    },
+    {
+      "base": {
+        "id": 519,
+        "technicalName": "pidove"
+      },
+      "stage2": {
+        "id": 520,
+        "technicalName": "tranquill"
+      },
+      "stage3": {
+        "id": 521,
+        "technicalName": "unfezant"
+      }
+    },
+    {
+      "base": {
+        "id": 522,
+        "technicalName": "blitzle"
+      },
+      "stage2": {
+        "id": 523,
+        "technicalName": "zebstrika"
+      }
+    },
+    {
+      "base": {
+        "id": 524,
+        "technicalName": "roggenrola"
+      },
+      "stage2": {
+        "id": 525,
+        "technicalName": "boldore"
+      },
+      "stage3": {
+        "id": 526,
+        "technicalName": "gigalith"
+      }
+    },
+    {
+      "base": {
+        "id": 527,
+        "technicalName": "woobat"
+      },
+      "stage2": {
+        "id": 528,
+        "technicalName": "swoobat"
+      }
+    },
+    {
+      "base": {
+        "id": 529,
+        "technicalName": "drilbur"
+      },
+      "stage2": {
+        "id": 530,
+        "technicalName": "excadrill"
+      }
+    },
+    {
+      "base": {
+        "id": 531,
+        "technicalName": "audino"
+      }
+    },
+    {
+      "base": {
+        "id": 532,
+        "technicalName": "timburr"
+      },
+      "stage2": {
+        "id": 533,
+        "technicalName": "gurdurr"
+      },
+      "stage3": {
+        "id": 534,
+        "technicalName": "conkeldurr"
+      }
+    },
+    {
+      "base": {
+        "id": 535,
+        "technicalName": "tympole"
+      },
+      "stage2": {
+        "id": 536,
+        "technicalName": "palpitoad"
+      },
+      "stage3": {
+        "id": 537,
+        "technicalName": "seismitoad"
+      }
+    },
+    {
+      "base": {
+        "id": 538,
+        "technicalName": "throh"
+      }
+    },
+    {
+      "base": {
+        "id": 539,
+        "technicalName": "sawk"
+      }
+    },
+    {
+      "base": {
+        "id": 540,
+        "technicalName": "sewaddle"
+      },
+      "stage2": {
+        "id": 541,
+        "technicalName": "swadloon"
+      },
+      "stage3": {
+        "id": 542,
+        "technicalName": "leavanny"
+      }
+    },
+    {
+      "base": {
+        "id": 543,
+        "technicalName": "venipede"
+      },
+      "stage2": {
+        "id": 544,
+        "technicalName": "whirlipede"
+      },
+      "stage3": {
+        "id": 545,
+        "technicalName": "scolipede"
+      }
+    },
+    {
+      "base": {
+        "id": 546,
+        "technicalName": "cottonee"
+      },
+      "stage2": {
+        "id": 547,
+        "technicalName": "whimsicott"
+      }
+    },
+    {
+      "base": {
+        "id": 548,
+        "technicalName": "petilil"
+      },
+      "stage2": {
+        "id": 549,
+        "technicalName": "lilligant"
+      }
+    },
+    {
+      "base": {
+        "id": 551,
+        "technicalName": "sandile"
+      },
+      "stage2": {
+        "id": 552,
+        "technicalName": "krokorok"
+      },
+      "stage3": {
+        "id": 553,
+        "technicalName": "krookodile"
+      }
+    },
+    {
+      "base": {
+        "id": 554,
+        "technicalName": "darumaka"
+      }
+    },
+    {
+      "base": {
+        "id": 556,
+        "technicalName": "maractus"
+      }
+    },
+    {
+      "base": {
+        "id": 557,
+        "technicalName": "dwebble"
+      },
+      "stage2": {
+        "id": 558,
+        "technicalName": "crustle"
+      }
+    },
+    {
+      "base": {
+        "id": 559,
+        "technicalName": "scraggy"
+      },
+      "stage2": {
+        "id": 560,
+        "technicalName": "scrafty"
+      }
+    },
+    {
+      "base": {
+        "id": 561,
+        "technicalName": "sigilyph"
+      }
+    },
+    {
+      "base": {
+        "id": 562,
+        "technicalName": "yamask"
+      },
+      "stage2": {
+        "id": 563,
+        "technicalName": "cofagrigus"
+      }
+    },
+    {
+      "base": {
+        "id": 564,
+        "technicalName": "tirtouga"
+      },
+      "stage2": {
+        "id": 565,
+        "technicalName": "carracosta"
+      }
+    },
+    {
+      "base": {
+        "id": 566,
+        "technicalName": "archen"
+      },
+      "stage2": {
+        "id": 567,
+        "technicalName": "archeops"
+      }
+    },
+    {
+      "base": {
+        "id": 568,
+        "technicalName": "trubbish"
+      },
+      "stage2": {
+        "id": 569,
+        "technicalName": "garbodor"
+      }
+    },
+    {
+      "base": {
+        "id": 570,
+        "technicalName": "zorua"
+      },
+      "stage2": {
+        "id": 571,
+        "technicalName": "zoroark"
+      }
+    },
+    {
+      "base": {
+        "id": 572,
+        "technicalName": "minccino"
+      },
+      "stage2": {
+        "id": 573,
+        "technicalName": "cinccino"
+      }
+    },
+    {
+      "base": {
+        "id": 574,
+        "technicalName": "gothita"
+      },
+      "stage2": {
+        "id": 575,
+        "technicalName": "gothorita"
+      },
+      "stage3": {
+        "id": 576,
+        "technicalName": "gothitelle"
+      }
+    },
+    {
+      "base": {
+        "id": 577,
+        "technicalName": "solosis"
+      },
+      "stage2": {
+        "id": 578,
+        "technicalName": "duosion"
+      },
+      "stage3": {
+        "id": 579,
+        "technicalName": "reuniclus"
+      }
+    },
+    {
+      "base": {
+        "id": 580,
+        "technicalName": "ducklett"
+      },
+      "stage2": {
+        "id": 581,
+        "technicalName": "swanna"
+      }
+    },
+    {
+      "base": {
+        "id": 582,
+        "technicalName": "vanillite"
+      },
+      "stage2": {
+        "id": 583,
+        "technicalName": "vanillish"
+      },
+      "stage3": {
+        "id": 584,
+        "technicalName": "vanilluxe"
+      }
+    },
+    {
+      "base": {
+        "id": 585,
+        "technicalName": "deerling"
+      },
+      "stage2": {
+        "id": 586,
+        "technicalName": "sawsbuck"
+      }
+    },
+    {
+      "base": {
+        "id": 587,
+        "technicalName": "emolga"
+      }
+    },
+    {
+      "base": {
+        "id": 588,
+        "technicalName": "karrablast"
+      },
+      "stage2": {
+        "id": 589,
+        "technicalName": "escavalier"
+      }
+    },
+    {
+      "base": {
+        "id": 590,
+        "technicalName": "foongus"
+      },
+      "stage2": {
+        "id": 591,
+        "technicalName": "amoonguss"
+      }
+    },
+    {
+      "base": {
+        "id": 594,
+        "technicalName": "alomomola"
+      }
+    },
+    {
+      "base": {
+        "id": 595,
+        "technicalName": "joltik"
+      },
+      "stage2": {
+        "id": 596,
+        "technicalName": "galvantula"
+      }
+    },
+    {
+      "base": {
+        "id": 597,
+        "technicalName": "ferroseed"
+      },
+      "stage2": {
+        "id": 598,
+        "technicalName": "ferrothorn"
+      }
+    },
+    {
+      "base": {
+        "id": 599,
+        "technicalName": "klink"
+      },
+      "stage2": {
+        "id": 600,
+        "technicalName": "klang"
+      },
+      "stage3": {
+        "id": 601,
+        "technicalName": "klinklang"
+      }
+    },
+    {
+      "base": {
+        "id": 602,
+        "technicalName": "tynamo"
+      },
+      "stage2": {
+        "id": 603,
+        "technicalName": "eelektrik"
+      },
+      "stage3": {
+        "id": 604,
+        "technicalName": "eelektross"
+      }
+    },
+    {
+      "base": {
+        "id": 605,
+        "technicalName": "elgyem"
+      },
+      "stage2": {
+        "id": 606,
+        "technicalName": "beheeyem"
+      }
+    },
+    {
+      "base": {
+        "id": 607,
+        "technicalName": "litwick"
+      },
+      "stage2": {
+        "id": 608,
+        "technicalName": "lampent"
+      },
+      "stage3": {
+        "id": 609,
+        "technicalName": "chandelure"
+      }
+    },
+    {
+      "base": {
+        "id": 610,
+        "technicalName": "axew"
+      },
+      "stage2": {
+        "id": 611,
+        "technicalName": "fraxure"
+      },
+      "stage3": {
+        "id": 612,
+        "technicalName": "haxorus"
+      }
+    },
+    {
+      "base": {
+        "id": 613,
+        "technicalName": "cubchoo"
+      },
+      "stage2": {
+        "id": 614,
+        "technicalName": "beartic"
+      }
+    },
+    {
+      "base": {
+        "id": 615,
+        "technicalName": "cryogonal"
+      }
+    },
+    {
+      "base": {
+        "id": 616,
+        "technicalName": "shelmet"
+      },
+      "stage2": {
+        "id": 617,
+        "technicalName": "accelgor"
+      }
+    },
+    {
+      "base": {
+        "id": 618,
+        "technicalName": "stunfisk"
+      }
+    },
+    {
+      "base": {
+        "id": 619,
+        "technicalName": "mienfoo"
+      },
+      "stage2": {
+        "id": 620,
+        "technicalName": "mienshao"
+      }
+    },
+    {
+      "base": {
+        "id": 621,
+        "technicalName": "druddigon"
+      }
+    },
+    {
+      "base": {
+        "id": 622,
+        "technicalName": "golett"
+      },
+      "stage2": {
+        "id": 623,
+        "technicalName": "golurk"
+      }
+    },
+    {
+      "base": {
+        "id": 624,
+        "technicalName": "pawniard"
+      },
+      "stage2": {
+        "id": 625,
+        "technicalName": "bisharp"
+      },
+      "stage3": {
+        "id": 983,
+        "technicalName": "kingambit"
+      }
+    },
+    {
+      "base": {
+        "id": 626,
+        "technicalName": "bouffalant"
+      }
+    },
+    {
+      "base": {
+        "id": 627,
+        "technicalName": "rufflet"
+      },
+      "stage2": {
+        "id": 628,
+        "technicalName": "braviary"
+      }
+    },
+    {
+      "base": {
+        "id": 629,
+        "technicalName": "vullaby"
+      },
+      "stage2": {
+        "id": 630,
+        "technicalName": "mandibuzz"
+      }
+    },
+    {
+      "base": {
+        "id": 631,
+        "technicalName": "heatmor"
+      }
+    },
+    {
+      "base": {
+        "id": 632,
+        "technicalName": "durant"
+      }
+    },
+    {
+      "base": {
+        "id": 633,
+        "technicalName": "deino"
+      },
+      "stage2": {
+        "id": 634,
+        "technicalName": "zweilous"
+      },
+      "stage3": {
+        "id": 635,
+        "technicalName": "hydreigon"
+      }
+    },
+    {
+      "base": {
+        "id": 636,
+        "technicalName": "larvesta"
+      },
+      "stage2": {
+        "id": 637,
+        "technicalName": "volcarona"
+      }
+    },
+    {
+      "base": {
+        "id": 638,
+        "technicalName": "cobalion"
+      }
+    },
+    {
+      "base": {
+        "id": 639,
+        "technicalName": "terrakion"
+      }
+    },
+    {
+      "base": {
+        "id": 640,
+        "technicalName": "virizion"
+      }
+    },
+    {
+      "base": {
+        "id": 643,
+        "technicalName": "reshiram"
+      }
+    },
+    {
+      "base": {
+        "id": 644,
+        "technicalName": "zekrom"
+      }
+    },
+    {
+      "base": {
+        "id": 646,
+        "technicalName": "kyurem"
+      }
+    },
+    {
+      "base": {
+        "id": 649,
+        "technicalName": "genesect"
+      }
+    },
+    {
+      "base": {
+        "id": 650,
+        "technicalName": "chespin"
+      },
+      "stage2": {
+        "id": 651,
+        "technicalName": "quilladin"
+      },
+      "stage3": {
+        "id": 652,
+        "technicalName": "chesnaught"
+      }
+    },
+    {
+      "base": {
+        "id": 653,
+        "technicalName": "fennekin"
+      },
+      "stage2": {
+        "id": 654,
+        "technicalName": "braixen"
+      },
+      "stage3": {
+        "id": 655,
+        "technicalName": "delphox"
+      }
+    },
+    {
+      "base": {
+        "id": 656,
+        "technicalName": "froakie"
+      },
+      "stage2": {
+        "id": 657,
+        "technicalName": "frogadier"
+      },
+      "stage3": {
+        "id": 658,
+        "technicalName": "greninja"
+      }
+    },
+    {
+      "base": {
+        "id": 659,
+        "technicalName": "bunnelby"
+      },
+      "stage2": {
+        "id": 660,
+        "technicalName": "diggersby"
+      }
+    },
+    {
+      "base": {
+        "id": 661,
+        "technicalName": "fletchling"
+      },
+      "stage2": {
+        "id": 662,
+        "technicalName": "fletchinder"
+      },
+      "stage3": {
+        "id": 663,
+        "technicalName": "talonflame"
+      }
+    },
+    {
+      "base": {
+        "id": 664,
+        "technicalName": "scatterbug"
+      },
+      "stage2": {
+        "id": 665,
+        "technicalName": "spewpa"
+      },
+      "stage3": {
+        "id": 666,
+        "technicalName": "vivillon"
+      }
+    },
+    {
+      "base": {
+        "id": 667,
+        "technicalName": "litleo"
+      }
+    },
+    {
+      "base": {
+        "id": 669,
+        "technicalName": "flabebe"
+      },
+      "stage2": {
+        "id": 670,
+        "technicalName": "floette"
+      },
+      "stage3": {
+        "id": 671,
+        "technicalName": "florges"
+      }
+    },
+    {
+      "base": {
+        "id": 672,
+        "technicalName": "skiddo"
+      },
+      "stage2": {
+        "id": 673,
+        "technicalName": "gogoat"
+      }
+    },
+    {
+      "base": {
+        "id": 674,
+        "technicalName": "pancham"
+      },
+      "stage2": {
+        "id": 675,
+        "technicalName": "pangoro"
+      }
+    },
+    {
+      "base": {
+        "id": 676,
+        "technicalName": "furfrou"
+      }
+    },
+    {
+      "base": {
+        "id": 677,
+        "technicalName": "espurr"
+      }
+    },
+    {
+      "base": {
+        "id": 679,
+        "technicalName": "honedge"
+      },
+      "stage2": {
+        "id": 680,
+        "technicalName": "doublade"
+      }
+    },
+    {
+      "base": {
+        "id": 682,
+        "technicalName": "spritzee"
+      },
+      "stage2": {
+        "id": 683,
+        "technicalName": "aromatisse"
+      }
+    },
+    {
+      "base": {
+        "id": 684,
+        "technicalName": "swirlix"
+      },
+      "stage2": {
+        "id": 685,
+        "technicalName": "slurpuff"
+      }
+    },
+    {
+      "base": {
+        "id": 686,
+        "technicalName": "inkay"
+      },
+      "stage2": {
+        "id": 687,
+        "technicalName": "malamar"
+      }
+    },
+    {
+      "base": {
+        "id": 688,
+        "technicalName": "binacle"
+      },
+      "stage2": {
+        "id": 689,
+        "technicalName": "barbaracle"
+      }
+    },
+    {
+      "base": {
+        "id": 690,
+        "technicalName": "skrelp"
+      },
+      "stage2": {
+        "id": 691,
+        "technicalName": "dragalge"
+      }
+    },
+    {
+      "base": {
+        "id": 692,
+        "technicalName": "clauncher"
+      },
+      "stage2": {
+        "id": 693,
+        "technicalName": "clawitzer"
+      }
+    },
+    {
+      "base": {
+        "id": 694,
+        "technicalName": "helioptile"
+      },
+      "stage2": {
+        "id": 695,
+        "technicalName": "heliolisk"
+      }
+    },
+    {
+      "base": {
+        "id": 696,
+        "technicalName": "tyrunt"
+      },
+      "stage2": {
+        "id": 697,
+        "technicalName": "tyrantrum"
+      }
+    },
+    {
+      "base": {
+        "id": 698,
+        "technicalName": "amaura"
+      },
+      "stage2": {
+        "id": 699,
+        "technicalName": "aurorus"
+      }
+    },
+    {
+      "base": {
+        "id": 701,
+        "technicalName": "hawlucha"
+      }
+    },
+    {
+      "base": {
+        "id": 702,
+        "technicalName": "dedenne"
+      }
+    },
+    {
+      "base": {
+        "id": 703,
+        "technicalName": "carbink"
+      }
+    },
+    {
+      "base": {
+        "id": 704,
+        "technicalName": "goomy"
+      },
+      "stage2": {
+        "id": 705,
+        "technicalName": "sliggoo"
+      },
+      "stage3": {
+        "id": 706,
+        "technicalName": "goodra"
+      }
+    },
+    {
+      "base": {
+        "id": 707,
+        "technicalName": "klefki"
+      }
+    },
+    {
+      "base": {
+        "id": 708,
+        "technicalName": "phantump"
+      },
+      "stage2": {
+        "id": 709,
+        "technicalName": "trevenant"
+      }
+    },
+    {
+      "base": {
+        "id": 712,
+        "technicalName": "bergmite"
+      },
+      "stage2": {
+        "id": 713,
+        "technicalName": "avalugg"
+      }
+    },
+    {
+      "base": {
+        "id": 714,
+        "technicalName": "noibat"
+      },
+      "stage2": {
+        "id": 715,
+        "technicalName": "noivern"
+      }
+    },
+    {
+      "base": {
+        "id": 716,
+        "technicalName": "xerneas"
+      }
+    },
+    {
+      "base": {
+        "id": 717,
+        "technicalName": "yveltal"
+      }
+    },
+    {
+      "base": {
+        "id": 719,
+        "technicalName": "diancie"
+      }
+    },
+    {
+      "base": {
+        "id": 720,
+        "technicalName": "hoopa"
+      }
+    },
+    {
+      "base": {
+        "id": 721,
+        "technicalName": "volcanion"
+      }
+    },
+    {
+      "base": {
+        "id": 722,
+        "technicalName": "rowlet"
+      },
+      "stage2": {
+        "id": 723,
+        "technicalName": "dartrix"
+      },
+      "stage3": {
+        "id": 724,
+        "technicalName": "decidueye"
+      }
+    },
+    {
+      "base": {
+        "id": 725,
+        "technicalName": "litten"
+      },
+      "stage2": {
+        "id": 726,
+        "technicalName": "torracat"
+      },
+      "stage3": {
+        "id": 727,
+        "technicalName": "incineroar"
+      }
+    },
+    {
+      "base": {
+        "id": 728,
+        "technicalName": "popplio"
+      },
+      "stage2": {
+        "id": 729,
+        "technicalName": "brionne"
+      },
+      "stage3": {
+        "id": 730,
+        "technicalName": "primarina"
+      }
+    },
+    {
+      "base": {
+        "id": 731,
+        "technicalName": "pikipek"
+      },
+      "stage2": {
+        "id": 732,
+        "technicalName": "trumbeak"
+      },
+      "stage3": {
+        "id": 733,
+        "technicalName": "toucannon"
+      }
+    },
+    {
+      "base": {
+        "id": 734,
+        "technicalName": "yungoos"
+      },
+      "stage2": {
+        "id": 735,
+        "technicalName": "gumshoos"
+      }
+    },
+    {
+      "base": {
+        "id": 736,
+        "technicalName": "grubbin"
+      },
+      "stage2": {
+        "id": 737,
+        "technicalName": "charjabug"
+      },
+      "stage3": {
+        "id": 738,
+        "technicalName": "vikavolt"
+      }
+    },
+    {
+      "base": {
+        "id": 739,
+        "technicalName": "crabrawler"
+      },
+      "stage2": {
+        "id": 740,
+        "technicalName": "crabominable"
+      }
+    },
+    {
+      "base": {
+        "id": 742,
+        "technicalName": "cutiefly"
+      },
+      "stage2": {
+        "id": 743,
+        "technicalName": "ribombee"
+      }
+    },
+    {
+      "base": {
+        "id": 10151,
+        "technicalName": "rockruff"
+      }
+    },
+    {
+      "base": {
+        "id": 747,
+        "technicalName": "mareanie"
+      },
+      "stage2": {
+        "id": 748,
+        "technicalName": "toxapex"
+      }
+    },
+    {
+      "base": {
+        "id": 749,
+        "technicalName": "mudbray"
+      },
+      "stage2": {
+        "id": 750,
+        "technicalName": "mudsdale"
+      }
+    },
+    {
+      "base": {
+        "id": 751,
+        "technicalName": "dewpider"
+      },
+      "stage2": {
+        "id": 752,
+        "technicalName": "araquanid"
+      }
+    },
+    {
+      "base": {
+        "id": 753,
+        "technicalName": "fomantis"
+      },
+      "stage2": {
+        "id": 754,
+        "technicalName": "lurantis"
+      }
+    },
+    {
+      "base": {
+        "id": 755,
+        "technicalName": "morelull"
+      },
+      "stage2": {
+        "id": 756,
+        "technicalName": "shiinotic"
+      }
+    },
+    {
+      "base": {
+        "id": 757,
+        "technicalName": "salandit"
+      },
+      "stage2": {
+        "id": 758,
+        "technicalName": "salazzle"
+      }
+    },
+    {
+      "base": {
+        "id": 759,
+        "technicalName": "stufful"
+      },
+      "stage2": {
+        "id": 760,
+        "technicalName": "bewear"
+      }
+    },
+    {
+      "base": {
+        "id": 761,
+        "technicalName": "bounsweet"
+      },
+      "stage2": {
+        "id": 762,
+        "technicalName": "steenee"
+      },
+      "stage3": {
+        "id": 763,
+        "technicalName": "tsareena"
+      }
+    },
+    {
+      "base": {
+        "id": 764,
+        "technicalName": "comfey"
+      }
+    },
+    {
+      "base": {
+        "id": 765,
+        "technicalName": "oranguru"
+      }
+    },
+    {
+      "base": {
+        "id": 766,
+        "technicalName": "passimian"
+      }
+    },
+    {
+      "base": {
+        "id": 767,
+        "technicalName": "wimpod"
+      },
+      "stage2": {
+        "id": 768,
+        "technicalName": "golisopod"
+      }
+    },
+    {
+      "base": {
+        "id": 769,
+        "technicalName": "sandygast"
+      },
+      "stage2": {
+        "id": 770,
+        "technicalName": "palossand"
+      }
+    },
+    {
+      "base": {
+        "id": 771,
+        "technicalName": "pyukumuku"
+      }
+    },
+    {
+      "base": {
+        "id": 772,
+        "technicalName": "type-null"
+      },
+      "stage2": {
+        "id": 773,
+        "technicalName": "silvally"
+      }
+    },
+    {
+      "base": {
+        "id": 10142,
+        "technicalName": "minior"
+      }
+    },
+    {
+      "base": {
+        "id": 775,
+        "technicalName": "komala"
+      }
+    },
+    {
+      "base": {
+        "id": 776,
+        "technicalName": "turtonator"
+      }
+    },
+    {
+      "base": {
+        "id": 777,
+        "technicalName": "togedemaru"
+      }
+    },
+    {
+      "base": {
+        "id": 10145,
+        "technicalName": "mimikyu"
+      }
+    },
+    {
+      "base": {
+        "id": 779,
+        "technicalName": "bruxish"
+      }
+    },
+    {
+      "base": {
+        "id": 780,
+        "technicalName": "drampa"
+      }
+    },
+    {
+      "base": {
+        "id": 781,
+        "technicalName": "dhelmise"
+      }
+    },
+    {
+      "base": {
+        "id": 782,
+        "technicalName": "jangmo-o"
+      },
+      "stage2": {
+        "id": 783,
+        "technicalName": "hakamo-o"
+      },
+      "stage3": {
+        "id": 784,
+        "technicalName": "kommo-o"
+      }
+    },
+    {
+      "base": {
+        "id": 785,
+        "technicalName": "tapu-koko"
+      }
+    },
+    {
+      "base": {
+        "id": 786,
+        "technicalName": "tapu-lele"
+      }
+    },
+    {
+      "base": {
+        "id": 787,
+        "technicalName": "tapu-bulu"
+      }
+    },
+    {
+      "base": {
+        "id": 788,
+        "technicalName": "tapu-fini"
+      }
+    },
+    {
+      "base": {
+        "id": 789,
+        "technicalName": "cosmog"
+      },
+      "stage2": {
+        "id": 790,
+        "technicalName": "cosmoem"
+      },
+      "stage3": {
+        "id": 791,
+        "technicalName": "solgaleo"
+      }
+    },
+    {
+      "base": {
+        "id": 793,
+        "technicalName": "nihilego"
+      }
+    },
+    {
+      "base": {
+        "id": 794,
+        "technicalName": "buzzwole"
+      }
+    },
+    {
+      "base": {
+        "id": 795,
+        "technicalName": "pheromosa"
+      }
+    },
+    {
+      "base": {
+        "id": 796,
+        "technicalName": "xurkitree"
+      }
+    },
+    {
+      "base": {
+        "id": 797,
+        "technicalName": "celesteela"
+      }
+    },
+    {
+      "base": {
+        "id": 798,
+        "technicalName": "kartana"
+      }
+    },
+    {
+      "base": {
+        "id": 799,
+        "technicalName": "guzzlord"
+      }
+    },
+    {
+      "base": {
+        "id": 800,
+        "technicalName": "necrozma"
+      }
+    },
+    {
+      "base": {
+        "id": 801,
+        "technicalName": "magearna"
+      }
+    },
+    {
+      "base": {
+        "id": 802,
+        "technicalName": "marshadow"
+      }
+    },
+    {
+      "base": {
+        "id": 803,
+        "technicalName": "poipole"
+      },
+      "stage2": {
+        "id": 804,
+        "technicalName": "naganadel"
+      }
+    },
+    {
+      "base": {
+        "id": 805,
+        "technicalName": "stakataka"
+      }
+    },
+    {
+      "base": {
+        "id": 806,
+        "technicalName": "blacephalon"
+      }
+    },
+    {
+      "base": {
+        "id": 807,
+        "technicalName": "zeraora"
+      }
+    },
+    {
+      "base": {
+        "id": 808,
+        "technicalName": "meltan"
+      }
+    },
+    {
+      "base": {
+        "id": 809,
+        "technicalName": "melmetal"
+      }
+    },
+    {
+      "base": {
+        "id": 810,
+        "technicalName": "grookey"
+      },
+      "stage2": {
+        "id": 811,
+        "technicalName": "thwackey"
+      },
+      "stage3": {
+        "id": 812,
+        "technicalName": "rillaboom"
+      }
+    },
+    {
+      "base": {
+        "id": 813,
+        "technicalName": "scorbunny"
+      },
+      "stage2": {
+        "id": 814,
+        "technicalName": "raboot"
+      },
+      "stage3": {
+        "id": 815,
+        "technicalName": "cinderace"
+      }
+    },
+    {
+      "base": {
+        "id": 816,
+        "technicalName": "sobble"
+      },
+      "stage2": {
+        "id": 817,
+        "technicalName": "drizzile"
+      },
+      "stage3": {
+        "id": 818,
+        "technicalName": "inteleon"
+      }
+    },
+    {
+      "base": {
+        "id": 819,
+        "technicalName": "skwovet"
+      },
+      "stage2": {
+        "id": 820,
+        "technicalName": "greedent"
+      }
+    },
+    {
+      "base": {
+        "id": 821,
+        "technicalName": "rookidee"
+      },
+      "stage2": {
+        "id": 822,
+        "technicalName": "corvisquire"
+      },
+      "stage3": {
+        "id": 823,
+        "technicalName": "corviknight"
+      }
+    },
+    {
+      "base": {
+        "id": 824,
+        "technicalName": "blipbug"
+      },
+      "stage2": {
+        "id": 825,
+        "technicalName": "dottler"
+      },
+      "stage3": {
+        "id": 826,
+        "technicalName": "orbeetle"
+      }
+    },
+    {
+      "base": {
+        "id": 827,
+        "technicalName": "nickit"
+      },
+      "stage2": {
+        "id": 828,
+        "technicalName": "thievul"
+      }
+    },
+    {
+      "base": {
+        "id": 829,
+        "technicalName": "gossifleur"
+      },
+      "stage2": {
+        "id": 830,
+        "technicalName": "eldegoss"
+      }
+    },
+    {
+      "base": {
+        "id": 831,
+        "technicalName": "wooloo"
+      },
+      "stage2": {
+        "id": 832,
+        "technicalName": "dubwool"
+      }
+    },
+    {
+      "base": {
+        "id": 833,
+        "technicalName": "chewtle"
+      },
+      "stage2": {
+        "id": 834,
+        "technicalName": "drednaw"
+      }
+    },
+    {
+      "base": {
+        "id": 835,
+        "technicalName": "yamper"
+      },
+      "stage2": {
+        "id": 836,
+        "technicalName": "boltund"
+      }
+    },
+    {
+      "base": {
+        "id": 837,
+        "technicalName": "rolycoly"
+      },
+      "stage2": {
+        "id": 838,
+        "technicalName": "carkol"
+      },
+      "stage3": {
+        "id": 839,
+        "technicalName": "coalossal"
+      }
+    },
+    {
+      "base": {
+        "id": 840,
+        "technicalName": "applin"
+      },
+      "stage2": {
+        "id": 841,
+        "technicalName": "flapple"
+      }
+    },
+    {
+      "base": {
+        "id": 843,
+        "technicalName": "silicobra"
+      },
+      "stage2": {
+        "id": 844,
+        "technicalName": "sandaconda"
+      }
+    },
+    {
+      "base": {
+        "id": 10183,
+        "technicalName": "cramorant"
+      }
+    },
+    {
+      "base": {
+        "id": 846,
+        "technicalName": "arrokuda"
+      },
+      "stage2": {
+        "id": 847,
+        "technicalName": "barraskewda"
+      }
+    },
+    {
+      "base": {
+        "id": 848,
+        "technicalName": "toxel"
+      }
+    },
+    {
+      "base": {
+        "id": 850,
+        "technicalName": "sizzlipede"
+      },
+      "stage2": {
+        "id": 851,
+        "technicalName": "centiskorch"
+      }
+    },
+    {
+      "base": {
+        "id": 852,
+        "technicalName": "clobbopus"
+      },
+      "stage2": {
+        "id": 853,
+        "technicalName": "grapploct"
+      }
+    },
+    {
+      "base": {
+        "id": 854,
+        "technicalName": "sinistea"
+      },
+      "stage2": {
+        "id": 855,
+        "technicalName": "polteageist"
+      }
+    },
+    {
+      "base": {
+        "id": 856,
+        "technicalName": "hatenna"
+      },
+      "stage2": {
+        "id": 857,
+        "technicalName": "hattrem"
+      },
+      "stage3": {
+        "id": 858,
+        "technicalName": "hatterene"
+      }
+    },
+    {
+      "base": {
+        "id": 859,
+        "technicalName": "impidimp"
+      },
+      "stage2": {
+        "id": 860,
+        "technicalName": "morgrem"
+      },
+      "stage3": {
+        "id": 861,
+        "technicalName": "grimmsnarl"
+      }
+    },
+    {
+      "base": {
+        "id": 868,
+        "technicalName": "milcery"
+      },
+      "stage2": {
+        "id": 869,
+        "technicalName": "alcremie"
+      }
+    },
+    {
+      "base": {
+        "id": 870,
+        "technicalName": "falinks"
+      }
+    },
+    {
+      "base": {
+        "id": 871,
+        "technicalName": "pincurchin"
+      }
+    },
+    {
+      "base": {
+        "id": 872,
+        "technicalName": "snom"
+      },
+      "stage2": {
+        "id": 873,
+        "technicalName": "frosmoth"
+      }
+    },
+    {
+      "base": {
+        "id": 874,
+        "technicalName": "stonjourner"
+      }
+    },
+    {
+      "base": {
+        "id": 878,
+        "technicalName": "cufant"
+      },
+      "stage2": {
+        "id": 879,
+        "technicalName": "copperajah"
+      }
+    },
+    {
+      "base": {
+        "id": 880,
+        "technicalName": "dracozolt"
+      }
+    },
+    {
+      "base": {
+        "id": 881,
+        "technicalName": "arctozolt"
+      }
+    },
+    {
+      "base": {
+        "id": 882,
+        "technicalName": "dracovish"
+      }
+    },
+    {
+      "base": {
+        "id": 883,
+        "technicalName": "arctovish"
+      }
+    },
+    {
+      "base": {
+        "id": 884,
+        "technicalName": "duraludon"
+      },
+      "stage2": {
+        "id": 1018,
+        "technicalName": "archaludon"
+      }
+    },
+    {
+      "base": {
+        "id": 885,
+        "technicalName": "dreepy"
+      },
+      "stage2": {
+        "id": 886,
+        "technicalName": "drakloak"
+      },
+      "stage3": {
+        "id": 887,
+        "technicalName": "dragapult"
+      }
+    },
+    {
+      "base": {
+        "id": 888,
+        "technicalName": "zacian"
+      }
+    },
+    {
+      "base": {
+        "id": 889,
+        "technicalName": "zamazenta"
+      }
+    },
+    {
+      "base": {
+        "id": 890,
+        "technicalName": "eternatus"
+      }
+    },
+    {
+      "base": {
+        "id": 891,
+        "technicalName": "kubfu"
+      }
+    },
+    {
+      "base": {
+        "id": 893,
+        "technicalName": "zarude"
+      }
+    },
+    {
+      "base": {
+        "id": 894,
+        "technicalName": "regieleki"
+      }
+    },
+    {
+      "base": {
+        "id": 895,
+        "technicalName": "regidrago"
+      }
+    },
+    {
+      "base": {
+        "id": 896,
+        "technicalName": "glastrier"
+      }
+    },
+    {
+      "base": {
+        "id": 897,
+        "technicalName": "spectrier"
+      }
+    },
+    {
+      "base": {
+        "id": 898,
+        "technicalName": "calyrex"
+      }
+    },
+    {
+      "base": {
+        "id": 906,
+        "technicalName": "sprigatito"
+      },
+      "stage2": {
+        "id": 907,
+        "technicalName": "floragato"
+      },
+      "stage3": {
+        "id": 908,
+        "technicalName": "meowscarada"
+      }
+    },
+    {
+      "base": {
+        "id": 909,
+        "technicalName": "fuecoco"
+      },
+      "stage2": {
+        "id": 910,
+        "technicalName": "crocalor"
+      },
+      "stage3": {
+        "id": 911,
+        "technicalName": "skeledirge"
+      }
+    },
+    {
+      "base": {
+        "id": 912,
+        "technicalName": "quaxly"
+      },
+      "stage2": {
+        "id": 913,
+        "technicalName": "quaxwell"
+      },
+      "stage3": {
+        "id": 914,
+        "technicalName": "quaquaval"
+      }
+    },
+    {
+      "base": {
+        "id": 915,
+        "technicalName": "lechonk"
+      }
+    },
+    {
+      "base": {
+        "id": 917,
+        "technicalName": "tarountula"
+      },
+      "stage2": {
+        "id": 918,
+        "technicalName": "spidops"
+      }
+    },
+    {
+      "base": {
+        "id": 919,
+        "technicalName": "nymble"
+      },
+      "stage2": {
+        "id": 920,
+        "technicalName": "lokix"
+      }
+    },
+    {
+      "base": {
+        "id": 921,
+        "technicalName": "pawmi"
+      },
+      "stage2": {
+        "id": 922,
+        "technicalName": "pawmo"
+      },
+      "stage3": {
+        "id": 923,
+        "technicalName": "pawmot"
+      }
+    },
+    {
+      "base": {
+        "id": 924,
+        "technicalName": "tandemaus"
+      }
+    },
+    {
+      "base": {
+        "id": 926,
+        "technicalName": "fidough"
+      },
+      "stage2": {
+        "id": 927,
+        "technicalName": "dachsbun"
+      }
+    },
+    {
+      "base": {
+        "id": 928,
+        "technicalName": "smoliv"
+      },
+      "stage2": {
+        "id": 929,
+        "technicalName": "dolliv"
+      },
+      "stage3": {
+        "id": 930,
+        "technicalName": "arboliva"
+      }
+    },
+    {
+      "base": {
+        "id": 932,
+        "technicalName": "nacli"
+      },
+      "stage2": {
+        "id": 933,
+        "technicalName": "naclstack"
+      },
+      "stage3": {
+        "id": 934,
+        "technicalName": "garganacl"
+      }
+    },
+    {
+      "base": {
+        "id": 935,
+        "technicalName": "charcadet"
+      },
+      "stage2": {
+        "id": 936,
+        "technicalName": "armarouge"
+      }
+    },
+    {
+      "base": {
+        "id": 938,
+        "technicalName": "tadbulb"
+      },
+      "stage2": {
+        "id": 939,
+        "technicalName": "bellibolt"
+      }
+    },
+    {
+      "base": {
+        "id": 940,
+        "technicalName": "wattrel"
+      },
+      "stage2": {
+        "id": 941,
+        "technicalName": "kilowattrel"
+      }
+    },
+    {
+      "base": {
+        "id": 942,
+        "technicalName": "maschiff"
+      },
+      "stage2": {
+        "id": 943,
+        "technicalName": "mabosstiff"
+      }
+    },
+    {
+      "base": {
+        "id": 944,
+        "technicalName": "shroodle"
+      },
+      "stage2": {
+        "id": 945,
+        "technicalName": "grafaiai"
+      }
+    },
+    {
+      "base": {
+        "id": 946,
+        "technicalName": "bramblin"
+      },
+      "stage2": {
+        "id": 947,
+        "technicalName": "brambleghast"
+      }
+    },
+    {
+      "base": {
+        "id": 948,
+        "technicalName": "toedscool"
+      },
+      "stage2": {
+        "id": 949,
+        "technicalName": "toedscruel"
+      }
+    },
+    {
+      "base": {
+        "id": 950,
+        "technicalName": "klawf"
+      }
+    },
+    {
+      "base": {
+        "id": 951,
+        "technicalName": "capsakid"
+      },
+      "stage2": {
+        "id": 952,
+        "technicalName": "scovillain"
+      }
+    },
+    {
+      "base": {
+        "id": 953,
+        "technicalName": "rellor"
+      },
+      "stage2": {
+        "id": 954,
+        "technicalName": "rabsca"
+      }
+    },
+    {
+      "base": {
+        "id": 955,
+        "technicalName": "flittle"
+      },
+      "stage2": {
+        "id": 956,
+        "technicalName": "espathra"
+      }
+    },
+    {
+      "base": {
+        "id": 957,
+        "technicalName": "tinkatink"
+      },
+      "stage2": {
+        "id": 958,
+        "technicalName": "tinkatuff"
+      },
+      "stage3": {
+        "id": 959,
+        "technicalName": "tinkaton"
+      }
+    },
+    {
+      "base": {
+        "id": 960,
+        "technicalName": "wiglett"
+      },
+      "stage2": {
+        "id": 961,
+        "technicalName": "wugtrio"
+      }
+    },
+    {
+      "base": {
+        "id": 962,
+        "technicalName": "bombirdier"
+      }
+    },
+    {
+      "base": {
+        "id": 963,
+        "technicalName": "finizen"
+      }
+    },
+    {
+      "base": {
+        "id": 965,
+        "technicalName": "varoom"
+      },
+      "stage2": {
+        "id": 966,
+        "technicalName": "revavroom"
+      }
+    },
+    {
+      "base": {
+        "id": 967,
+        "technicalName": "cyclizar"
+      }
+    },
+    {
+      "base": {
+        "id": 968,
+        "technicalName": "orthworm"
+      }
+    },
+    {
+      "base": {
+        "id": 969,
+        "technicalName": "glimmet"
+      },
+      "stage2": {
+        "id": 970,
+        "technicalName": "glimmora"
+      }
+    },
+    {
+      "base": {
+        "id": 971,
+        "technicalName": "greavard"
+      },
+      "stage2": {
+        "id": 972,
+        "technicalName": "houndstone"
+      }
+    },
+    {
+      "base": {
+        "id": 973,
+        "technicalName": "flamigo"
+      }
+    },
+    {
+      "base": {
+        "id": 974,
+        "technicalName": "cetoddle"
+      },
+      "stage2": {
+        "id": 975,
+        "technicalName": "cetitan"
+      }
+    },
+    {
+      "base": {
+        "id": 976,
+        "technicalName": "veluza"
+      }
+    },
+    {
+      "base": {
+        "id": 977,
+        "technicalName": "dondozo"
+      }
+    },
+    {
+      "base": {
+        "id": 984,
+        "technicalName": "great-tusk"
+      }
+    },
+    {
+      "base": {
+        "id": 985,
+        "technicalName": "scream-tail"
+      }
+    },
+    {
+      "base": {
+        "id": 986,
+        "technicalName": "brute-bonnet"
+      }
+    },
+    {
+      "base": {
+        "id": 987,
+        "technicalName": "flutter-mane"
+      }
+    },
+    {
+      "base": {
+        "id": 988,
+        "technicalName": "slither-wing"
+      }
+    },
+    {
+      "base": {
+        "id": 989,
+        "technicalName": "sandy-shocks"
+      }
+    },
+    {
+      "base": {
+        "id": 990,
+        "technicalName": "iron-treads"
+      }
+    },
+    {
+      "base": {
+        "id": 991,
+        "technicalName": "iron-bundle"
+      }
+    },
+    {
+      "base": {
+        "id": 992,
+        "technicalName": "iron-hands"
+      }
+    },
+    {
+      "base": {
+        "id": 993,
+        "technicalName": "iron-jugulis"
+      }
+    },
+    {
+      "base": {
+        "id": 994,
+        "technicalName": "iron-moth"
+      }
+    },
+    {
+      "base": {
+        "id": 995,
+        "technicalName": "iron-thorns"
+      }
+    },
+    {
+      "base": {
+        "id": 996,
+        "technicalName": "frigibax"
+      },
+      "stage2": {
+        "id": 997,
+        "technicalName": "arctibax"
+      },
+      "stage3": {
+        "id": 998,
+        "technicalName": "baxcalibur"
+      }
+    },
+    {
+      "base": {
+        "id": 999,
+        "technicalName": "gimmighoul"
+      },
+      "stage2": {
+        "id": 1000,
+        "technicalName": "gholdengo"
+      }
+    },
+    {
+      "base": {
+        "id": 1001,
+        "technicalName": "wo-chien"
+      }
+    },
+    {
+      "base": {
+        "id": 1002,
+        "technicalName": "chien-pao"
+      }
+    },
+    {
+      "base": {
+        "id": 1003,
+        "technicalName": "ting-lu"
+      }
+    },
+    {
+      "base": {
+        "id": 1004,
+        "technicalName": "chi-yu"
+      }
+    },
+    {
+      "base": {
+        "id": 1005,
+        "technicalName": "roaring-moon"
+      }
+    },
+    {
+      "base": {
+        "id": 1006,
+        "technicalName": "iron-valiant"
+      }
+    },
+    {
+      "base": {
+        "id": 1007,
+        "technicalName": "koraidon"
+      }
+    },
+    {
+      "base": {
+        "id": 1008,
+        "technicalName": "miraidon"
+      }
+    },
+    {
+      "base": {
+        "id": 1009,
+        "technicalName": "walking-wake"
+      }
+    },
+    {
+      "base": {
+        "id": 1010,
+        "technicalName": "iron-leaves"
+      }
+    },
+    {
+      "base": {
+        "id": 1012,
+        "technicalName": "poltchageist"
+      },
+      "stage2": {
+        "id": 1013,
+        "technicalName": "sinistcha"
+      }
+    },
+    {
+      "base": {
+        "id": 1014,
+        "technicalName": "okidogi"
+      }
+    },
+    {
+      "base": {
+        "id": 1015,
+        "technicalName": "munkidori"
+      }
+    },
+    {
+      "base": {
+        "id": 1016,
+        "technicalName": "fezandipiti"
+      }
+    },
+    {
+      "base": {
+        "id": 1017,
+        "technicalName": "ogerpon"
+      }
+    },
+    {
+      "base": {
+        "id": 1020,
+        "technicalName": "gouging-fire"
+      }
+    },
+    {
+      "base": {
+        "id": 1021,
+        "technicalName": "raging-bolt"
+      }
+    },
+    {
+      "base": {
+        "id": 1023,
+        "technicalName": "iron-crown"
+      }
+    },
+    {
+      "base": {
+        "id": 1022,
+        "technicalName": "iron-boulder"
+      }
+    },
+    {
+      "base": {
+        "id": 1024,
+        "technicalName": "terapagos"
+      }
+    },
+    {
+      "base": {
+        "id": 1025,
+        "technicalName": "pecharunt"
+      }
+    }
+  ],
+  "generatedAt": "2026-05-07T00:21:47.355Z",
+  "totalCount": 521
+}

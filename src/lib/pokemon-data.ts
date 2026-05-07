@@ -8,6 +8,31 @@ export interface CaptureSpriteOption {
   label: string;
 }
 
+export async function getPokemonList(): Promise<PokemonData[]> {
+  // Attempt to use the pre-generated static cache
+  try {
+    if (!pokemonListJsonCache) {
+      const res = await fetch(publicPath("/data/pokemon-list.json"));
+      if (res.ok) {
+        const data = (await res.json()) as {
+          pokemon?: PokemonData[];
+        };
+        if (data.pokemon && data.pokemon.length > 0) {
+          pokemonListJsonCache = data.pokemon;
+        } else {
+          return [];
+        }
+      } else {
+        return [];
+      }
+    }
+    return pokemonListJsonCache;
+  } catch {
+    // Cache not available
+    return [];
+  }
+}
+
 export async function getPokemonById(id: number): Promise<PokemonData | null> {
   // Attempt to use the pre-generated static cache
   try {
@@ -211,13 +236,62 @@ export async function getAvailableCaptureSpriteOptions(params: {
 
 // ── Evolution chain functions ──────────────────────────────────────────────
 
+// Cache for evolution chains
+let evolutionChainsCache: Array<{
+  base: { id: number; technicalName: string };
+  stage2?: { id: number; technicalName: string };
+  stage3?: { id: number; technicalName: string };
+}> | null = null;
+
 /**
- * Get the evolution chain for a given Pokémon
+ * Get the evolution chain for a given Pokémon (works for base, stage2, or stage3)
+ * Returns all members of the chain as PokemonData objects
  */
 export async function getEvolutionChain(pId: number): Promise<PokemonData[]> {
   try {
-    const evolutions: PokemonData[] = [];
-    return evolutions;
+    // Load evolution chains cache if not already loaded
+    if (!evolutionChainsCache) {
+      const res = await fetch(publicPath("/data/evolution-chains.json"));
+      if (res.ok) {
+        const data = (await res.json()) as {
+          chains?: Array<{
+            base: { id: number; technicalName: string };
+            stage2?: { id: number; technicalName: string };
+            stage3?: { id: number; technicalName: string };
+          }>;
+        };
+        if (data.chains) {
+          evolutionChainsCache = data.chains;
+        }
+      }
+    }
+
+    if (!evolutionChainsCache) return [];
+
+    // Find the chain containing this pokémon
+    const chain = evolutionChainsCache.find(
+      (c) => c.base.id === pId || c.stage2?.id === pId || c.stage3?.id === pId,
+    );
+
+    if (!chain) return [];
+
+    // Build the evolution chain as PokemonData objects
+    const result: PokemonData[] = [];
+
+    const baseData = await getPokemonById(chain.base.id);
+    if (baseData) result.push(baseData);
+
+    if (chain.stage2) {
+      const stage2Data = await getPokemonById(chain.stage2.id);
+      if (stage2Data) result.push(stage2Data);
+    }
+
+    if (chain.stage3) {
+      const stage3Data = await getPokemonById(chain.stage3.id);
+      if (stage3Data) result.push(stage3Data);
+    }
+
+    return result;
   } catch {
     return [];
   }
@@ -225,7 +299,7 @@ export async function getEvolutionChain(pId: number): Promise<PokemonData[]> {
 
 /**
  * Get available evolutions for a capture based on game mode
- * @param capture The capture to evolve
+ * @param pokemon The pokémon to evolve
  * @param run The run configuration (for mode detection)
  * @returns Array of possible evolutions
  */
@@ -240,16 +314,17 @@ export async function getAvailableEvolutions(
   if (!chain || chain.length === 0) return [];
 
   // Remove current pokémon from the list
-  const otherEvolutions = chain.filter((e) => e.id !== pokemon.id);
+  const otherEvolutions = (await getPokemonList()).filter(
+    (e) => e.id !== pokemon.id,
+  );
 
   if (!run) return otherEvolutions;
 
   // Normal mode: only allow evolutions in the same family (chain)
   if (!run.isRandomMode) {
-    return otherEvolutions;
+    return chain.filter((e) => e.id !== pokemon.id);
   } else {
     // Random mode: allow any evolution (full pokedex) except the current form
+    return otherEvolutions;
   }
-
-  return [];
 }

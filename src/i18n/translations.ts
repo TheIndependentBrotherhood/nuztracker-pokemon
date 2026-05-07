@@ -327,6 +327,16 @@ const translations = {
       fr: "Pas d'évolutions disponibles",
       en: "No evolutions available",
     },
+    searchPlaceholder: {
+      fr: "Rechercher un Pokémon…",
+      en: "Search Pokémon…",
+    },
+    resultSingular: { fr: "résultat", en: "result" },
+    resultPlural: { fr: "résultats", en: "results" },
+    noResults: {
+      fr: (query: string) => `Aucun Pokémon ne correspond à "${query}"`,
+      en: (query: string) => `No Pokémon found matching "${query}"`,
+    },
     evolveButton: { fr: "Évoluer", en: "Evolve" },
     cancelButton: { fr: "Annuler", en: "Cancel" },
     closeButton: { fr: "Fermer", en: "Close" },
@@ -532,7 +542,7 @@ const translations = {
 } as const;
 
 /** Return the string for the given language */
-export function t<T extends string | ((n: number) => string)>(
+export function t<T extends string | ((...args: any[]) => string)>(
   entry: { fr: T; en: T },
   lang: Lang,
 ): T {
