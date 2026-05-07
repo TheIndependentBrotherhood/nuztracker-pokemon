@@ -254,6 +254,14 @@ const translations = {
     removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
     noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
     abilitiesHidden: { fr: "Caché", en: "Hidden" },
+    firstTypeRequired: {
+      fr: "Choisis au moins un type pour ce Pokémon.",
+      en: "Choose at least one type for this Pokémon.",
+    },
+    abilityRequired: {
+      fr: "Choisis un talent pour ce Pokémon.",
+      en: "Choose an ability for this Pokémon.",
+    },
   },
 
   // ── Zone List ──────────────────────────────────────────────────────────────

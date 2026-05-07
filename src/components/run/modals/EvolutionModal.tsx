@@ -108,10 +108,16 @@ export default function EvolutionModal({
     if (!selectedEvolution) return;
 
     try {
-      // Create the evolved capture
+      // Create the evolved capture with:
+      // - Reset selectedSprite to default
+      // - Inherit customTypes from the run config for the new species
+      // - Reset ability to re-select from the new species options
       const evolvedCapture = {
         ...pokemonCaptured,
         pokemon: selectedEvolution,
+        selectedSprite: undefined,
+        customTypes: run.customTypesByPokemonId?.[selectedEvolution.id],
+        ability: undefined,
       };
 
       // Update the run with the evolved capture
