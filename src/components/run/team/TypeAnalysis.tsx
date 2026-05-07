@@ -269,32 +269,46 @@ export default function TypeAnalysis({ run }: Props) {
             {TYPES.map((attackType) => {
               // teamTypes is built by mapping over run.team in the same order,
               // so teamTypes[i] always corresponds to run.team[i].
-              // Use BASE defenses (no ability) for bucket display, as requested.
+              // Use BASE defenses (no ability) for comparison.
               const memberBaseEffects = teamTypes.map((types) => {
                 if (types.length === 0) return 1;
                 return getDefenses(types)[attackType] ?? 1;
               });
 
-              // Also compute ability-modified value per member, to detect changes.
+              // Compute ability-modified value per member (includes all ability effects).
+              const memberEffectsWithAbilities = teamTypes.map((types, i) => {
+                if (types.length === 0) return 1;
+                const memberAbility = run.team[i]?.ability;
+                if (!memberAbility) {
+                  return getDefenses(types)[attackType] ?? 1;
+                }
+                return (
+                  getDefensesWithAbilities(types, [memberAbility])[
+                    attackType
+                  ] ?? 1
+                );
+              });
+
+              // Detect which members have ability-modified effects (for visual indicator).
               const memberAbilityEffects = teamTypes.map((types, i) => {
                 if (types.length === 0) return null;
                 const memberAbility = run.team[i]?.ability;
-                if (!memberAbility) return null; // no ability
-                const modified =
-                  getDefensesWithAbilities(types, [memberAbility])[
-                    attackType
-                  ] ?? 1;
+                if (!memberAbility) return null;
+                const modified = memberEffectsWithAbilities[i];
                 // Return null if ability doesn't change this matchup
                 return modified !== (getDefenses(types)[attackType] ?? 1)
                   ? modified
                   : null;
               });
 
-              const weakCount = memberBaseEffects.filter((e) => e > 1).length;
-              const resistCount = memberBaseEffects.filter(
+              // Count using ability-modified values
+              const weakCount = memberEffectsWithAbilities.filter(
+                (e) => e > 1,
+              ).length;
+              const resistCount = memberEffectsWithAbilities.filter(
                 (e) => e < 1 && e !== 0,
               ).length;
-              const immunityCount = memberBaseEffects.filter(
+              const immunityCount = memberEffectsWithAbilities.filter(
                 (e) => e === 0,
               ).length;
 
@@ -327,32 +341,35 @@ export default function TypeAnalysis({ run }: Props) {
                     </Box>
                   </TableCell>
                   {memberBaseEffects.map((eff, i) => {
+                    // Use ability-modified value for display if ability changes the matchup
+                    const displayEff =
+                      memberAbilityEffects[i] ?? memberEffectsWithAbilities[i];
                     const bg =
-                      eff === 0
+                      displayEff === 0
                         ? "#60a5fa"
-                        : eff >= 4
+                        : displayEff >= 4
                           ? "#ef4444"
-                          : eff === 2
+                          : displayEff === 2
                             ? "#f87171"
-                            : eff === 0.5
+                            : displayEff === 0.5
                               ? "#86efac"
-                              : eff === 0.25
+                              : displayEff === 0.25
                                 ? "#4ade80"
                                 : "#e5e7eb";
                     const label =
-                      eff === 0
+                      displayEff === 0
                         ? "0"
-                        : eff === 0.25
+                        : displayEff === 0.25
                           ? "¼"
-                          : eff === 0.5
+                          : displayEff === 0.5
                             ? "½"
-                            : eff === 1
+                            : displayEff === 1
                               ? "1"
-                              : eff === 2
+                              : displayEff === 2
                                 ? "2"
-                                : eff === 4
+                                : displayEff === 4
                                   ? "4"
-                                  : `${eff}`;
+                                  : `${displayEff}`;
 
                     const abilityModified = memberAbilityEffects[i];
                     const memberAbility = run.team[i]?.ability;
@@ -897,37 +914,12 @@ export default function TypeAnalysis({ run }: Props) {
       );
     }
 
-    const effectivenessLabelToMultiplier: Record<
-      EffectivenessLabelKey,
-      number
-    > = {
-      immune: 0,
-      veryWeak: 4,
-      weak: 2,
-      neutral: 1,
-      resistant: 0.5,
-      veryResistant: 0.25,
-      hyperEffective: 4,
-      superEffective: 2,
-      notVeryEffective: 0.5,
-      veryNotEffective: 0.25,
-      noEffect: 0,
-      unknown: 1,
-    };
-
     const rawCombinationDefenses = getDefensesWithAbilities(
       selectedTypes,
       selectedAbilities,
     );
-    const combinationDefenses = Object.fromEntries(
-      Object.entries(rawCombinationDefenses).map(([type, multiplier]) => {
-        const { labelKey: label } = getEffectivenessLabel(
-          multiplier,
-          "defense",
-        );
-        return [type, effectivenessLabelToMultiplier[label] ?? multiplier];
-      }),
-    );
+    // Use raw defenses directly - no conversion needed, this preserves ability modifiers
+    const combinationDefenses = rawCombinationDefenses;
     const combinationOffenses = getOffenses(selectedTypes);
 
     return (
