@@ -275,6 +275,18 @@ const translations = {
     filterVisited: { fr: "Visitées", en: "Visited" },
     filterCaptured: { fr: "Capturées", en: "Captured" },
     noZoneFound: { fr: "Aucune zone trouvée", en: "No zone found" },
+    addTitle: { fr: "Nouvelle zone", en: "New zone" },
+    addLabel: { fr: "Nom de la zone", en: "Zone name" },
+    addPlaceholder: { fr: "Ex: Vallée des Bois", en: "Ex: Forest Valley" },
+    addButton: { fr: "Ajouter", en: "Add" },
+    addCancel: { fr: "Annuler", en: "Cancel" },
+    deleteTitle: { fr: "Supprimer la zone ?", en: "Delete zone?" },
+    deleteMessage: {
+      fr: "Êtes-vous sûr de vouloir supprimer cette zone ? Les captures seront également supprimées.",
+      en: "Are you sure you want to delete this zone? Captures will also be deleted.",
+    },
+    deleteButton: { fr: "Supprimer", en: "Delete" },
+    deleteCancel: { fr: "Annuler", en: "Cancel" },
   },
 
   // ── Zone Item ──────────────────────────────────────────────────────────────
@@ -554,7 +566,7 @@ const translations = {
 } as const;
 
 /** Return the string for the given language */
-export function t<T extends string | ((...args: any[]) => string)>(
+export function t<T extends string | ((...args: unknown[]) => string)>(
   entry: { fr: T; en: T },
   lang: Lang,
 ): T {

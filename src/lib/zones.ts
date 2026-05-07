@@ -65,6 +65,18 @@ export async function loadRegions(): Promise<Region[]> {
         })) || [],
     }));
 
+    // Add custom region at the end
+    const customRegion: Region = {
+      id: "custom",
+      name: "Custom",
+      names: {
+        fr: "Personnalisée",
+        en: "Custom",
+      },
+      locations: [],
+    };
+    mappedRegions.push(customRegion);
+
     // Populate regionZones from the loaded regions: flatten location-areas as zones
     mappedRegions.forEach((region) => {
       if (region.locations && !regionZones[region.id]) {
@@ -132,6 +144,14 @@ if (typeof window !== "undefined") {
 export async function getZonesForRegionAsync(
   region: string,
 ): Promise<ZoneTemplate[]> {
+  // Special case: custom region starts with no zones
+  if (region === "custom") {
+    if (!regionZones["custom"]) {
+      regionZones["custom"] = [];
+    }
+    return regionZones["custom"];
+  }
+
   // Always load regions to ensure translations are available.
   const loadedRegions = await loadRegions();
   const foundRegion = loadedRegions.find((r) => r.id === region);

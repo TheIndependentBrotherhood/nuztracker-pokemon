@@ -2,12 +2,20 @@
 
 import { Run } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
-import { Box, TextField } from "@mui/material";
+import {
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getZonesForRegionAsync, getZoneDisplayName } from "@/lib/zones";
 import ZoneItem from "./ZoneItem";
+import StyledButton from "@/components/ui/StyledButton";
+import StyledTextField from "@/components/ui/StyledTextField";
 
 interface Props {
   run: Run;
@@ -22,6 +30,9 @@ export default function ZoneList({ run }: Props) {
   const [zoneNamesMap, setZoneNamesMap] = useState<
     Map<string, { fr?: string; en?: string }>
   >(new Map());
+  const [showAddZoneDialog, setShowAddZoneDialog] = useState(false);
+  const [newZoneName, setNewZoneName] = useState("");
+  const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const { lang } = useLanguage();
   const tr = translations;
 
@@ -44,7 +55,8 @@ export default function ZoneList({ run }: Props) {
       });
       setZoneNamesMap(newMap);
 
-      if (zonesMismatch) {
+      // For non-custom regions: sync zones if mismatch
+      if (run.region !== "custom" && zonesMismatch) {
         const syncedZones = correctZones.map((expectedZone) => {
           const currentZone = run.zones.find((z) => z.id === expectedZone.id);
           return currentZone
@@ -96,6 +108,45 @@ export default function ZoneList({ run }: Props) {
     return true;
   });
 
+  const handleAddZone = () => {
+    if (!newZoneName.trim()) return;
+
+    const zoneId = `custom-zone-${Date.now()}`;
+    const newZone = {
+      id: zoneId,
+      zoneName: newZoneName.trim(),
+      zoneNames: {
+        en: newZoneName.trim(),
+      },
+      regionArea: "",
+      status: "not-visited" as const,
+      captures: [],
+      updatedAt: Date.now(),
+    };
+
+    updateRun({
+      ...run,
+      zones: [...run.zones, newZone],
+    });
+
+    setNewZoneName("");
+    setShowAddZoneDialog(false);
+  };
+
+  const handleRemoveZone = (zoneId: string) => {
+    setZoneToDelete(zoneId);
+  };
+
+  const confirmRemoveZone = () => {
+    if (zoneToDelete) {
+      updateRun({
+        ...run,
+        zones: run.zones.filter((z) => z.id !== zoneToDelete),
+      });
+      setZoneToDelete(null);
+    }
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Box
@@ -108,7 +159,7 @@ export default function ZoneList({ run }: Props) {
           background: "linear-gradient(to right, #EFF6FF, #F3E8FF)",
         }}
       >
-        <TextField
+        <StyledTextField
           fullWidth
           placeholder={t(tr.zoneList.searchPlaceholder, lang)}
           value={search}
@@ -171,16 +222,59 @@ export default function ZoneList({ run }: Props) {
             </Box>
           ))}
         </Box>
+
+        {/* Add zone button for custom region */}
+        {run.region === "custom" && (
+          <StyledButton
+            variant="primary"
+            onClick={() => setShowAddZoneDialog(true)}
+            sx={{ width: "100%" }}
+          >
+            ➕ Ajouter une zone
+          </StyledButton>
+        )}
       </Box>
       <Box sx={{ overflowY: "auto", flex: 1, background: "#fff" }}>
         {filtered.map((zone) => (
-          <ZoneItem
+          <Box
             key={zone.id}
-            zone={zone}
-            runId={run.id}
-            isSelected={selectedZoneId === zone.id}
-            isShinyHuntMode={run.isShinyHuntMode}
-          />
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+              borderBottom: "1px solid #eee",
+            }}
+          >
+            <Box sx={{ flex: 1 }}>
+              <ZoneItem
+                zone={zone}
+                runId={run.id}
+                isSelected={selectedZoneId === zone.id}
+                isShinyHuntMode={run.isShinyHuntMode}
+              />
+            </Box>
+            {run.region === "custom" && (
+              <Box
+                component="button"
+                onClick={() => handleRemoveZone(zone.id)}
+                sx={{
+                  px: 1.5,
+                  py: 0,
+                  border: "none",
+                  borderBottom: "1px solid rgba(71, 85, 99, 0.3);",
+                  background: "none",
+                  cursor: "pointer",
+                  color: "#dc2626",
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                  "&:hover": {
+                    background: "#fee2e2",
+                  },
+                }}
+              >
+                ✕
+              </Box>
+            )}
+          </Box>
         ))}
         {filtered.length === 0 && (
           <Box
@@ -196,6 +290,87 @@ export default function ZoneList({ run }: Props) {
           </Box>
         )}
       </Box>
+
+      {/* Add Zone Dialog */}
+      <Dialog
+        open={showAddZoneDialog}
+        onClose={() => setShowAddZoneDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              background: "#FEF3E2",
+              border: "3px solid #000",
+              borderRadius: "1.5rem",
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontSize: "1.25rem" }}>
+          {t(tr.zoneList.addTitle, lang)}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 4, overflow: "visible" }}>
+          <StyledTextField
+            autoFocus
+            label={t(tr.zoneList.addLabel, lang)}
+            placeholder={t(tr.zoneList.addPlaceholder, lang)}
+            fullWidth
+            value={newZoneName}
+            onChange={(e) => setNewZoneName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ gap: 1, p: 2 }}>
+          <StyledButton
+            variant="secondary"
+            onClick={() => setShowAddZoneDialog(false)}
+          >
+            {t(tr.zoneList.addCancel, lang)}
+          </StyledButton>
+          <StyledButton
+            variant="primary"
+            onClick={handleAddZone}
+            disabled={!newZoneName.trim()}
+          >
+            {t(tr.zoneList.addButton, lang)}
+          </StyledButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Zone Confirmation Dialog */}
+      <Dialog
+        open={!!zoneToDelete}
+        onClose={() => setZoneToDelete(null)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              background: "#FEF3E2",
+              border: "3px solid #000",
+              borderRadius: "1.5rem",
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontSize: "1.25rem" }}>
+          {t(tr.zoneList.deleteTitle, lang)}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          {t(tr.zoneList.deleteMessage, lang)}
+        </DialogContent>
+        <DialogActions sx={{ gap: 1, p: 2 }}>
+          <StyledButton
+            variant="secondary"
+            onClick={() => setZoneToDelete(null)}
+          >
+            {t(tr.zoneList.deleteCancel, lang)}
+          </StyledButton>
+          <StyledButton variant="danger" onClick={confirmRemoveZone}>
+            {t(tr.zoneList.deleteButton, lang)}
+          </StyledButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

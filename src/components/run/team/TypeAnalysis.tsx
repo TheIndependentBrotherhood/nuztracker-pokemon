@@ -227,7 +227,7 @@ export default function TypeAnalysis({ run }: Props) {
                 >
                   {(
                     c.nickname || getLocalizedPokemonName(c.pokemon, lang)
-                  ).slice(0, 6)}
+                  )}
                 </TableCell>
               ))}
               <TableCell
@@ -592,7 +592,7 @@ export default function TypeAnalysis({ run }: Props) {
                 >
                   {(
                     c.nickname || getLocalizedPokemonName(c.pokemon, lang)
-                  ).slice(0, 6)}
+                  )}
                 </TableCell>
               ))}
               <TableCell

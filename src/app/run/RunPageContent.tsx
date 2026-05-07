@@ -369,7 +369,7 @@ export default function RunPageContent({ runId }: Props) {
                 .flatMap((z) => z.captures)
                 .filter((c) => c.isDead)
                 .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
-              const lastThreeDeadPokemon = deadPokemon.slice(0,3);
+              const lastThreeDeadPokemon = deadPokemon.slice(0, 3);
 
               return lastThreeDeadPokemon.map((pokemonCaptured) => (
                 <Box
@@ -415,86 +415,112 @@ export default function RunPageContent({ runId }: Props) {
             overflow: "hidden",
           }}
         >
-          {/* Map Panel */}
-          <Box
-            sx={{
-              transform: showTypesDrawer ? "translateX(100%)" : "translateX(0)",
-              opacity: showTypesDrawer ? 0 : 1,
-              transition: "all 500ms ease-out",
-            }}
-          >
-            <MapView run={run} />
-          </Box>
-
-          {/* Analysis Panel */}
-          <Box
-            sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              width: "100%",
-              background: "#FEF3E2",
-              border: "3px solid #000",
-              borderRadius: "1rem",
-              overflow: "hidden",
-              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-              display: "flex",
-              flexDirection: "column",
-              transform: showTypesDrawer
-                ? "translateX(0)"
-                : "translateX(-100%)",
-              opacity: showTypesDrawer ? 1 : 0,
-              transition: "all 500ms ease-out",
-            }}
-          >
-            {/* Drawer Header */}
+          {/* For custom region: always show TypeAnalysis */}
+          {run.region === "custom" ? (
             <Box
               sx={{
-                p: 2,
-                borderBottom: "2px solid #000",
+                background: "#FEF3E2",
+                border: "3px solid #000",
+                borderRadius: "1rem",
+                overflow: "hidden",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography
-                sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
-              >
-                {t(tr.runPage.analysis, lang)}
-              </Typography>
-              <Box
-                component="button"
-                onClick={() => setShowTypesDrawer(false)}
-                sx={{
-                  color: "#000",
-                  fontSize: "1.5rem",
-                  p: 0.5,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  "&:hover": {
-                    opacity: 0.7,
-                  },
-                }}
-                title={t(tr.runPage.close, lang)}
-              >
-                ✕
-              </Box>
-            </Box>
-
-            {/* Analysis Content */}
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: "auto",
-                p: 2,
+                flexDirection: "column",
+                height: "100%",
               }}
             >
               <TypeAnalysis run={run} />
             </Box>
-          </Box>
+          ) : (
+            <>
+              {/* Map Panel */}
+              <Box
+                sx={{
+                  transform: showTypesDrawer
+                    ? "translateX(100%)"
+                    : "translateX(0)",
+                  opacity: showTypesDrawer ? 0 : 1,
+                  transition: "all 500ms ease-out",
+                }}
+              >
+                <MapView run={run} />
+              </Box>
+
+              {/* Analysis Panel */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: "100%",
+                  background: "#FEF3E2",
+                  border: "3px solid #000",
+                  borderRadius: "1rem",
+                  overflow: "hidden",
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  flexDirection: "column",
+                  transform: showTypesDrawer
+                    ? "translateX(0)"
+                    : "translateX(-100%)",
+                  opacity: showTypesDrawer ? 1 : 0,
+                  transition: "all 500ms ease-out",
+                }}
+              >
+                {/* Drawer Header */}
+                <Box
+                  sx={{
+                    p: 2,
+                    borderBottom: "2px solid #000",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "1.125rem",
+                      fontWeight: 700,
+                      color: "#000",
+                    }}
+                  >
+                    {t(tr.runPage.analysis, lang)}
+                  </Typography>
+                  <Box
+                    component="button"
+                    onClick={() => setShowTypesDrawer(false)}
+                    sx={{
+                      color: "#000",
+                      fontSize: "1.5rem",
+                      p: 0.5,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      "&:hover": {
+                        opacity: 0.7,
+                      },
+                    }}
+                    title={t(tr.runPage.close, lang)}
+                  >
+                    ✕
+                  </Box>
+                </Box>
+
+                {/* Analysis Content */}
+                <Box
+                  sx={{
+                    flex: 1,
+                    overflowY: "auto",
+                    p: 2,
+                  }}
+                >
+                  <TypeAnalysis run={run} />
+                </Box>
+              </Box>
+            </>
+          )}
         </Box>
       </Box>
     </Box>
