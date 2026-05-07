@@ -233,16 +233,14 @@ export default function ZoneList({ run }: Props) {
           ))}
         </Box>
 
-        {/* Add zone button for custom region */}
-        {run.region === "custom" && (
-          <StyledButton
-            variant="primary"
-            onClick={() => setShowAddZoneDialog(true)}
-            sx={{ width: "100%" }}
-          >
-            ➕ Ajouter une zone
-          </StyledButton>
-        )}
+        {/* Add zone button */}
+        <StyledButton
+          variant="primary"
+          onClick={() => setShowAddZoneDialog(true)}
+          sx={{ width: "100%" }}
+        >
+          ➕ Ajouter une zone
+        </StyledButton>
       </Box>
       <Box sx={{ overflowY: "auto", flex: 1, background: "#fff" }}>
         {filtered.map((zone) => (
@@ -262,28 +260,26 @@ export default function ZoneList({ run }: Props) {
                 isShinyHuntMode={run.isShinyHuntMode}
               />
             </Box>
-            {run.region === "custom" && (
-              <Box
-                component="button"
-                onClick={() => handleRemoveZone(zone.id)}
-                sx={{
-                  px: 1.5,
-                  py: 0,
-                  border: "none",
-                  borderBottom: "1px solid rgba(71, 85, 99, 0.3);",
-                  background: "none",
-                  cursor: "pointer",
-                  color: "#dc2626",
-                  fontSize: "1.25rem",
-                  fontWeight: 700,
-                  "&:hover": {
-                    background: "#fee2e2",
-                  },
-                }}
-              >
-                ✕
-              </Box>
-            )}
+            <Box
+              component="button"
+              onClick={() => handleRemoveZone(zone.id)}
+              sx={{
+                px: 1.5,
+                py: 0,
+                border: "none",
+                borderBottom: "1px solid rgba(71, 85, 99, 0.3);",
+                background: "none",
+                cursor: "pointer",
+                color: "#dc2626",
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                "&:hover": {
+                  background: "#fee2e2",
+                },
+              }}
+            >
+              ✕
+            </Box>
           </Box>
         ))}
         {filtered.length === 0 && (

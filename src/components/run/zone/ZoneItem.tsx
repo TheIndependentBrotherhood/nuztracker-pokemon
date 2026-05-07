@@ -180,25 +180,17 @@ const statusConfig: Record<
   },
 };
 
-const cycleLabel: Record<string, string> = {
-  "not-visited": "👁",
-  visited: "✓",
-  captured: "🔴",
-};
-
 export default function ZoneItem({
   zone,
   runId,
   isSelected,
   isShinyHuntMode,
 }: Props) {
-  const { setZoneStatus, setSelectedZone } = useRunStore();
+  const { setSelectedZone } = useRunStore();
   const [showCapture, setShowCapture] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { lang } = useLanguage();
   const tr = translations;
-  const deleteCapturesToChange = t(tr.zoneItem.deleteCapturesToChange, lang);
-  const changeStatus = t(tr.zoneItem.changeStatus, lang);
   const maxCaptures = isShinyHuntMode ? 2 : 1;
   const capturesFull = zone.captures.length >= maxCaptures;
 
@@ -210,14 +202,6 @@ export default function ZoneItem({
 
   const visualStatus = zone.captures.length >= 2 ? "multiple" : zone.status;
   const config = statusConfig[visualStatus] ?? statusConfig["not-visited"];
-
-  function handleStatusCycle() {
-    if (zone.captures.length > 0 && zone.status === "captured") return;
-    const order: Zone["status"][] = ["not-visited", "visited", "captured"];
-    const current = order.indexOf(zone.status);
-    const next = order[(current + 1) % order.length];
-    setZoneStatus(runId, zone.id, next);
-  }
 
   return (
     <>
@@ -285,80 +269,6 @@ export default function ZoneItem({
               flexShrink: 0,
             }}
           >
-            {zone.captures.length > 0 && (
-              <Typography
-                sx={{
-                  fontSize: "0.7rem",
-                  color: "#334155",
-                  px: 0.75,
-                  py: 0.2,
-                  borderRadius: "999px",
-                  border: "1px solid rgba(71, 85, 99, 0.35)",
-                  background: "rgba(255, 255, 255, 0.65)",
-                  fontWeight: 700,
-                  minWidth: "1.5rem",
-                  textAlign: "center",
-                }}
-              >
-                {zone.captures.length}
-              </Typography>
-            )}
-
-            {/* Cycle status */}
-            <Box
-              component="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleStatusCycle();
-              }}
-              sx={{
-                fontSize: "0.75rem",
-                width: "1.75rem",
-                height: "1.75rem",
-                borderRadius: "0.5rem",
-                transition: "all 200ms ease",
-                color:
-                  zone.captures.length > 0 && zone.status === "captured"
-                    ? "#94a3b8"
-                    : "#334155",
-                background:
-                  zone.captures.length > 0 && zone.status === "captured"
-                    ? "rgba(148, 163, 184, 0.1)"
-                    : "rgba(255, 255, 255, 0.8)",
-                border: "1px solid rgba(71, 85, 99, 0.35)",
-                cursor:
-                  zone.captures.length > 0 && zone.status === "captured"
-                    ? "not-allowed"
-                    : "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                "&:hover": {
-                  color:
-                    zone.captures.length > 0 && zone.status === "captured"
-                      ? undefined
-                      : "#000",
-                  background:
-                    zone.captures.length > 0 && zone.status === "captured"
-                      ? undefined
-                      : "rgba(96, 165, 250, 0.2)",
-                },
-              }}
-              title={
-                zone.captures.length > 0 && zone.status === "captured"
-                  ? deleteCapturesToChange
-                  : changeStatus
-              }
-              aria-label={
-                zone.captures.length > 0 && zone.status === "captured"
-                  ? deleteCapturesToChange
-                  : changeStatus
-              }
-              disabled={zone.captures.length > 0 && zone.status === "captured"}
-            >
-              {cycleLabel[zone.status]}
-            </Box>
-
             {/* Add capture */}
             {!capturesFull && (
               <Box
