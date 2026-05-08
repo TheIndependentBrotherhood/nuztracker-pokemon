@@ -12,7 +12,7 @@ import {
   MenuItem,
   Tooltip,
 } from "@mui/material";
-import { Capture, PokemonData } from "@/lib/types";
+import { Capture, PokemonData, TypeObservation } from "@/lib/types";
 import {
   getPokemonById,
   getAvailableCaptureSpriteOptions,
@@ -29,6 +29,7 @@ import {
 } from "@/lib/pokemon-display";
 import { useRunStore } from "@/store/runStore";
 import { useCache } from "@/context/CacheContext";
+import TypeDeductionTool from "@/components/pokedex/TypeDeductionTool";
 
 interface Props {
   pokemonCaptured: Capture;
@@ -133,6 +134,10 @@ export default function PokemonDetailModal({
   );
   const [abilitySearch, setAbilitySearch] = useState("");
   const [panelSearch, setPanelSearch] = useState("");
+  const [pokedexObservations, setPokedexObservations] = useState<
+    TypeObservation[]
+  >([]);
+  const [pokedexNotes, setPokedexNotes] = useState("");
   const { lang } = useLanguage();
   const { runs, updateRun } = useRunStore();
   const { abilities: abilitiesCache } = useCache();
@@ -218,6 +223,21 @@ export default function PokemonDetailModal({
         ? "♀"
         : null;
   const genderColor = pokemonCaptured.gender === "male" ? "#60a5fa" : "#ec4899";
+
+  // Load Pokédex observations and notes
+  useEffect(() => {
+    if (isPokedexCapture && runToUpdate) {
+      const observations =
+        runToUpdate.pokedexObservationsByPokemonId?.[
+          pokemonCaptured.pokemon.id
+        ] ?? [];
+      const notes =
+        runToUpdate.pokedexNotesByPokemonId?.[pokemonCaptured.pokemon.id] ?? "";
+
+      setPokedexObservations(observations);
+      setPokedexNotes(notes);
+    }
+  }, [isPokedexCapture, pokemonCaptured.pokemon.id, runToUpdate]);
 
   function updateCaptureInRun(updater: (target: Capture) => Capture) {
     if (!runToUpdate) return;
@@ -415,6 +435,55 @@ export default function PokemonDetailModal({
     }
   }
 
+  function persistPokedexObservations(nextObservations: TypeObservation[]) {
+    if (!runToUpdate || !isPokedexCapture) return;
+
+    const nextObservationsByPokemonId = {
+      ...(runToUpdate.pokedexObservationsByPokemonId ?? {}),
+    };
+
+    if (nextObservations.length > 0) {
+      nextObservationsByPokemonId[pokemonCaptured.pokemon.id] =
+        nextObservations;
+    } else {
+      delete nextObservationsByPokemonId[pokemonCaptured.pokemon.id];
+    }
+
+    updateRun({
+      ...runToUpdate,
+      pokedexObservationsByPokemonId:
+        Object.keys(nextObservationsByPokemonId).length > 0
+          ? nextObservationsByPokemonId
+          : undefined,
+    });
+
+    setPokedexObservations(nextObservations);
+  }
+
+  function persistPokedexNotes(nextNotes: string) {
+    if (!runToUpdate || !isPokedexCapture) return;
+
+    const nextNotesByPokemonId = {
+      ...(runToUpdate.pokedexNotesByPokemonId ?? {}),
+    };
+
+    if (nextNotes.trim()) {
+      nextNotesByPokemonId[pokemonCaptured.pokemon.id] = nextNotes.trim();
+    } else {
+      delete nextNotesByPokemonId[pokemonCaptured.pokemon.id];
+    }
+
+    updateRun({
+      ...runToUpdate,
+      pokedexNotesByPokemonId:
+        Object.keys(nextNotesByPokemonId).length > 0
+          ? nextNotesByPokemonId
+          : undefined,
+    });
+
+    setPokedexNotes(nextNotes);
+  }
+
   return (
     <Box
       sx={{
@@ -444,7 +513,8 @@ export default function PokemonDetailModal({
           maxWidth: "448px",
           border: "3px solid #000",
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-          maxHeight: "90vh",
+          minWidth: "40vw",
+          maxHeight: "80vh",
           overflowY: "auto",
           animation: "slideUp 300ms ease",
           "@keyframes slideUp": {
@@ -586,7 +656,7 @@ export default function PokemonDetailModal({
                           >
                             {pokemonDisplayLabel}
                           </Box>
-                          {runToUpdate && (
+                          {runToUpdate && !isPokedexCapture && (
                             <IconButton
                               size="small"
                               onClick={() => {
@@ -663,7 +733,33 @@ export default function PokemonDetailModal({
                         </Box>
                       </Tooltip>
 
-                      {!hasSecondTypeSlot && (
+                      {firstType && (
+                        <Tooltip
+                          title={t(tr.pokemonDetail.removeFirstType, lang)}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              persistCustomTypes([]);
+                              setShowSecondTypeSlot(false);
+                            }}
+                            disabled={!runToUpdate}
+                            sx={{
+                              border: "2px solid #000",
+                              borderRadius: "999px",
+                              width: "24px",
+                              height: "24px",
+                              background: "#fff",
+                              fontWeight: 800,
+                              fontSize: "0.75rem",
+                            }}
+                          >
+                            -
+                          </IconButton>
+                        </Tooltip>
+                      )}
+
+                      {!hasSecondTypeSlot && firstType && (
                         <Tooltip
                           title={t(tr.pokemonDetail.addSecondType, lang)}
                         >
@@ -758,7 +854,7 @@ export default function PokemonDetailModal({
                   )}
                 </Box>
 
-                {isRandomTypeMode && !firstType && (
+                {!isPokedexCapture && isRandomTypeMode && !firstType && (
                   <Typography
                     sx={{
                       mt: 0.75,
@@ -1798,6 +1894,19 @@ export default function PokemonDetailModal({
               )}
             </Box>
 
+            {/* Type Deduction Tool - Pokédex Mode (Random Types only) */}
+            {isPokedexCapture && runToUpdate && isRandomTypeMode && (
+              <Box sx={{ mb: 2 }}>
+                <TypeDeductionTool
+                  observations={pokedexObservations}
+                  abilityPanel={abilityPanel}
+                  notes={pokedexNotes}
+                  onObservationsChange={persistPokedexObservations}
+                  onNotesChange={persistPokedexNotes}
+                />
+              </Box>
+            )}
+
             {/* Base Stats */}
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}
@@ -1909,7 +2018,10 @@ export default function PokemonDetailModal({
 
         <Button
           onClick={onClose}
-          disabled={(isRandomTypeMode && !firstType) || !activeAbility}
+          disabled={
+            !isPokedexCapture &&
+            ((isRandomTypeMode && !firstType) || !activeAbility)
+          }
           sx={{
             mt: 2.5,
             width: "100%",

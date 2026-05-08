@@ -313,6 +313,8 @@ export default function AddCaptureModal({
           maxWidth: "448px",
           border: "3px solid #000",
           boxShadow: "0 20px 25px rgba(0, 0, 0, 0.2)",
+          maxHeight: "80vh",
+          overflowY: "auto",
           animation: "slideUp 300ms ease",
           "@keyframes slideUp": {
             "0%": { opacity: 0, transform: "translateY(20px)" },

@@ -166,6 +166,10 @@ const translations = {
     chooseType: { fr: "Choisir un type", en: "Choose a type" },
     unknownType: { fr: "???", en: "???" },
     addSecondType: { fr: "Ajouter un second type", en: "Add second type" },
+    removeFirstType: {
+      fr: "Retirer le type",
+      en: "Remove type",
+    },
     removeSecondType: {
       fr: "Retirer le second type",
       en: "Remove second type",
@@ -210,6 +214,10 @@ const translations = {
     chooseType: { fr: "Choisir un type", en: "Choose a type" },
     unknownType: { fr: "???", en: "???" },
     addSecondType: { fr: "Ajouter un second type", en: "Add second type" },
+    removeFirstType: {
+      fr: "Retirer le type",
+      en: "Remove type",
+    },
     removeSecondType: {
       fr: "Retirer le second type",
       en: "Remove second type",
@@ -257,6 +265,26 @@ const translations = {
     firstTypeRequired: {
       fr: "Choisis au moins un type pour ce Pokémon.",
       en: "Choose at least one type for this Pokémon.",
+    },
+    typeDeductionTitle: {
+      fr: "Outil de déduction de types",
+      en: "Type Deduction Tool",
+    },
+    speciesNotes: { fr: "Notes sur l'espèce", en: "Species notes" },
+    speciesNotesPlaceholder: {
+      fr: "Vos observations globales sur ce Pokémon...",
+      en: "Your overall observations about this Pokémon...",
+    },
+    abilityPanelLabel: { fr: "Talents du panel", en: "Ability panel" },
+    observations: { fr: "Observations", en: "Observations" },
+    possibleTypesLabel: {
+      fr: (n: number) => `Types possibles (${n})`,
+      en: (n: number) => `Possible types (${n})`,
+    },
+    typesConfirmed: { fr: "✓ Type déterminé", en: "✓ Type confirmed" },
+    otherPossibilities: {
+      fr: (n: number) => `+${n} autres`,
+      en: (n: number) => `+${n} more`,
     },
     abilityRequired: {
       fr: "Choisis un talent pour ce Pokémon.",

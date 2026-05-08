@@ -5,6 +5,13 @@ export interface CaptureSelectedSprite {
   unownLetter?: string;
 }
 
+export interface TypeObservation {
+  id: string;
+  type: "immunity" | "weakness" | "resistance";
+  observationType: string; // The type (fire, water, etc.)
+  createdAt: number;
+}
+
 export interface Capture {
   id: string;
   pokemon: PokemonData;
@@ -54,6 +61,10 @@ export interface Run {
   customTypesByPokemonId?: Record<number, string[]>;
   /** Player-defined ability panel (up to 3) per Pokémon species in randomizer mode. */
   customAbilitiesByPokemonId?: Record<number, string[]>;
+  /** Type observations for Pokédex exploration, indexed by pokemon id. Used for type deduction. */
+  pokedexObservationsByPokemonId?: Record<number, TypeObservation[]>;
+  /** Global notes for each Pokémon species in Pokédex, indexed by pokemon id. */
+  pokedexNotesByPokemonId?: Record<number, string>;
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];

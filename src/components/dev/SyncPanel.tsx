@@ -412,7 +412,7 @@ function JsonModal({
           border: "1px solid #1e293b",
           borderRadius: 12,
           maxWidth: "95vw",
-          maxHeight: "90vh",
+          maxHeight: "80vh",
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 20px 25px -5px rgba(0,0,0,0.5)",
