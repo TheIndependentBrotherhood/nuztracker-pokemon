@@ -174,6 +174,11 @@ const statusConfig: Record<
     dotColor: "#10b981",
     borderColor: "rgba(16, 185, 129, 0.4)",
   },
+  lost: {
+    bgColor: "rgba(239, 68, 68, 0.1)",
+    dotColor: "#dc2626",
+    borderColor: "rgba(239, 68, 68, 0.4)",
+  },
   multiple: {
     bgColor: "rgba(249, 115, 22, 0.05)",
     dotColor: "#fb923c",
@@ -192,7 +197,8 @@ export default function ZoneItem({
   const { lang } = useLanguage();
   const tr = translations;
   const maxCaptures = isShinyHuntMode ? 2 : 1;
-  const capturesFull = zone.captures.length >= maxCaptures;
+  const capturesFull =
+    zone.captures.length >= maxCaptures || zone.status === "lost";
 
   useEffect(() => {
     if (isSelected && ref.current) {

@@ -284,6 +284,24 @@ export default function AddCaptureModal({
     onClose();
   }
 
+  function handleSkip() {
+    if (!selected) return;
+    // Mark as dead without filling form (loupé/tué) - cannot be resurrected
+    addCapture(
+      runId,
+      zoneId,
+      {
+        pokemon: selected,
+        gender: "unknown",
+        isShiny,
+        isDead: true,
+        failedCapture: true,
+      },
+      undefined,
+    );
+    onClose();
+  }
+
   return (
     <Box
       sx={{
@@ -1313,32 +1331,61 @@ export default function AddCaptureModal({
           </>
         )}
 
-        <Box sx={{ display: "flex", gap: 1.5 }}>
-          <Button
-            onClick={onClose}
-            sx={{
-              flex: 1,
-              background: "#e5e5e5",
-              color: "#000",
-              py: 1.5,
-              borderRadius: "0.5rem",
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              textTransform: "none",
-              border: "2px solid #000",
-              transition: "all 200ms",
-              "&:hover": {
-                background: "#ccc",
-              },
-            }}
-          >
-            {t(tr.addCapture.cancel, lang)}
-          </Button>
+        <Box sx={{ display: "flex", gap: 1.5, flexDirection: "column" }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              onClick={onClose}
+              sx={{
+                flex: 1,
+                background: "#e5e5e5",
+                color: "#000",
+                py: 1.5,
+                borderRadius: "0.5rem",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                textTransform: "none",
+                border: "2px solid #000",
+                transition: "all 200ms",
+                "&:hover": {
+                  background: "#ccc",
+                },
+              }}
+            >
+              {t(tr.addCapture.cancel, lang)}
+            </Button>
+            <Button
+              onClick={handleSkip}
+              disabled={!selected}
+              sx={{
+                flex: 1,
+                background: "#dc2626",
+                color: "#fff",
+                py: 1.5,
+                borderRadius: "0.5rem",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                textTransform: "none",
+                border: "2px solid #000",
+                transition: "all 200ms",
+                "&:hover": {
+                  background: "#b91c1c",
+                },
+                "&:disabled": {
+                  background: "#ccc",
+                  color: "#666",
+                  cursor: "not-allowed",
+                  opacity: 0.6,
+                },
+              }}
+            >
+              {lang === "fr" ? "💀 Loupé/Mort" : "💀 Failed/Dead"}
+            </Button>
+          </Box>
           <Button
             onClick={handleAdd}
             disabled={!canAddCapture}
             sx={{
-              flex: 1,
+              width: "100%",
               background: "linear-gradient(to right, #3b82f6, #1d4ed8)",
               color: "#fff",
               py: 1.5,

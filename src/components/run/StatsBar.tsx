@@ -116,55 +116,48 @@ export default function StatsBar({
   const tr = translations;
 
   const total = run.zones.length;
-  const visited = run.zones.filter(
-    (z: Zone) => z.status !== "not-visited",
+  // Count zones that are lost or captured (finished zones)
+  const finished = run.zones.filter(
+    (z: Zone) => z.status === "lost" || z.status === "captured",
   ).length;
-  const captured = run.zones.filter(
-    (z: Zone) => z.status === "captured",
+  // Count zones with successful captures (not failed/loupé)
+  const captured = run.zones.filter((z: Zone) =>
+    z.captures.some((c: Capture) => !c.isDead),
   ).length;
 
   // Zones with regular captures and shiny captures (for stats calculation)
-  const zonesWithRegularCaptures = run.zones.filter((z: Zone) =>
+  // Exclude dead captures from the count
+  const regularZones = run.zones.filter((z: Zone) =>
     z.captures.some((c: Capture) => !c.isShiny),
   ).length;
-  const zonesWithShinyCaptures = run.zones.filter((z: Zone) =>
+  const shinyZones = run.zones.filter((z: Zone) =>
     z.captures.some((c: Capture) => c.isShiny),
   ).length;
 
   // In shiny hunt mode, displayed captured count includes both regular and shiny
-  let displayCaptured = captured;
-  let displayMissed = visited - captured;
-  if (run.isShinyHuntMode) {
-    displayCaptured = zonesWithRegularCaptures + zonesWithShinyCaptures;
-    displayMissed =
-      run.zones.filter((z: Zone) => z.status !== "not-visited").length * 2 -
-      displayCaptured;
-  }
+  const displayCaptured = captured;
+  const displayMissed = finished - captured;
 
-  // Display values (x2 total if shiny hunt mode)
-  let displayVisited = visited;
-  if (run.isShinyHuntMode) {
-    // In shiny hunt mode, count both normal and shiny captures
-    displayVisited = zonesWithRegularCaptures + zonesWithShinyCaptures;
-  }
-  const displayTotal = run.isShinyHuntMode ? total * 2 : total;
-
-  const captureRate = visited > 0 ? Math.round((captured / visited) * 100) : 0;
-  const progress = total > 0 ? (visited / total) * 100 : 0;
-
-  // Count dead pokémons
+  // Count dead pokémons (used for both stats and missed calculation in shiny hunt)
   const deadCount = run.zones.reduce(
     (acc: number, z: Zone) =>
       acc + z.captures.filter((c: Capture) => c.isDead).length,
     0,
   );
 
+  // Display values (x2 total if shiny hunt mode)
+  const displayFinished = finished;
+  const displayTotal = run.isShinyHuntMode ? total * 2 : total;
+
+  const captureRate = finished > 0 ? Math.round((captured / finished) * 100) : 0;
+  const progress = total > 0 ? (finished / total) * 100 : 0;
+
   // Get last 3 dead pokémons for RIP export (sorted by death time, most recent first)
   const deadPokemon = run.zones
     .flatMap((z: Zone) => z.captures)
     .filter((c: Capture) => c.isDead)
     .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
-  const lastThreeDeadPokemon = deadPokemon.slice(0,3);
+  const lastThreeDeadPokemon = deadPokemon.slice(0, 3);
 
   // Export handlers for team stats card
   async function handleOpenExportPng() {
@@ -456,7 +449,7 @@ export default function StatsBar({
             mb: 1,
           }}
         >
-          {zonesWithRegularCaptures}/{total}
+          {regularZones}/{total}
         </Typography>
         <Typography
           sx={{
@@ -479,7 +472,7 @@ export default function StatsBar({
             mb: 1,
           }}
         >
-          {zonesWithShinyCaptures}/{total}
+          {shinyZones}/{total}
         </Typography>
         <Typography
           sx={{
@@ -605,7 +598,7 @@ export default function StatsBar({
         sx={{ mb: 3, pt: 2 }}
       >
         <StatCard
-          value={`${displayVisited}/${displayTotal}`}
+          value={`${displayFinished}/${displayTotal}`}
           label={t(tr.statsBar.zones, lang)}
           color="#E3F2FD"
           hoverContent={run.isShinyHuntMode ? zonesHoverContent : undefined}

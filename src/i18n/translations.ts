@@ -56,10 +56,10 @@ const translations = {
         },
       },
       shinyHunt: {
-        title: { fr: "Mode Shiny Hunt", en: "Shiny Hunt Mode" },
+        title: { fr: "Seconde chance (Shiny)", en: "Second Chance (Shiny)" },
         description: {
-          fr: "Activez le mode Shiny Hunt pour vos runs à la recherche des raretés.",
-          en: "Enable Shiny Hunt mode for runs in search of rare shinies.",
+          fr: "Activez la seconde chance pour vos runs à la recherche des raretés avec deux tentatives par zone.",
+          en: "Enable second chance for runs in search of rare shinies with two attempts per zone.",
         },
       },
     },
@@ -119,7 +119,10 @@ const translations = {
     gen25: { fr: "Générations 2-5", en: "Generations 2-5" },
     gen6: { fr: "Générations 6+", en: "Generations 6+" },
     gameModes: { fr: "⚙️ Modes de Jeu", en: "⚙️ Game Modes" },
-    shinyHuntMode: { fr: "✨ Mode Shiny Hunt", en: "✨ Shiny Hunt Mode" },
+    shinyHuntMode: {
+      fr: "✨ Seconde chance (Shiny)",
+      en: "✨ Second Chance (Shiny)",
+    },
     randomizerMode: { fr: "🎲 Mode Randomizer", en: "🎲 Randomizer Mode" },
     randomizerOptions: {
       fr: "🎛️ Options Randomizer",

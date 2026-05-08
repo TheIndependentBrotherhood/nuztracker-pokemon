@@ -79,7 +79,13 @@ export const useRunStore = create<RunStore>((set, get) => ({
   },
 
   updateRun: (run) => {
-    const updated = { ...run, updatedAt: Date.now() };
+    // Clean dead captures from team
+    const cleanedTeam = run.team.filter((capture) => !capture.isDead);
+    const updated = {
+      ...run,
+      team: cleanedTeam,
+      updatedAt: Date.now(),
+    };
     saveRun(updated);
     set((state) => ({
       runs: state.runs.map((r) => (r.id === updated.id ? updated : r)),
@@ -124,7 +130,8 @@ export const useRunStore = create<RunStore>((set, get) => ({
     };
     if (abilityPanel && abilityPanel.length > 0) {
       // Cap at 3 to enforce the panel limit regardless of caller
-      nextCustomAbilitiesByPokemonId[captureData.pokemon.id] = abilityPanel.slice(0, 3);
+      nextCustomAbilitiesByPokemonId[captureData.pokemon.id] =
+        abilityPanel.slice(0, 3);
     }
     const updatedRun = {
       ...run,
@@ -136,18 +143,28 @@ export const useRunStore = create<RunStore>((set, get) => ({
         Object.keys(nextCustomAbilitiesByPokemonId).length > 0
           ? nextCustomAbilitiesByPokemonId
           : undefined,
-      zones: run.zones.map((z) =>
-        z.id === zoneId
-          ? {
-              ...z,
-              status: "captured" as const,
-              captures: [...z.captures, capture],
-              updatedAt: Date.now(),
-            }
-          : z,
-      ),
+      zones: run.zones.map((z) => {
+        if (z.id !== zoneId) return z;
+
+        // Determine zone status based on failed captures
+        let zoneStatus = z.status;
+        if (captureData.isDead && captureData.failedCapture) {
+          zoneStatus = "lost";
+        } else if (!captureData.isDead) {
+          // Successful capture
+          zoneStatus = "captured";
+        }
+
+        return {
+          ...z,
+          status: zoneStatus,
+          captures: [...z.captures, capture],
+          updatedAt: Date.now(),
+        };
+      }),
     };
-    if (updatedRun.team.length < 6) {
+    // Only add to team if not dead and team is not full
+    if (!captureData.isDead && updatedRun.team.length < 6) {
       updatedRun.team = [...updatedRun.team, capture];
     }
     get().updateRun(updatedRun);

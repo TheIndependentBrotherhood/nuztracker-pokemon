@@ -19,6 +19,8 @@ export interface Capture {
   gender: "male" | "female" | "unknown";
   isShiny: boolean;
   isDead: boolean;
+  /** If true, this is a failed capture (skipped with fail button) and cannot be resurrected */
+  failedCapture?: boolean;
   /** User-discovered types for randomizer type mode (max two). */
   customTypes?: string[];
   /** The single ability of this captured Pokémon. In randomizer mode this is user-defined; in classic mode it is the ability observed in-game. */
@@ -44,7 +46,7 @@ export interface Zone {
     en?: string;
   };
   regionArea: string;
-  status: "not-visited" | "visited" | "captured";
+  status: "not-visited" | "visited" | "captured" | "lost";
   captures: Capture[];
   updatedAt: number;
 }
@@ -73,7 +75,7 @@ export interface Run {
   updatedAt: number;
 }
 
-export type ZoneStatus = "not-visited" | "visited" | "captured";
+export type ZoneStatus = "not-visited" | "visited" | "captured" | "lost";
 
 export interface PokemonStat {
   base_stat: number;

@@ -203,7 +203,7 @@ export default function RunPageContent({ runId }: Props) {
   const headerSubtitle = [
     run.region,
     run.difficulty,
-    run.isShinyHuntMode && "✨ Shiny",
+    run.isShinyHuntMode && "✨ Seconde chance (Shiny)",
     run.isRandomMode && "🎲 Random",
   ]
     .filter(Boolean)

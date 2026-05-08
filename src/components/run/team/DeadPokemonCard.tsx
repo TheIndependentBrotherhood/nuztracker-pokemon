@@ -20,23 +20,10 @@ export default function DeadPokemonCard({
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations;
-  return (
-    <PokemonDisplayCard
-      capture={capture}
-      runId={runId}
-      zone={zone}
-      lang={lang}
-      background="#fff"
-      borderColor="#ef4444"
-      hoverBorderColor="#dc2626"
-      hoverBackground="#fecaca"
-      draggableData={{
-        key: "deadPokemonId",
-        effectAllowed: "move",
-      }}
-      opacity={0.7}
-      imageFilter="grayscale(100%) contrast(0.8)"
-      actions={[
+
+  // Only allow resurrection if not a failed capture
+  const actions = !capture.failedCapture
+    ? [
         {
           icon: "↻",
           title: t(tr.deadPokemonCard.resurrect, lang),
@@ -67,7 +54,26 @@ export default function DeadPokemonCard({
             },
           },
         },
-      ]}
+      ]
+    : [];
+
+  return (
+    <PokemonDisplayCard
+      capture={capture}
+      runId={runId}
+      zone={zone}
+      lang={lang}
+      background="#fff"
+      borderColor="#ef4444"
+      hoverBorderColor="#dc2626"
+      hoverBackground="#fecaca"
+      draggableData={{
+        key: "deadPokemonId",
+        effectAllowed: "move",
+      }}
+      opacity={0.7}
+      imageFilter="grayscale(100%) contrast(0.8)"
+      actions={actions}
     />
   );
 }
