@@ -22,7 +22,7 @@ import { getDefaultSprite, getPokemonById } from "@/lib/pokemon-data";
 
 const ITEMS_PER_PAGE = 20;
 
-type SortOption = "dex" | "name" | "bst";
+type SortOption = "dex" | "name" | "bst" | "type";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -162,6 +162,54 @@ export default function PokedexView({ runId }: Props) {
         else if (bstA == null) result = 1;
         else if (bstB == null) result = -1;
         else result = bstA !== bstB ? bstA - bstB : a.id - b.id;
+      } else if (sortBy === "type") {
+        // In random types mode, use the custom assigned types from the run
+        // Otherwise use the pokedex entry types
+        const typesA = randomTypesMode
+          ? (run?.customTypesByPokemonId?.[a.id] ?? [])
+          : a.types && a.types.length > 0
+            ? a.types
+            : (pokemonData[a.id]?.types ?? []);
+        const typesB = randomTypesMode
+          ? (run?.customTypesByPokemonId?.[b.id] ?? [])
+          : b.types && b.types.length > 0
+            ? b.types
+            : (pokemonData[b.id]?.types ?? []);
+        const typeA = typesA.length > 0 ? typesA[0] : null;
+        const typeB = typesB.length > 0 ? typesB[0] : null;
+
+        // Both have types: sort alphabetically by primary type
+        if (typeA && typeB) {
+          result = typeA.localeCompare(typeB);
+          // If primary types are equal, sort by secondary type
+          if (result === 0) {
+            const secondaryTypeA = typesA.length > 1 ? typesA[1] : null;
+            const secondaryTypeB = typesB.length > 1 ? typesB[1] : null;
+
+            // Mono-types (no secondary type) come before dual-types
+            if (!secondaryTypeA && secondaryTypeB) {
+              result = -1;
+            } else if (secondaryTypeA && !secondaryTypeB) {
+              result = 1;
+            } else if (secondaryTypeA && secondaryTypeB) {
+              result = secondaryTypeA.localeCompare(secondaryTypeB);
+            }
+            // If still equal, sort by dex number
+            if (result === 0) result = a.id - b.id;
+          }
+        }
+        // A has type, B doesn't: A comes first
+        else if (typeA && !typeB) {
+          result = -1;
+        }
+        // B has type, A doesn't: B comes first
+        else if (!typeA && typeB) {
+          result = 1;
+        }
+        // Neither has types: sort by dex number
+        else {
+          result = a.id - b.id;
+        }
       } else {
         result = a.id - b.id;
       }
@@ -241,6 +289,9 @@ export default function PokedexView({ runId }: Props) {
               <MenuItem value="bst">
                 {t(tr.runPage.pokedexSortBst, lang)}
               </MenuItem>
+              <MenuItem value="type">
+                {t(tr.runPage.pokedexSortType, lang)}
+              </MenuItem>
             </Select>
           </FormControl>
 
@@ -286,8 +337,7 @@ export default function PokedexView({ runId }: Props) {
             const bst = data
               ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
               : null;
-            const fallbackTypes =
-              data?.types ?? entry.types;
+            const fallbackTypes = data?.types ?? entry.types;
             const rowCapture: Capture = {
               id: `pokedex-${entry.id}`,
               pokemon: entry,
@@ -344,11 +394,19 @@ export default function PokedexView({ runId }: Props) {
 
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={entry.sprites.normal.default}
+                  src={
+                    data?.sprites?.normal?.default ??
+                    entry.sprites?.normal?.default ??
+                    ""
+                  }
                   alt={displayLabel}
                   onError={async (event) => {
                     const defaultSprite = await getDefaultSprite(entry.id);
-                    if (defaultSprite && event.currentTarget.src !== defaultSprite) {
+                    if (
+                      defaultSprite &&
+                      event.currentTarget &&
+                      event.currentTarget.src !== defaultSprite
+                    ) {
                       event.currentTarget.src = defaultSprite;
                     }
                   }}
@@ -457,7 +515,10 @@ export default function PokedexView({ runId }: Props) {
             <Typography
               sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#334155" }}
             >
-              {t(tr.runPage.pokedexPageInfo, lang)(safePage + 1)} / {totalPages}
+              {(tr.runPage.pokedexPageInfo[lang] as (n: number) => string)(
+                safePage + 1,
+              )}{" "}
+              / {totalPages}
             </Typography>
 
             <Box

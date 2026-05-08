@@ -581,6 +581,7 @@ const translations = {
     pokedexSortDesc: { fr: "Décroissant ↓", en: "Descending ↓" },
     pokedexSortDex: { fr: "Trier par numéro", en: "Sort by Pokédex number" },
     pokedexSortName: { fr: "Trier par nom", en: "Sort by name" },
+    pokedexSortType: { fr: "Trier par type", en: "Sort by type" },
     analysis: { fr: "🔬 Analyse", en: "🔬 Analysis" },
     close: { fr: "Fermer", en: "Close" },
     loading: { fr: "Chargement...", en: "Loading..." },
