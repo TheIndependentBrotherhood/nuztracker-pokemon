@@ -18,6 +18,7 @@ import {
 } from "@/lib/type-deduction";
 import { typeColors, TYPES } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCache } from "@/context/CacheContext";
 import translations, { t } from "@/i18n/translations";
 
 interface Props {
@@ -48,6 +49,7 @@ export default function TypeDeductionTool({
   const [showAllTypes, setShowAllTypes] = useState(false);
   const [possibleTypes, setPossibleTypes] = useState<TypePossibility[]>([]);
   const { lang } = useLanguage();
+  const { abilities: abilitiesCache } = useCache();
   const tr = translations;
 
   useEffect(() => {
@@ -82,11 +84,16 @@ export default function TypeDeductionTool({
     onObservationsChange(observations.filter((o) => o.id !== obsId));
   }
 
+  function getAbilityDisplayName(abilityName: string): string {
+    const entry = abilitiesCache.abilities.find((a) => a.name === abilityName);
+    return entry ? (entry.names?.[lang] ?? abilityName) : abilityName;
+  }
+
   const obsTypeLabels: Record<ObservationType, string> = {
-    immunity: lang === "fr" ? "Immunité à" : "Immune to",
-    weakness: lang === "fr" ? "Faible à" : "Weak to",
-    resistance: lang === "fr" ? "Résistant à" : "Resistant to",
-    neutral: lang === "fr" ? "Neutre à" : "Neutral to",
+    immunity: t(tr.pokemonDetail.observationTypes.immunity, lang),
+    weakness: t(tr.pokemonDetail.observationTypes.weakness, lang),
+    resistance: t(tr.pokemonDetail.observationTypes.resistance, lang),
+    neutral: t(tr.pokemonDetail.observationTypes.neutral, lang),
   };
 
   const obsTypeColors: Record<ObservationType, string> = {
@@ -207,7 +214,7 @@ export default function TypeDeductionTool({
             },
           }}
         >
-          {selectedType || (lang === "fr" ? "Choisir un type" : "Choose type")}
+          {selectedType || t(tr.pokemonDetail.chooseType, lang)}
           <span style={{ fontSize: "0.65rem", marginLeft: "4px" }}>▼</span>
         </Button>
         <Menu
@@ -316,7 +323,7 @@ export default function TypeDeductionTool({
             {abilityPanel.map((ability) => (
               <Chip
                 key={ability}
-                label={ability}
+                label={getAbilityDisplayName(ability)}
                 size="small"
                 sx={{
                   background: "#e0e7ff",
@@ -379,9 +386,11 @@ export default function TypeDeductionTool({
                 <Typography
                   sx={{ fontSize: "0.75rem", color: "#059669", mt: 0.5 }}
                 >
-                  {lang === "fr"
-                    ? `+ ${abilityPanel.length} talent(s) du panel`
-                    : `+ ${abilityPanel.length} ability(ies) in panel`}
+                  {(
+                    tr.pokemonDetail.abilityPanelCount[lang] as (
+                      n: number,
+                    ) => string
+                  )(abilityPanel.length)}
                 </Typography>
               )}
             </Box>

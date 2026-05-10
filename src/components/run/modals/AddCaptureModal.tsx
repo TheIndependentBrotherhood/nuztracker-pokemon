@@ -296,6 +296,7 @@ export default function AddCaptureModal({
         isShiny,
         isDead: true,
         failedCapture: true,
+        diedAt: Date.now(),
       },
       undefined,
     );

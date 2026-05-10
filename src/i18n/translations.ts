@@ -279,7 +279,18 @@ const translations = {
       en: "Your overall observations about this Pokémon...",
     },
     abilityPanelLabel: { fr: "Talents du panel", en: "Ability panel" },
+    abilityPanelCount: {
+      fr: (n: number) => `+ ${n} talent${n > 1 ? "s" : ""} du panel`,
+      en: (n: number) => `+ ${n} ability(ies) in panel`,
+    },
     observations: { fr: "Observations", en: "Observations" },
+    observationTypes: {
+      immunity: { fr: "Immunité à", en: "Immune to" },
+      weakness: { fr: "Faible à", en: "Weak to" },
+      resistance: { fr: "Résistant à", en: "Resistant to" },
+      neutral: { fr: "Neutre à", en: "Neutral to" },
+    },
+    chooseType: { fr: "Choisir un type", en: "Choose type" },
     possibleTypesLabel: {
       fr: (n: number) => `Types possibles (${n})`,
       en: (n: number) => `Possible types (${n})`,

@@ -37,7 +37,9 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
     const zone = run.zones.find((z) =>
       z.captures.some((c) => c.id === captureId),
     );
-    return zone?.zoneName;
+    if (!zone) return undefined;
+    // Return translated zone name if available, otherwise use fallback
+    return zone.zoneNames?.[lang] ?? zone.zoneName;
   };
 
   const handleDragOverSlot = (
