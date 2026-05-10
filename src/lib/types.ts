@@ -7,7 +7,7 @@ export interface CaptureSelectedSprite {
 
 export interface TypeObservation {
   id: string;
-  type: "immunity" | "weakness" | "resistance";
+  type: "immunity" | "weakness" | "resistance" | "neutral";
   observationType: string; // The type (fire, water, etc.)
   createdAt: number;
 }

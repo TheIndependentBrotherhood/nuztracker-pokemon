@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -12,7 +12,10 @@ import {
   MenuItem,
 } from "@mui/material";
 import { TypeObservation } from "@/lib/types";
-import { deducePossibleTypes } from "@/lib/type-deduction";
+import {
+  deducePossibleTypes,
+  type TypePossibility,
+} from "@/lib/type-deduction";
 import { typeColors, TYPES } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -21,16 +24,18 @@ interface Props {
   observations: TypeObservation[];
   abilityPanel: string[];
   notes: string;
+  typeChartGeneration: "gen1" | "gen2-5" | "gen6+";
   onObservationsChange: (observations: TypeObservation[]) => void;
   onNotesChange: (notes: string) => void;
 }
 
-type ObservationType = "immunity" | "weakness" | "resistance";
+type ObservationType = "immunity" | "weakness" | "resistance" | "neutral";
 
 export default function TypeDeductionTool({
   observations,
   abilityPanel,
   notes,
+  typeChartGeneration,
   onObservationsChange,
   onNotesChange,
 }: Props) {
@@ -41,10 +46,22 @@ export default function TypeDeductionTool({
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [typeAnchor, setTypeAnchor] = useState<HTMLElement | null>(null);
   const [showAllTypes, setShowAllTypes] = useState(false);
+  const [possibleTypes, setPossibleTypes] = useState<TypePossibility[]>([]);
   const { lang } = useLanguage();
   const tr = translations;
 
-  const possibleTypes = deducePossibleTypes(observations, abilityPanel);
+  useEffect(() => {
+    const loadPossibleTypes = async () => {
+      const types = await deducePossibleTypes(
+        observations,
+        abilityPanel,
+        typeChartGeneration,
+      );
+      setPossibleTypes(types);
+    };
+
+    loadPossibleTypes();
+  }, [observations, abilityPanel, typeChartGeneration]);
 
   function addObservation() {
     if (!selectedType) return;
@@ -69,12 +86,14 @@ export default function TypeDeductionTool({
     immunity: lang === "fr" ? "Immunité à" : "Immune to",
     weakness: lang === "fr" ? "Faible à" : "Weak to",
     resistance: lang === "fr" ? "Résistant à" : "Resistant to",
+    neutral: lang === "fr" ? "Neutre à" : "Neutral to",
   };
 
   const obsTypeColors: Record<ObservationType, string> = {
     immunity: "#10b981",
     weakness: "#ef4444",
     resistance: "#3b82f6",
+    neutral: "#8b5cf6",
   };
 
   return (
@@ -148,18 +167,20 @@ export default function TypeDeductionTool({
           open={!!observationTypeAnchor}
           onClose={() => setObservationTypeAnchor(null)}
         >
-          {(["immunity", "weakness", "resistance"] as const).map((obsType) => (
-            <MenuItem
-              key={obsType}
-              onClick={() => {
-                setSelectedObsType(obsType);
-                setObservationTypeAnchor(null);
-              }}
-              selected={obsType === selectedObsType}
-            >
-              {obsTypeLabels[obsType]}
-            </MenuItem>
-          ))}
+          {(["immunity", "weakness", "resistance", "neutral"] as const).map(
+            (obsType) => (
+              <MenuItem
+                key={obsType}
+                onClick={() => {
+                  setSelectedObsType(obsType);
+                  setObservationTypeAnchor(null);
+                }}
+                selected={obsType === selectedObsType}
+              >
+                {obsTypeLabels[obsType]}
+              </MenuItem>
+            ),
+          )}
         </Menu>
 
         {/* Type Button */}

@@ -1,5 +1,10 @@
 import { TypeObservation } from "./types";
-import { getTypeDefenses, TYPES } from "./type-chart";
+import {
+  getTypeDefenses,
+  TYPES,
+  loadTypeData,
+  buildTypeDefensesFromJson,
+} from "./type-chart";
 
 /**
  * Type deduction logic for Pokédex exploration mode
@@ -20,54 +25,43 @@ export interface TypePossibility {
 }
 
 /**
- * Check if a single type matches an observation
- */
-function typeMatchesObservation(
-  type: string,
-  observation: TypeObservation,
-): boolean {
-  const defense = getTypeDefenses([type]);
-
-  switch (observation.type) {
-    case "immunity":
-      // Immunity: the observed type should deal 0x damage
-      return (defense[observation.observationType] ?? 1) === 0;
-
-    case "weakness":
-      // Weakness: the observed type should deal 2x damage
-      return (defense[observation.observationType] ?? 1) === 2;
-
-    case "resistance":
-      // Resistance: the observed type should deal 0.5x damage
-      return (defense[observation.observationType] ?? 1) === 0.5;
-
-    default:
-      return false;
-  }
-}
-
-/**
  * Check if a type combination matches all observations
  */
-function typeComboMatchesObservations(
+async function typeComboMatchesObservations(
   types: string[],
   observations: TypeObservation[],
-): boolean {
+  generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
+): Promise<boolean> {
   if (observations.length === 0) return true;
 
+  // Load type data for the generation
+  const typeData = await loadTypeData(generation);
+
+  // Calculate the combined defense for this type combo
+  const defenses = buildTypeDefensesFromJson(types, typeData);
+
+  // Check if all observations match this combined defense
   for (const obs of observations) {
-    let matches = false;
+    const defenseValue = defenses[obs.observationType] ?? 1;
 
-    // For each type in the combo, check if it matches the observation
-    for (const type of types) {
-      if (typeMatchesObservation(type, obs)) {
-        matches = true;
+    switch (obs.type) {
+      case "immunity":
+        // Immunity: should deal 0x damage
+        if (defenseValue !== 0) return false;
         break;
-      }
+      case "weakness":
+        // Weakness: should deal 2x damage
+        if (defenseValue !== 2) return false;
+        break;
+      case "resistance":
+        // Resistance: should deal 0.5x damage
+        if (defenseValue !== 0.5) return false;
+        break;
+      case "neutral":
+        // Neutral: should deal 1x damage
+        if (defenseValue !== 1) return false;
+        break;
     }
-
-    // If no type in the combo matches this observation, the combo is invalid
-    if (!matches) return false;
   }
 
   return true;
@@ -112,10 +106,11 @@ function getAbilityModifierForTypeMatchup(
  * Deduce possible types from observations
  * Returns matching type combinations, ordered by how well they match
  */
-export function deducePossibleTypes(
+export async function deducePossibleTypes(
   observations: TypeObservation[],
   abilityPanel: string[] = [],
-): TypePossibility[] {
+  generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
+): Promise<TypePossibility[]> {
   if (observations.length === 0) {
     // No observations yet, all types are possible
     return generateAllTypeCombos().map((types) => ({
@@ -125,9 +120,12 @@ export function deducePossibleTypes(
     }));
   }
 
-  const validCombos = generateAllTypeCombos().filter((combo) =>
-    typeComboMatchesObservations(combo, observations),
-  );
+  const validCombos: string[][] = [];
+  for (const combo of generateAllTypeCombos()) {
+    if (await typeComboMatchesObservations(combo, observations, generation)) {
+      validCombos.push(combo);
+    }
+  }
 
   return validCombos.map((types) => ({
     types,
@@ -145,19 +143,36 @@ export function deducePossibleTypes(
  * Check how many observations a type combo actually explains
  * (used for filtering/scoring when user has contradictory notes)
  */
-export function scoreTypeCombo(
+export async function scoreTypeCombo(
   types: string[],
   observations: TypeObservation[],
-): number {
+  generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
+): Promise<number> {
+  const typeData = await loadTypeData(generation);
+  const defenses = buildTypeDefensesFromJson(types, typeData);
+
   let explained = 0;
 
   for (const obs of observations) {
-    for (const type of types) {
-      if (typeMatchesObservation(type, obs)) {
-        explained++;
+    const defenseValue = defenses[obs.observationType] ?? 1;
+    let matches = false;
+
+    switch (obs.type) {
+      case "immunity":
+        matches = defenseValue === 0;
         break;
-      }
+      case "weakness":
+        matches = defenseValue === 2;
+        break;
+      case "resistance":
+        matches = defenseValue === 0.5;
+        break;
+      case "neutral":
+        matches = defenseValue === 1;
+        break;
     }
+
+    if (matches) explained++;
   }
 
   return observations.length > 0 ? (explained / observations.length) * 100 : 0;

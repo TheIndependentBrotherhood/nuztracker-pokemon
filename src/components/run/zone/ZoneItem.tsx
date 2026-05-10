@@ -198,7 +198,7 @@ export default function ZoneItem({
   const tr = translations;
   const maxCaptures = isShinyHuntMode ? 2 : 1;
   const capturesFull =
-    zone.captures.length >= maxCaptures || zone.status === "lost";
+    zone.captures.length >= maxCaptures;
 
   useEffect(() => {
     if (isSelected && ref.current) {

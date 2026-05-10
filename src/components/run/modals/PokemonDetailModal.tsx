@@ -1894,13 +1894,14 @@ export default function PokemonDetailModal({
               )}
             </Box>
 
-            {/* Type Deduction Tool - Pokédex Mode (Random Types only) */}
+            {/* Type Deduction Tool - Pokédex Mode (Random Types only, unknown types) */}
             {isPokedexCapture && runToUpdate && isRandomTypeMode && (
               <Box sx={{ mb: 2 }}>
                 <TypeDeductionTool
                   observations={pokedexObservations}
                   abilityPanel={abilityPanel}
                   notes={pokedexNotes}
+                  typeChartGeneration={runToUpdate.typeChartGeneration}
                   onObservationsChange={persistPokedexObservations}
                   onNotesChange={persistPokedexNotes}
                 />
