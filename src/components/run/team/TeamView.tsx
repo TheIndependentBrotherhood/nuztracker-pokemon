@@ -405,7 +405,9 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
           >
-            {t(tr.teamView.capturedPokemon, lang)(capturedNotInTeam.length)}
+            {(tr.teamView.capturedPokemon[lang] as (n: number) => string)(
+              capturedNotInTeam.length,
+            )}
           </Typography>
           <Typography sx={{ fontSize: "1.25rem", color: "#000" }}>
             {expandedCaptured ? "▼" : "▶"}
@@ -481,7 +483,9 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           <Typography
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}
           >
-            {t(tr.teamView.deadPokemon, lang)(deadPokemon.length)}
+            {(tr.teamView.deadPokemon[lang] as (n: number) => string)(
+              deadPokemon.length,
+            )}
           </Typography>
           <Typography sx={{ fontSize: "1.25rem", color: "#dc2626" }}>
             {expandedDead ? "▼" : "▶"}
