@@ -25,11 +25,40 @@ export interface TypePossibility {
 }
 
 /**
+ * Get ability's immunity types from its name
+ * Maps ability names to types they provide immunity to
+ * Special case: "wonder-guard" creates immunity to all non-super-effective types
+ */
+function getAbilityImmunities(abilityName: string): string[] {
+  const IMMUNITY_MAP: Record<string, string[]> = {
+    "water-absorb": ["water"],
+    "flash-fire": ["fire"],
+    levitate: ["ground"],
+    "sap-sipper": ["grass"],
+    "lightning-rod": ["electric"],
+    "volt-absorb": ["electric"],
+    "dry-skin": ["water"],
+    "storm-drain": ["water"],
+    "earth-eater": ["ground"],
+  };
+  return IMMUNITY_MAP[abilityName] ?? [];
+}
+
+/**
+ * Check if an ability is Wonder Guard (Garde Mystik)
+ */
+function isWonderGuard(abilityName: string): boolean {
+  return abilityName === "wonder-guard";
+}
+
+/**
  * Check if a type combination matches all observations
+ * Considers both type-based and ability-based immunities
  */
 async function typeComboMatchesObservations(
   types: string[],
   observations: TypeObservation[],
+  abilityPanel: string[] = [],
   generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
 ): Promise<boolean> {
   if (observations.length === 0) return true;
@@ -40,25 +69,47 @@ async function typeComboMatchesObservations(
   // Calculate the combined defense for this type combo
   const defenses = buildTypeDefensesFromJson(types, typeData);
 
-  // Check if all observations match this combined defense
+  // Check if Garde Mystik is in the panel
+  const hasWonderGuard = abilityPanel.some((ability) => isWonderGuard(ability));
+
+  // Check if all observations match this combined defense or ability panel
   for (const obs of observations) {
     const defenseValue = defenses[obs.observationType] ?? 1;
 
     switch (obs.type) {
       case "immunity":
-        // Immunity: should deal 0x damage
-        if (defenseValue !== 0) return false;
+        // Immunity: should deal 0x damage from type
+        // OR should be immunized by ability
+        const typeImmune = defenseValue === 0;
+
+        // Check specific type immunities
+        const specificAbilityImmune = abilityPanel.some((ability) => {
+          const immunities = getAbilityImmunities(ability);
+          return immunities.includes(obs.observationType);
+        });
+
+        // Check Wonder Guard: immunizes all types except those that are super-effective (weakness >= 2x)
+        const wonderGuardImmune = hasWonderGuard && defenseValue < 2; // < 2 means not a weakness (includes 0, 0.25, 0.5, 1)
+
+        if (!typeImmune && !specificAbilityImmune && !wonderGuardImmune) {
+          return false;
+        }
         break;
+
       case "weakness":
-        // Weakness: should deal 2x damage
-        if (defenseValue !== 2) return false;
+        // Weakness: should deal 2x+ damage (from type, not from ability)
+        // This includes 2x, 4x (double weakness), etc.
+        if (defenseValue < 2) return false;
         break;
+
       case "resistance":
-        // Resistance: should deal 0.5x damage
-        if (defenseValue !== 0.5) return false;
+        // Resistance: should deal reduced damage (0 < defenseValue < 1)
+        // This includes 0.5x, 0.25x, etc.
+        if (defenseValue <= 0 || defenseValue >= 1) return false;
         break;
+
       case "neutral":
-        // Neutral: should deal 1x damage
+        // Neutral: should deal exactly 1x damage
         if (defenseValue !== 1) return false;
         break;
     }
@@ -122,19 +173,43 @@ export async function deducePossibleTypes(
 
   const validCombos: string[][] = [];
   for (const combo of generateAllTypeCombos()) {
-    if (await typeComboMatchesObservations(combo, observations, generation)) {
+    if (
+      await typeComboMatchesObservations(
+        combo,
+        observations,
+        abilityPanel,
+        generation,
+      )
+    ) {
       validCombos.push(combo);
     }
   }
 
+  // Load type data for displaying ability impacts
+  const typeData = await loadTypeData(generation);
+
   return validCombos.map((types) => ({
     types,
-    abilityImpacts: abilityPanel.map((ability) => ({
-      abilityName: ability,
-      immunitiesAdded: [],
-      weaknessesAdded: [],
-      resistancesAdded: [],
-    })),
+    abilityImpacts: abilityPanel.map((ability) => {
+      const specificImmunities = getAbilityImmunities(ability);
+      let immunitiesAdded = specificImmunities;
+
+      // For Wonder Guard, show that it immunizes all non-weakness types
+      if (isWonderGuard(ability)) {
+        const defenses = buildTypeDefensesFromJson(types, typeData);
+        immunitiesAdded = TYPES.filter((type) => {
+          const defenseValue = defenses[type] ?? 1;
+          return defenseValue < 2; // Everything except super-effective (weakness >= 2x)
+        });
+      }
+
+      return {
+        abilityName: ability,
+        immunitiesAdded,
+        weaknessesAdded: [],
+        resistancesAdded: [],
+      };
+    }),
     matchScore: 100, // Perfect match
   }));
 }

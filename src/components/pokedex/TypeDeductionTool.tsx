@@ -16,7 +16,7 @@ import {
   deducePossibleTypes,
   type TypePossibility,
 } from "@/lib/type-deduction";
-import { typeColors, TYPES } from "@/lib/type-chart";
+import { typeColors, TYPES, getTypeTranslation } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
 import { useCache } from "@/context/CacheContext";
 import translations, { t } from "@/i18n/translations";
@@ -214,7 +214,9 @@ export default function TypeDeductionTool({
             },
           }}
         >
-          {selectedType || t(tr.pokemonDetail.chooseType, lang)}
+          {selectedType
+            ? getTypeTranslation(selectedType, lang)
+            : t(tr.pokemonDetail.chooseType, lang)}
           <span style={{ fontSize: "0.65rem", marginLeft: "4px" }}>▼</span>
         </Button>
         <Menu
@@ -248,7 +250,7 @@ export default function TypeDeductionTool({
                     border: "1px solid #000",
                   }}
                 />
-                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {getTypeTranslation(type, lang)}
               </Box>
             </MenuItem>
           ))}
@@ -286,7 +288,7 @@ export default function TypeDeductionTool({
             {observations.map((obs) => (
               <Chip
                 key={obs.id}
-                label={`${obsTypeLabels[obs.type]} ${obs.observationType}`}
+                label={`${obsTypeLabels[obs.type]} ${getTypeTranslation(obs.observationType, lang)}`}
                 onDelete={() => removeObservation(obs.id)}
                 icon={
                   <Box
@@ -378,7 +380,7 @@ export default function TypeDeductionTool({
                       border: "1px solid rgba(0,0,0,0.2)",
                     }}
                   >
-                    {type}
+                    {getTypeTranslation(type, lang)}
                   </Box>
                 ))}
               </Box>
@@ -426,7 +428,7 @@ export default function TypeDeductionTool({
                         }}
                       >
                         {possibility.types
-                          .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
+                          .map((t) => getTypeTranslation(t, lang))
                           .join(" / ")}
                       </Box>
                     </Grid>

@@ -1,5 +1,6 @@
 import type { AbilityEntry } from "@/context/CacheContext";
 import { publicPath } from "@/lib/base-path";
+import translations from "@/i18n/translations";
 
 export const TYPES = [
   "normal",
@@ -416,4 +417,20 @@ export function applyAbilityModifiers(
   }
 
   return result;
+}
+
+/**
+ * Translate a Pokémon type name to the user's language
+ * Uses the centralized translations from src/i18n/translations.ts
+ */
+export function getTypeTranslation(
+  typeName: string,
+  lang: "fr" | "en",
+): string {
+  const typeTranslations =
+    translations.pokemonTypes[
+      typeName as keyof typeof translations.pokemonTypes
+    ];
+  if (!typeTranslations) return typeName;
+  return typeTranslations[lang];
 }

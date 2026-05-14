@@ -601,6 +601,28 @@ const translations = {
     loading: { fr: "Chargement...", en: "Loading..." },
   },
 
+  // ── Pokemon Types ─────────────────────────────────────────────────────────
+  pokemonTypes: {
+    normal: { fr: "Normal", en: "Normal" },
+    fire: { fr: "Feu", en: "Fire" },
+    water: { fr: "Eau", en: "Water" },
+    electric: { fr: "Électrik", en: "Electric" },
+    grass: { fr: "Plante", en: "Grass" },
+    ice: { fr: "Glace", en: "Ice" },
+    fighting: { fr: "Combat", en: "Fighting" },
+    poison: { fr: "Poison", en: "Poison" },
+    ground: { fr: "Sol", en: "Ground" },
+    flying: { fr: "Vol", en: "Flying" },
+    psychic: { fr: "Psy", en: "Psychic" },
+    bug: { fr: "Insecte", en: "Bug" },
+    rock: { fr: "Roche", en: "Rock" },
+    ghost: { fr: "Spectre", en: "Ghost" },
+    dragon: { fr: "Dragon", en: "Dragon" },
+    dark: { fr: "Ténèbres", en: "Dark" },
+    steel: { fr: "Acier", en: "Steel" },
+    fairy: { fr: "Fée", en: "Fairy" },
+  },
+
   // ── Language toggle ────────────────────────────────────────────────────────
   language: {
     switchToEnglish: { fr: "Switch to English", en: "Switch to English" },
