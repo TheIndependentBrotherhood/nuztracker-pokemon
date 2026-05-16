@@ -19,6 +19,7 @@ import {
   getTypeDefenses,
   getTypeOffenses,
   typeColors,
+  getTypeTranslation,
   getEffectivenessLabel,
   loadTypeData,
   buildTypeDefensesFromJson,
@@ -31,7 +32,7 @@ import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
-import { getLocalizedPokemonName, getPokemonById } from "@/lib/pokemon-data";
+import { getLocalizedPokemonName } from "@/lib/pokemon-data";
 
 interface Props {
   run: Run;
@@ -225,9 +226,7 @@ export default function TypeAnalysis({ run }: Props) {
                     fontSize: "0.75rem",
                   }}
                 >
-                  {(
-                    c.nickname || getLocalizedPokemonName(c.pokemon, lang)
-                  )}
+                  {c.nickname || getLocalizedPokemonName(c.pokemon, lang)}
                 </TableCell>
               ))}
               <TableCell
@@ -337,7 +336,7 @@ export default function TypeAnalysis({ run }: Props) {
                         textAlign: "center",
                       }}
                     >
-                      {attackType}
+                      {getTypeTranslation(attackType, lang)}
                     </Box>
                   </TableCell>
                   {memberBaseEffects.map((eff, i) => {
@@ -590,9 +589,7 @@ export default function TypeAnalysis({ run }: Props) {
                     fontSize: "0.75rem",
                   }}
                 >
-                  {(
-                    c.nickname || getLocalizedPokemonName(c.pokemon, lang)
-                  )}
+                  {c.nickname || getLocalizedPokemonName(c.pokemon, lang)}
                 </TableCell>
               ))}
               <TableCell
@@ -668,7 +665,7 @@ export default function TypeAnalysis({ run }: Props) {
                         textAlign: "center",
                       }}
                     >
-                      {defendType}
+                      {getTypeTranslation(defendType, lang)}
                     </Box>
                   </TableCell>
                   {teamOffenses.map((eff, i) => {
@@ -906,7 +903,7 @@ export default function TypeAnalysis({ run }: Props) {
                   },
                 }}
               >
-                {type}
+                {getTypeTranslation(type, lang)}
               </Box>
             ))}
           </Box>
@@ -968,7 +965,7 @@ export default function TypeAnalysis({ run }: Props) {
                   },
                 }}
               >
-                {type}
+                {getTypeTranslation(type, lang)}
               </Box>
             ))}
             {selectedTypes.length < 2 && (
@@ -1016,7 +1013,7 @@ export default function TypeAnalysis({ run }: Props) {
                       },
                     }}
                   >
-                    {type}
+                    {getTypeTranslation(type, lang)}
                   </Box>
                 ))}
               </Box>
@@ -1279,7 +1276,7 @@ export default function TypeAnalysis({ run }: Props) {
                             border: "1px solid #000",
                           }}
                         >
-                          {type}
+                          {getTypeTranslation(type, lang)}
                           {multiplier === 0 && " 🔒"}
                         </Box>
                       ))}
@@ -1344,7 +1341,7 @@ export default function TypeAnalysis({ run }: Props) {
                             border: "1px solid #000",
                           }}
                         >
-                          {type}
+                          {getTypeTranslation(type, lang)}
                         </Box>
                       ))}
                     </Box>
@@ -1492,7 +1489,7 @@ export default function TypeAnalysis({ run }: Props) {
                         display: "inline-block",
                       }}
                     >
-                      {type}
+                      {getTypeTranslation(type, lang)}
                     </Box>
                   </TableCell>
                   <TableCell sx={{ p: 1.5, borderLeft: "2px solid #e5e7eb" }}>
@@ -1512,7 +1509,7 @@ export default function TypeAnalysis({ run }: Props) {
                             border: "1px solid #000",
                           }}
                         >
-                          {t}
+                          {getTypeTranslation(t, lang)}
                         </Box>
                       ))}
                     </Box>
@@ -1534,7 +1531,7 @@ export default function TypeAnalysis({ run }: Props) {
                             border: "1px solid #000",
                           }}
                         >
-                          {t}
+                          {getTypeTranslation(t, lang)}
                         </Box>
                       ))}
                     </Box>
@@ -1556,7 +1553,7 @@ export default function TypeAnalysis({ run }: Props) {
                             border: "1px solid #000",
                           }}
                         >
-                          {t}
+                          {getTypeTranslation(t, lang)}
                         </Box>
                       ))}
                     </Box>

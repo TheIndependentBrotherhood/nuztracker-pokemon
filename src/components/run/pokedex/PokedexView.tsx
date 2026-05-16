@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Capture, PokemonData } from "@/lib/types";
-import { typeColors } from "@/lib/type-chart";
+import { typeColors, getTypeTranslation } from "@/lib/type-chart";
 import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import PokemonDetailModal from "@/components/run/modals/PokemonDetailModal";
 import { useLanguage } from "@/context/LanguageContext";
@@ -458,7 +458,9 @@ export default function PokedexView({ runId }: Props) {
                           border: "1px solid #000",
                         }}
                       >
-                        {typeName}
+                        {typeName === t(tr.pokemonDetail.unknownType, lang)
+                          ? typeName
+                          : getTypeTranslation(typeName, lang)}
                       </Box>
                     ))}
                   </Box>

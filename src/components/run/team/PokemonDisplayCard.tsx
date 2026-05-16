@@ -5,7 +5,7 @@ import { Box, Typography, Tooltip } from "@mui/material";
 import { Capture } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import { getCaptureTypesForRun } from "@/lib/capture-types";
-import { typeColors } from "@/lib/type-chart";
+import { typeColors, getTypeTranslation } from "@/lib/type-chart";
 import PokemonDetailModal from "../modals/PokemonDetailModal";
 import { Lang } from "@/i18n/translations";
 import {
@@ -269,7 +269,9 @@ export default function PokemonDisplayCard({
                       (typeName === "???" ? "#64748b" : "#888"),
                   }}
                 >
-                  {typeName}
+                  {typeName === "???"
+                    ? typeName
+                    : getTypeTranslation(typeName, lang)}
                 </Box>
               ))}
             </Box>

@@ -19,7 +19,7 @@ import {
   getCaptureSpriteOptionMeta,
   type CaptureSpriteOption,
 } from "@/lib/pokemon-data";
-import { typeColors } from "@/lib/type-chart";
+import { typeColors, getTypeTranslation } from "@/lib/type-chart";
 import { TYPES } from "@/lib/type-chart";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -729,7 +729,9 @@ export default function PokemonDetailModal({
                           }}
                           disabled={!runToUpdate}
                         >
-                          {firstType ?? t(tr.pokemonDetail.unknownType, lang)}
+                          {firstType
+                            ? getTypeTranslation(firstType, lang)
+                            : t(tr.pokemonDetail.unknownType, lang)}
                         </Box>
                       </Tooltip>
 
@@ -804,8 +806,9 @@ export default function PokemonDetailModal({
                               }}
                               disabled={!runToUpdate}
                             >
-                              {secondType ??
-                                t(tr.pokemonDetail.unknownType, lang)}
+                              {secondType
+                                ? getTypeTranslation(secondType, lang)
+                                : t(tr.pokemonDetail.unknownType, lang)}
                             </Box>
                           </Tooltip>
 
@@ -848,7 +851,7 @@ export default function PokemonDetailModal({
                           border: "2px solid #000",
                         }}
                       >
-                        {type}
+                        {getTypeTranslation(type, lang)}
                       </Box>
                     ))
                   )}
@@ -900,7 +903,7 @@ export default function PokemonDetailModal({
                       border: "1px solid #000",
                     }}
                   />
-                  {typeName}
+                  {getTypeTranslation(typeName, lang)}
                 </MenuItem>
               ))}
             </Menu>
