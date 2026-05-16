@@ -9,12 +9,14 @@ import PokemonDisplayCard from "./PokemonDisplayCard";
 import EvolutionModal from "../modals/EvolutionModal";
 import PokemonDetailModal from "../modals/PokemonDetailModal";
 import { useState } from "react";
+import { getPokemonCardActions } from "./pokemonCardActions";
 
 interface Props {
   capture: Capture | null;
   slotIndex: number;
   runId: string;
   zone: string;
+  onToggleDead?: (captureId: string) => void;
 }
 
 export default function TeamPokemonCard({
@@ -22,6 +24,7 @@ export default function TeamPokemonCard({
   slotIndex,
   runId,
   zone,
+  onToggleDead,
 }: Props) {
   const { runs, updateTeam } = useRunStore();
   const { lang } = useLanguage();
@@ -55,7 +58,7 @@ export default function TeamPokemonCard({
         <Typography
           sx={{ color: "#64748b", fontSize: "0.75rem", fontWeight: 600 }}
         >
-          {t(tr.teamView.slot, lang)(slotIndex + 1)}
+          {(tr.teamView.slot as Record<string, (n: number) => string>)[lang](slotIndex + 1)}
         </Typography>
       </Box>
     );
@@ -75,38 +78,12 @@ export default function TeamPokemonCard({
           key: "pokemonId",
           effectAllowed: "move",
         }}
-        actions={[
-          {
-            icon: "⬆",
-            title: t(tr.pokemonCard.evolveButton, lang),
-            className: "evolve-btn",
-            onClick: () => setShowEvolution(true),
-            sx: {
-              position: "absolute",
-              top: 3,
-              left: 3,
-              width: "1.75rem",
-              height: "1.75rem",
-              minWidth: "1.75rem",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.9rem",
-              color: "#10b981",
-              background: "rgba(255, 255, 255, 0.9)",
-              borderRadius: "0.25rem",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
-              cursor: "pointer",
-              fontWeight: 600,
-              zIndex: 10,
-              "&:hover": {
-                color: "#047857",
-                background: "rgba(255, 255, 255, 0.95)",
-                borderColor: "rgba(16, 185, 129, 0.5)",
-              },
-            },
-          },
-          {
+        actions={getPokemonCardActions({
+          lang,
+          onEvolve: () => setShowEvolution(true),
+          onToggleDead,
+          captureId: capture.id,
+          primaryAction: {
             icon: "✕",
             title: t(tr.pokemonCard.removeFromTeam, lang),
             className: "remove-btn",
@@ -118,32 +95,8 @@ export default function TeamPokemonCard({
                 run.team.filter((cardCapture) => cardCapture.id !== capture.id),
               );
             },
-            sx: {
-              position: "absolute",
-              top: 3,
-              right: 3,
-              width: "1.75rem",
-              height: "1.75rem",
-              minWidth: "1.75rem",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.9rem",
-              color: "#dc2626",
-              background: "rgba(255, 255, 255, 0.9)",
-              borderRadius: "0.25rem",
-              border: "1px solid rgba(220, 38, 38, 0.3)",
-              cursor: "pointer",
-              fontWeight: 600,
-              zIndex: 10,
-              "&:hover": {
-                color: "#991b1b",
-                background: "rgba(255, 255, 255, 0.95)",
-                borderColor: "rgba(220, 38, 38, 0.5)",
-              },
-            },
           },
-        ]}
+        })}
       />
 
       {showEvolution && run && (

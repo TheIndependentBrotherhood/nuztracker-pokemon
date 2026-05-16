@@ -249,18 +249,33 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
   };
 
   const handleToggleDeadStatus = (captureId: string) => {
+    // Check if the pokémon is in the team
+    const isInTeam = run.team.some((p) => p.id === captureId);
+
+    // Get the current dead status
+    const capture = run.zones
+      .flatMap((z) => z.captures)
+      .find((c) => c.id === captureId);
+
+    const willBeDead = !capture?.isDead;
+
     const updatedRun = {
       ...run,
+      // Remove from team if marking as dead
+      team:
+        willBeDead && isInTeam
+          ? run.team.filter((p) => p.id !== captureId)
+          : run.team,
       zones: run.zones.map((zone) => ({
         ...zone,
-        captures: zone.captures.map((capture) =>
-          capture.id === captureId
+        captures: zone.captures.map((c) =>
+          c.id === captureId
             ? {
-                ...capture,
-                isDead: !capture.isDead,
-                diedAt: !capture.isDead ? Date.now() : undefined,
+                ...c,
+                isDead: !c.isDead,
+                diedAt: !c.isDead ? Date.now() : undefined,
               }
-            : capture,
+            : c,
         ),
       })),
     };
@@ -363,6 +378,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                         t(tr.teamView.unknown, lang))
                       : ""
                   }
+                  onToggleDead={handleToggleDeadStatus}
                 />
               </Box>
             </Grid>
