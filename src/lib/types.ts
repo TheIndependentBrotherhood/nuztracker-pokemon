@@ -12,6 +12,12 @@ export interface TypeObservation {
   createdAt: number;
 }
 
+export interface EvolutionHistoryEntry {
+  pokemonId: number;
+  technicalName: string;
+  timestamp: number;
+}
+
 export interface Capture {
   id: string;
   pokemon: PokemonData;
@@ -29,6 +35,8 @@ export interface Capture {
   createdAt: number;
   /** Timestamp when the Pokémon died (marked as RIP) */
   diedAt?: number;
+  /** ID of the original Pokémon species when first captured. Used to track evolution history in random evo mode. */
+  originalCapturedPokemonId?: number;
 }
 
 export interface RandomizerOptions {
@@ -67,6 +75,8 @@ export interface Run {
   pokedexObservationsByPokemonId?: Record<number, TypeObservation[]>;
   /** Global notes for each Pokémon species in Pokédex, indexed by pokemon id. */
   pokedexNotesByPokemonId?: Record<number, string>;
+  /** Evolution history (genealogy) for each Pokémon species, indexed by pokemon id. Tracks all evolution steps from first capture to current form. */
+  evolutionHistoryByPokemonId?: Record<number, EvolutionHistoryEntry[]>;
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
   team: Capture[];

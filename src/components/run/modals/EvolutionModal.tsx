@@ -19,6 +19,13 @@ import {
   getAvailableEvolutions,
   getLocalizedPokemonName,
 } from "@/lib/pokemon-data";
+import {
+  createEvolvedCapture,
+  getEvolutionHistoryForSpecies,
+  addEvolutionStep,
+  buildInitialEvolutionHistory,
+  updateRunWithEvolutionHistory,
+} from "@/lib/evolution-utils";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -108,20 +115,41 @@ export default function EvolutionModal({
     if (!selectedEvolution) return;
 
     try {
-      // Create the evolved capture with:
-      // - Reset selectedSprite to default
-      // - Inherit customTypes from the run config for the new species
-      // - Reset ability to re-select from the new species options
-      const evolvedCapture = {
-        ...pokemonCaptured,
-        pokemon: selectedEvolution,
-        selectedSprite: undefined,
-        customTypes: run.customTypesByPokemonId?.[selectedEvolution.id],
-        ability: undefined,
-      };
+      // Create the evolved capture
+      const evolvedCapture = createEvolvedCapture(
+        pokemonCaptured,
+        selectedEvolution,
+        run.customTypesByPokemonId,
+      );
 
-      // Update the run with the evolved capture
-      const updatedRun = {
+      // Track evolution history at the original species level
+      // Use originalCapturedPokemonId if available (in case this capture already evolved)
+      const originalPokemonId =
+        pokemonCaptured.originalCapturedPokemonId || pokemonCaptured.pokemon.id;
+      const timestamp = Date.now();
+
+      // Get existing history for the original species, or start a new one
+      const currentHistory = getEvolutionHistoryForSpecies(
+        run,
+        originalPokemonId,
+      );
+      const newHistory =
+        currentHistory.length === 0
+          ? buildInitialEvolutionHistory(
+              pokemonCaptured.pokemon,
+              pokemonCaptured.createdAt,
+            )
+          : currentHistory;
+
+      // Add the new evolution step
+      const updatedHistory = addEvolutionStep(
+        newHistory,
+        selectedEvolution,
+        timestamp,
+      );
+
+      // Update the run with both the evolved capture and the evolution history
+      let updatedRun = {
         ...run,
         team: run.team.map((teamCapture) =>
           teamCapture.id === pokemonCaptured.id ? evolvedCapture : teamCapture,
@@ -135,6 +163,13 @@ export default function EvolutionModal({
           ),
         })),
       };
+
+      // Update the evolution history in the run
+      updatedRun = updateRunWithEvolutionHistory(
+        updatedRun,
+        originalPokemonId,
+        updatedHistory,
+      );
 
       updateRun(updatedRun);
 
@@ -313,9 +348,15 @@ export default function EvolutionModal({
             }}
           >
             {(() => {
-              const noResultsEntry = t(tr.evolution.noResults, lang);
+              const noResultsEntry = t(
+                tr.evolution.noResults as unknown as {
+                  fr: string | ((...args: unknown[]) => string);
+                  en: string | ((...args: unknown[]) => string);
+                },
+                lang,
+              );
               return typeof noResultsEntry === "function"
-                ? noResultsEntry(searchQuery)
+                ? (noResultsEntry as (query: string) => string)(searchQuery)
                 : noResultsEntry;
             })()}
           </Typography>

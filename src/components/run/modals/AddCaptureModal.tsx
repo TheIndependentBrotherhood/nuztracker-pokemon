@@ -23,7 +23,7 @@ import {
   type CaptureSpriteOption,
 } from "@/lib/pokemon-data";
 import { Capture, PokemonData } from "@/lib/types";
-import { TYPES, typeColors } from "@/lib/type-chart";
+import { TYPES, typeColors, getTypeTranslation } from "@/lib/type-chart";
 import { isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -626,7 +626,9 @@ export default function AddCaptureModal({
                         cursor: "pointer",
                       }}
                     >
-                      {firstType ?? t(tr.addCapture.unknownType, lang)}
+                      {firstType
+                        ? getTypeTranslation(firstType, lang)
+                        : t(tr.addCapture.unknownType, lang)}
                     </Box>
                   </Tooltip>
 
@@ -671,7 +673,9 @@ export default function AddCaptureModal({
                             cursor: "pointer",
                           }}
                         >
-                          {secondType ?? t(tr.addCapture.unknownType, lang)}
+                          {secondType
+                            ? getTypeTranslation(secondType, lang)
+                            : t(tr.addCapture.unknownType, lang)}
                         </Box>
                       </Tooltip>
 
@@ -740,7 +744,7 @@ export default function AddCaptureModal({
                           border: "1px solid #000",
                         }}
                       />
-                      {typeName}
+                      {getTypeTranslation(typeName, lang)}
                     </MenuItem>
                   ))}
                 </Menu>

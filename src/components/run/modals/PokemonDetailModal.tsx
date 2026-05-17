@@ -30,6 +30,8 @@ import {
 import { useRunStore } from "@/store/runStore";
 import { useCache } from "@/context/CacheContext";
 import TypeDeductionTool from "@/components/pokedex/TypeDeductionTool";
+import { PokemonEvolutionLineage } from "@/components/run/team/PokemonEvolutionLineage";
+import { EvolutionHistoryDialog } from "@/components/run/modals/EvolutionHistoryDialog";
 
 interface Props {
   pokemonCaptured: Capture;
@@ -138,6 +140,7 @@ export default function PokemonDetailModal({
     TypeObservation[]
   >([]);
   const [pokedexNotes, setPokedexNotes] = useState("");
+  const [showEvolutionHistory, setShowEvolutionHistory] = useState(false);
   const { lang } = useLanguage();
   const { runs, updateRun } = useRunStore();
   const { abilities: abilitiesCache } = useCache();
@@ -151,6 +154,11 @@ export default function PokemonDetailModal({
   const currentNickname = pokemonCaptured.nickname ?? "";
   const runCustomTypes =
     runToUpdate?.customTypesByPokemonId?.[pokemonCaptured.pokemon.id];
+  // Get evolution history: use originalCapturedPokemonId to trace back through evolutions
+  const evolutionHistoryPokemonId =
+    pokemonCaptured.originalCapturedPokemonId || pokemonCaptured.pokemon.id;
+  const evolutionHistory =
+    runToUpdate?.evolutionHistoryByPokemonId?.[evolutionHistoryPokemonId];
   const isRandomTypeMode = Boolean(
     runToUpdate?.isRandomMode && runToUpdate.randomizerOptions?.randomizeTypes,
   );
@@ -839,6 +847,15 @@ export default function PokemonDetailModal({
                       </Box>
                     ))
                   )}
+                </Box>
+
+                {/* Evolution lineage (genealogy tracking) */}
+                <Box sx={{ mt: 1 }}>
+                  <PokemonEvolutionLineage
+                    capture={pokemonCaptured}
+                    evolutionHistory={evolutionHistory}
+                    onClick={() => setShowEvolutionHistory(true)}
+                  />
                 </Box>
 
                 {!isPokedexCapture && isRandomTypeMode && !firstType && (
@@ -2036,6 +2053,13 @@ export default function PokemonDetailModal({
         >
           {t(tr.pokemonDetail.close, lang)}
         </Button>
+
+        {/* Evolution History Dialog */}
+        <EvolutionHistoryDialog
+          evolutionHistory={evolutionHistory || []}
+          open={showEvolutionHistory}
+          onClose={() => setShowEvolutionHistory(false)}
+        />
       </Box>
     </Box>
   );
