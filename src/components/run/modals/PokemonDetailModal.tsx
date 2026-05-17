@@ -115,7 +115,7 @@ export default function PokemonDetailModal({
 }: Props) {
   const [data, setData] = useState<PokemonData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(false);
+  const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(true);
   const [spriteOptions, setSpriteOptions] = useState<CaptureSpriteOption[]>([]);
   const [selectedSpriteUrl, setSelectedSpriteUrl] = useState<string | null>(
     pokemonCaptured.selectedSprite?.url ?? null,
@@ -181,7 +181,6 @@ export default function PokemonDetailModal({
     let cancelled = false;
 
     async function loadSpriteOptions() {
-      setLoadingSpriteOptions(true);
       const options = await getAvailableCaptureSpriteOptions({
         pokemonId: pokemonCaptured.pokemon.id,
         isShiny: pokemonCaptured.isShiny,
@@ -223,21 +222,6 @@ export default function PokemonDetailModal({
         ? "♀"
         : null;
   const genderColor = pokemonCaptured.gender === "male" ? "#60a5fa" : "#ec4899";
-
-  // Load Pokédex observations and notes
-  useEffect(() => {
-    if (isPokedexCapture && runToUpdate) {
-      const observations =
-        runToUpdate.pokedexObservationsByPokemonId?.[
-          pokemonCaptured.pokemon.id
-        ] ?? [];
-      const notes =
-        runToUpdate.pokedexNotesByPokemonId?.[pokemonCaptured.pokemon.id] ?? "";
-
-      setPokedexObservations(observations);
-      setPokedexNotes(notes);
-    }
-  }, [isPokedexCapture, pokemonCaptured.pokemon.id, runToUpdate]);
 
   function updateCaptureInRun(updater: (target: Capture) => Capture) {
     if (!runToUpdate) return;
