@@ -134,6 +134,10 @@ export interface Run {
   typeChartGeneration: "gen1" | "gen2-5" | "gen6+";
   createdAt: number;
   updatedAt: number;
+  /** When true the run is synced to Firebase Firestore in real time. */
+  cloudSyncEnabled?: boolean;
+  /** Firebase anonymous UID of the run creator. Set on first cloud sync. */
+  ownerUid?: string;
 }
 
 export type ZoneStatus = "not-visited" | "visited" | "captured" | "lost";

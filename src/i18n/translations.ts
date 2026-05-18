@@ -693,6 +693,54 @@ const translations = {
     fairy: { fr: "Fée", en: "Fairy" },
   },
 
+  // ── Cloud Sync ─────────────────────────────────────────────────────────────
+  cloudSync: {
+    enableButton: {
+      fr: "☁️ Sync cloud",
+      en: "☁️ Cloud sync",
+    },
+    disableButton: {
+      fr: "☁️ Sync activé",
+      en: "☁️ Sync on",
+    },
+    notConfigured: {
+      fr: "Firebase non configuré",
+      en: "Firebase not configured",
+    },
+    syncing: {
+      fr: "Synchronisation…",
+      en: "Syncing…",
+    },
+    synced: {
+      fr: "✓ Synchronisé",
+      en: "✓ Synced",
+    },
+    error: {
+      fr: "✕ Erreur de sync",
+      en: "✕ Sync error",
+    },
+    permanentTeamLink: {
+      fr: "🔗 Lien équipe permanent",
+      en: "🔗 Permanent team link",
+    },
+    permanentRipLink: {
+      fr: "🔗 Lien RIP permanent",
+      en: "🔗 Permanent RIP link",
+    },
+    linkCopied: {
+      fr: "✓ Lien copié !",
+      en: "✓ Link copied!",
+    },
+    linkCopyFailed: {
+      fr: "Impossible de copier le lien",
+      en: "Failed to copy link",
+    },
+    syncRequired: {
+      fr: "Activez le sync cloud pour obtenir un lien permanent",
+      en: "Enable cloud sync to get a permanent link",
+    },
+  },
+
   // ── Language toggle ────────────────────────────────────────────────────────
   language: {
     switchToEnglish: { fr: "Switch to English", en: "Switch to English" },

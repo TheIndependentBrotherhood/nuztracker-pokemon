@@ -13,6 +13,7 @@ import TeamColumn from "@/components/share/TeamColumn";
 import TypeAnalysis from "@/components/run/team/TypeAnalysis";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
+import CloudSyncToggle from "@/components/run/CloudSyncToggle";
 import { PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -148,6 +149,7 @@ export default function RunPageContent({ runId }: Props) {
   const statusActions =
     run.status === "in-progress" ? (
       <>
+        <CloudSyncToggle run={run} />
         <StyledButton
           onClick={() => updateRun({ ...run, status: "completed" })}
           variant="primary"
@@ -163,6 +165,7 @@ export default function RunPageContent({ runId }: Props) {
       </>
     ) : (
       <>
+        <CloudSyncToggle run={run} />
         <Box
           sx={{
             display: "inline-block",
