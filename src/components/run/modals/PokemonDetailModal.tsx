@@ -186,6 +186,21 @@ export default function PokemonDetailModal({
   }, [pokemonCaptured.pokemon.id]);
 
   useEffect(() => {
+    // Load Pokédex observations and notes from the run
+    if (isPokedexCapture && runToUpdate) {
+      const savedObservations =
+        runToUpdate.pokedexObservationsByPokemonId?.[
+          pokemonCaptured.pokemon.id
+        ] ?? [];
+      const savedNotes =
+        runToUpdate.pokedexNotesByPokemonId?.[pokemonCaptured.pokemon.id] ?? "";
+
+      setPokedexObservations(savedObservations);
+      setPokedexNotes(savedNotes);
+    }
+  }, [isPokedexCapture, runToUpdate, pokemonCaptured.pokemon.id]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadSpriteOptions() {
