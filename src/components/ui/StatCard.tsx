@@ -8,12 +8,19 @@ interface Action {
   disabled?: boolean;
 }
 
+interface SubValue {
+  label: string;
+  value: number;
+  color: string;
+}
+
 interface Props {
   value: number | string;
   label: string;
   color: string;
   hoverContent?: React.ReactNode;
   actions?: Action[];
+  subValues?: SubValue[];
 }
 
 export default function StatCard({
@@ -22,6 +29,7 @@ export default function StatCard({
   color,
   hoverContent,
   actions,
+  subValues,
 }: Props) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -123,6 +131,49 @@ export default function StatCard({
             >
               {label}
             </Typography>
+            {/* Soul Link per-player sub-values */}
+            {subValues && subValues.length > 0 && (
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 0.5,
+                  mt: 0.5,
+                  width: "100%",
+                }}
+              >
+                {subValues.map((sv) => (
+                  <Box
+                    key={sv.label}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        background: sv.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        fontSize: "0.6rem",
+                        fontWeight: 700,
+                        color: sv.color,
+                      }}
+                    >
+                      {sv.label}: {sv.value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
           </>
         ) : (
           hoverContent

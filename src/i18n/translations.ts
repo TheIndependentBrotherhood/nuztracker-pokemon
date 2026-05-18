@@ -140,6 +140,18 @@ const translations = {
     },
     cancel: { fr: "Annuler", en: "Cancel" },
     createRun: { fr: "🚀 Créer le Run", en: "🚀 Create Run" },
+    soulLinkMode: { fr: "🔗 Soul Link", en: "🔗 Soul Link" },
+    soulLinkPlayers: { fr: "⚙️ Joueurs Soul Link", en: "⚙️ Soul Link Players" },
+    player1Name: { fr: "Nom du J1", en: "P1 Name" },
+    player2Name: { fr: "Nom du J2", en: "P2 Name" },
+    player3Name: { fr: "Nom du J3", en: "P3 Name" },
+    player4Name: { fr: "Nom du J4", en: "P4 Name" },
+    player1Placeholder: { fr: "Ex: RedPlayer", en: "e.g. RedPlayer" },
+    player2Placeholder: { fr: "Ex: BluePlayer", en: "e.g. BluePlayer" },
+    player3Placeholder: { fr: "Ex: GreenPlayer", en: "e.g. GreenPlayer" },
+    player4Placeholder: { fr: "Ex: GoldPlayer", en: "e.g. GoldPlayer" },
+    addPlayer3: { fr: "+ J3", en: "+ P3" },
+    addPlayer4: { fr: "+ J4", en: "+ P4" },
   },
 
   // ── Add Capture Modal ──────────────────────────────────────────────────────
@@ -205,9 +217,8 @@ const translations = {
     },
     removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
     noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
+    soulLinkPlayer: { fr: "Joueur", en: "Player" },
   },
-
-  // ── Pokemon Detail Modal ───────────────────────────────────────────────────
   pokemonDetail: {
     loading: { fr: "Chargement...", en: "Loading..." },
     loadingSprites: {
@@ -343,6 +354,7 @@ const translations = {
       fr: "Supprimer les captures pour changer le statut",
       en: "Delete captures to change status",
     },
+    captureFor: { fr: "Capturer pour", en: "Capture for" },
   },
 
   // ── Team View ──────────────────────────────────────────────────────────────
@@ -369,6 +381,28 @@ const translations = {
     noDeadPokemon: {
       fr: "Aucun pokémon décédé pour le moment. Longue vie à votre équipe ! 🍀",
       en: "No deceased Pokémon so far. Long live your team! 🍀",
+    },
+    soulLinkSubTab: {
+      fr: (name: string) => `J: ${name}`,
+      en: (name: string) => `P: ${name}`,
+    },
+    toastRemoved: {
+      fr: (playerName: string, pokemonName: string) =>
+        `${pokemonName} retiré de l'équipe de ${playerName}`,
+      en: (playerName: string, pokemonName: string) =>
+        `${pokemonName} removed from ${playerName}'s team`,
+    },
+    toastAdded: {
+      fr: (playerName: string, pokemonName: string) =>
+        `${pokemonName} ajouté à l'équipe de ${playerName}`,
+      en: (playerName: string, pokemonName: string) =>
+        `${pokemonName} added to ${playerName}'s team`,
+    },
+    toastDied: {
+      fr: (playerName: string, pokemonName: string) =>
+        `${pokemonName} de ${playerName} est décédé`,
+      en: (playerName: string, pokemonName: string) =>
+        `${playerName}'s ${pokemonName} has died`,
     },
   },
 
@@ -481,6 +515,18 @@ const translations = {
     exporting: { fr: "Export...", en: "Exporting..." },
     export: { fr: "Exporter", en: "Export" },
     zones: { fr: "Zones", en: "Zones" },
+    soulLinkMissedByPlayer: {
+      fr: (name: string, n: number) => `${name}: ${n} loupé${n > 1 ? "s" : ""}`,
+      en: (name: string, n: number) => `${name}: ${n} missed`,
+    },
+    soulLinkDeathsByPlayer: {
+      fr: (name: string, n: number) => `${name}: ${n} mort${n > 1 ? "s" : ""}`,
+      en: (name: string, n: number) => `${name}: ${n} death${n > 1 ? "s" : ""}`,
+    },
+    killedBy: {
+      fr: (name: string) => `Tué par ${name}`,
+      en: (name: string) => `Killed by ${name}`,
+    },
   },
 
   // ── Type Analysis ──────────────────────────────────────────────────────────

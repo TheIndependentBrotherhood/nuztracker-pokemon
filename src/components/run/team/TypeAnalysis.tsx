@@ -13,7 +13,7 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { Run } from "@/lib/types";
+import { Run, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import {
   TYPES,
   getTypeDefenses,
@@ -38,7 +38,14 @@ interface Props {
   run: Run;
 }
 
-export default function TypeAnalysis({ run }: Props) {
+/** Core analysis logic scoped to a specific team */
+function TypeAnalysisCore({
+  run,
+  team,
+}: {
+  run: Run;
+  team: Capture[];
+}) {
   const [teamTypes, setTeamTypes] = useState<string[][]>([]);
   const [tabValue, setTabValue] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -50,7 +57,6 @@ export default function TypeAnalysis({ run }: Props) {
   const { abilities: abilitiesCache } = useCache();
 
   useEffect(() => {
-    // Load type chart data for the selected generation
     loadTypeData(run.typeChartGeneration).then((data) => {
       setTypeChartData(data);
     });
@@ -58,20 +64,20 @@ export default function TypeAnalysis({ run }: Props) {
 
   useEffect(() => {
     async function load() {
-      if (run.team.length === 0) {
+      if (team.length === 0) {
         setTeamTypes([]);
         return;
       }
 
       if (isRandomTypesMode(run)) {
         setTeamTypes(
-          run.team.map((capture) => getCaptureTypesForRun(capture, run, [])),
+          team.map((capture) => getCaptureTypesForRun(capture, run, [])),
         );
         return;
       }
 
       const types = await Promise.all(
-        run.team.map(async (c) => {
+        team.map(async (c) => {
           try {
             if (c.pokemon && c.pokemon.types) {
               return getCaptureTypesForRun(c, run, c.pokemon.types);
@@ -85,7 +91,7 @@ export default function TypeAnalysis({ run }: Props) {
       setTeamTypes(types);
     }
     void load();
-  }, [run]);
+  }, [run, team]);
 
   // Helper functions to use JSON data or fallback to old system
   const getDefenses = (types: string[]): Record<string, number> => {
@@ -111,7 +117,7 @@ export default function TypeAnalysis({ run }: Props) {
     return getTypeOffenses(types);
   };
 
-  if (run.team.length === 0) {
+  if (team.length === 0) {
     return (
       <Box
         sx={{
@@ -213,7 +219,7 @@ export default function TypeAnalysis({ run }: Props) {
               >
                 {t(tr.typeAnalysis.attackType, lang)}
               </TableCell>
-              {run.team.map((c) => (
+              {team.map((c) => (
                 <TableCell
                   key={c.id}
                   sx={{
@@ -266,8 +272,8 @@ export default function TypeAnalysis({ run }: Props) {
           </TableHead>
           <TableBody>
             {TYPES.map((attackType) => {
-              // teamTypes is built by mapping over run.team in the same order,
-              // so teamTypes[i] always corresponds to run.team[i].
+              // teamTypes is built by mapping over team in the same order,
+              // so teamTypes[i] always corresponds to team[i].
               // Use BASE defenses (no ability) for comparison.
               const memberBaseEffects = teamTypes.map((types) => {
                 if (types.length === 0) return 1;
@@ -277,7 +283,7 @@ export default function TypeAnalysis({ run }: Props) {
               // Compute ability-modified value per member (includes all ability effects).
               const memberEffectsWithAbilities = teamTypes.map((types, i) => {
                 if (types.length === 0) return 1;
-                const memberAbility = run.team[i]?.ability;
+                const memberAbility = team[i]?.ability;
                 if (!memberAbility) {
                   return getDefenses(types)[attackType] ?? 1;
                 }
@@ -291,7 +297,7 @@ export default function TypeAnalysis({ run }: Props) {
               // Detect which members have ability-modified effects (for visual indicator).
               const memberAbilityEffects = teamTypes.map((types, i) => {
                 if (types.length === 0) return null;
-                const memberAbility = run.team[i]?.ability;
+                const memberAbility = team[i]?.ability;
                 if (!memberAbility) return null;
                 const modified = memberEffectsWithAbilities[i];
                 // Return null if ability doesn't change this matchup
@@ -371,7 +377,7 @@ export default function TypeAnalysis({ run }: Props) {
                                   : `${displayEff}`;
 
                     const abilityModified = memberAbilityEffects[i];
-                    const memberAbility = run.team[i]?.ability;
+                    const memberAbility = team[i]?.ability;
                     const abilityEntry = memberAbility
                       ? abilitiesCache.abilities.find(
                           (a) => a.name === memberAbility,
@@ -576,7 +582,7 @@ export default function TypeAnalysis({ run }: Props) {
               >
                 {t(tr.typeAnalysis.defenseType, lang)}
               </TableCell>
-              {run.team.map((c) => (
+              {team.map((c) => (
                 <TableCell
                   key={c.id}
                   sx={{
@@ -1566,4 +1572,74 @@ export default function TypeAnalysis({ run }: Props) {
       </TableContainer>
     );
   }
+}
+
+export default function TypeAnalysis({ run }: Props) {
+  const { lang } = useLanguage();
+  const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
+  const players = run.soulLinkPlayers ?? [];
+  const [activePlayer, setActivePlayer] = useState(0);
+
+  if (!isSoulLink) {
+    return <TypeAnalysisCore run={run} team={run.team} />;
+  }
+
+  const activePlayerTeam = run.playerTeams?.[activePlayer] ?? [];
+
+  return (
+    <Box>
+      {/* Soul Link player tabs */}
+      <Box
+        sx={{
+          display: "flex",
+          borderBottom: "2px solid #000",
+          mb: 1,
+          background: "linear-gradient(to right, #EFF6FF, #E0E7FF)",
+          borderRadius: "0.75rem 0.75rem 0 0",
+          overflow: "hidden",
+        }}
+      >
+        {players.map((player) => {
+          const color = SOUL_LINK_PLAYER_COLORS[player.playerIndex];
+          const isActive = activePlayer === player.playerIndex;
+          return (
+            <Box
+              key={player.id}
+              component="button"
+              onClick={() => setActivePlayer(player.playerIndex)}
+              sx={{
+                flex: 1,
+                py: 1,
+                px: 0.5,
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                border: "none",
+                borderBottom: `3px solid ${isActive ? color : "transparent"}`,
+                backgroundColor: isActive ? `${color}22` : "transparent",
+                color: isActive ? color : "#64748b",
+                cursor: "pointer",
+                transition: "all 200ms ease",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 0.25,
+                "&:hover": { backgroundColor: `${color}11`, color: color },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: color,
+                }}
+              />
+              {player.name}
+            </Box>
+          );
+        })}
+      </Box>
+      <TypeAnalysisCore run={run} team={activePlayerTeam} />
+    </Box>
+  );
 }

@@ -258,6 +258,7 @@ export default function ZoneList({ run }: Props) {
                 runId={run.id}
                 isSelected={selectedZoneId === zone.id}
                 isShinyHuntMode={run.isShinyHuntMode}
+                run={run}
               />
             </Box>
             <Box

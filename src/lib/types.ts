@@ -37,6 +37,10 @@ export interface Capture {
   diedAt?: number;
   /** ID of the original Pokémon species when first captured. Used to track evolution history in random evo mode. */
   originalCapturedPokemonId?: number;
+  /** Soul Link: index (0-3) of the player who owns this capture */
+  playerIndex?: number;
+  /** Soul Link: index (0-3) of the player whose action caused this Pokémon's death */
+  killedByPlayerIndex?: number;
 }
 
 export interface RandomizerOptions {
@@ -45,6 +49,47 @@ export interface RandomizerOptions {
   randomizeEncounters: boolean;
   randomizeEvolvedForms: boolean;
 }
+
+/** A player in a Soul Link run */
+export interface SoulLinkPlayer {
+  id: string;
+  name: string;
+  /** 0 = P1 (blue), 1 = P2 (red), 2 = P3 (orange), 3 = P4 (green) */
+  playerIndex: 0 | 1 | 2 | 3;
+}
+
+/** Colors associated with each Soul Link player index */
+export const SOUL_LINK_PLAYER_COLORS: Record<number, string> = {
+  0: "#3b82f6", // blue  – P1
+  1: "#ef4444", // red   – P2
+  2: "#f97316", // orange – P3
+  3: "#22c55e", // green  – P4
+};
+
+/** MissingNo placeholder Pokémon used when a Soul Link player has no capture in a zone */
+export const MISSINGNO_POKEMON: PokemonData = {
+  id: -1,
+  technicalName: "missingno",
+  names: { fr: "???", en: "???" },
+  generation: 1,
+  types: ["normal"],
+  abilities: [],
+  stats: [],
+  height: 0,
+  weight: 0,
+  sprites: {
+    normal: {
+      default:
+        "https://projectpokemon.org/home/uploads/monthly_2017_07/missingno.png.4bc4f1920385390a41f267dd8f15b2ed.png",
+      alternatives: [],
+    },
+    shiny: {
+      default:
+        "https://projectpokemon.org/home/uploads/monthly_2017_07/missingno.png.4bc4f1920385390a41f267dd8f15b2ed.png",
+      alternatives: [],
+    },
+  },
+};
 
 export interface Zone {
   id: string;
@@ -66,6 +111,12 @@ export interface Run {
   difficulty: "easy" | "normal" | "hard";
   isShinyHuntMode: boolean;
   isRandomMode: boolean;
+  /** Soul Link mode: links up to 4 players' runs together */
+  isSoulLinkMode?: boolean;
+  /** Soul Link players (P1–P4). Only present when isSoulLinkMode is true. */
+  soulLinkPlayers?: SoulLinkPlayer[];
+  /** Per-player teams in Soul Link mode. Key = playerIndex (0-3). */
+  playerTeams?: Record<number, Capture[]>;
   randomizerOptions?: RandomizerOptions;
   /** User-discovered types for randomizer type mode, indexed by pokemon id. */
   customTypesByPokemonId?: Record<number, string[]>;
