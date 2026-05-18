@@ -40,18 +40,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /runs/{runId} {
-      // Lecture : le document doit appartenir à l'utilisateur connecté
-      allow read: if request.auth != null
-                  && resource.data.ownerUid == request.auth.uid;
+      // Lecture publique par runId (requis pour les liens de partage)
+      allow read: if true;
 
-      // Écriture : l'utilisateur doit être connecté,
-      // ne peut écrire que son propre UID dans ownerUid
-      // et ne peut pas modifier l'ownerUid d'un document existant
+      // Écriture : seul le propriétaire authentifié peut créer / modifier / supprimer
       allow create: if request.auth != null
-                    && request.resource.data.ownerUid == request.auth.uid;
+                     && request.resource.data.ownerUid == request.auth.uid;
 
       allow update: if request.auth != null
-                    && resource.data.ownerUid == request.auth.uid
+                     && resource.data.ownerUid == request.auth.uid
                     && request.resource.data.ownerUid == request.auth.uid;
 
       allow delete: if request.auth != null
@@ -61,7 +58,7 @@ service cloud.firestore {
 }
 ```
 
-> **Note** : si tu veux aussi permettre le partage par lien (lecture publique par runId), remplace la règle `read` par `allow read: if true;` — les runs ne contiennent aucune donnée personnelle sensible.
+> **Note** : la lecture publique par `runId` est **requise** pour que la page `/share` fonctionne. Si tu remplaces `allow read: if true;` par une règle plus stricte, le sync cloud privé continuera de marcher pour le propriétaire, mais les liens de partage permanents ne pourront plus charger le run.
 
 ---
 
