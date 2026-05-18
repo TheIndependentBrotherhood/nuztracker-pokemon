@@ -22,7 +22,7 @@ import {
   searchPokemonByName,
   type CaptureSpriteOption,
 } from "@/lib/pokemon-data";
-import { Capture, PokemonData } from "@/lib/types";
+import { Capture, PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { TYPES, typeColors, getTypeTranslation } from "@/lib/type-chart";
 import { isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -36,6 +36,7 @@ interface Props {
   zoneName: string;
   zoneNames?: { fr?: string; en?: string };
   forceShiny?: boolean;
+  defaultPlayerIndex?: number;
   onClose: () => void;
 }
 
@@ -45,6 +46,7 @@ export default function AddCaptureModal({
   zoneName,
   zoneNames,
   forceShiny = false,
+  defaultPlayerIndex,
   onClose,
 }: Props) {
   const { addCapture, runs } = useRunStore();
@@ -91,6 +93,13 @@ export default function AddCaptureModal({
   // Panel of up to 3 possible abilities for the selected Pokémon species
   const [abilityPanelDraft, setAbilityPanelDraft] = useState<string[]>([]);
   const [abilitySearch, setAbilitySearch] = useState("");
+
+  // Soul Link: which player is capturing
+  const isSoulLink = Boolean(run?.isSoulLinkMode && run?.soulLinkPlayers?.length);
+  const soulLinkPlayers = run?.soulLinkPlayers ?? [];
+  const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number>(
+    defaultPlayerIndex ?? soulLinkPlayers[0]?.playerIndex ?? 0,
+  );
 
   useEffect(() => {
     // Reset ability draft & panel when Pokémon changes; pre-fill panel from run
@@ -275,6 +284,7 @@ export default function AddCaptureModal({
               },
             }
           : {}),
+        ...(isSoulLink ? { playerIndex: selectedPlayerIndex } : {}),
       },
       // Pass the ability panel so it gets persisted on the run
       randomAbilitiesMode && abilityPanelDraft.length > 0
@@ -352,6 +362,55 @@ export default function AddCaptureModal({
             📍 {displayZoneName}
           </Typography>
         </Box>
+
+        {/* Soul Link player selector */}
+        {isSoulLink && soulLinkPlayers.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              component="label"
+              sx={{
+                display: "block",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#000",
+                mb: 1,
+              }}
+            >
+              {t(tr.addCapture.soulLinkPlayer, lang)}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+              {soulLinkPlayers.map((player) => {
+                const color =
+                  SOUL_LINK_PLAYER_COLORS[player.playerIndex] ?? "#64748b";
+                const isActive = selectedPlayerIndex === player.playerIndex;
+                return (
+                  <Box
+                    key={player.id}
+                    component="button"
+                    onClick={() => setSelectedPlayerIndex(player.playerIndex)}
+                    sx={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      px: 1.25,
+                      py: 0.5,
+                      border: `2px solid ${color}`,
+                      borderRadius: "0.75rem",
+                      background: isActive ? color : "transparent",
+                      color: isActive ? "#fff" : color,
+                      cursor: "pointer",
+                      transition: "all 150ms ease",
+                      "&:hover": { background: isActive ? color : `${color}22` },
+                    }}
+                  >
+                    {player.name}
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
 
         {/* Pokemon search */}
         <Box sx={{ position: "relative", mb: 2 }}>

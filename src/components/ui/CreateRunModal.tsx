@@ -12,11 +12,12 @@ import {
   Box,
   Typography,
   Stack,
+  IconButton,
 } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
 import { regions, loadRegions, type Region } from "@/lib/zones";
-import { RandomizerOptions } from "@/lib/types";
+import { RandomizerOptions, SoulLinkPlayer, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledTextField from "@/components/ui/StyledTextField";
 import StyledSelect from "@/components/ui/StyledSelect";
@@ -40,6 +41,11 @@ export default function CreateRunModal({ onClose }: Props) {
   >("gen6+");
   const [isShinyHuntMode, setIsShinyHuntMode] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
+  const [isSoulLinkMode, setIsSoulLinkMode] = useState(false);
+  const [player1Name, setPlayer1Name] = useState("");
+  const [player2Name, setPlayer2Name] = useState("");
+  const [player3Name, setPlayer3Name] = useState<string | null>(null);
+  const [player4Name, setPlayer4Name] = useState<string | null>(null);
   const [loadedRegions, setLoadedRegions] = useState<Region[]>(regions);
 
   useEffect(() => {
@@ -84,8 +90,34 @@ export default function CreateRunModal({ onClose }: Props) {
     setTypeChartGeneration(value as "gen1" | "gen2-5" | "gen6+");
   };
 
+  const soulLinkValid =
+    !isSoulLinkMode || (player1Name.trim() && player2Name.trim());
+
+  function buildSoulLinkPlayers(): SoulLinkPlayer[] {
+    const players: SoulLinkPlayer[] = [
+      { id: "p1", name: player1Name.trim(), playerIndex: 0 },
+      { id: "p2", name: player2Name.trim(), playerIndex: 1 },
+    ];
+    if (player3Name !== null) {
+      players.push({
+        id: "p3",
+        name: player3Name.trim() || "P3",
+        playerIndex: 2,
+      });
+    }
+    if (player4Name !== null) {
+      players.push({
+        id: "p4",
+        name: player4Name.trim() || "P4",
+        playerIndex: 3,
+      });
+    }
+    return players;
+  }
+
   function handleCreate() {
     if (!gameName.trim()) return;
+    if (!soulLinkValid) return;
     const run = createRun({
       gameName: gameName.trim(),
       region,
@@ -93,6 +125,9 @@ export default function CreateRunModal({ onClose }: Props) {
       isShinyHuntMode,
       isRandomMode,
       randomizerOptions: isRandomMode ? randomizerOptions : undefined,
+      ...(isSoulLinkMode
+        ? { isSoulLinkMode: true, soulLinkPlayers: buildSoulLinkPlayers() }
+        : {}),
     });
     onClose();
     router.push(`/run/?id=${run.id}`);
@@ -103,6 +138,8 @@ export default function CreateRunModal({ onClose }: Props) {
     { key: "randomizeAbilities", label: t(tr.createRun.randomizeAbilities, lang) },
     { key: "randomizeEvolvedForms", label: t(tr.createRun.randomizeEvolvedForms, lang) },
   ];
+
+  const playerColors = SOUL_LINK_PLAYER_COLORS;
 
   return (
     <Dialog
@@ -232,7 +269,211 @@ export default function CreateRunModal({ onClose }: Props) {
                 m: 0,
               }}
             />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isSoulLinkMode}
+                  onChange={(e) => setIsSoulLinkMode(e.target.checked)}
+                />
+              }
+              label={t(tr.createRun.soulLinkMode, lang)}
+              sx={{
+                color: "#000",
+                fontWeight: 600,
+                p: 1.5,
+                border: "2px solid #000",
+                borderRadius: "1rem",
+                m: 0,
+              }}
+            />
           </Stack>
+
+          {/* Soul Link Players */}
+          {isSoulLinkMode && (
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #EFF6FF 0%, #E0E7FF 100%)",
+                border: "2px solid #3b82f6",
+                borderRadius: "1rem",
+                p: 2,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "#3b82f6",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  mb: 2,
+                }}
+              >
+                {t(tr.createRun.soulLinkPlayers, lang)}
+              </Typography>
+              <Stack spacing={1.5}>
+                {/* P1 */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: "50%",
+                      background: playerColors[0],
+                      flexShrink: 0,
+                    }}
+                  />
+                  <StyledTextField
+                    label={t(tr.createRun.player1Name, lang)}
+                    placeholder={t(tr.createRun.player1Placeholder, lang)}
+                    fullWidth
+                    value={player1Name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setPlayer1Name(e.target.value.substring(0, 24))
+                    }
+                  />
+                </Box>
+                {/* P2 */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: "50%",
+                      background: playerColors[1],
+                      flexShrink: 0,
+                    }}
+                  />
+                  <StyledTextField
+                    label={t(tr.createRun.player2Name, lang)}
+                    placeholder={t(tr.createRun.player2Placeholder, lang)}
+                    fullWidth
+                    value={player2Name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setPlayer2Name(e.target.value.substring(0, 24))
+                    }
+                  />
+                </Box>
+                {/* P3 */}
+                {player3Name !== null ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: "50%",
+                        background: playerColors[2],
+                        flexShrink: 0,
+                      }}
+                    />
+                    <StyledTextField
+                      label={t(tr.createRun.player3Name, lang)}
+                      placeholder={t(tr.createRun.player3Placeholder, lang)}
+                      fullWidth
+                      value={player3Name}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setPlayer3Name(e.target.value.substring(0, 24))
+                      }
+                    />
+                    <IconButton
+                      onClick={() => {
+                        setPlayer3Name(null);
+                        setPlayer4Name(null);
+                      }}
+                      size="small"
+                      sx={{
+                        border: "2px solid #dc2626",
+                        borderRadius: "0.5rem",
+                        color: "#dc2626",
+                        flexShrink: 0,
+                      }}
+                    >
+                      ✕
+                    </IconButton>
+                  </Box>
+                ) : (
+                  <Box
+                    component="button"
+                    onClick={() => setPlayer3Name("")}
+                    sx={{
+                      alignSelf: "flex-start",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      color: playerColors[2],
+                      background: "rgba(249, 115, 22, 0.1)",
+                      border: `2px solid ${playerColors[2]}`,
+                      borderRadius: "0.75rem",
+                      px: 1.5,
+                      py: 0.75,
+                      cursor: "pointer",
+                      "&:hover": { background: "rgba(249, 115, 22, 0.2)" },
+                    }}
+                  >
+                    {t(tr.createRun.addPlayer3, lang)}
+                  </Box>
+                )}
+                {/* P4 – only when P3 is added */}
+                {player3Name !== null && (
+                  <>
+                    {player4Name !== null ? (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            background: playerColors[3],
+                            flexShrink: 0,
+                          }}
+                        />
+                        <StyledTextField
+                          label={t(tr.createRun.player4Name, lang)}
+                          placeholder={t(tr.createRun.player4Placeholder, lang)}
+                          fullWidth
+                          value={player4Name}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setPlayer4Name(e.target.value.substring(0, 24))
+                          }
+                        />
+                        <IconButton
+                          onClick={() => setPlayer4Name(null)}
+                          size="small"
+                          sx={{
+                            border: "2px solid #dc2626",
+                            borderRadius: "0.5rem",
+                            color: "#dc2626",
+                            flexShrink: 0,
+                          }}
+                        >
+                          ✕
+                        </IconButton>
+                      </Box>
+                    ) : (
+                      <Box
+                        component="button"
+                        onClick={() => setPlayer4Name("")}
+                        sx={{
+                          alignSelf: "flex-start",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          color: playerColors[3],
+                          background: "rgba(34, 197, 94, 0.1)",
+                          border: `2px solid ${playerColors[3]}`,
+                          borderRadius: "0.75rem",
+                          px: 1.5,
+                          py: 0.75,
+                          cursor: "pointer",
+                          "&:hover": { background: "rgba(34, 197, 94, 0.2)" },
+                        }}
+                      >
+                        {t(tr.createRun.addPlayer4, lang)}
+                      </Box>
+                    )}
+                  </>
+                )}
+              </Stack>
+            </Box>
+          )}
 
           {/* Randomizer Options */}
           {isRandomMode && (
@@ -292,7 +533,7 @@ export default function CreateRunModal({ onClose }: Props) {
         </StyledButton>
         <StyledButton
           onClick={handleCreate}
-          disabled={!gameName.trim()}
+          disabled={!gameName.trim() || !soulLinkValid}
           variant="primary"
           shape="pill"
           sx={{ flexGrow: 1 }}

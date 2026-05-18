@@ -1,7 +1,7 @@
 "use client";
 
-import { Run, Capture } from "@/lib/types";
-import { Box, Grid, Typography } from "@mui/material";
+import { Run, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
+import { Box, Grid, Snackbar, Typography } from "@mui/material";
 import { useState } from "react";
 import TeamPokemonCard from "./TeamPokemonCard";
 import CapturedPokemonCard from "./CapturedPokemonCard";
@@ -16,38 +16,93 @@ interface Props {
   onToggleAnalysis?: () => void;
 }
 
-export default function TeamView({ run, id, onToggleAnalysis }: Props) {
-  const teamSlots = Array.from({ length: 6 }, (_, i) => run.team[i] ?? null);
+/** Inner component: renders a team view for a given team + captured pool */
+function TeamPanel({
+  run,
+  team,
+  playerIndex,
+}: {
+  run: Run;
+  team: Capture[];
+  playerIndex?: number;
+}) {
+  const teamSlots = Array.from({ length: 6 }, (_, i) => team[i] ?? null);
   const { updateTeam } = useRunStore();
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const [dragOverCaptured, setDragOverCaptured] = useState(false);
   const [dragOverDead, setDragOverDead] = useState(false);
   const [expandedCaptured, setExpandedCaptured] = useState(true);
   const [expandedDead, setExpandedDead] = useState(true);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const { lang } = useLanguage();
   const tr = translations;
 
-  // Get all captured pokémons not in team (excluding dead)
+  const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers);
+
+  // In soul link mode, capturedNotInTeam is scoped to this player's captures
   const capturedNotInTeam = run.zones
     .flatMap((z) => z.captures)
-    .filter((c) => !run.team.find((t) => t.id === c.id) && !c.isDead);
+    .filter((c) => {
+      if (isSoulLink) {
+        return (
+          (c.playerIndex ?? 0) === (playerIndex ?? 0) &&
+          !team.find((t) => t.id === c.id) &&
+          !c.isDead &&
+          !c.failedCapture
+        );
+      }
+      return !run.team.find((t) => t.id === c.id) && !c.isDead;
+    });
 
-  // Helper function to find zone name for a capture
+  const deadPokemon = run.zones
+    .flatMap((z) => z.captures)
+    .filter((c) => {
+      if (isSoulLink) {
+        return (c.playerIndex ?? 0) === (playerIndex ?? 0) && c.isDead;
+      }
+      return c.isDead;
+    })
+    .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
+
   const getZoneForCapture = (captureId: string): string | undefined => {
     const zone = run.zones.find((z) =>
       z.captures.some((c) => c.id === captureId),
     );
     if (!zone) return undefined;
-    // Return translated zone name if available, otherwise use fallback
     return zone.zoneNames?.[lang] ?? zone.zoneName;
   };
+
+  function showToast(msg: string) {
+    setToastMsg(msg);
+  }
+
+  function getSoulLinkPlayerName(idx?: number) {
+    return (
+      run.soulLinkPlayers?.find((p) => p.playerIndex === (idx ?? 0))?.name ??
+      `P${(idx ?? 0) + 1}`
+    );
+  }
+
+  function toastDied(capture?: Capture) {
+    if (!isSoulLink || !capture) return;
+    const idx = capture.playerIndex ?? playerIndex ?? 0;
+    showToast(
+      (tr.teamView.toastDied[lang] as (p: string, n: string) => string)(
+        getSoulLinkPlayerName(idx),
+        capture.nickname ?? capture.pokemon.technicalName ?? "???",
+      ),
+    );
+  }
+
+  function doUpdateTeam(nextTeam: Capture[]) {
+    updateTeam(run.id, nextTeam, playerIndex);
+  }
 
   const handleDragOverSlot = (
     e: React.DragEvent<HTMLDivElement>,
     slotIndex: number,
   ) => {
     e.preventDefault();
-    // Accept both move (from team) and copy (from captured)
     e.dataTransfer.dropEffect =
       e.dataTransfer.effectAllowed === "copy" ? "copy" : "move";
     setDragOverSlot(slotIndex);
@@ -69,65 +124,73 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
     const deadPokemonId = e.dataTransfer.getData("deadPokemonId");
 
     if (pokemonId) {
-      // Moving within team
-      const teamArray = [...run.team];
+      const teamArray = [...team];
       const draggedIndex = teamArray.findIndex((p) => p.id === pokemonId);
-
       if (draggedIndex !== -1) {
         const draggedPokemon = teamArray[draggedIndex];
         teamArray.splice(draggedIndex, 1);
         teamArray.splice(slotIndex, 0, draggedPokemon);
-        updateTeam(run.id, teamArray);
+        doUpdateTeam(teamArray);
       }
     } else if (capturedPokemonId) {
-      // Adding from captured list
       const capturedPokemon = run.zones
         .flatMap((z) => z.captures)
         .find((c) => c.id === capturedPokemonId);
-
       if (capturedPokemon) {
-        const nextTeam = [...run.team];
+        const nextTeam = [...team];
         if (nextTeam[slotIndex]) {
-          // Replace occupied slot: previous team member automatically goes back to Captured
           nextTeam[slotIndex] = capturedPokemon;
         } else if (nextTeam.length < 6) {
-          // Empty slot: add at the targeted position when possible
           if (slotIndex >= nextTeam.length) {
             nextTeam.push(capturedPokemon);
           } else {
             nextTeam.splice(slotIndex, 0, capturedPokemon);
           }
         }
-
         if (nextTeam.length <= 6) {
-          updateTeam(run.id, nextTeam);
+          doUpdateTeam(nextTeam);
+          if (isSoulLink) {
+            const pName =
+              run.soulLinkPlayers?.find((p) => p.playerIndex === playerIndex)
+                ?.name ?? `P${(playerIndex ?? 0) + 1}`;
+            showToast(
+              (
+                tr.teamView.toastAdded[lang] as (
+                  p: string,
+                  n: string,
+                ) => string
+              )(pName, capturedPokemon.nickname ?? capturedPokemon.pokemon.technicalName),
+            );
+          }
         }
       }
     } else if (deadPokemonId) {
-      // Resurrect dead pokémon and add to team
       const capturedPokemon = run.zones
         .flatMap((z) => z.captures)
         .find((c) => c.id === deadPokemonId);
-
       if (capturedPokemon) {
         const resurrectPokemon = { ...capturedPokemon, isDead: false };
-        const nextTeam = [...run.team];
-
+        const nextTeam = [...team];
         if (nextTeam[slotIndex]) {
-          // Replace occupied slot: previous team member automatically goes back to Captured
           nextTeam[slotIndex] = resurrectPokemon;
         } else if (nextTeam.length < 6) {
-          // Empty slot: add at the targeted position when possible
           if (slotIndex >= nextTeam.length) {
             nextTeam.push(resurrectPokemon);
           } else {
             nextTeam.splice(slotIndex, 0, resurrectPokemon);
           }
         }
-
         const updatedRun = {
           ...run,
-          team: nextTeam,
+          team: isSoulLink ? run.team : nextTeam,
+          ...(isSoulLink
+            ? {
+                playerTeams: {
+                  ...(run.playerTeams ?? {}),
+                  [playerIndex ?? 0]: nextTeam,
+                },
+              }
+            : {}),
           zones: run.zones.map((zone) => ({
             ...zone,
             captures: zone.captures.map((capture) =>
@@ -137,7 +200,6 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             ),
           })),
         };
-
         if (nextTeam.length <= 6) {
           const { updateRun } = useRunStore.getState();
           updateRun(updatedRun);
@@ -148,38 +210,28 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
 
   const handleDragOverCaptured = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    // Only accept move from team (not copy from captured)
     if (e.dataTransfer.effectAllowed === "move") {
       e.dataTransfer.dropEffect = "move";
       setDragOverCaptured(true);
     }
   };
-
-  const handleDragLeaveCaptured = () => {
-    setDragOverCaptured(false);
-  };
+  const handleDragLeaveCaptured = () => setDragOverCaptured(false);
 
   const handleDragOverDead = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    // Accept both captured pokémons (copy) and team pokémons (move)
     e.dataTransfer.dropEffect =
       e.dataTransfer.effectAllowed === "copy" ? "copy" : "move";
     setDragOverDead(true);
   };
-
-  const handleDragLeaveDead = () => {
-    setDragOverDead(false);
-  };
+  const handleDragLeaveDead = () => setDragOverDead(false);
 
   const handleDropOnDead = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOverDead(false);
-
     const capturedPokemonId = e.dataTransfer.getData("capturedPokemonId");
     const pokemonId = e.dataTransfer.getData("pokemonId");
-
     if (capturedPokemonId) {
-      // Mark captured pokémon as dead
+      const cap = run.zones.flatMap((z) => z.captures).find((c) => c.id === capturedPokemonId);
       const updatedRun = {
         ...run,
         zones: run.zones.map((zone) => ({
@@ -193,12 +245,21 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
       };
       const { updateRun } = useRunStore.getState();
       updateRun(updatedRun);
+      toastDied(cap);
     } else if (pokemonId) {
-      // Remove from team and mark as dead
-      const updatedTeam = run.team.filter((p) => p.id !== pokemonId);
+      const updatedTeam = team.filter((p) => p.id !== pokemonId);
+      const cap = run.zones.flatMap((z) => z.captures).find((c) => c.id === pokemonId);
       const updatedRun = {
         ...run,
-        team: updatedTeam,
+        team: isSoulLink ? run.team : updatedTeam,
+        ...(isSoulLink
+          ? {
+              playerTeams: {
+                ...(run.playerTeams ?? {}),
+                [playerIndex ?? 0]: updatedTeam,
+              },
+            }
+          : {}),
         zones: run.zones.map((zone) => ({
           ...zone,
           captures: zone.captures.map((capture) =>
@@ -210,22 +271,31 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
       };
       const { updateRun } = useRunStore.getState();
       updateRun(updatedRun);
+      toastDied(cap);
     }
   };
 
   const handleDropOnCaptured = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOverCaptured(false);
-
     const pokemonId = e.dataTransfer.getData("pokemonId");
     const deadPokemonId = e.dataTransfer.getData("deadPokemonId");
-
     if (pokemonId) {
-      // Remove from team
-      const updatedTeam = run.team.filter((p) => p.id !== pokemonId);
-      updateTeam(run.id, updatedTeam);
+      const updatedTeam = team.filter((p) => p.id !== pokemonId);
+      doUpdateTeam(updatedTeam);
+      if (isSoulLink) {
+        const cap = team.find((c) => c.id === pokemonId);
+        const pName =
+          run.soulLinkPlayers?.find((p) => p.playerIndex === playerIndex)?.name ??
+          `P${(playerIndex ?? 0) + 1}`;
+        showToast(
+          (tr.teamView.toastRemoved[lang] as (p: string, n: string) => string)(
+            pName,
+            cap?.nickname ?? cap?.pokemon.technicalName ?? "???",
+          ),
+        );
+      }
     } else if (deadPokemonId) {
-      // Resurrect dead pokémon (toggle isDead to false)
       const updatedRun = {
         ...run,
         zones: run.zones.map((zone) => ({
@@ -243,62 +313,47 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
   };
 
   const handleAddCapturedToTeam = (capture: Capture) => {
-    if (run.team.length < 6) {
-      updateTeam(run.id, [...run.team, capture]);
+    if (team.length < 6) {
+      doUpdateTeam([...team, capture]);
     }
   };
 
   const handleToggleDeadStatus = (captureId: string) => {
-    // Check if the pokémon is in the team
-    const isInTeam = run.team.some((p) => p.id === captureId);
-
-    // Get the current dead status
-    const capture = run.zones
-      .flatMap((z) => z.captures)
-      .find((c) => c.id === captureId);
-
+    const isInTeam = team.some((p) => p.id === captureId);
+    const capture = run.zones.flatMap((z) => z.captures).find((c) => c.id === captureId);
     const willBeDead = !capture?.isDead;
+
+    const updatedTeam = willBeDead && isInTeam ? team.filter((p) => p.id !== captureId) : team;
 
     const updatedRun = {
       ...run,
-      // Remove from team if marking as dead
-      team:
-        willBeDead && isInTeam
-          ? run.team.filter((p) => p.id !== captureId)
-          : run.team,
+      team: isSoulLink ? run.team : updatedTeam,
+      ...(isSoulLink
+        ? {
+            playerTeams: {
+              ...(run.playerTeams ?? {}),
+              [playerIndex ?? 0]: updatedTeam,
+            },
+          }
+        : {}),
       zones: run.zones.map((zone) => ({
         ...zone,
         captures: zone.captures.map((c) =>
           c.id === captureId
-            ? {
-                ...c,
-                isDead: !c.isDead,
-                diedAt: !c.isDead ? Date.now() : undefined,
-              }
+            ? { ...c, isDead: !c.isDead, diedAt: !c.isDead ? Date.now() : undefined }
             : c,
         ),
       })),
     };
-    // Use the updateRun from store to persist changes
     const { updateRun } = useRunStore.getState();
     updateRun(updatedRun);
+    if (willBeDead) {
+      toastDied(capture);
+    }
   };
 
-  // Get all dead pokémons (sorted by death time, most recent first)
-  const deadPokemon = run.zones
-    .flatMap((z) => z.captures)
-    .filter((c) => c.isDead)
-    .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
-
   return (
-    <Box
-      id={id}
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-      }}
-    >
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       {/* Team Section */}
       <Box
         sx={{
@@ -318,37 +373,9 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             borderBottom: "2px solid #000",
           }}
         >
-          <Typography
-            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
-          >
+          <Typography sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}>
             {t(tr.teamView.team, lang)}
           </Typography>
-          <Box
-            sx={{
-              fontSize: "0.875rem",
-              fontWeight: 700,
-              background: "#fff",
-              color: "#000",
-              px: 1.5,
-              py: 0.5,
-              borderRadius: "0.5rem",
-              border: "2px solid #000",
-              cursor: "pointer",
-              transition: "all 200ms ease",
-              "&:hover": {
-                background: "#f0f4f8",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              },
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-            }}
-            onClick={onToggleAnalysis}
-            role="button"
-            tabIndex={0}
-          >
-            {t(tr.teamView.analysis, lang)}
-          </Box>
         </Box>
         <Grid container spacing={1.5}>
           {teamSlots.map((capture, i) => (
@@ -360,9 +387,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                 sx={{
                   transition: "all 200ms ease",
                   background:
-                    dragOverSlot === i
-                      ? "rgba(59, 130, 246, 0.1)"
-                      : "transparent",
+                    dragOverSlot === i ? "rgba(59, 130, 246, 0.1)" : "transparent",
                   borderRadius: "0.75rem",
                   p: dragOverSlot === i ? 1 : 0,
                   height: "100%",
@@ -374,8 +399,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                   runId={run.id}
                   zone={
                     capture
-                      ? (getZoneForCapture(capture.id) ??
-                        t(tr.teamView.unknown, lang))
+                      ? (getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang))
                       : ""
                   }
                   onToggleDead={handleToggleDeadStatus}
@@ -406,9 +430,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
             mb: 2,
             pb: 1.5,
             borderBottom: "2px solid #000",
-            background: dragOverCaptured
-              ? "rgba(59, 130, 246, 0.05)"
-              : "transparent",
+            background: dragOverCaptured ? "rgba(59, 130, 246, 0.05)" : "transparent",
             transition: "all 200ms ease",
             mx: -2,
             px: 2,
@@ -418,9 +440,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           role="button"
           tabIndex={0}
         >
-          <Typography
-            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
-          >
+          <Typography sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}>
             {(tr.teamView.capturedPokemon[lang] as (n: number) => string)(
               capturedNotInTeam.length,
             )}
@@ -455,8 +475,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                       onAddToTeam={handleAddCapturedToTeam}
                       onToggleDead={handleToggleDeadStatus}
                       zone={
-                        getZoneForCapture(capture.id) ??
-                        t(tr.teamView.unknown, lang)
+                        getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)
                       }
                     />
                   </Grid>
@@ -496,12 +515,8 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           role="button"
           tabIndex={0}
         >
-          <Typography
-            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}
-          >
-            {(tr.teamView.deadPokemon[lang] as (n: number) => string)(
-              deadPokemon.length,
-            )}
+          <Typography sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}>
+            {(tr.teamView.deadPokemon[lang] as (n: number) => string)(deadPokemon.length)}
           </Typography>
           <Typography sx={{ fontSize: "1.25rem", color: "#dc2626" }}>
             {expandedDead ? "▼" : "▶"}
@@ -532,8 +547,7 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
                       runId={run.id}
                       onResurrect={handleToggleDeadStatus}
                       zone={
-                        getZoneForCapture(capture.id) ??
-                        t(tr.teamView.unknown, lang)
+                        getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)
                       }
                     />
                   </Grid>
@@ -543,6 +557,103 @@ export default function TeamView({ run, id, onToggleAnalysis }: Props) {
           </>
         )}
       </Box>
+
+      {/* Toast notification */}
+      <Snackbar
+        open={Boolean(toastMsg)}
+        autoHideDuration={3000}
+        onClose={() => setToastMsg(null)}
+        message={toastMsg}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
+    </Box>
+  );
+}
+
+export default function TeamView({ run, id, onToggleAnalysis: _onToggleAnalysis }: Props) {
+  const { lang } = useLanguage();
+  const tr = translations;
+  const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers);
+  const players = run.soulLinkPlayers ?? [];
+  const [activePlayer, setActivePlayer] = useState(() => players[0]?.playerIndex ?? 0);
+  const resolvedActivePlayer = players.some((p) => p.playerIndex === activePlayer)
+    ? activePlayer
+    : (players[0]?.playerIndex ?? 0);
+
+  if (!isSoulLink) {
+    return (
+      <Box id={id} sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <TeamPanel run={run} team={run.team} />
+      </Box>
+    );
+  }
+  const activePlayerTeam = run.playerTeams?.[resolvedActivePlayer] ?? [];
+
+  return (
+    <Box id={id} sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {/* Soul Link player sub-tabs */}
+      <Box
+        sx={{
+          display: "flex",
+          borderBottom: "2px solid #000",
+          mb: 2,
+          background: "linear-gradient(to right, #EFF6FF, #E0E7FF)",
+          borderRadius: "1rem 1rem 0 0",
+          overflow: "hidden",
+        }}
+      >
+        {players.map((player) => {
+          const color = SOUL_LINK_PLAYER_COLORS[player.playerIndex];
+          const isActive = resolvedActivePlayer === player.playerIndex;
+          return (
+            <Box
+              key={player.id}
+              component="button"
+              onClick={() => setActivePlayer(player.playerIndex)}
+              sx={{
+                flex: 1,
+                py: 1.25,
+                px: 0.5,
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                border: "none",
+                borderBottom: `4px solid ${isActive ? color : "transparent"}`,
+                backgroundColor: isActive
+                  ? `${color}22`
+                  : "transparent",
+                color: isActive ? color : "#64748b",
+                cursor: "pointer",
+                transition: "all 200ms ease",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 0.25,
+                "&:hover": {
+                  backgroundColor: `${color}11`,
+                  color: color,
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: color,
+                  flexShrink: 0,
+                }}
+              />
+              {player.name}
+            </Box>
+          );
+        })}
+      </Box>
+
+      <TeamPanel
+        run={run}
+        team={activePlayerTeam}
+        playerIndex={resolvedActivePlayer}
+      />
     </Box>
   );
 }

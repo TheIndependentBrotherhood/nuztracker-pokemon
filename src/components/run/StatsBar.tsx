@@ -11,7 +11,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { Run, Zone, Capture } from "@/lib/types";
+import { Run, Zone, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
 import StyledTextField from "@/components/ui/StyledTextField";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
@@ -158,6 +158,47 @@ export default function StatsBar({
     .filter((c: Capture) => c.isDead)
     .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0));
   const lastThreeDeadPokemon = deadPokemon.slice(0, 3);
+
+  // Soul Link per-player stats
+  const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
+  const soulLinkPlayers = run.soulLinkPlayers ?? [];
+
+  const perPlayerMissed = isSoulLink
+    ? soulLinkPlayers.map((player) => {
+        const missed = run.zones.filter((z: Zone) => {
+          const playerCaptures = z.captures.filter(
+            (c: Capture) => (c.playerIndex ?? 0) === player.playerIndex,
+          );
+
+          if (playerCaptures.length === 0) {
+            return false;
+          }
+
+          const hasSuccessfulCapture = playerCaptures.some(
+            (c: Capture) => !c.isDead,
+          );
+          const hasFailedCapture = playerCaptures.some(
+            (c: Capture) => c.isDead,
+          );
+
+          return !hasSuccessfulCapture && hasFailedCapture;
+        }).length;
+
+        return { player, missed };
+      })
+    : [];
+
+  const perPlayerDeaths = isSoulLink
+    ? soulLinkPlayers.map((player) => ({
+        player,
+        deaths: run.zones
+          .flatMap((z: Zone) => z.captures)
+          .filter(
+            (c: Capture) =>
+              c.isDead && (c.playerIndex ?? 0) === player.playerIndex,
+          ).length,
+      }))
+    : [];
 
   // Export handlers for team stats card
   async function handleOpenExportPng() {
@@ -419,21 +460,66 @@ export default function StatsBar({
 
   // RIP hover content (3 last dead pokémons)
   const ripHoverContent = (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 2,
-      }}
-    >
-      {lastThreeDeadPokemon.map((pokemonCaptured: Capture, index: number) => (
-        <TeamPreviewPokemonTile
-          key={`rip-${index}-${pokemonCaptured.id}`}
-          pokemonCaptured={pokemonCaptured}
-          lang={lang}
-        />
-      ))}
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 2,
+          mb: isSoulLink && perPlayerDeaths.length > 0 ? 1.5 : 0,
+        }}
+      >
+        {lastThreeDeadPokemon.map((pokemonCaptured: Capture, index: number) => (
+          <TeamPreviewPokemonTile
+            key={`rip-${index}-${pokemonCaptured.id}`}
+            pokemonCaptured={pokemonCaptured}
+            lang={lang}
+          />
+        ))}
+      </Box>
+      {/* Soul Link per-player death counts */}
+      {isSoulLink && perPlayerDeaths.length > 0 && (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 0.5,
+            borderTop: "1px solid rgba(220,38,38,0.15)",
+            pt: 1,
+          }}
+        >
+          {perPlayerDeaths.map(({ player, deaths }) => (
+            <Typography
+              key={player.id}
+              sx={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                color: SOUL_LINK_PLAYER_COLORS[player.playerIndex],
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+              }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: SOUL_LINK_PLAYER_COLORS[player.playerIndex],
+                  flexShrink: 0,
+                  display: "inline-block",
+                }}
+              />
+              {(tr.statsBar.soulLinkDeathsByPlayer[lang] as (n: string, m: number) => string)(
+                player.name,
+                deaths,
+              )}
+            </Typography>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 
@@ -491,53 +577,97 @@ export default function StatsBar({
 
   // Caught hover content (rate and missed)
   const captureesHoverContent = (
-    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6 }}>
-      <Box sx={{ textAlign: "center" }}>
-        <Typography
-          sx={{
-            fontWeight: 900,
-            fontSize: { xs: "2rem", sm: "3rem" },
-            color: "#000",
-            mb: 1,
-          }}
-        >
-          {captureRate}%
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-            fontWeight: 700,
-            color: "#000",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          }}
-        >
-          {t(tr.statsBar.rate, lang)}
-        </Typography>
+    <Box>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6, mb: isSoulLink && perPlayerMissed.length > 0 ? 1.5 : 0 }}>
+        <Box sx={{ textAlign: "center" }}>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              fontSize: { xs: "2rem", sm: "3rem" },
+              color: "#000",
+              mb: 1,
+            }}
+          >
+            {captureRate}%
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              fontWeight: 700,
+              color: "#000",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
+            {t(tr.statsBar.rate, lang)}
+          </Typography>
+        </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              fontSize: { xs: "2rem", sm: "3rem" },
+              color: "#000",
+              mb: 1,
+            }}
+          >
+            {displayMissed}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              fontWeight: 700,
+              color: "#000",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
+            {t(tr.statsBar.missed, lang)}
+          </Typography>
+        </Box>
       </Box>
-      <Box sx={{ textAlign: "center" }}>
-        <Typography
+      {/* Soul Link per-player missed counts */}
+      {isSoulLink && perPlayerMissed.length > 0 && (
+        <Box
           sx={{
-            fontWeight: 900,
-            fontSize: { xs: "2rem", sm: "3rem" },
-            color: "#000",
-            mb: 1,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 0.5,
+            borderTop: "1px solid rgba(0,0,0,0.1)",
+            pt: 1,
           }}
         >
-          {displayMissed}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: { xs: "0.75rem", sm: "0.875rem" },
-            fontWeight: 700,
-            color: "#000",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          }}
-        >
-          {t(tr.statsBar.missed, lang)}
-        </Typography>
-      </Box>
+          {perPlayerMissed.map(({ player, missed }) => (
+            <Typography
+              key={player.id}
+              sx={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                color: SOUL_LINK_PLAYER_COLORS[player.playerIndex],
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+              }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: SOUL_LINK_PLAYER_COLORS[player.playerIndex],
+                  flexShrink: 0,
+                  display: "inline-block",
+                }}
+              />
+              {(tr.statsBar.soulLinkMissedByPlayer[lang] as (n: string, m: number) => string)(
+                player.name,
+                missed,
+              )}
+            </Typography>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 
@@ -613,6 +743,15 @@ export default function StatsBar({
           value={deadCount}
           label={t(tr.statsBar.dead, lang)}
           color="#FEE2E2"
+          subValues={
+            isSoulLink && perPlayerDeaths.length > 0
+              ? perPlayerDeaths.map(({ player, deaths }) => ({
+                  label: player.name,
+                  value: deaths,
+                  color: SOUL_LINK_PLAYER_COLORS[player.playerIndex],
+                }))
+              : undefined
+          }
           hoverContent={deadCount > 0 ? ripHoverContent : undefined}
           actions={ripActions}
         />

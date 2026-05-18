@@ -6,7 +6,6 @@ import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getRun } from "@/lib/storage";
 import StatsBar from "@/components/run/StatsBar";
-import MapView from "@/components/run/maps/MapView";
 import ZoneList from "@/components/run/zone/ZoneList";
 import TeamView from "@/components/run/team/TeamView";
 import PokedexView from "@/components/run/pokedex/PokedexView";
@@ -14,7 +13,7 @@ import TeamColumn from "@/components/share/TeamColumn";
 import TypeAnalysis from "@/components/run/team/TypeAnalysis";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
-import { PokemonData } from "@/lib/types";
+import { PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getPokemonById } from "@/lib/pokemon-data";
@@ -28,7 +27,6 @@ export default function RunPageContent({ runId }: Props) {
   const router = useRouter();
   const { runs, loadRuns, setCurrentRun, updateRun } = useRunStore();
   const [tab, setTab] = useState<Tab>("zones");
-  const [showTypesDrawer, setShowTypesDrawer] = useState(false);
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -190,14 +188,57 @@ export default function RunPageContent({ runId }: Props) {
       </>
     );
 
+  // Soul Link player chips (shown to the right of the Home button)
+  const soulLinkChips =
+    run.isSoulLinkMode && run.soulLinkPlayers ? (
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "2px 6px",
+          ml: 1,
+        }}
+      >
+        {run.soulLinkPlayers.map((player) => (
+          <Box
+            key={player.id}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              fontSize: "0.65rem",
+              fontWeight: 700,
+              color: "#000",
+            }}
+          >
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: SOUL_LINK_PLAYER_COLORS[player.playerIndex],
+                flexShrink: 0,
+              }}
+            />
+            <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#000", lineHeight: 1 }}>
+              {player.name}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    ) : null;
+
   const backAction = (
-    <StyledButton
-      onClick={() => router.push("/")}
-      variant="secondary"
-      sx={{ px: 3 }}
-    >
-      {t(tr.runPage.home, lang)}
-    </StyledButton>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0 }}>
+      <StyledButton
+        onClick={() => router.push("/")}
+        variant="secondary"
+        sx={{ px: 3 }}
+      >
+        {t(tr.runPage.home, lang)}
+      </StyledButton>
+      {soulLinkChips}
+    </Box>
   );
 
   const headerSubtitle = [
@@ -205,6 +246,7 @@ export default function RunPageContent({ runId }: Props) {
     run.difficulty,
     run.isShinyHuntMode && "✨ Seconde chance (Shiny)",
     run.isRandomMode && "🎲 Random",
+    run.isSoulLinkMode && "🔗 Soul Link",
   ]
     .filter(Boolean)
     .join(" • ");
@@ -304,10 +346,7 @@ export default function RunPageContent({ runId }: Props) {
             {tab === "zones" && <ZoneList run={run} />}
             {tab === "team" && (
               <Box sx={{ p: 2 }}>
-                <TeamView
-                  run={run}
-                  onToggleAnalysis={() => setShowTypesDrawer(!showTypesDrawer)}
-                />
+                <TeamView run={run} />
               </Box>
             )}
             {tab === "pokedex" && <PokedexView runId={run.id} />}
@@ -407,120 +446,46 @@ export default function RunPageContent({ runId }: Props) {
           </Box>
         </Box>
 
-        {/* Right: Map or Analysis with simultaneous transitions */}
+        {/* Right: Always show TypeAnalysis */}
         <Box
           sx={{
-            position: "relative",
             width: "50%",
+            background: "#FEF3E2",
+            border: "3px solid #000",
+            borderRadius: "1rem",
             overflow: "hidden",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          {/* For custom region: always show TypeAnalysis */}
-          {run.region === "custom" ? (
-            <Box
+          <Box
+            sx={{
+              p: 2,
+              borderBottom: "2px solid #000",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
               sx={{
-                background: "#FEF3E2",
-                border: "3px solid #000",
-                borderRadius: "1rem",
-                overflow: "hidden",
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
+                fontSize: "1.125rem",
+                fontWeight: 700,
+                color: "#000",
               }}
             >
-              <TypeAnalysis run={run} />
-            </Box>
-          ) : (
-            <>
-              {/* Map Panel */}
-              <Box
-                sx={{
-                  transform: showTypesDrawer
-                    ? "translateX(100%)"
-                    : "translateX(0)",
-                  opacity: showTypesDrawer ? 0 : 1,
-                  transition: "all 500ms ease-out",
-                }}
-              >
-                <MapView run={run} />
-              </Box>
-
-              {/* Analysis Panel */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: "100%",
-                  background: "#FEF3E2",
-                  border: "3px solid #000",
-                  borderRadius: "1rem",
-                  overflow: "hidden",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                  display: "flex",
-                  flexDirection: "column",
-                  transform: showTypesDrawer
-                    ? "translateX(0)"
-                    : "translateX(-100%)",
-                  opacity: showTypesDrawer ? 1 : 0,
-                  transition: "all 500ms ease-out",
-                }}
-              >
-                {/* Drawer Header */}
-                <Box
-                  sx={{
-                    p: 2,
-                    borderBottom: "2px solid #000",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: "1.125rem",
-                      fontWeight: 700,
-                      color: "#000",
-                    }}
-                  >
-                    {t(tr.runPage.analysis, lang)}
-                  </Typography>
-                  <Box
-                    component="button"
-                    onClick={() => setShowTypesDrawer(false)}
-                    sx={{
-                      color: "#000",
-                      fontSize: "1.5rem",
-                      p: 0.5,
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      "&:hover": {
-                        opacity: 0.7,
-                      },
-                    }}
-                    title={t(tr.runPage.close, lang)}
-                  >
-                    ✕
-                  </Box>
-                </Box>
-
-                {/* Analysis Content */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    overflowY: "auto",
-                    p: 2,
-                  }}
-                >
-                  <TypeAnalysis run={run} />
-                </Box>
-              </Box>
-            </>
-          )}
+              {t(tr.runPage.analysis, lang)}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              p: 2,
+            }}
+          >
+            <TypeAnalysis run={run} />
+          </Box>
         </Box>
       </Box>
     </Box>

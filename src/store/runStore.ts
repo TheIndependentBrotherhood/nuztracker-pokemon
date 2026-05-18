@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Run, Zone, Capture, RandomizerOptions } from "@/lib/types";
+import { Run, Zone, Capture, RandomizerOptions, SoulLinkPlayer } from "@/lib/types";
 import { getRuns, saveRun, deleteRun as deleteRunStorage } from "@/lib/storage";
 import { getZonesForRegion } from "@/lib/zones";
 
@@ -16,6 +16,8 @@ interface RunStore {
     isRandomMode: boolean;
     typeChartGeneration: "gen1" | "gen2-5" | "gen6+";
     randomizerOptions?: RandomizerOptions;
+    isSoulLinkMode?: boolean;
+    soulLinkPlayers?: SoulLinkPlayer[];
   }) => Run;
   updateRun: (run: Run) => void;
   deleteRun: (id: string) => void;
@@ -27,7 +29,7 @@ interface RunStore {
   ) => void;
   removeCapture: (runId: string, zoneId: string, captureId: string) => void;
   setSelectedZone: (zoneId: string | null) => void;
-  updateTeam: (runId: string, team: Capture[]) => void;
+  updateTeam: (runId: string, team: Capture[], playerIndex?: number) => void;
 }
 
 function newId(): string {
@@ -69,6 +71,13 @@ export const useRunStore = create<RunStore>((set, get) => ({
       status: "in-progress",
       zones,
       team: [],
+      ...(data.isSoulLinkMode && data.soulLinkPlayers
+        ? {
+            isSoulLinkMode: true,
+            soulLinkPlayers: data.soulLinkPlayers,
+            playerTeams: {},
+          }
+        : {}),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -81,9 +90,22 @@ export const useRunStore = create<RunStore>((set, get) => ({
   updateRun: (run) => {
     // Clean dead captures from team
     const cleanedTeam = run.team.filter((capture) => !capture.isDead);
+    // Also clean dead captures from playerTeams if soul link mode
+    const cleanedPlayerTeams: Record<number, Capture[]> | undefined =
+      run.playerTeams
+        ? Object.fromEntries(
+            Object.entries(run.playerTeams).map(([idx, t]) => [
+              idx,
+              (t as Capture[]).filter((c) => !c.isDead),
+            ]),
+          )
+        : undefined;
     const updated = {
       ...run,
       team: cleanedTeam,
+      ...(cleanedPlayerTeams !== undefined
+        ? { playerTeams: cleanedPlayerTeams }
+        : {}),
       updatedAt: Date.now(),
     };
     saveRun(updated);
@@ -106,13 +128,26 @@ export const useRunStore = create<RunStore>((set, get) => ({
     const run = get().runs.find((r) => r.id === runId);
     if (!run) return;
     const zone = run.zones.find((z) => z.id === zoneId);
-    const maxCaptures = run.isShinyHuntMode ? 2 : 1;
-    if (zone && zone.captures.length >= maxCaptures) return;
-    // In shiny hunt mode, one of the two captures must be shiny
-    if (run.isShinyHuntMode && zone && zone.captures.length === 1) {
-      const existingIsShiny = zone.captures[0].isShiny;
-      if (!existingIsShiny && !captureData.isShiny) return;
+
+    if (run.isSoulLinkMode) {
+      // In soul link mode: max 1 capture per player per zone
+      const playerIdx = captureData.playerIndex ?? 0;
+      if (
+        zone &&
+        zone.captures.some((c) => (c.playerIndex ?? 0) === playerIdx)
+      ) {
+        return;
+      }
+    } else {
+      const maxCaptures = run.isShinyHuntMode ? 2 : 1;
+      if (zone && zone.captures.length >= maxCaptures) return;
+      // In shiny hunt mode, one of the two captures must be shiny
+      if (run.isShinyHuntMode && zone && zone.captures.length === 1) {
+        const existingIsShiny = zone.captures[0].isShiny;
+        if (!existingIsShiny && !captureData.isShiny) return;
+      }
     }
+
     const capture: Capture = {
       ...captureData,
       id: newId(),
@@ -133,6 +168,29 @@ export const useRunStore = create<RunStore>((set, get) => ({
       nextCustomAbilitiesByPokemonId[captureData.pokemon.id] =
         abilityPanel.slice(0, 3);
     }
+
+    // Determine zone status
+    const determineZoneStatus = (
+      currentStatus: Zone["status"],
+    ): Zone["status"] => {
+      if (captureData.isDead && captureData.failedCapture) return "lost";
+      if (!captureData.isDead) {
+        if (run.isSoulLinkMode && run.soulLinkPlayers) {
+          // In soul link: "captured" only when all players have a real capture
+          const playerCount = run.soulLinkPlayers.length;
+          const existingRealCaptures = (zone?.captures ?? []).filter(
+            (c) => !c.failedCapture,
+          ).length;
+          // +1 for this new capture (if not a fail)
+          return existingRealCaptures + 1 >= playerCount
+            ? "captured"
+            : "visited";
+        }
+        return "captured";
+      }
+      return currentStatus;
+    };
+
     const updatedRun = {
       ...run,
       customTypesByPokemonId:
@@ -145,34 +203,49 @@ export const useRunStore = create<RunStore>((set, get) => ({
           : undefined,
       zones: run.zones.map((z) => {
         if (z.id !== zoneId) return z;
-
-        // Determine zone status based on failed captures
-        let zoneStatus = z.status;
-        if (captureData.isDead && captureData.failedCapture) {
-          zoneStatus = "lost";
-        } else if (!captureData.isDead) {
-          // Successful capture
-          zoneStatus = "captured";
-        }
-
         return {
           ...z,
-          status: zoneStatus,
+          status: determineZoneStatus(z.status),
           captures: [...z.captures, capture],
           updatedAt: Date.now(),
         };
       }),
     };
-    // Only add to team if not dead and team is not full
-    if (!captureData.isDead && updatedRun.team.length < 6) {
-      updatedRun.team = [...updatedRun.team, capture];
+
+    if (run.isSoulLinkMode) {
+      // In soul link mode: add to the appropriate playerTeam
+      if (!captureData.isDead) {
+        const playerIdx = captureData.playerIndex ?? 0;
+        const currentPlayerTeam = updatedRun.playerTeams?.[playerIdx] ?? [];
+        if (currentPlayerTeam.length < 6) {
+          updatedRun.playerTeams = {
+            ...(updatedRun.playerTeams ?? {}),
+            [playerIdx]: [...currentPlayerTeam, capture],
+          };
+        }
+      }
+    } else {
+      // Classic mode: add to shared team
+      if (!captureData.isDead && updatedRun.team.length < 6) {
+        updatedRun.team = [...updatedRun.team, capture];
+      }
     }
+
     get().updateRun(updatedRun);
   },
 
   removeCapture: (runId, zoneId, captureId) => {
     const run = get().runs.find((r) => r.id === runId);
     if (!run) return;
+    const updatedPlayerTeams: Record<number, Capture[]> | undefined =
+      run.playerTeams
+        ? Object.fromEntries(
+            Object.entries(run.playerTeams).map(([idx, t]) => [
+              idx,
+              (t as Capture[]).filter((c) => c.id !== captureId),
+            ]),
+          )
+        : undefined;
     const updatedRun = {
       ...run,
       zones: run.zones.map((z) => {
@@ -186,15 +259,29 @@ export const useRunStore = create<RunStore>((set, get) => ({
         };
       }),
       team: run.team.filter((c) => c.id !== captureId),
+      ...(updatedPlayerTeams !== undefined
+        ? { playerTeams: updatedPlayerTeams }
+        : {}),
     };
     get().updateRun(updatedRun);
   },
 
   setSelectedZone: (zoneId) => set({ selectedZoneId: zoneId }),
 
-  updateTeam: (runId, team) => {
+  updateTeam: (runId, team, playerIndex) => {
     const run = get().runs.find((r) => r.id === runId);
     if (!run) return;
-    get().updateRun({ ...run, team });
+    if (run.isSoulLinkMode && playerIndex !== undefined) {
+      // Update the specific player's team
+      get().updateRun({
+        ...run,
+        playerTeams: {
+          ...(run.playerTeams ?? {}),
+          [playerIndex]: team,
+        },
+      });
+    } else {
+      get().updateRun({ ...run, team });
+    }
   },
 }));

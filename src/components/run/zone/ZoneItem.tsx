@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
-import { Capture, Zone } from "@/lib/types";
+import { Capture, Zone, Run, SOUL_LINK_PLAYER_COLORS, MISSINGNO_POKEMON } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "../modals/AddCaptureModal";
 import PokemonDetailModal from "../modals/PokemonDetailModal";
@@ -19,6 +19,7 @@ interface Props {
   runId: string;
   isSelected: boolean;
   isShinyHuntMode: boolean;
+  run?: Run;
 }
 
 function CaptureThumbnail({
@@ -26,11 +27,17 @@ function CaptureThumbnail({
   lang,
   runId,
   zoneId,
+  playerColor,
+  playerLabel,
+  isPlaceholder,
 }: {
   capture: Capture;
   lang: "fr" | "en";
   runId: string;
   zoneId: string;
+  playerColor?: string;
+  playerLabel?: string;
+  isPlaceholder?: boolean;
 }) {
   const displayName = useCaptureDisplayName(capture, lang);
   const displayLabel = useCaptureDisplayLabel(capture, lang);
@@ -54,33 +61,53 @@ function CaptureThumbnail({
           component="button"
           onClick={(e) => {
             e.stopPropagation();
-            setShowPokemonDetail(true);
+            if (!isPlaceholder) setShowPokemonDetail(true);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               e.stopPropagation();
-              setShowPokemonDetail(true);
+              if (!isPlaceholder) setShowPokemonDetail(true);
             }
           }}
           sx={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: 0.5,
-            background: "rgba(51, 65, 85, 0.4)",
-            border: "1px solid rgba(71, 85, 99, 0.3)",
+            gap: 0.25,
+            background: isPlaceholder
+              ? "rgba(148, 163, 184, 0.15)"
+              : "rgba(51, 65, 85, 0.4)",
+            border: playerColor
+              ? `2px solid ${playerColor}`
+              : "1px solid rgba(71, 85, 99, 0.3)",
             borderRadius: "0.5rem",
             px: 1,
             py: 0.25,
-            cursor: "pointer",
+            cursor: isPlaceholder ? "default" : "pointer",
             transition: "all 150ms ease",
-            "&:hover": {
-              background: "rgba(51, 65, 85, 0.55)",
-              borderColor: "rgba(71, 85, 99, 0.45)",
-            },
+            opacity: isPlaceholder ? 0.55 : 1,
+            "&:hover": isPlaceholder
+              ? {}
+              : {
+                  background: "rgba(51, 65, 85, 0.55)",
+                  borderColor: playerColor ?? "rgba(71, 85, 99, 0.45)",
+                },
           }}
           aria-label={displayName}
         >
+          {playerLabel && (
+            <Typography
+              sx={{
+                fontSize: "0.55rem",
+                fontWeight: 700,
+                color: playerColor ?? "#64748b",
+                lineHeight: 1,
+              }}
+            >
+              {playerLabel}
+            </Typography>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={
@@ -99,52 +126,61 @@ function CaptureThumbnail({
               }
             }}
             style={{
-              width: "46px",
-              height: "46px",
+              width: "40px",
+              height: "40px",
               objectFit: "contain",
             }}
           />
-          <Typography sx={{ fontSize: "0.75rem", color: "#1e293b" }}>
-            {displayLabel}
-          </Typography>
-          {capture.isShiny && (
-            <Typography sx={{ fontSize: "0.75rem" }}>✨</Typography>
+          {!isPlaceholder && (
+            <Typography sx={{ fontSize: "0.65rem", color: "#1e293b" }}>
+              {displayLabel}
+            </Typography>
+          )}
+          {!isPlaceholder && capture.isShiny && (
+            <Typography sx={{ fontSize: "0.65rem" }}>✨</Typography>
+          )}
+          {isPlaceholder && (
+            <Typography sx={{ fontSize: "0.65rem", color: "#94a3b8" }}>
+              ???
+            </Typography>
           )}
         </Box>
 
-        {/* Croix de suppression */}
-        <Box
-          component="button"
-          onClick={handleDelete}
-          sx={{
-            position: "absolute",
-            top: "-6px",
-            right: "-6px",
-            width: "18px",
-            height: "18px",
-            borderRadius: "999px",
-            background: "#ef4444",
-            border: "1px solid #dc2626",
-            color: "#fff",
-            fontSize: "0.65rem",
-            fontWeight: 700,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            transition: "all 150ms",
-            "&:hover": {
-              background: "#dc2626",
-              transform: "scale(1.2)",
-            },
-          }}
-          aria-label={lang === "fr" ? "Supprimer" : "Delete"}
-        >
-          ✕
-        </Box>
+        {/* Delete button — not shown for placeholders */}
+        {!isPlaceholder && (
+          <Box
+            component="button"
+            onClick={handleDelete}
+            sx={{
+              position: "absolute",
+              top: "-6px",
+              right: "-6px",
+              width: "18px",
+              height: "18px",
+              borderRadius: "999px",
+              background: "#ef4444",
+              border: "1px solid #dc2626",
+              color: "#fff",
+              fontSize: "0.65rem",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "all 150ms",
+              "&:hover": {
+                background: "#dc2626",
+                transform: "scale(1.2)",
+              },
+            }}
+            aria-label={lang === "fr" ? "Supprimer" : "Delete"}
+          >
+            ✕
+          </Box>
+        )}
       </Box>
 
-      {showPokemonDetail && (
+      {!isPlaceholder && showPokemonDetail && (
         <PokemonDetailModal
           key={capture.id}
           pokemonCaptured={capture}
@@ -190,15 +226,24 @@ export default function ZoneItem({
   runId,
   isSelected,
   isShinyHuntMode,
+  run,
 }: Props) {
   const { setSelectedZone } = useRunStore();
   const [showCapture, setShowCapture] = useState(false);
+  const [defaultPlayerIndex, setDefaultPlayerIndex] = useState<number | undefined>(undefined);
   const ref = useRef<HTMLDivElement>(null);
   const { lang } = useLanguage();
   const tr = translations;
-  const maxCaptures = isShinyHuntMode ? 2 : 1;
-  const capturesFull =
-    zone.captures.length >= maxCaptures;
+
+  const isSoulLink = Boolean(run?.isSoulLinkMode && run?.soulLinkPlayers?.length);
+  const players = run?.soulLinkPlayers ?? [];
+
+  // Determine if captures are full
+  const capturesFull = isSoulLink
+    ? players.every((player) =>
+        zone.captures.some((c) => (c.playerIndex ?? 0) === player.playerIndex),
+      )
+    : zone.captures.length >= (isShinyHuntMode ? 2 : 1);
 
   useEffect(() => {
     if (isSelected && ref.current) {
@@ -206,8 +251,21 @@ export default function ZoneItem({
     }
   }, [isSelected]);
 
-  const visualStatus = zone.captures.length >= 2 ? "multiple" : zone.status;
+  const visualStatus = zone.captures.length >= 2 && !isSoulLink ? "multiple" : zone.status;
   const config = statusConfig[visualStatus] ?? statusConfig["not-visited"];
+
+  // Find the first player without a capture in this zone (for pre-filling)
+  const nextPlayerWithoutCapture = isSoulLink
+    ? players.find(
+        (player) =>
+          !zone.captures.some((c) => (c.playerIndex ?? 0) === player.playerIndex),
+      )
+    : undefined;
+
+  function openCapture(playerIndex?: number) {
+    setDefaultPlayerIndex(playerIndex);
+    setShowCapture(true);
+  }
 
   return (
     <>
@@ -275,13 +333,13 @@ export default function ZoneItem({
               flexShrink: 0,
             }}
           >
-            {/* Add capture */}
+            {/* Add capture button(s) */}
             {!capturesFull && (
               <Box
                 component="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowCapture(true);
+                  openCapture(nextPlayerWithoutCapture?.playerIndex);
                 }}
                 sx={{
                   fontSize: "0.75rem",
@@ -312,18 +370,82 @@ export default function ZoneItem({
         </Box>
 
         {/* Capture thumbnails */}
-        {zone.captures.length > 0 && (
-          <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
-            {zone.captures.map((c) => (
-              <CaptureThumbnail
-                key={c.id}
-                capture={c}
-                lang={lang}
-                runId={runId}
-                zoneId={zone.id}
-              />
-            ))}
+        {isSoulLink ? (
+          // Soul Link: one slot per player (2x2 grid)
+          <Box
+            sx={{
+              mt: 1,
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 0.75,
+            }}
+          >
+            {players.map((player) => {
+              const playerCapture = zone.captures.find(
+                (c) => (c.playerIndex ?? 0) === player.playerIndex,
+              );
+              const color = SOUL_LINK_PLAYER_COLORS[player.playerIndex];
+              const label = `P${player.playerIndex + 1}`;
+              if (playerCapture) {
+                return (
+                  <CaptureThumbnail
+                    key={player.id}
+                    capture={playerCapture}
+                    lang={lang}
+                    runId={runId}
+                    zoneId={zone.id}
+                    playerColor={color}
+                    playerLabel={label}
+                  />
+                );
+              }
+              // Placeholder (MissingNo)
+              const placeholder: Capture = {
+                id: `placeholder-${player.id}`,
+                pokemon: MISSINGNO_POKEMON,
+                gender: "unknown",
+                isShiny: false,
+                isDead: false,
+                createdAt: 0,
+                playerIndex: player.playerIndex,
+              };
+              return (
+                <Box
+                  key={player.id}
+                  component="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openCapture(player.playerIndex);
+                  }}
+                  sx={{ background: "none", border: "none", p: 0, cursor: "pointer" }}
+                >
+                  <CaptureThumbnail
+                    capture={placeholder}
+                    lang={lang}
+                    runId={runId}
+                    zoneId={zone.id}
+                    playerColor={color}
+                    playerLabel={label}
+                    isPlaceholder
+                  />
+                </Box>
+              );
+            })}
           </Box>
+        ) : (
+          zone.captures.length > 0 && (
+            <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
+              {zone.captures.map((c) => (
+                <CaptureThumbnail
+                  key={c.id}
+                  capture={c}
+                  lang={lang}
+                  runId={runId}
+                  zoneId={zone.id}
+                />
+              ))}
+            </Box>
+          )
         )}
       </Box>
 
@@ -334,10 +456,12 @@ export default function ZoneItem({
           zoneName={zone.zoneName}
           zoneNames={zone.zoneNames}
           forceShiny={
+            !isSoulLink &&
             isShinyHuntMode &&
             zone.captures.length === 1 &&
             !zone.captures[0].isShiny
           }
+          defaultPlayerIndex={defaultPlayerIndex}
           onClose={() => setShowCapture(false)}
         />
       )}
