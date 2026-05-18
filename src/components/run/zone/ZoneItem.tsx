@@ -2,7 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
-import { Capture, Zone, Run, SOUL_LINK_PLAYER_COLORS, MISSINGNO_POKEMON } from "@/lib/types";
+import {
+  Capture,
+  Zone,
+  Run,
+  SOUL_LINK_PLAYER_COLORS,
+  MISSINGNO_POKEMON,
+} from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import AddCaptureModal from "../modals/AddCaptureModal";
 import PokemonDetailModal from "../modals/PokemonDetailModal";
@@ -44,6 +50,11 @@ function CaptureThumbnail({
   const { removeCapture } = useRunStore();
   const [showPokemonDetail, setShowPokemonDetail] = useState(false);
 
+  // Determine if this individual capture is lost
+  const captureStatus =
+    capture.isDead || capture.failedCapture ? "lost" : "captured";
+  const captureStyle = statusConfig[captureStatus] ?? statusConfig["captured"];
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeCapture(runId, zoneId, capture.id);
@@ -74,24 +85,28 @@ function CaptureThumbnail({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: 0.25,
+            justifyContent: "center",
+            gap: 0.2,
+            width: "88px",
+            height: "88px",
             background: isPlaceholder
               ? "rgba(148, 163, 184, 0.15)"
-              : "rgba(51, 65, 85, 0.4)",
+              : captureStyle.bgColor || "rgba(51, 65, 85, 0.4)",
             border: playerColor
               ? `2px solid ${playerColor}`
-              : "1px solid rgba(71, 85, 99, 0.3)",
+              : `1px solid ${captureStyle.borderColor ?? "rgba(71, 85, 99, 0.3)"}`,
             borderRadius: "0.5rem",
-            px: 1,
-            py: 0.25,
             cursor: isPlaceholder ? "default" : "pointer",
             transition: "all 150ms ease",
             opacity: isPlaceholder ? 0.55 : 1,
             "&:hover": isPlaceholder
               ? {}
               : {
-                  background: "rgba(51, 65, 85, 0.55)",
-                  borderColor: playerColor ?? "rgba(71, 85, 99, 0.45)",
+                  background: captureStyle.bgColor || "rgba(51, 65, 85, 0.55)",
+                  borderColor:
+                    playerColor ??
+                    captureStyle.borderColor ??
+                    "rgba(71, 85, 99, 0.45)",
                 },
           }}
           aria-label={displayName}
@@ -99,7 +114,7 @@ function CaptureThumbnail({
           {playerLabel && (
             <Typography
               sx={{
-                fontSize: "0.55rem",
+                fontSize: "0.5rem",
                 fontWeight: 700,
                 color: playerColor ?? "#64748b",
                 lineHeight: 1,
@@ -126,24 +141,48 @@ function CaptureThumbnail({
               }
             }}
             style={{
-              width: "40px",
-              height: "40px",
+              width: "44px",
+              height: "44px",
               objectFit: "contain",
             }}
           />
-          {!isPlaceholder && (
-            <Typography sx={{ fontSize: "0.65rem", color: "#1e293b" }}>
-              {displayLabel}
-            </Typography>
-          )}
-          {!isPlaceholder && capture.isShiny && (
-            <Typography sx={{ fontSize: "0.65rem" }}>✨</Typography>
-          )}
-          {isPlaceholder && (
-            <Typography sx={{ fontSize: "0.65rem", color: "#94a3b8" }}>
-              ???
-            </Typography>
-          )}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 0.1,
+              minHeight: "0.65rem",
+            }}
+          >
+            {!isPlaceholder && capture.isShiny && (
+              <Typography sx={{ fontSize: "0.6rem", lineHeight: 1 }}>
+                ✨
+              </Typography>
+            )}
+            {!isPlaceholder && (
+              <Typography
+                sx={{
+                  fontSize: "0.6rem",
+                  color: "#1e293b",
+                  lineHeight: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  maxWidth: "60px",
+                }}
+              >
+                {displayLabel}
+              </Typography>
+            )}
+            {isPlaceholder && (
+              <Typography
+                sx={{ fontSize: "0.6rem", color: "#94a3b8", lineHeight: 1 }}
+              >
+                ???
+              </Typography>
+            )}
+          </Box>
         </Box>
 
         {/* Delete button — not shown for placeholders */}
@@ -200,20 +239,15 @@ const statusConfig: Record<
     bgColor: "transparent",
     dotColor: "#475569",
   },
-  visited: {
-    bgColor: "rgba(59, 130, 246, 0.05)",
-    dotColor: "#60a5fa",
-    borderColor: "rgba(59, 130, 246, 0.4)",
-  },
   captured: {
     bgColor: "rgba(16, 185, 129, 0.05)",
     dotColor: "#10b981",
     borderColor: "rgba(16, 185, 129, 0.4)",
   },
   lost: {
-    bgColor: "rgba(239, 68, 68, 0.1)",
-    dotColor: "#dc2626",
-    borderColor: "rgba(239, 68, 68, 0.4)",
+    bgColor: "rgba(127, 29, 29, 0.1)",
+    dotColor: "#991b1b",
+    borderColor: "rgba(127, 29, 29, 0.4)",
   },
   multiple: {
     bgColor: "rgba(249, 115, 22, 0.05)",
@@ -230,12 +264,16 @@ export default function ZoneItem({
 }: Props) {
   const { setSelectedZone } = useRunStore();
   const [showCapture, setShowCapture] = useState(false);
-  const [defaultPlayerIndex, setDefaultPlayerIndex] = useState<number | undefined>(undefined);
+  const [defaultPlayerIndex, setDefaultPlayerIndex] = useState<
+    number | undefined
+  >(undefined);
   const ref = useRef<HTMLDivElement>(null);
   const { lang } = useLanguage();
   const tr = translations;
 
-  const isSoulLink = Boolean(run?.isSoulLinkMode && run?.soulLinkPlayers?.length);
+  const isSoulLink = Boolean(
+    run?.isSoulLinkMode && run?.soulLinkPlayers?.length,
+  );
   const players = run?.soulLinkPlayers ?? [];
 
   // Determine if captures are full
@@ -251,14 +289,17 @@ export default function ZoneItem({
     }
   }, [isSelected]);
 
-  const visualStatus = zone.captures.length >= 2 && !isSoulLink ? "multiple" : zone.status;
+  const visualStatus =
+    zone.captures.length >= 2 && !isSoulLink ? "multiple" : zone.status;
   const config = statusConfig[visualStatus] ?? statusConfig["not-visited"];
 
   // Find the first player without a capture in this zone (for pre-filling)
   const nextPlayerWithoutCapture = isSoulLink
     ? players.find(
         (player) =>
-          !zone.captures.some((c) => (c.playerIndex ?? 0) === player.playerIndex),
+          !zone.captures.some(
+            (c) => (c.playerIndex ?? 0) === player.playerIndex,
+          ),
       )
     : undefined;
 
@@ -417,7 +458,12 @@ export default function ZoneItem({
                     e.stopPropagation();
                     openCapture(player.playerIndex);
                   }}
-                  sx={{ background: "none", border: "none", p: 0, cursor: "pointer" }}
+                  sx={{
+                    background: "none",
+                    border: "none",
+                    p: 0,
+                    cursor: "pointer",
+                  }}
                 >
                   <CaptureThumbnail
                     capture={placeholder}

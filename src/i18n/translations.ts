@@ -349,7 +349,7 @@ const translations = {
     },
     filterAll: { fr: "Toutes", en: "All" },
     filterNotVisited: { fr: "Non visitées", en: "Not Visited" },
-    filterVisited: { fr: "Visitées", en: "Visited" },
+    filterLost: { fr: "Loupées", en: "Lost" },
     filterCaptured: { fr: "Capturées", en: "Captured" },
     noZoneFound: { fr: "Aucune zone trouvée", en: "No zone found" },
     addTitle: { fr: "Nouvelle zone", en: "New zone" },

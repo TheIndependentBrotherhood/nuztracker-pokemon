@@ -1,5 +1,11 @@
 import { create } from "zustand";
-import { Run, Zone, Capture, RandomizerOptions, SoulLinkPlayer } from "@/lib/types";
+import {
+  Run,
+  Zone,
+  Capture,
+  RandomizerOptions,
+  SoulLinkPlayer,
+} from "@/lib/types";
 import { getRuns, saveRun, deleteRun as deleteRunStorage } from "@/lib/storage";
 import { getZonesForRegion } from "@/lib/zones";
 
@@ -40,13 +46,29 @@ function newId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 }
 
+function normalizeRuns(runs: Run[]): Run[] {
+  const validStatuses: Zone["status"][] = ["not-visited", "captured", "lost"];
+
+  return runs.map((run) => ({
+    ...run,
+    zones: run.zones.map((zone) => ({
+      ...zone,
+      // Normalize unknown statuses to "not-visited"
+      status: validStatuses.includes(zone.status as Zone["status"])
+        ? (zone.status as Zone["status"])
+        : ("not-visited" as const),
+    })),
+  }));
+}
+
 export const useRunStore = create<RunStore>((set, get) => ({
   runs: [],
   currentRun: null,
   selectedZoneId: null,
 
   loadRuns: () => {
-    const runs = getRuns();
+    let runs = getRuns();
+    runs = normalizeRuns(runs);
     set({ runs });
   },
 
@@ -175,17 +197,6 @@ export const useRunStore = create<RunStore>((set, get) => ({
     ): Zone["status"] => {
       if (captureData.isDead && captureData.failedCapture) return "lost";
       if (!captureData.isDead) {
-        if (run.isSoulLinkMode && run.soulLinkPlayers) {
-          // In soul link: "captured" only when all players have a real capture
-          const playerCount = run.soulLinkPlayers.length;
-          const existingRealCaptures = (zone?.captures ?? []).filter(
-            (c) => !c.failedCapture,
-          ).length;
-          // +1 for this new capture (if not a fail)
-          return existingRealCaptures + 1 >= playerCount
-            ? "captured"
-            : "visited";
-        }
         return "captured";
       }
       return currentStatus;
@@ -254,7 +265,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
         return {
           ...z,
           captures: remaining,
-          status: remaining.length === 0 ? ("visited" as const) : z.status,
+          status: remaining.length === 0 ? ("not-visited" as const) : z.status,
           updatedAt: Date.now(),
         };
       }),

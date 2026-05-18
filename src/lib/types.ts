@@ -99,7 +99,7 @@ export interface Zone {
     en?: string;
   };
   regionArea: string;
-  status: "not-visited" | "visited" | "captured" | "lost";
+  status: "not-visited" | "captured" | "lost";
   captures: Capture[];
   updatedAt: number;
 }
@@ -136,7 +136,7 @@ export interface Run {
   updatedAt: number;
 }
 
-export type ZoneStatus = "not-visited" | "visited" | "captured" | "lost";
+export type ZoneStatus = "not-visited" | "captured" | "lost";
 
 export interface PokemonStat {
   base_stat: number;

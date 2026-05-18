@@ -21,7 +21,7 @@ interface Props {
   run: Run;
 }
 
-type FilterKey = "all" | "not-visited" | "visited" | "captured";
+type FilterKey = "all" | "not-visited" | "lost" | "captured";
 
 export default function ZoneList({ run }: Props) {
   const { selectedZoneId, updateRun } = useRunStore();
@@ -95,7 +95,7 @@ export default function ZoneList({ run }: Props) {
   const FILTERS: { key: FilterKey; label: string }[] = [
     { key: "all", label: t(tr.zoneList.filterAll, lang) },
     { key: "not-visited", label: t(tr.zoneList.filterNotVisited, lang) },
-    { key: "visited", label: t(tr.zoneList.filterVisited, lang) },
+    { key: "lost", label: t(tr.zoneList.filterLost, lang) },
     { key: "captured", label: t(tr.zoneList.filterCaptured, lang) },
   ];
 
