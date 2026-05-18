@@ -165,17 +165,26 @@ export default function StatsBar({
 
   const perPlayerMissed = isSoulLink
     ? soulLinkPlayers.map((player) => {
-        const playerCaptured = run.zones.filter((z: Zone) =>
-          z.captures.some(
-            (c: Capture) =>
-              (c.playerIndex ?? 0) === player.playerIndex && !c.isDead,
-          ),
-        ).length;
-        const playerFinished = run.zones.filter(
-          (z: Zone) =>
-            z.status === "lost" || z.status === "captured",
-        ).length;
-        return { player, missed: Math.max(0, playerFinished - playerCaptured) };
+        const missed = run.zones.filter((z: Zone) => {
+          const playerCaptures = z.captures.filter(
+            (c: Capture) => (c.playerIndex ?? 0) === player.playerIndex,
+          );
+
+          if (playerCaptures.length === 0) {
+            return false;
+          }
+
+          const hasSuccessfulCapture = playerCaptures.some(
+            (c: Capture) => !c.isDead,
+          );
+          const hasFailedCapture = playerCaptures.some(
+            (c: Capture) => c.isDead,
+          );
+
+          return !hasSuccessfulCapture && hasFailedCapture;
+        }).length;
+
+        return { player, missed };
       })
     : [];
 
