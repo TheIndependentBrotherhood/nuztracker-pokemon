@@ -22,7 +22,7 @@ import {
   searchPokemonByName,
   type CaptureSpriteOption,
 } from "@/lib/pokemon-data";
-import { Capture, PokemonData } from "@/lib/types";
+import { Capture, PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { TYPES, typeColors, getTypeTranslation } from "@/lib/type-chart";
 import { isRandomTypesMode } from "@/lib/capture-types";
 import { useLanguage } from "@/context/LanguageContext";
@@ -382,7 +382,8 @@ export default function AddCaptureModal({
             </Typography>
             <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
               {soulLinkPlayers.map((player) => {
-                const color = ({ 0: "#3b82f6", 1: "#ef4444", 2: "#f97316", 3: "#22c55e" } as Record<number, string>)[player.playerIndex] ?? "#64748b";
+                const color =
+                  SOUL_LINK_PLAYER_COLORS[player.playerIndex] ?? "#64748b";
                 const isActive = selectedPlayerIndex === player.playerIndex;
                 return (
                   <Box
