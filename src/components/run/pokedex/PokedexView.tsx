@@ -13,7 +13,7 @@ import {
 import { Capture, PokemonData } from "@/lib/types";
 import { typeColors, getTypeTranslation } from "@/lib/type-chart";
 import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
-import PokemonDetailModal from "@/components/run/modals/PokemonDetailModal";
+import AdvancedComparisonModal from "@/components/run/modals/AdvancedComparisonModal";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useRunStore } from "@/store/runStore";
@@ -45,6 +45,25 @@ export default function PokedexView({ runId }: Props) {
   const [selectedCapture, setSelectedCapture] = useState<Capture | null>(null);
   const run = runId ? runs.find((candidate) => candidate.id === runId) : null;
   const randomTypesMode = isRandomTypesMode(run);
+
+  // Create synthetic pokedex captures for advanced mode comparison
+  const allPokedexCaptures = useMemo<Capture[]>(() => {
+    return pokedexEntries.map((entry, idx) => ({
+      id: `pokedex-${entry.id}`,
+      pokemon: {
+        id: entry.id,
+        technicalName: entry.technicalName,
+        names: entry.names,
+        sprites: entry.sprites,
+      } as any,
+      gender: "unknown",
+      level: 0,
+      isShiny: false,
+      nickname: undefined,
+      ability: undefined,
+      createdAt: Date.now(),
+    }));
+  }, [pokedexEntries]);
 
   useEffect(() => {
     let cancelled = false;
@@ -549,10 +568,11 @@ export default function PokedexView({ runId }: Props) {
       </Box>
 
       {selectedCapture && (
-        <PokemonDetailModal
+        <AdvancedComparisonModal
           key={selectedCapture.id}
           pokemonCaptured={selectedCapture}
           runId={runId}
+          allCaptures={allPokedexCaptures}
           onClose={() => setSelectedCapture(null)}
         />
       )}

@@ -37,6 +37,9 @@ interface Props {
   pokemonCaptured: Capture;
   runId?: string;
   onClose: () => void;
+  advancedModeButtonEnabled?: boolean;
+  onEnterAdvancedMode?: () => void;
+  hiddenInAdvancedMode?: boolean;
 }
 
 function StatBar({
@@ -114,6 +117,9 @@ export default function PokemonDetailModal({
   pokemonCaptured,
   runId,
   onClose,
+  advancedModeButtonEnabled = false,
+  onEnterAdvancedMode,
+  hiddenInAdvancedMode = false,
 }: Props) {
   const [data, setData] = useState<PokemonData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -185,8 +191,8 @@ export default function PokemonDetailModal({
       .finally(() => setLoading(false));
   }, [pokemonCaptured.pokemon.id]);
 
+  // Load Pokédex observations and notes from the run on mount
   useEffect(() => {
-    // Load Pokédex observations and notes from the run
     if (isPokedexCapture && runToUpdate) {
       const savedObservations =
         runToUpdate.pokedexObservationsByPokemonId?.[
@@ -194,7 +200,6 @@ export default function PokemonDetailModal({
         ] ?? [];
       const savedNotes =
         runToUpdate.pokedexNotesByPokemonId?.[pokemonCaptured.pokemon.id] ?? "";
-
       setPokedexObservations(savedObservations);
       setPokedexNotes(savedNotes);
     }
@@ -491,46 +496,90 @@ export default function PokemonDetailModal({
     setPokedexNotes(nextNotes);
   }
 
+  // Determine wrapper and box styles based on mode
+  const isAdvancedMode = hiddenInAdvancedMode === true;
+
   return (
     <Box
-      sx={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(3, 7, 18, 0.8)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 50,
-        p: 2,
-        animation: "fadeIn 300ms ease",
-        "@keyframes fadeIn": {
-          "0%": { opacity: 0 },
-          "100%": { opacity: 1 },
-        },
-      }}
-      onClick={onClose}
+      sx={
+        isAdvancedMode
+          ? { position: "relative" }
+          : {
+              position: "fixed",
+              inset: 0,
+              background: "rgba(3, 7, 18, 0.8)",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 50,
+              p: 2,
+              animation: "fadeIn 300ms ease",
+              "@keyframes fadeIn": {
+                "0%": { opacity: 0 },
+                "100%": { opacity: 1 },
+              },
+            }
+      }
+      onClick={isAdvancedMode ? undefined : onClose}
     >
       <Box
-        sx={{
-          background: "#FEF3E2",
-          borderRadius: "1.5rem",
-          p: 3,
-          width: "100%",
-          maxWidth: "448px",
-          border: "3px solid #000",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-          minWidth: "40vw",
-          maxHeight: "80vh",
-          overflowY: "auto",
-          animation: "slideUp 300ms ease",
-          "@keyframes slideUp": {
-            "0%": { opacity: 0, transform: "translateY(20px)" },
-            "100%": { opacity: 1, transform: "translateY(0)" },
-          },
+        sx={
+          isAdvancedMode
+            ? { position: "relative" }
+            : {
+                background: "#FEF3E2",
+                borderRadius: "1.5rem",
+                p: 3,
+                width: "100%",
+                maxWidth: "448px",
+                border: "3px solid #000",
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+                minWidth: "40vw",
+                maxHeight: "80vh",
+                overflowY: "auto",
+                animation: "slideUp 300ms ease",
+                position: "relative",
+                "@keyframes slideUp": {
+                  "0%": { opacity: 0, transform: "translateY(20px)" },
+                  "100%": { opacity: 1, transform: "translateY(0)" },
+                },
+              }
+        }
+        onClick={(e) => {
+          if (!isAdvancedMode) e.stopPropagation();
         }}
-        onClick={(e) => e.stopPropagation()}
       >
+        {/* Advanced mode toggle button */}
+        {advancedModeButtonEnabled &&
+          onEnterAdvancedMode &&
+          !hiddenInAdvancedMode && (
+            <Tooltip title={t(tr.pokemonDetail.enterAdvancedMode, lang)}>
+              <IconButton
+                onClick={onEnterAdvancedMode}
+                sx={{
+                  position: "absolute",
+                  top: "12px",
+                  right: "12px",
+                  width: "32px",
+                  height: "32px",
+                  border: "2px solid #000",
+                  background: "#fff",
+                  zIndex: 10,
+                  fontSize: "1rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  "&:hover": {
+                    background: "#f0f0f0",
+                  },
+                }}
+              >
+                ⇄
+              </IconButton>
+            </Tooltip>
+          )}
+
         {loading ? (
           <Box sx={{ textAlign: "center", py: 6, color: "#64748b" }}>
             {t(tr.pokemonDetail.loading, lang)}
@@ -2036,38 +2085,40 @@ export default function PokemonDetailModal({
           </Box>
         )}
 
-        <Button
-          onClick={onClose}
-          disabled={
-            !isPokedexCapture &&
-            ((isRandomTypeMode && !firstType) || !activeAbility)
-          }
-          sx={{
-            mt: 2.5,
-            width: "100%",
-            background: "#e5e5e5",
-            color: "#000",
-            py: 1.5,
-            borderRadius: "0.5rem",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            textTransform: "none",
-            transition: "all 200ms",
-            border: "2px solid #000",
-            "&:hover": {
-              background: "#ccc",
+        {!isAdvancedMode && (
+          <Button
+            onClick={onClose}
+            disabled={
+              !isPokedexCapture &&
+              ((isRandomTypeMode && !firstType) || !activeAbility)
+            }
+            sx={{
+              mt: 2.5,
+              width: "100%",
+              background: "#e5e5e5",
               color: "#000",
-            },
-            "&:disabled": {
-              background: "#ccc",
-              color: "#666",
-              cursor: "not-allowed",
-              opacity: 0.6,
-            },
-          }}
-        >
-          {t(tr.pokemonDetail.close, lang)}
-        </Button>
+              py: 1.5,
+              borderRadius: "0.5rem",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              textTransform: "none",
+              transition: "all 200ms",
+              border: "2px solid #000",
+              "&:hover": {
+                background: "#ccc",
+                color: "#000",
+              },
+              "&:disabled": {
+                background: "#ccc",
+                color: "#666",
+                cursor: "not-allowed",
+                opacity: 0.6,
+              },
+            }}
+          >
+            {t(tr.pokemonDetail.close, lang)}
+          </Button>
+        )}
 
         {/* Evolution History Dialog */}
         <EvolutionHistoryDialog

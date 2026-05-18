@@ -304,6 +304,30 @@ const translations = {
       fr: "Choisis un talent pour ce Pokémon.",
       en: "Choose an ability for this Pokémon.",
     },
+    enterAdvancedMode: {
+      fr: "Mode comparaison avancé",
+      en: "Advanced comparison mode",
+    },
+    exitAdvancedMode: {
+      fr: "Quitter",
+      en: "Exit",
+    },
+    advancedComparison: {
+      fr: "Comparaison avancée de deux Pokémon",
+      en: "Advanced comparison of two Pokémon",
+    },
+    selectSecondPokemon: {
+      fr: "Sélectionner un second Pokémon",
+      en: "Select a second Pokémon",
+    },
+    searchPokemon: {
+      fr: "Rechercher par nom ou numéro...",
+      en: "Search by name or number...",
+    },
+    changeSecondPokemon: {
+      fr: "Changer",
+      en: "Change",
+    },
   },
 
   // ── Zone List ──────────────────────────────────────────────────────────────
