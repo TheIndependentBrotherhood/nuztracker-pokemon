@@ -21,6 +21,8 @@ import {
   useCaptureDisplayLabel,
   useCaptureDisplayName,
 } from "@/lib/pokemon-display";
+import { BASE_PATH } from "@/lib/base-path";
+
 
 interface Props {
   run: Run;
@@ -112,8 +114,30 @@ export default function StatsBar({
   const [exportHeight, setExportHeight] = useState(720);
   const [dialogShowTypes, setDialogShowTypes] = useState(exportShowTypes);
   const [dialogTightTypes, setDialogTightTypes] = useState(exportTightTypes);
+  const [copyFeedback, setCopyFeedback] = useState("");
   const { lang } = useLanguage();
   const tr = translations;
+
+  /** Builds a full permanent share URL for a cloud-synced run. */
+  function buildPermanentUrl(type: "team" | "rip", options?: { showTypes?: boolean; tightTypes?: boolean }): string {
+    const params = new URLSearchParams({ runId: run.id, type });
+    if (type === "team") {
+      if (typeof options?.showTypes === "boolean") params.set("showTypes", String(options.showTypes));
+      if (typeof options?.tightTypes === "boolean") params.set("tightTypes", String(options.tightTypes));
+    }
+    return `${window.location.origin}${BASE_PATH}/share/?${params.toString()}`;
+  }
+
+  async function copyToClipboard(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyFeedback(t(tr.cloudSync.linkCopied, lang));
+    } catch {
+      setCopyFeedback(t(tr.cloudSync.linkCopyFailed, lang));
+    }
+    setTimeout(() => setCopyFeedback(""), 2500);
+  }
+
 
   const total = run.zones.length;
   // Count zones that are lost or captured (finished zones)
@@ -316,15 +340,25 @@ export default function StatsBar({
     });
 
     try {
-      const encoded = await encodeTeam(run.team);
-      const shareUrl = buildShareUrl(encoded, {
-        showTypes: dialogShowTypes,
-        tightTypes: dialogTightTypes,
-      });
-      const link = document.createElement("a");
-      link.href = shareUrl;
-      link.target = "_blank";
-      link.click();
+      if (run.cloudSyncEnabled) {
+        // Cloud sync enabled → copy permanent link to clipboard
+        const permanentUrl = buildPermanentUrl("team", {
+          showTypes: dialogShowTypes,
+          tightTypes: dialogTightTypes,
+        });
+        await copyToClipboard(permanentUrl);
+      } else {
+        // Fallback → open base64 snapshot URL in new tab
+        const encoded = await encodeTeam(run.team);
+        const shareUrl = buildShareUrl(encoded, {
+          showTypes: dialogShowTypes,
+          tightTypes: dialogTightTypes,
+        });
+        const link = document.createElement("a");
+        link.href = shareUrl;
+        link.target = "_blank";
+        link.click();
+      }
     } catch (error) {
       console.error("URL generation error:", error);
       setExportError(t(tr.statsBar.failedToGenerateShareUrl, lang));
@@ -417,16 +451,23 @@ export default function StatsBar({
 
   async function handleOpenGenerateRipUrl() {
     try {
-      const encoded = await encodeTeam(lastThreeDeadPokemon);
-      const shareUrl = buildShareUrl(encoded, {
-        showTypes: false,
-        tightTypes: false,
-        isRip: true,
-      });
-      const link = document.createElement("a");
-      link.href = shareUrl;
-      link.target = "_blank";
-      link.click();
+      if (run.cloudSyncEnabled) {
+        // Cloud sync enabled → copy permanent RIP link to clipboard
+        const permanentUrl = buildPermanentUrl("rip");
+        await copyToClipboard(permanentUrl);
+      } else {
+        // Fallback → open base64 snapshot URL in new tab
+        const encoded = await encodeTeam(lastThreeDeadPokemon);
+        const shareUrl = buildShareUrl(encoded, {
+          showTypes: false,
+          tightTypes: false,
+          isRip: true,
+        });
+        const link = document.createElement("a");
+        link.href = shareUrl;
+        link.target = "_blank";
+        link.click();
+      }
     } catch (error) {
       console.error("RIP URL generation error:", error);
       setExportError(t(tr.statsBar.failedToGenerateShareUrl, lang));
@@ -442,7 +483,9 @@ export default function StatsBar({
     },
     {
       icon: "🔗",
-      title: t(tr.statsBar.generateShareableUrl, lang),
+      title: run.cloudSyncEnabled
+        ? t(tr.cloudSync.permanentTeamLink, lang)
+        : t(tr.statsBar.generateShareableUrl, lang),
       onClick: handleOpenGenerateUrl,
       disabled: run.team.length === 0,
     },
@@ -457,7 +500,9 @@ export default function StatsBar({
     },
     {
       icon: "🔗",
-      title: t(tr.statsBar.generateRipShareUrl, lang),
+      title: run.cloudSyncEnabled
+        ? t(tr.cloudSync.permanentRipLink, lang)
+        : t(tr.statsBar.generateRipShareUrl, lang),
       onClick: handleOpenGenerateRipUrl,
       disabled: deadCount === 0,
     },
@@ -1025,6 +1070,31 @@ export default function StatsBar({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Copy-to-clipboard feedback toast */}
+      {copyFeedback && (
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            background: "#000",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: "0.875rem",
+            px: 3,
+            py: 1.5,
+            borderRadius: "2rem",
+            border: "2px solid #fff",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+            pointerEvents: "none",
+          }}
+        >
+          {copyFeedback}
+        </Box>
+      )}
     </Box>
   );
 }

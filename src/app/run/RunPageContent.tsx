@@ -4,7 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
-import { getRun } from "@/lib/storage";
+import { getRun, saveRun } from "@/lib/storage";
 import StatsBar from "@/components/run/StatsBar";
 import ZoneList from "@/components/run/zone/ZoneList";
 import TeamView from "@/components/run/team/TeamView";
@@ -13,10 +13,14 @@ import TeamColumn from "@/components/share/TeamColumn";
 import TypeAnalysis from "@/components/run/team/TypeAnalysis";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
-import { PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
+import CloudSyncToggle from "@/components/run/CloudSyncToggle";
+import SyncConflictDialog from "@/components/run/SyncConflictDialog";
+import { PokemonData, Run, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getPokemonById } from "@/lib/pokemon-data";
+import { getRunFromCloud, saveRunToCloud } from "@/lib/firestore";
+import { isFirebaseConfigured } from "@/lib/firebase";
 
 type Tab = "zones" | "team" | "pokedex";
 
@@ -46,9 +50,41 @@ export default function RunPageContent({ runId }: Props) {
   const tr = translations;
   const effectiveRunId = runId ?? runIdFromUrl;
 
+  // Conflict dialog state
+  const [conflictLocal, setConflictLocal] = useState<Run | null>(null);
+  const [conflictCloud, setConflictCloud] = useState<Run | null>(null);
+
   useEffect(() => {
     loadRuns();
   }, [loadRuns]);
+
+  // On first mount: if cloud sync is enabled, compare local vs cloud versions
+  useEffect(() => {
+    if (!mounted || !effectiveRunId || !isFirebaseConfigured()) return;
+
+    const localRun = getRun(effectiveRunId);
+    if (!localRun?.cloudSyncEnabled) return;
+
+    getRunFromCloud(effectiveRunId)
+      .then((cloudRun) => {
+        if (!cloudRun) return;
+
+        if (cloudRun.updatedAt > localRun.updatedAt) {
+          // Cloud is newer → silently update localStorage + store
+          saveRun(cloudRun);
+          loadRuns();
+        } else if (localRun.updatedAt > cloudRun.updatedAt) {
+          // Local is newer → show conflict dialog
+          setConflictLocal(localRun);
+          setConflictCloud(cloudRun);
+        }
+        // Equal timestamps → nothing to do
+      })
+      .catch(() => {
+        // Cloud unreachable → keep local, no disruption
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, effectiveRunId]);
 
   const run =
     runs.find((r) => r.id === effectiveRunId) ??
@@ -100,6 +136,22 @@ export default function RunPageContent({ runId }: Props) {
 
   if (!mounted) return null;
 
+  // Conflict resolution handlers
+  const handleKeepLocal = () => {
+    if (!conflictLocal) return;
+    saveRunToCloud(conflictLocal).catch(() => {});
+    setConflictLocal(null);
+    setConflictCloud(null);
+  };
+
+  const handleKeepCloud = () => {
+    if (!conflictCloud) return;
+    saveRun(conflictCloud);
+    loadRuns();
+    setConflictLocal(null);
+    setConflictCloud(null);
+  };
+
   if (!run) {
     return (
       <Box
@@ -148,6 +200,7 @@ export default function RunPageContent({ runId }: Props) {
   const statusActions =
     run.status === "in-progress" ? (
       <>
+        <CloudSyncToggle run={run} />
         <StyledButton
           onClick={() => updateRun({ ...run, status: "completed" })}
           variant="primary"
@@ -163,6 +216,7 @@ export default function RunPageContent({ runId }: Props) {
       </>
     ) : (
       <>
+        <CloudSyncToggle run={run} />
         <Box
           sx={{
             display: "inline-block",
@@ -488,6 +542,16 @@ export default function RunPageContent({ runId }: Props) {
           </Box>
         </Box>
       </Box>
+
+      {/* Save conflict resolution dialog */}
+      {conflictLocal && conflictCloud && (
+        <SyncConflictDialog
+          localRun={conflictLocal}
+          cloudRun={conflictCloud}
+          onKeepLocal={handleKeepLocal}
+          onKeepCloud={handleKeepCloud}
+        />
+      )}
     </Box>
   );
 }

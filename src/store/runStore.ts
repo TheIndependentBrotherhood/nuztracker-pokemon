@@ -8,6 +8,8 @@ import {
 } from "@/lib/types";
 import { getRuns, saveRun, deleteRun as deleteRunStorage } from "@/lib/storage";
 import { getZonesForRegion } from "@/lib/zones";
+import { saveRunToCloud, deleteRunFromCloud } from "@/lib/firestore";
+import { isFirebaseConfigured } from "@/lib/firebase";
 
 interface RunStore {
   runs: Run[];
@@ -109,7 +111,8 @@ export const useRunStore = create<RunStore>((set, get) => ({
     return run;
   },
 
-  updateRun: (run) => {
+  updateRun: (run: Run) => {
+    const previousRun = get().runs.find((r) => r.id === run.id);
     // Clean dead captures from team
     const cleanedTeam = run.team.filter((capture) => !capture.isDead);
     // Also clean dead captures from playerTeams if soul link mode
@@ -131,6 +134,16 @@ export const useRunStore = create<RunStore>((set, get) => ({
       updatedAt: Date.now(),
     };
     saveRun(updated);
+    // Fire-and-forget cloud sync when enabled, and persist the disabled flag once
+    // when a previously synced run is turned off so other devices see the change.
+    const shouldSyncToCloud =
+      isFirebaseConfigured() &&
+      (updated.cloudSyncEnabled || previousRun?.cloudSyncEnabled);
+    if (shouldSyncToCloud) {
+      saveRunToCloud(updated).catch(() => {
+        // Cloud sync failure must never block the UI
+      });
+    }
     set((state) => ({
       runs: state.runs.map((r) => (r.id === updated.id ? updated : r)),
       currentRun:
@@ -139,7 +152,14 @@ export const useRunStore = create<RunStore>((set, get) => ({
   },
 
   deleteRun: (id) => {
+    const run = get().runs.find((r) => r.id === id);
     deleteRunStorage(id);
+    // Fire-and-forget cloud delete when the run was synced
+    if (run?.cloudSyncEnabled && isFirebaseConfigured()) {
+      deleteRunFromCloud(id).catch(() => {
+        // Cloud sync failure must never block the UI
+      });
+    }
     set((state) => ({
       runs: state.runs.filter((r) => r.id !== id),
       currentRun: state.currentRun?.id === id ? null : state.currentRun,
