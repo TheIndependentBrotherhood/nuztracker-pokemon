@@ -90,6 +90,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
   },
 
   updateRun: (run: Run) => {
+    const previousRun = get().runs.find((r) => r.id === run.id);
     // Clean dead captures from team
     const cleanedTeam = run.team.filter((capture) => !capture.isDead);
     // Also clean dead captures from playerTeams if soul link mode
@@ -111,8 +112,12 @@ export const useRunStore = create<RunStore>((set, get) => ({
       updatedAt: Date.now(),
     };
     saveRun(updated);
-    // Fire-and-forget cloud sync when enabled
-    if (updated.cloudSyncEnabled && isFirebaseConfigured()) {
+    // Fire-and-forget cloud sync when enabled, and persist the disabled flag once
+    // when a previously synced run is turned off so other devices see the change.
+    const shouldSyncToCloud =
+      isFirebaseConfigured() &&
+      (updated.cloudSyncEnabled || previousRun?.cloudSyncEnabled);
+    if (shouldSyncToCloud) {
       saveRunToCloud(updated).catch(() => {
         // Cloud sync failure must never block the UI
       });
