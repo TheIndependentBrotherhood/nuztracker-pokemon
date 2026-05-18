@@ -739,6 +739,34 @@ const translations = {
       fr: "Activez le sync cloud pour obtenir un lien permanent",
       en: "Enable cloud sync to get a permanent link",
     },
+    conflictTitle: {
+      fr: "⚠️ Conflit de sauvegarde détecté",
+      en: "⚠️ Save conflict detected",
+    },
+    conflictDescription: {
+      fr: "Votre sauvegarde locale est plus récente que la version cloud. Quelle version souhaitez-vous conserver ?",
+      en: "Your local save is more recent than the cloud version. Which version do you want to keep?",
+    },
+    conflictLocalLabel: {
+      fr: "💾 Sauvegarde locale",
+      en: "💾 Local save",
+    },
+    conflictCloudLabel: {
+      fr: "☁️ Sauvegarde cloud",
+      en: "☁️ Cloud save",
+    },
+    conflictLastUpdated: {
+      fr: "Dernière mise à jour :",
+      en: "Last updated:",
+    },
+    conflictKeepLocal: {
+      fr: "Garder le local → écraser le cloud",
+      en: "Keep local → overwrite cloud",
+    },
+    conflictKeepCloud: {
+      fr: "Garder le cloud → écraser le local",
+      en: "Keep cloud → overwrite local",
+    },
   },
 
   // ── Language toggle ────────────────────────────────────────────────────────
