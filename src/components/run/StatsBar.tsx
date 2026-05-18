@@ -145,11 +145,16 @@ export default function StatsBar({
     0,
   );
 
-  // Display values (x2 total if shiny hunt mode)
-  const displayFinished = finished;
-  const displayTotal = run.isShinyHuntMode ? total * 2 : total;
+  // Display values: count total captures slots and actual captures
+  const expectedCapturesPerZone = run.isShinyHuntMode ? 2 : 1;
+  const displayTotal = run.zones.length * expectedCapturesPerZone;
+  const displayFinished = run.zones.reduce(
+    (acc: number, z: Zone) => acc + z.captures.length,
+    0,
+  );
 
-  const captureRate = finished > 0 ? Math.round((captured / finished) * 100) : 0;
+  const captureRate =
+    finished > 0 ? Math.round((captured / finished) * 100) : 0;
   const progress = total > 0 ? (finished / total) * 100 : 0;
 
   // Get last 3 dead pokémons for RIP export (sorted by death time, most recent first)
@@ -512,10 +517,12 @@ export default function StatsBar({
                   display: "inline-block",
                 }}
               />
-              {(tr.statsBar.soulLinkDeathsByPlayer[lang] as (n: string, m: number) => string)(
-                player.name,
-                deaths,
-              )}
+              {(
+                tr.statsBar.soulLinkDeathsByPlayer[lang] as (
+                  n: string,
+                  m: number,
+                ) => string
+              )(player.name, deaths)}
             </Typography>
           ))}
         </Box>
@@ -578,7 +585,14 @@ export default function StatsBar({
   // Caught hover content (rate and missed)
   const captureesHoverContent = (
     <Box>
-      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 6, mb: isSoulLink && perPlayerMissed.length > 0 ? 1.5 : 0 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          columnGap: 6,
+          mb: isSoulLink && perPlayerMissed.length > 0 ? 1.5 : 0,
+        }}
+      >
         <Box sx={{ textAlign: "center" }}>
           <Typography
             sx={{
@@ -660,10 +674,12 @@ export default function StatsBar({
                   display: "inline-block",
                 }}
               />
-              {(tr.statsBar.soulLinkMissedByPlayer[lang] as (n: string, m: number) => string)(
-                player.name,
-                missed,
-              )}
+              {(
+                tr.statsBar.soulLinkMissedByPlayer[lang] as (
+                  n: string,
+                  m: number,
+                ) => string
+              )(player.name, missed)}
             </Typography>
           ))}
         </Box>
