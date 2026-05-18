@@ -76,6 +76,24 @@ function TeamPanel({
     setToastMsg(msg);
   }
 
+  function getSoulLinkPlayerName(idx?: number) {
+    return (
+      run.soulLinkPlayers?.find((p) => p.playerIndex === (idx ?? 0))?.name ??
+      `P${(idx ?? 0) + 1}`
+    );
+  }
+
+  function toastDied(capture?: Capture) {
+    if (!isSoulLink || !capture) return;
+    const idx = capture.playerIndex ?? playerIndex ?? 0;
+    showToast(
+      (tr.teamView.toastDied[lang] as (p: string, n: string) => string)(
+        getSoulLinkPlayerName(idx),
+        capture.nickname ?? capture.pokemon.technicalName ?? "???",
+      ),
+    );
+  }
+
   function doUpdateTeam(nextTeam: Capture[]) {
     updateTeam(run.id, nextTeam, playerIndex);
   }
@@ -213,6 +231,7 @@ function TeamPanel({
     const capturedPokemonId = e.dataTransfer.getData("capturedPokemonId");
     const pokemonId = e.dataTransfer.getData("pokemonId");
     if (capturedPokemonId) {
+      const cap = run.zones.flatMap((z) => z.captures).find((c) => c.id === capturedPokemonId);
       const updatedRun = {
         ...run,
         zones: run.zones.map((zone) => ({
@@ -226,8 +245,10 @@ function TeamPanel({
       };
       const { updateRun } = useRunStore.getState();
       updateRun(updatedRun);
+      toastDied(cap);
     } else if (pokemonId) {
       const updatedTeam = team.filter((p) => p.id !== pokemonId);
+      const cap = run.zones.flatMap((z) => z.captures).find((c) => c.id === pokemonId);
       const updatedRun = {
         ...run,
         team: isSoulLink ? run.team : updatedTeam,
@@ -250,18 +271,7 @@ function TeamPanel({
       };
       const { updateRun } = useRunStore.getState();
       updateRun(updatedRun);
-      if (isSoulLink) {
-        const cap = run.zones.flatMap((z) => z.captures).find((c) => c.id === pokemonId);
-        const pName =
-          run.soulLinkPlayers?.find((p) => p.playerIndex === playerIndex)?.name ??
-          `P${(playerIndex ?? 0) + 1}`;
-        showToast(
-          (tr.teamView.toastDied[lang] as (p: string, n: string) => string)(
-            pName,
-            cap?.nickname ?? cap?.pokemon.technicalName ?? "???",
-          ),
-        );
-      }
+      toastDied(cap);
     }
   };
 
@@ -337,6 +347,9 @@ function TeamPanel({
     };
     const { updateRun } = useRunStore.getState();
     updateRun(updatedRun);
+    if (willBeDead) {
+      toastDied(capture);
+    }
   };
 
   return (
@@ -560,9 +573,12 @@ function TeamPanel({
 export default function TeamView({ run, id, onToggleAnalysis: _onToggleAnalysis }: Props) {
   const { lang } = useLanguage();
   const tr = translations;
-  const [activePlayer, setActivePlayer] = useState(0);
-
   const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers);
+  const players = run.soulLinkPlayers ?? [];
+  const [activePlayer, setActivePlayer] = useState(() => players[0]?.playerIndex ?? 0);
+  const resolvedActivePlayer = players.some((p) => p.playerIndex === activePlayer)
+    ? activePlayer
+    : (players[0]?.playerIndex ?? 0);
 
   if (!isSoulLink) {
     return (
@@ -571,9 +587,7 @@ export default function TeamView({ run, id, onToggleAnalysis: _onToggleAnalysis 
       </Box>
     );
   }
-
-  const players = run.soulLinkPlayers ?? [];
-  const activePlayerTeam = run.playerTeams?.[activePlayer] ?? [];
+  const activePlayerTeam = run.playerTeams?.[resolvedActivePlayer] ?? [];
 
   return (
     <Box id={id} sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -590,7 +604,7 @@ export default function TeamView({ run, id, onToggleAnalysis: _onToggleAnalysis 
       >
         {players.map((player) => {
           const color = SOUL_LINK_PLAYER_COLORS[player.playerIndex];
-          const isActive = activePlayer === player.playerIndex;
+          const isActive = resolvedActivePlayer === player.playerIndex;
           return (
             <Box
               key={player.id}
@@ -638,7 +652,7 @@ export default function TeamView({ run, id, onToggleAnalysis: _onToggleAnalysis 
       <TeamPanel
         run={run}
         team={activePlayerTeam}
-        playerIndex={activePlayer}
+        playerIndex={resolvedActivePlayer}
       />
     </Box>
   );

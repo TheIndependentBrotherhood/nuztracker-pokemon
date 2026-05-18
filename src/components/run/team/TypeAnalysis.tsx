@@ -1578,13 +1578,16 @@ export default function TypeAnalysis({ run }: Props) {
   const { lang } = useLanguage();
   const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
   const players = run.soulLinkPlayers ?? [];
-  const [activePlayer, setActivePlayer] = useState(0);
+  const [activePlayer, setActivePlayer] = useState(() => players[0]?.playerIndex ?? 0);
+  const resolvedActivePlayer = players.some((p) => p.playerIndex === activePlayer)
+    ? activePlayer
+    : (players[0]?.playerIndex ?? 0);
 
   if (!isSoulLink) {
     return <TypeAnalysisCore run={run} team={run.team} />;
   }
 
-  const activePlayerTeam = run.playerTeams?.[activePlayer] ?? [];
+  const activePlayerTeam = run.playerTeams?.[resolvedActivePlayer] ?? [];
 
   return (
     <Box>
@@ -1601,7 +1604,7 @@ export default function TypeAnalysis({ run }: Props) {
       >
         {players.map((player) => {
           const color = SOUL_LINK_PLAYER_COLORS[player.playerIndex];
-          const isActive = activePlayer === player.playerIndex;
+          const isActive = resolvedActivePlayer === player.playerIndex;
           return (
             <Box
               key={player.id}
