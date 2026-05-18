@@ -48,9 +48,26 @@ export default function TypeDeductionTool({
   const [typeAnchor, setTypeAnchor] = useState<HTMLElement | null>(null);
   const [showAllTypes, setShowAllTypes] = useState(false);
   const [possibleTypes, setPossibleTypes] = useState<TypePossibility[]>([]);
+  const [localNotes, setLocalNotes] = useState(notes);
   const { lang } = useLanguage();
   const { abilities: abilitiesCache } = useCache();
   const tr = translations;
+
+  // Sync local notes when parent notes change (e.g., switching pokémon)
+  useEffect(() => {
+    setLocalNotes(notes);
+  }, [notes]);
+
+  // Debounce notes saving - update local state immediately but save to parent after 500ms
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (localNotes !== notes) {
+        onNotesChange(localNotes);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [localNotes, notes, onNotesChange]);
 
   useEffect(() => {
     const loadPossibleTypes = async () => {
@@ -130,8 +147,8 @@ export default function TypeDeductionTool({
           size="small"
           fullWidth
           placeholder={t(tr.pokemonDetail.speciesNotesPlaceholder, lang)}
-          value={notes}
-          onChange={(e) => onNotesChange(e.target.value)}
+          value={localNotes}
+          onChange={(e) => setLocalNotes(e.target.value)}
           multiline
           rows={2}
           sx={{
