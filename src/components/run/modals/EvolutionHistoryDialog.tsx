@@ -77,9 +77,7 @@ export function EvolutionHistoryDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {t(tr.pokemonDetail.evolutionHistory, lang)}
-      </DialogTitle>
+      <DialogTitle>{t(tr.pokemonDetail.evolutionHistory, lang)}</DialogTitle>
       <DialogContent>
         {loading ? (
           <Box
