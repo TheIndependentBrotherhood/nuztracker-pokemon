@@ -108,10 +108,7 @@ export function useCaptureDisplayNames(
   };
 
   useEffect(() => {
-    if (!captures.length) {
-      setResolvedNames({});
-      return;
-    }
+    if (!captures.length) return;
 
     let cancelled = false;
 
@@ -138,5 +135,5 @@ export function useCaptureDisplayNames(
 
   // Return resolved names if available, otherwise fallback to initial names
   const initialNames = buildInitialNames();
-  return Object.keys(resolvedNames).length > 0 ? resolvedNames : initialNames;
+  return { ...initialNames, ...resolvedNames };
 }

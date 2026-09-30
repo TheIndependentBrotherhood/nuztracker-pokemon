@@ -48,20 +48,16 @@ export default function PokedexView({ runId }: Props) {
 
   // Create synthetic pokedex captures for advanced mode comparison
   const allPokedexCaptures = useMemo<Capture[]>(() => {
-    return pokedexEntries.map((entry, idx) => ({
+    return pokedexEntries.map((entry) => ({
       id: `pokedex-${entry.id}`,
-      pokemon: {
-        id: entry.id,
-        technicalName: entry.technicalName,
-        names: entry.names,
-        sprites: entry.sprites,
-      } as any,
+      pokemon: entry,
       gender: "unknown",
       level: 0,
       isShiny: false,
+      isDead: false,
       nickname: undefined,
       ability: undefined,
-      createdAt: Date.now(),
+      createdAt: 0,
     }));
   }, [pokedexEntries]);
 
@@ -237,7 +233,16 @@ export default function PokedexView({ runId }: Props) {
     });
 
     return sorted;
-  }, [lang, pokedexEntries, pokemonData, searchQuery, sortBy, sortDir]);
+  }, [
+    lang,
+    pokedexEntries,
+    pokemonData,
+    randomTypesMode,
+    run?.customTypesByPokemonId,
+    searchQuery,
+    sortBy,
+    sortDir,
+  ]);
 
   const totalPages = Math.max(
     1,

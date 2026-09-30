@@ -4,7 +4,6 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
   type ReactNode,
 } from "react";
@@ -21,19 +20,15 @@ const LanguageContext = createContext<LanguageContextValue>({
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>("fr");
-
-  // Hydrate from localStorage on mount
-  useEffect(() => {
+  const [lang, setLang] = useState<Lang>(() => {
+    if (typeof window === "undefined") return "fr";
     try {
       const stored = localStorage.getItem("nuztracker-lang") as Lang | null;
-      if (stored === "fr" || stored === "en") {
-        setLang(stored);
-      }
+      return stored === "fr" || stored === "en" ? stored : "fr";
     } catch {
-      // localStorage not available (SSR / privacy mode)
+      return "fr";
     }
-  }, []);
+  });
 
   const toggleLang = useCallback(() => {
     setLang((prev) => {

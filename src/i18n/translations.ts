@@ -225,6 +225,8 @@ const translations = {
       fr: "Chargement des sprites...",
       en: "Loading sprites...",
     },
+    evolutionHistory: { fr: "Historique d'évolution", en: "Evolution history" },
+    closeButton: { fr: "Fermer", en: "Close" },
     chooseType: { fr: "Choisir un type", en: "Choose a type" },
     unknownType: { fr: "???", en: "???" },
     addSecondType: { fr: "Ajouter un second type", en: "Add second type" },
@@ -301,7 +303,6 @@ const translations = {
       resistance: { fr: "Résistant à", en: "Resistant to" },
       neutral: { fr: "Neutre à", en: "Neutral to" },
     },
-    chooseType: { fr: "Choisir un type", en: "Choose type" },
     possibleTypesLabel: {
       fr: (n: number) => `Types possibles (${n})`,
       en: (n: number) => `Possible types (${n})`,
@@ -700,11 +701,13 @@ const translations = {
   },
 } as const;
 
-/** Return the string for the given language */
-export function t<T extends string | ((...args: unknown[]) => string)>(
-  entry: { fr: T; en: T },
+type TranslationText = string | ((...args: never[]) => string);
+
+/** Return the translation for the given language */
+export function t<T extends { fr: TranslationText; en: TranslationText }>(
+  entry: T,
   lang: Lang,
-): T {
+): T[Lang] {
   return entry[lang];
 }
 

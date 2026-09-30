@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Tooltip,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -10,11 +9,10 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import { EvolutionHistoryEntry } from "@/lib/types";
+import { EvolutionHistoryEntry, PokemonData } from "@/lib/types";
 import { getPokemonById } from "@/lib/pokemon-data";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
-import { getEvolutionStepCount } from "@/lib/evolution-display-utils";
 
 interface Props {
   evolutionHistory: EvolutionHistoryEntry[];
@@ -33,34 +31,33 @@ export function EvolutionHistoryDialog({
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations;
-  const [pokemonData, setPokemonData] = useState<Record<number, any>>({});
+  const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
 
-  const stepCount = getEvolutionStepCount(evolutionHistory);
-
   useEffect(() => {
-    if (!open || !evolutionHistory.length) {
-      setLoading(false);
-      return;
-    }
+    if (!open || !evolutionHistory.length) return;
 
     // Load pokemon data for all species in the history
     (async () => {
-      const data: Record<number, any> = {};
+      const data: Record<number, PokemonData> = {};
       for (const entry of evolutionHistory) {
         if (!pokemonData[entry.pokemonId]) {
           try {
             const pokemon = await getPokemonById(entry.pokemonId);
-            data[entry.pokemonId] = pokemon;
+            if (pokemon) data[entry.pokemonId] = pokemon;
           } catch (error) {
             console.error(`Failed to load pokemon ${entry.pokemonId}:`, error);
           }
         }
       }
-      setPokemonData((prev) => ({ ...prev, ...data }));
+      if (Object.keys(data).length > 0) {
+        setPokemonData((prev) => ({ ...prev, ...data }));
+      }
       setLoading(false);
     })();
-  }, [open, evolutionHistory]);
+  }, [open, evolutionHistory, pokemonData]);
 
   if (!evolutionHistory || evolutionHistory.length === 0) {
     return null;
@@ -81,7 +78,7 @@ export function EvolutionHistoryDialog({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {t(tr.pokemonDetail?.evolutionHistory ?? "Evolution History", lang)}
+        {t(tr.pokemonDetail.evolutionHistory, lang)}
       </DialogTitle>
       <DialogContent>
         {loading ? (
@@ -203,7 +200,7 @@ export function EvolutionHistoryDialog({
             color: "#0284c7",
           }}
         >
-          {t(tr.pokemonDetail?.closeButton ?? "Close", lang)}
+          {t(tr.pokemonDetail.closeButton, lang)}
         </Button>
       </DialogActions>
     </Dialog>

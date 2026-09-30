@@ -142,10 +142,11 @@ export default function PokemonDetailModal({
   );
   const [abilitySearch, setAbilitySearch] = useState("");
   const [panelSearch, setPanelSearch] = useState("");
-  const [pokedexObservations, setPokedexObservations] = useState<
-    TypeObservation[]
-  >([]);
-  const [pokedexNotes, setPokedexNotes] = useState("");
+  const [pokedexDraft, setPokedexDraft] = useState<{
+    pokemonId: number;
+    observations: TypeObservation[];
+    notes: string;
+  } | null>(null);
   const [showEvolutionHistory, setShowEvolutionHistory] = useState(false);
   const { lang } = useLanguage();
   const { runs, updateRun } = useRunStore();
@@ -181,6 +182,19 @@ export default function PokemonDetailModal({
   const activeAbility = abilityDraft;
   // Synthetic id used by PokedexView — there is no real capture to update.
   const isPokedexCapture = pokemonCaptured.id.startsWith("pokedex-");
+  const savedPokedexObservations =
+    runToUpdate?.pokedexObservationsByPokemonId?.[pokemonCaptured.pokemon.id] ??
+    [];
+  const savedPokedexNotes =
+    runToUpdate?.pokedexNotesByPokemonId?.[pokemonCaptured.pokemon.id] ?? "";
+  const hasCurrentPokedexDraft =
+    pokedexDraft?.pokemonId === pokemonCaptured.pokemon.id;
+  const pokedexObservations = hasCurrentPokedexDraft
+    ? pokedexDraft.observations
+    : savedPokedexObservations;
+  const pokedexNotes = hasCurrentPokedexDraft
+    ? pokedexDraft.notes
+    : savedPokedexNotes;
   // The ability panel for this Pokémon species (from the run, not the capture)
   const abilityPanel: string[] =
     runToUpdate?.customAbilitiesByPokemonId?.[pokemonCaptured.pokemon.id] ?? [];
@@ -190,20 +204,6 @@ export default function PokemonDetailModal({
       .then(setData)
       .finally(() => setLoading(false));
   }, [pokemonCaptured.pokemon.id]);
-
-  // Load Pokédex observations and notes from the run on mount
-  useEffect(() => {
-    if (isPokedexCapture && runToUpdate) {
-      const savedObservations =
-        runToUpdate.pokedexObservationsByPokemonId?.[
-          pokemonCaptured.pokemon.id
-        ] ?? [];
-      const savedNotes =
-        runToUpdate.pokedexNotesByPokemonId?.[pokemonCaptured.pokemon.id] ?? "";
-      setPokedexObservations(savedObservations);
-      setPokedexNotes(savedNotes);
-    }
-  }, [isPokedexCapture, runToUpdate, pokemonCaptured.pokemon.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -469,7 +469,11 @@ export default function PokemonDetailModal({
           : undefined,
     });
 
-    setPokedexObservations(nextObservations);
+    setPokedexDraft({
+      pokemonId: pokemonCaptured.pokemon.id,
+      observations: nextObservations,
+      notes: pokedexNotes,
+    });
   }
 
   function persistPokedexNotes(nextNotes: string) {
@@ -493,7 +497,11 @@ export default function PokemonDetailModal({
           : undefined,
     });
 
-    setPokedexNotes(nextNotes);
+    setPokedexDraft({
+      pokemonId: pokemonCaptured.pokemon.id,
+      observations: pokedexObservations,
+      notes: nextNotes,
+    });
   }
 
   // Determine wrapper and box styles based on mode

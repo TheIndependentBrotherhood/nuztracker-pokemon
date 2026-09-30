@@ -1,4 +1,4 @@
-import { Button, ButtonProps } from "@mui/material";
+import { Button, ButtonProps, SxProps, Theme } from "@mui/material";
 
 type Variant = "primary" | "danger" | "secondary";
 type Shape = "rounded" | "pill";
@@ -8,7 +8,7 @@ interface Props extends Omit<ButtonProps, "variant"> {
   shape?: Shape;
 }
 
-const variantStyles: Record<Variant, any> = {
+const variantStyles: Record<Variant, SxProps<Theme>> = {
   primary: {
     background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
     color: "#fff",
@@ -23,7 +23,7 @@ const variantStyles: Record<Variant, any> = {
   },
 };
 
-const shapeStyles: Record<Shape, any> = {
+const shapeStyles: Record<Shape, SxProps<Theme>> = {
   rounded: {
     borderRadius: "2rem",
   },
@@ -41,31 +41,33 @@ export default function StyledButton({
   return (
     <Button
       {...props}
-      sx={{
-        ...variantStyles[variant],
-        ...shapeStyles[shape],
-        border: "3px solid #000",
-        fontWeight: 700,
-        fontSize: "1rem",
-        px: 4,
-        py: 1.5,
-        boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
-        transition: "all 0.2s ease-in-out",
-        textTransform: "none",
-        "&:hover": {
-          transform: "translate(-2px, -2px)",
-          boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
+      sx={[
+        variantStyles[variant],
+        shapeStyles[shape],
+        {
+          border: "3px solid #000",
+          fontWeight: 700,
+          fontSize: "1rem",
+          px: 4,
+          py: 1.5,
+          boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
+          transition: "all 0.2s ease-in-out",
+          textTransform: "none",
+          "&:hover": {
+            transform: "translate(-2px, -2px)",
+            boxShadow: "6px 6px 0 rgba(0, 0, 0, 0.4)",
+          },
+          "&:active": {
+            transform: "translate(1px, 1px)",
+            boxShadow: "2px 2px 0 rgba(0, 0, 0, 0.2)",
+          },
+          "&:disabled": {
+            opacity: 0.5,
+            cursor: "not-allowed",
+          },
         },
-        "&:active": {
-          transform: "translate(1px, 1px)",
-          boxShadow: "2px 2px 0 rgba(0, 0, 0, 0.2)",
-        },
-        "&:disabled": {
-          opacity: 0.5,
-          cursor: "not-allowed",
-        },
-        ...sx,
-      }}
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     />
   );
 }

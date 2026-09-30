@@ -34,15 +34,10 @@ export function PokemonEvolutionLineage({
   const [pokemonList, setPokemonList] = useState<PokemonDisplay[]>([]);
   const [loading, setLoading] = useState(false);
 
-  if (!evolutionHistory || evolutionHistory.length === 0) {
-    return null;
-  }
-
-  const stepCount = getEvolutionStepCount(evolutionHistory);
-  const isClickable = Boolean(onClick && stepCount > 0);
-
   // Load pokemon data (sprites and names) for display
   useEffect(() => {
+    if (!evolutionHistory?.length) return;
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -50,10 +45,10 @@ export function PokemonEvolutionLineage({
         for (const entry of evolutionHistory) {
           const pokemon = await getPokemonById(entry.pokemonId);
           data.push({
-            spriteUrl: pokemon.sprites?.normal?.default || "",
+            spriteUrl: pokemon?.sprites?.normal?.default || "",
             technicalName: entry.technicalName,
-            frenchName: pokemon.names?.fr || entry.technicalName,
-            englishName: pokemon.names?.en || entry.technicalName,
+            frenchName: pokemon?.names?.fr || entry.technicalName,
+            englishName: pokemon?.names?.en || entry.technicalName,
           });
         }
         setPokemonList(data);
@@ -66,6 +61,13 @@ export function PokemonEvolutionLineage({
 
     loadData();
   }, [evolutionHistory]);
+
+  if (!evolutionHistory || evolutionHistory.length === 0) {
+    return null;
+  }
+
+  const stepCount = getEvolutionStepCount(evolutionHistory);
+  const isClickable = Boolean(onClick && stepCount > 0);
 
   if (loading || pokemonList.length === 0) {
     return null;
