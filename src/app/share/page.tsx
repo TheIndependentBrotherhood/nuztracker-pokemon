@@ -6,6 +6,8 @@ import { Box } from "@mui/material";
 import { Capture, PokemonData, Run } from "@/lib/types";
 import { decodeTeam } from "@/lib/share";
 import { getPokemonById } from "@/lib/pokemon-data";
+import { getRunFromCloud } from "@/lib/firestore";
+import { isFirebaseConfigured } from "@/lib/firebase";
 import TeamColumn from "@/components/share/TeamColumn";
 
 function ShareContent() {
@@ -13,6 +15,8 @@ function ShareContent() {
   const showTypes = searchParams.get("showTypes") !== "false";
   const tightTypes = showTypes && searchParams.get("tightTypes") === "true";
   const isRipMode = searchParams.get("isRip") === "true";
+  const runId = searchParams.get("runId");
+  const exportType = searchParams.get("type"); // "team" | "rip" | null
   const [team, setTeam] = useState<Capture[]>([]);
   const [shareRun, setShareRun] = useState<Run | undefined>(undefined);
   const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
@@ -21,11 +25,51 @@ function ShareContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const encoded = searchParams.get("team");
-    if (!encoded) {
-      return;
-    }
-    decodeTeam(encoded).then(async (captures) => {
+    async function load() {
+      // ── Live Firestore mode ──────────────────────────────────────────────
+      if (runId && isFirebaseConfigured()) {
+        try {
+          const run = await getRunFromCloud(runId);
+          if (run) {
+            const isRip = exportType === "rip";
+            const captures = isRip
+              ? run.zones
+                  .flatMap((z) => z.captures)
+                  .filter((c) => c.isDead)
+                  .sort((a, b) => (b.diedAt ?? 0) - (a.diedAt ?? 0))
+                  .slice(0, 3)
+              : run.team;
+
+            setTeam(captures);
+            setShareRun(run);
+
+            const dataMap: Record<number, PokemonData> = {};
+            await Promise.all(
+              captures.map(async (c) => {
+                try {
+                  const data = await getPokemonById(c.pokemon.id);
+                  if (data) dataMap[c.pokemon.id] = data;
+                } catch {
+                  // silently fail
+                }
+              }),
+            );
+            setPokemonData(dataMap);
+          }
+        } catch {
+          // silently fail — fall through to empty state
+        }
+        setLoading(false);
+        return;
+      }
+
+      // ── Legacy base64 mode ───────────────────────────────────────────────
+      const encoded = searchParams.get("team");
+      if (!encoded) {
+        setLoading(false);
+        return;
+      }
+      const captures = await decodeTeam(encoded);
       setTeam(captures);
       const hasCustomTypes = captures.some(
         (capture) => (capture.customTypes?.length ?? 0) > 0,
@@ -63,7 +107,6 @@ function ShareContent() {
         setShareRun(undefined);
       }
 
-      // Fetch pokemon data for types
       const dataMap: Record<number, PokemonData> = {};
       await Promise.all(
         captures.map(async (c) => {
@@ -79,8 +122,13 @@ function ShareContent() {
       );
       setPokemonData(dataMap);
       setLoading(false);
-    });
-  }, [searchParams]);
+    }
+
+    load();
+  }, [searchParams, runId, exportType]);
+
+  // Derive effective RIP mode: explicit param or type=rip
+  const effectiveIsRip = isRipMode || exportType === "rip";
 
   if (loading) {
     return (
@@ -120,12 +168,12 @@ function ShareContent() {
         height: "100vh",
         backgroundColor: "rgba(0, 0, 0, 0)",
         display: "flex",
-        justifyContent: isRipMode ? "center" : "space-between",
-        alignItems: isRipMode ? "center" : "stretch",
+        justifyContent: effectiveIsRip ? "center" : "space-between",
+        alignItems: effectiveIsRip ? "center" : "stretch",
         overflow: "hidden",
       }}
     >
-      {isRipMode ? (
+      {effectiveIsRip ? (
         /* RIP mode - single horizontal line */
         <TeamColumn
           team={team}
