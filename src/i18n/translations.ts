@@ -365,6 +365,21 @@ const translations = {
     },
     deleteButton: { fr: "Supprimer", en: "Delete" },
     deleteCancel: { fr: "Annuler", en: "Cancel" },
+    removedZonesButton: {
+      fr: (n: number) => `🗑️ Zones retirées (${n})`,
+      en: (n: number) => `🗑️ Removed zones (${n})`,
+    },
+    removedZonesTitle: { fr: "Zones retirées", en: "Removed zones" },
+    removedZonesDescription: {
+      fr: "Ces zones ont été retirées de la partie. Restaure une zone pour la récupérer avec ses captures.",
+      en: "These zones were removed from the run. Restore a zone to get it back along with its captures.",
+    },
+    removedZoneCaptures: {
+      fr: (n: number) => `${n} capture${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} capture${n > 1 ? "s" : ""}`,
+    },
+    restoreButton: { fr: "Restaurer", en: "Restore" },
+    removedZonesClose: { fr: "Fermer", en: "Close" },
   },
 
   // ── Zone Item ──────────────────────────────────────────────────────────────

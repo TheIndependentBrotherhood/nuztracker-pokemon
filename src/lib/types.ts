@@ -130,6 +130,8 @@ export interface Run {
   evolutionHistoryByPokemonId?: Record<number, EvolutionHistoryEntry[]>;
   status: "in-progress" | "completed" | "abandoned";
   zones: Zone[];
+  /** Zones removed by the user (template or custom). Kept so they can be restored and so the template sync does not re-add them. */
+  removedZones?: Zone[];
   team: Capture[];
   typeChartGeneration: "gen1" | "gen2-5" | "gen6+";
   createdAt: number;

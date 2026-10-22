@@ -31,22 +31,43 @@ export default function ZoneList({ run }: Props) {
     Map<string, { fr?: string; en?: string }>
   >(new Map());
   const [showAddZoneDialog, setShowAddZoneDialog] = useState(false);
+  const [showRemovedZonesDialog, setShowRemovedZonesDialog] = useState(false);
   const [newZoneName, setNewZoneName] = useState("");
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
+  const [templateZoneIds, setTemplateZoneIds] = useState<string[]>([]);
   const { lang } = useLanguage();
   const tr = translations;
+
+  const removedZones = useMemo(
+    () => run.removedZones ?? [],
+    [run.removedZones],
+  );
 
   // Load correct zones for the region and sync if needed
   useEffect(() => {
     const loadAndSync = async () => {
       const correctZones = await getZonesForRegionAsync(run.region);
+      setTemplateZoneIds(correctZones.map((z) => z.id));
 
-      const expectedZoneIds = new Set(correctZones.map((z) => z.id));
+      // Template zones explicitly removed by the user must not be re-added
+      const removedZoneIds = new Set((run.removedZones ?? []).map((z) => z.id));
+      const expectedZones = correctZones.filter(
+        (z) => !removedZoneIds.has(z.id),
+      );
+
+      const expectedZoneIds = new Set(expectedZones.map((z) => z.id));
       const currentZoneIds = new Set(run.zones.map((z) => z.id));
 
-      const zonesMismatch =
-        expectedZoneIds.size !== currentZoneIds.size ||
-        ![...expectedZoneIds].every((id) => currentZoneIds.has(id));
+      // Zones added manually by the user are not part of the template and
+      // must always be preserved (otherwise their captures become orphans).
+      const userAddedZones = run.zones.filter(
+        (z) => !expectedZoneIds.has(z.id),
+      );
+
+      // Mismatch when at least one template zone is missing from the run
+      const zonesMismatch = ![...expectedZoneIds].every((id) =>
+        currentZoneIds.has(id),
+      );
 
       // Build a map of zoneId -> translated names for display (never persisted)
       const newMap = new Map<string, { fr?: string; en?: string }>();
@@ -57,7 +78,7 @@ export default function ZoneList({ run }: Props) {
 
       // For non-custom regions: sync zones if mismatch
       if (run.region !== "custom" && zonesMismatch) {
-        const syncedZones = correctZones.map((expectedZone) => {
+        const syncedZones = expectedZones.map((expectedZone) => {
           const currentZone = run.zones.find((z) => z.id === expectedZone.id);
           return currentZone
             ? { ...currentZone }
@@ -74,7 +95,7 @@ export default function ZoneList({ run }: Props) {
                 updatedAt: 0,
               };
         });
-        updateRun({ ...run, zones: syncedZones });
+        updateRun({ ...run, zones: [...syncedZones, ...userAddedZones] });
       }
     };
 
@@ -141,20 +162,102 @@ export default function ZoneList({ run }: Props) {
     if (zoneToDelete) {
       // Get the zone to be deleted
       const zoneToRemove = run.zones.find((z) => z.id === zoneToDelete);
+      if (!zoneToRemove) {
+        setZoneToDelete(null);
+        return;
+      }
 
       // Get all capture IDs from the zone to remove team members
       const captureIdsToRemove = new Set(
-        zoneToRemove?.captures.map((c) => c.id) || [],
+        zoneToRemove.captures.map((c) => c.id),
       );
 
-      // Remove the zone and filter out team members from this zone
+      // Soul Link: also remove the captures from each player's team
+      const cleanedPlayerTeams = run.playerTeams
+        ? Object.fromEntries(
+            Object.entries(run.playerTeams).map(([idx, team]) => [
+              idx,
+              team.filter((member) => !captureIdsToRemove.has(member.id)),
+            ]),
+          )
+        : undefined;
+
+      // Remove the zone, archive it for a possible restore and filter out team members from this zone
       updateRun({
         ...run,
         zones: run.zones.filter((z) => z.id !== zoneToDelete),
+        removedZones: [
+          ...removedZones.filter((z) => z.id !== zoneToRemove.id),
+          { ...zoneToRemove, updatedAt: Date.now() },
+        ],
         team: run.team.filter((member) => !captureIdsToRemove.has(member.id)),
+        ...(cleanedPlayerTeams !== undefined
+          ? { playerTeams: cleanedPlayerTeams }
+          : {}),
       });
       setZoneToDelete(null);
     }
+  };
+
+  const handleRestoreZone = (zoneId: string) => {
+    const zoneToRestore = removedZones.find((z) => z.id === zoneId);
+    if (!zoneToRestore || run.zones.some((z) => z.id === zoneId)) return;
+
+    const restoredZone = zoneToRestore;
+
+    // Template zones go back to their template position, custom zones are appended
+    const templateIndex = templateZoneIds.indexOf(zoneId);
+    const nextZones = [...run.zones];
+    if (templateIndex === -1) {
+      nextZones.push(restoredZone);
+    } else {
+      const insertAt = nextZones.findIndex((z) => {
+        const idx = templateZoneIds.indexOf(z.id);
+        return idx > templateIndex;
+      });
+      nextZones.splice(
+        insertAt === -1 ? nextZones.length : insertAt,
+        0,
+        restoredZone,
+      );
+    }
+
+    // Put alive captures back in the team(s) while there is room; the others stay in the reserve
+    const aliveCaptures = restoredZone.captures.filter((c) => !c.isDead);
+    let nextTeam = run.team;
+    let nextPlayerTeams = run.playerTeams;
+    if (run.isSoulLinkMode) {
+      nextPlayerTeams = { ...(run.playerTeams ?? {}) };
+      aliveCaptures.forEach((capture) => {
+        const playerIdx = capture.playerIndex ?? 0;
+        const playerTeam = nextPlayerTeams![playerIdx] ?? [];
+        if (
+          playerTeam.length < 6 &&
+          !playerTeam.some((c) => c.id === capture.id)
+        ) {
+          nextPlayerTeams![playerIdx] = [...playerTeam, capture];
+        }
+      });
+    } else {
+      nextTeam = [...run.team];
+      aliveCaptures.forEach((capture) => {
+        if (nextTeam.length < 6 && !nextTeam.some((c) => c.id === capture.id)) {
+          nextTeam.push(capture);
+        }
+      });
+    }
+
+    updateRun({
+      ...run,
+      zones: nextZones,
+      removedZones: removedZones.filter((z) => z.id !== zoneId),
+      team: nextTeam,
+      ...(nextPlayerTeams !== undefined
+        ? { playerTeams: nextPlayerTeams }
+        : {}),
+    });
+
+    if (removedZones.length <= 1) setShowRemovedZonesDialog(false);
   };
 
   return (
@@ -241,6 +344,17 @@ export default function ZoneList({ run }: Props) {
         >
           ➕ Ajouter une zone
         </StyledButton>
+
+        {/* Removed zones button (only when there is something to restore) */}
+        {removedZones.length > 0 && (
+          <StyledButton
+            variant="secondary"
+            onClick={() => setShowRemovedZonesDialog(true)}
+            sx={{ width: "100%" }}
+          >
+            {t(tr.zoneList.removedZonesButton, lang)(removedZones.length)}
+          </StyledButton>
+        )}
       </Box>
       <Box sx={{ overflowY: "auto", flex: 1, background: "#fff" }}>
         {filtered.map((zone) => (
@@ -375,6 +489,93 @@ export default function ZoneList({ run }: Props) {
           </StyledButton>
           <StyledButton variant="danger" onClick={confirmRemoveZone}>
             {t(tr.zoneList.deleteButton, lang)}
+          </StyledButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* Removed Zones Dialog */}
+      <Dialog
+        open={showRemovedZonesDialog}
+        onClose={() => setShowRemovedZonesDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              background: "#FEF3E2",
+              border: "3px solid #000",
+              borderRadius: "1.5rem",
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontSize: "1.25rem" }}>
+          {t(tr.zoneList.removedZonesTitle, lang)}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <Box sx={{ fontSize: "0.875rem", mb: 2 }}>
+            {t(tr.zoneList.removedZonesDescription, lang)}
+          </Box>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            {removedZones.map((zone) => {
+              const displayZone = {
+                ...zone,
+                zoneNames: zoneNamesMap.get(zone.id) ?? zone.zoneNames,
+              };
+              const name =
+                getZoneDisplayName(displayZone, lang) || zone.zoneName;
+              return (
+                <Box
+                  key={zone.id}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    background: "#fff",
+                    border: "2px solid #000",
+                    borderRadius: "0.75rem",
+                  }}
+                >
+                  <Box sx={{ minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "0.875rem",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {name}
+                    </Box>
+                    <Box sx={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                      {zone.regionArea ? `${zone.regionArea} · ` : ""}
+                      {t(
+                        tr.zoneList.removedZoneCaptures,
+                        lang,
+                      )(zone.captures.length)}
+                    </Box>
+                  </Box>
+                  <StyledButton
+                    variant="primary"
+                    onClick={() => handleRestoreZone(zone.id)}
+                  >
+                    {t(tr.zoneList.restoreButton, lang)}
+                  </StyledButton>
+                </Box>
+              );
+            })}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ gap: 1, p: 2 }}>
+          <StyledButton
+            variant="secondary"
+            onClick={() => setShowRemovedZonesDialog(false)}
+          >
+            {t(tr.zoneList.removedZonesClose, lang)}
           </StyledButton>
         </DialogActions>
       </Dialog>
