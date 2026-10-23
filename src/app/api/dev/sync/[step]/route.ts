@@ -907,9 +907,27 @@ const REGIONAL_POKEDEX_SOURCES: Record<string, string[]> = {
   paldea: ["paldea", "kitakami", "blueberry"],
 };
 
+/**
+ * Generation of the games set in each region. Every species introduced up to
+ * that generation can be obtained in those games (trades, Pal Park, GTS, Home…).
+ */
+const REGION_MAX_GENERATION: Record<string, number> = {
+  kanto: 1,
+  johto: 2,
+  hoenn: 3,
+  sinnoh: 4,
+  unova: 5,
+  kalos: 6,
+  alola: 7,
+  galar: 8,
+  hisui: 8,
+  paldea: 9,
+};
+
 interface RegionalPokedexEntry {
   region: string;
   pokedexes: string[];
+  maxGeneration: number;
   speciesIds: number[];
 }
 
@@ -969,7 +987,12 @@ async function syncRegionalPokedexes(send: SendFn) {
       }
     }
 
-    incoming.push({ region, pokedexes: sources, speciesIds });
+    incoming.push({
+      region,
+      pokedexes: sources,
+      maxGeneration: REGION_MAX_GENERATION[region] ?? 9,
+      speciesIds,
+    });
     send({
       type: "progress",
       message: `✓ ${region}: ${speciesIds.length} species`,

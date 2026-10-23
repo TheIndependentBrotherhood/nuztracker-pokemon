@@ -26,7 +26,7 @@ import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
 import { computePokedexKnowledge } from "@/lib/pokedex-progress";
 import {
   addPokedexEntryToRun,
-  isDefaultPokedexEntry,
+  getPokedexEntryOrigin,
   loadRegionalPokedexes,
   RegionalPokedex,
   removePokedexEntryFromRun,
@@ -86,8 +86,13 @@ export default function PokedexView({ runId }: Props) {
     };
   }, []);
 
-  // Entries shown for this run: regional dex (+ manual additions, − removals)
-  const { entries: dexEntries, isRegional } = useMemo(
+  // Entries shown for this run: regional dex + obtainable species (+ manual additions, − removals)
+  const {
+    entries: dexEntries,
+    isRegional,
+    regionalCount,
+    transferCount,
+  } = useMemo(
     () => resolveRunPokedexEntries(run, pokedexEntries, regionalPokedex),
     [run, pokedexEntries, regionalPokedex],
   );
@@ -415,6 +420,8 @@ export default function PokedexView({ runId }: Props) {
                 sx={{ fontSize: "0.72rem", fontWeight: 600, color: "#475569" }}
               >
                 {t(tr.runPage.pokedexEntryCount, lang)(dexEntries.length)}
+                {isRegional &&
+                  ` (${t(tr.runPage.pokedexRegionalCount, lang)(regionalCount)} · ${t(tr.runPage.pokedexTransferCount, lang)(transferCount)})`}
                 {(run.pokedexAddedPokemonIds?.length ?? 0) > 0 &&
                   ` · ${t(tr.runPage.pokedexAddedCount, lang)(run.pokedexAddedPokemonIds!.length)}`}
                 {(run.pokedexRemovedPokemonIds?.length ?? 0) > 0 &&
@@ -584,8 +591,9 @@ export default function PokedexView({ runId }: Props) {
               randomTypesMode && resolvedTypes.length === 0
                 ? [t(tr.pokemonDetail.unknownType, lang)]
                 : resolvedTypes;
-            const isManuallyAdded =
-              isRegional && !isDefaultPokedexEntry(entry, regionalPokedex);
+            const entryOrigin = isRegional
+              ? getPokedexEntryOrigin(entry, regionalPokedex)
+              : "regional";
 
             return (
               <Box
@@ -673,21 +681,33 @@ export default function PokedexView({ runId }: Props) {
                       >
                         {displayLabel}
                       </Typography>
-                      {isManuallyAdded && (
-                        <Box
-                          sx={{
-                            px: 0.6,
-                            py: 0.1,
-                            borderRadius: "999px",
-                            fontSize: "0.6rem",
-                            fontWeight: 800,
-                            background: "#fef3c7",
-                            border: "1px solid #000",
-                            color: "#92400e",
-                          }}
+                      {entryOrigin !== "regional" && (
+                        <Tooltip
+                          arrow
+                          title={
+                            entryOrigin === "transfer"
+                              ? t(tr.runPage.pokedexTransferTooltip, lang)
+                              : ""
+                          }
                         >
-                          {t(tr.runPage.pokedexAddedBadge, lang)}
-                        </Box>
+                          <Box
+                            sx={{
+                              px: 0.6,
+                              py: 0.1,
+                              borderRadius: "999px",
+                              fontSize: "0.6rem",
+                              fontWeight: 800,
+                              border: "1px solid #000",
+                              ...(entryOrigin === "added"
+                                ? { background: "#fef3c7", color: "#92400e" }
+                                : { background: "#e0f2fe", color: "#075985" }),
+                            }}
+                          >
+                            {entryOrigin === "added"
+                              ? t(tr.runPage.pokedexAddedBadge, lang)
+                              : t(tr.runPage.pokedexTransferBadge, lang)}
+                          </Box>
+                        </Tooltip>
                       )}
                     </Box>
 

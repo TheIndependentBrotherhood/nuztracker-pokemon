@@ -714,6 +714,19 @@ const translations = {
       fr: (n: number) => `${n} Pokémon`,
       en: (n: number) => `${n} Pokémon`,
     },
+    pokedexRegionalCount: {
+      fr: (n: number) => `${n} du Pokédex régional`,
+      en: (n: number) => `${n} from the regional Pokédex`,
+    },
+    pokedexTransferCount: {
+      fr: (n: number) => `${n} par échange`,
+      en: (n: number) => `${n} via trade`,
+    },
+    pokedexTransferBadge: { fr: "échange", en: "trade" },
+    pokedexTransferTooltip: {
+      fr: "Absent du Pokédex régional, mais obtenable dans ces jeux (échange, Parc des Amis, GTS, transfert…)",
+      en: "Not in the regional Pokédex, but obtainable in these games (trade, Pal Park, GTS, transfer…)",
+    },
     pokedexAddedCount: {
       fr: (n: number) => `${n} ajouté${n > 1 ? "s" : ""}`,
       en: (n: number) => `${n} added`,
@@ -728,8 +741,8 @@ const translations = {
       en: "Add a Pokémon to the Pokédex",
     },
     pokedexAddDescription: {
-      fr: "Ajoute un Pokémon absent du Pokédex régional (forme, Pokémon d'une autre région, Pokémon retiré par erreur…). Tu pourras le retirer à tout moment avec ✕.",
-      en: "Add a Pokémon missing from the regional Pokédex (form, Pokémon from another region, Pokémon removed by mistake…). You can remove it anytime with ✕.",
+      fr: "Ajoute un Pokémon absent de la liste (forme alternative, Pokémon d'une génération ultérieure, Pokémon retiré par erreur…). Tu pourras le retirer à tout moment avec ✕.",
+      en: "Add a Pokémon missing from the list (alternate form, Pokémon from a later generation, Pokémon removed by mistake…). You can remove it anytime with ✕.",
     },
     pokedexAddedBadge: { fr: "ajouté", en: "added" },
     pokedexRemovedBadge: { fr: "retiré", en: "removed" },
