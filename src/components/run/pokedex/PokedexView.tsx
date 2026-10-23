@@ -3,16 +3,37 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   MenuItem,
   Select,
   SelectChangeEvent,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { Capture, PokemonData } from "@/lib/types";
-import { typeColors, getTypeTranslation } from "@/lib/type-chart";
+import {
+  typeColors,
+  getTypeTranslation,
+  loadTypeData,
+  TypeChartData,
+} from "@/lib/type-chart";
 import { getCaptureTypesForRun, isRandomTypesMode } from "@/lib/capture-types";
+import { computePokedexKnowledge } from "@/lib/pokedex-progress";
+import {
+  addPokedexEntryToRun,
+  isDefaultPokedexEntry,
+  loadRegionalPokedexes,
+  RegionalPokedex,
+  removePokedexEntryFromRun,
+  resolveRunPokedexEntries,
+} from "@/lib/regional-pokedex";
+import StyledButton from "@/components/ui/StyledButton";
+import StyledTextField from "@/components/ui/StyledTextField";
 import AdvancedComparisonModal from "@/components/run/modals/AdvancedComparisonModal";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -31,7 +52,7 @@ interface Props {
 
 export default function PokedexView({ runId }: Props) {
   const { lang } = useLanguage();
-  const { runs } = useRunStore();
+  const { runs, updateRun } = useRunStore();
   const tr = translations;
   const [listLoading, setListLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,12 +64,90 @@ export default function PokedexView({ runId }: Props) {
     {},
   );
   const [selectedCapture, setSelectedCapture] = useState<Capture | null>(null);
+  const [typeData, setTypeData] = useState<TypeChartData | null>(null);
+  const [regionalPokedexes, setRegionalPokedexes] = useState<Map<
+    string,
+    RegionalPokedex
+  > | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
   const run = runId ? runs.find((candidate) => candidate.id === runId) : null;
   const randomTypesMode = isRandomTypesMode(run);
+  const typeChartGeneration = run?.typeChartGeneration;
+  const regionalPokedex = run ? regionalPokedexes?.get(run.region) : undefined;
+
+  useEffect(() => {
+    let cancelled = false;
+    loadRegionalPokedexes().then((data) => {
+      if (!cancelled) setRegionalPokedexes(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Entries shown for this run: regional dex (+ manual additions, − removals)
+  const { entries: dexEntries, isRegional } = useMemo(
+    () => resolveRunPokedexEntries(run, pokedexEntries, regionalPokedex),
+    [run, pokedexEntries, regionalPokedex],
+  );
+  const dexEntryIds = useMemo(
+    () => new Set(dexEntries.map((entry) => entry.id)),
+    [dexEntries],
+  );
+
+  const addCandidates = useMemo(() => {
+    const normalized = addSearch.trim().toLowerCase();
+    return pokedexEntries
+      .filter((entry) => !dexEntryIds.has(entry.id))
+      .filter((entry) => {
+        if (!normalized) return true;
+        return (
+          entry.technicalName.toLowerCase().includes(normalized) ||
+          (entry.names?.fr?.toLowerCase() ?? "").includes(normalized) ||
+          (entry.names?.en?.toLowerCase() ?? "").includes(normalized) ||
+          String(entry.id).includes(normalized)
+        );
+      })
+      .slice(0, 30);
+  }, [pokedexEntries, dexEntryIds, addSearch]);
+
+  const handleAddEntry = (entry: PokemonData) => {
+    if (!run) return;
+    updateRun(addPokedexEntryToRun(run, entry, regionalPokedex));
+  };
+
+  const handleRemoveEntry = (entry: PokemonData) => {
+    if (!run) return;
+    updateRun(removePokedexEntryFromRun(run, entry, regionalPokedex));
+  };
+
+  // Type chart is needed to count the type combinations compatible with observations
+  useEffect(() => {
+    if (!randomTypesMode || !typeChartGeneration) return;
+    let cancelled = false;
+    loadTypeData(typeChartGeneration).then((data) => {
+      if (!cancelled) setTypeData(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [randomTypesMode, typeChartGeneration]);
+
+  const pokedexKnowledge = useMemo(() => {
+    if (!randomTypesMode || !run || !typeData || dexEntries.length === 0) {
+      return null;
+    }
+    return computePokedexKnowledge(
+      run,
+      dexEntries.map((entry) => entry.id),
+      typeData,
+    );
+  }, [randomTypesMode, run, typeData, dexEntries]);
 
   // Create synthetic pokedex captures for advanced mode comparison
   const allPokedexCaptures = useMemo<Capture[]>(() => {
-    return pokedexEntries.map((entry) => ({
+    return dexEntries.map((entry) => ({
       id: `pokedex-${entry.id}`,
       pokemon: entry,
       gender: "unknown",
@@ -59,7 +158,7 @@ export default function PokedexView({ runId }: Props) {
       ability: undefined,
       createdAt: 0,
     }));
-  }, [pokedexEntries]);
+  }, [dexEntries]);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,7 +232,7 @@ export default function PokedexView({ runId }: Props) {
   const filteredAndSortedEntries = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    const filtered = pokedexEntries.filter((entry) => {
+    const filtered = dexEntries.filter((entry) => {
       if (!normalizedQuery) return true;
 
       const nameFr = entry.names?.fr?.toLowerCase() ?? "";
@@ -235,7 +334,7 @@ export default function PokedexView({ runId }: Props) {
     return sorted;
   }, [
     lang,
-    pokedexEntries,
+    dexEntries,
     pokemonData,
     randomTypesMode,
     run?.customTypesByPokemonId,
@@ -292,6 +391,111 @@ export default function PokedexView({ runId }: Props) {
   return (
     <>
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.25 }}>
+        {/* Dex header: scope + manual additions */}
+        {run && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            <Box>
+              <Typography sx={{ fontWeight: 900, fontSize: "0.95rem" }}>
+                {isRegional
+                  ? t(
+                      tr.runPage.pokedexRegionalTitle,
+                      lang,
+                    )(run.region.charAt(0).toUpperCase() + run.region.slice(1))
+                  : t(tr.runPage.pokedexNationalTitle, lang)}
+              </Typography>
+              <Typography
+                sx={{ fontSize: "0.72rem", fontWeight: 600, color: "#475569" }}
+              >
+                {t(tr.runPage.pokedexEntryCount, lang)(dexEntries.length)}
+                {(run.pokedexAddedPokemonIds?.length ?? 0) > 0 &&
+                  ` · ${t(tr.runPage.pokedexAddedCount, lang)(run.pokedexAddedPokemonIds!.length)}`}
+                {(run.pokedexRemovedPokemonIds?.length ?? 0) > 0 &&
+                  ` · ${t(tr.runPage.pokedexRemovedCount, lang)(run.pokedexRemovedPokemonIds!.length)}`}
+              </Typography>
+            </Box>
+            <StyledButton
+              variant="primary"
+              onClick={() => setShowAddDialog(true)}
+            >
+              {t(tr.runPage.pokedexAddButton, lang)}
+            </StyledButton>
+          </Box>
+        )}
+
+        {/* Type knowledge progress (random types mode only) */}
+        {pokedexKnowledge && (
+          <Tooltip title={t(tr.runPage.pokedexKnowledgeHint, lang)} arrow>
+            <Box
+              sx={{
+                p: 1.5,
+                background: "linear-gradient(to right, #EFF6FF, #F3E8FF)",
+                border: "2px solid #000",
+                borderRadius: "0.75rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.75,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  gap: 1,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography sx={{ fontWeight: 700, fontSize: "0.85rem" }}>
+                  📘 {t(tr.runPage.pokedexKnowledgeTitle, lang)}
+                </Typography>
+                <Typography sx={{ fontWeight: 900, fontSize: "0.95rem" }}>
+                  {pokedexKnowledge.percent.toFixed(
+                    pokedexKnowledge.percent < 10 ? 2 : 1,
+                  )}
+                  %
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  height: "10px",
+                  background: "#fff",
+                  border: "2px solid #000",
+                  borderRadius: "999px",
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  sx={{
+                    height: "100%",
+                    transition: "width 700ms ease",
+                    background: "linear-gradient(to right, #3b82f6, #a855f7)",
+                    width: `${Math.min(100, pokedexKnowledge.percent)}%`,
+                    // Keep a visible sliver for tiny percentages (1330 Pokémon dilute progress)
+                    minWidth: pokedexKnowledge.percent > 0 ? "6px" : 0,
+                  }}
+                />
+              </Box>
+              <Typography
+                sx={{ fontSize: "0.7rem", fontWeight: 600, color: "#475569" }}
+              >
+                {t(tr.runPage.pokedexKnowledgeDetail, lang)(
+                  pokedexKnowledge.known,
+                  pokedexKnowledge.partial,
+                  pokedexKnowledge.total,
+                )}
+              </Typography>
+            </Box>
+          </Tooltip>
+        )}
+
         {/* Search + Sort controls */}
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <TextField
@@ -380,128 +584,188 @@ export default function PokedexView({ runId }: Props) {
               randomTypesMode && resolvedTypes.length === 0
                 ? [t(tr.pokemonDetail.unknownType, lang)]
                 : resolvedTypes;
+            const isManuallyAdded =
+              isRegional && !isDefaultPokedexEntry(entry, regionalPokedex);
 
             return (
               <Box
                 key={entry.id}
-                component="button"
-                onClick={() => setSelectedCapture(rowCapture)}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  p: 1,
-                  background: "#fff",
-                  border: "2px solid #000",
-                  borderRadius: "0.75rem",
-                  textAlign: "left",
-                  cursor: "pointer",
-                  transition: "all 150ms ease",
-                  "&:hover": {
-                    background: "#f8fafc",
-                    transform: "translateY(-1px)",
-                  },
-                }}
+                sx={{ display: "flex", alignItems: "stretch", gap: 0.5 }}
               >
                 <Box
+                  component="button"
+                  onClick={() => setSelectedCapture(rowCapture)}
                   sx={{
-                    minWidth: "48px",
-                    textAlign: "center",
-                    fontSize: "0.72rem",
-                    fontWeight: 800,
-                    color: "#334155",
-                    flexShrink: 0,
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    p: 1,
+                    background: "#fff",
+                    border: "2px solid #000",
+                    borderRadius: "0.75rem",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    transition: "all 150ms ease",
+                    "&:hover": {
+                      background: "#f8fafc",
+                      transform: "translateY(-1px)",
+                    },
                   }}
                 >
-                  #{entry.id}
-                </Box>
-
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={
-                    data?.sprites?.normal?.default ??
-                    entry.sprites?.normal?.default ??
-                    ""
-                  }
-                  alt={displayLabel}
-                  onError={async (event) => {
-                    const defaultSprite = await getDefaultSprite(entry.id);
-                    if (
-                      defaultSprite &&
-                      event.currentTarget &&
-                      event.currentTarget.src !== defaultSprite
-                    ) {
-                      event.currentTarget.src = defaultSprite;
-                    }
-                  }}
-                  style={{
-                    width: "56px",
-                    height: "56px",
-                    objectFit: "contain",
-                    flexShrink: 0,
-                  }}
-                />
-
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography
+                  <Box
                     sx={{
-                      fontSize: "0.9rem",
-                      fontWeight: 700,
-                      color: "#000",
-                      textTransform: "capitalize",
-                      lineHeight: 1.2,
+                      minWidth: "48px",
+                      textAlign: "center",
+                      fontSize: "0.72rem",
+                      fontWeight: 800,
+                      color: "#334155",
+                      flexShrink: 0,
                     }}
                   >
-                    {displayLabel}
-                  </Typography>
+                    #{entry.id}
+                  </Box>
+
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={
+                      data?.sprites?.normal?.default ??
+                      entry.sprites?.normal?.default ??
+                      ""
+                    }
+                    alt={displayLabel}
+                    onError={async (event) => {
+                      const defaultSprite = await getDefaultSprite(entry.id);
+                      if (
+                        defaultSprite &&
+                        event.currentTarget &&
+                        event.currentTarget.src !== defaultSprite
+                      ) {
+                        event.currentTarget.src = defaultSprite;
+                      }
+                    }}
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      objectFit: "contain",
+                      flexShrink: 0,
+                    }}
+                  />
+
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.75,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "0.9rem",
+                          fontWeight: 700,
+                          color: "#000",
+                          textTransform: "capitalize",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {displayLabel}
+                      </Typography>
+                      {isManuallyAdded && (
+                        <Box
+                          sx={{
+                            px: 0.6,
+                            py: 0.1,
+                            borderRadius: "999px",
+                            fontSize: "0.6rem",
+                            fontWeight: 800,
+                            background: "#fef3c7",
+                            border: "1px solid #000",
+                            color: "#92400e",
+                          }}
+                        >
+                          {t(tr.runPage.pokedexAddedBadge, lang)}
+                        </Box>
+                      )}
+                    </Box>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        mt: 0.5,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {displayedTypes.map((typeName) => (
+                        <Box
+                          key={typeName}
+                          sx={{
+                            px: 0.75,
+                            py: 0.2,
+                            borderRadius: "999px",
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            color: "#fff",
+                            textTransform: "capitalize",
+                            background:
+                              typeColors[typeName] ??
+                              (typeName ===
+                              t(tr.pokemonDetail.unknownType, lang)
+                                ? "#64748b"
+                                : "#888"),
+                            border: "1px solid #000",
+                          }}
+                        >
+                          {typeName === t(tr.pokemonDetail.unknownType, lang)
+                            ? typeName
+                            : getTypeTranslation(typeName, lang)}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
 
                   <Box
                     sx={{
-                      display: "flex",
-                      gap: 0.5,
-                      mt: 0.5,
-                      flexWrap: "wrap",
+                      minWidth: "56px",
+                      textAlign: "right",
+                      fontSize: "0.75rem",
+                      fontWeight: 800,
+                      color: "#334155",
+                      flexShrink: 0,
                     }}
                   >
-                    {displayedTypes.map((typeName) => (
-                      <Box
-                        key={typeName}
-                        sx={{
-                          px: 0.75,
-                          py: 0.2,
-                          borderRadius: "999px",
-                          fontSize: "0.68rem",
-                          fontWeight: 700,
-                          color: "#fff",
-                          textTransform: "capitalize",
-                          background:
-                            typeColors[typeName] ??
-                            (typeName === t(tr.pokemonDetail.unknownType, lang)
-                              ? "#64748b"
-                              : "#888"),
-                          border: "1px solid #000",
-                        }}
-                      >
-                        {typeName === t(tr.pokemonDetail.unknownType, lang)
-                          ? typeName
-                          : getTypeTranslation(typeName, lang)}
-                      </Box>
-                    ))}
+                    {bst !== null ? `BST ${bst}` : "…"}
                   </Box>
                 </Box>
-
-                <Box
-                  sx={{
-                    minWidth: "56px",
-                    textAlign: "right",
-                    fontSize: "0.75rem",
-                    fontWeight: 800,
-                    color: "#334155",
-                    flexShrink: 0,
-                  }}
-                >
-                  {bst !== null ? `BST ${bst}` : "…"}
-                </Box>
+                {run && (
+                  <Tooltip
+                    title={t(tr.runPage.pokedexRemoveTooltip, lang)}
+                    arrow
+                  >
+                    <Box
+                      component="button"
+                      onClick={() => handleRemoveEntry(entry)}
+                      aria-label={t(tr.runPage.pokedexRemoveTooltip, lang)}
+                      sx={{
+                        px: 1,
+                        border: "2px solid #000",
+                        borderRadius: "0.75rem",
+                        background: "#fff",
+                        cursor: "pointer",
+                        color: "#dc2626",
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                        flexShrink: 0,
+                        "&:hover": { background: "#fee2e2" },
+                      }}
+                    >
+                      ✕
+                    </Box>
+                  </Tooltip>
+                )}
               </Box>
             );
           })
@@ -581,6 +845,135 @@ export default function PokedexView({ runId }: Props) {
           onClose={() => setSelectedCapture(null)}
         />
       )}
+
+      {/* Add Pokémon to the dex */}
+      <Dialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              background: "#FEF3E2",
+              border: "3px solid #000",
+              borderRadius: "1.5rem",
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontSize: "1.25rem" }}>
+          {t(tr.runPage.pokedexAddTitle, lang)}
+        </DialogTitle>
+        <DialogContent
+          sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 1.5 }}
+        >
+          <Typography sx={{ fontSize: "0.85rem" }}>
+            {t(tr.runPage.pokedexAddDescription, lang)}
+          </Typography>
+          <StyledTextField
+            autoFocus
+            fullWidth
+            placeholder={t(tr.runPage.pokedexSearchPlaceholder, lang)}
+            value={addSearch}
+            onChange={(e) => setAddSearch(e.target.value)}
+          />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 0.75,
+              maxHeight: "50vh",
+              overflowY: "auto",
+            }}
+          >
+            {addCandidates.length === 0 ? (
+              <Typography sx={{ fontSize: "0.85rem", color: "#475569" }}>
+                {t(tr.runPage.pokedexNoSearchResult, lang)}
+              </Typography>
+            ) : (
+              addCandidates.map((entry) => {
+                const label =
+                  lang === "fr"
+                    ? (entry.names?.fr ??
+                      entry.names?.en ??
+                      entry.technicalName)
+                    : (entry.names?.en ?? entry.technicalName);
+                const wasRemoved = run?.pokedexRemovedPokemonIds?.includes(
+                  entry.id,
+                );
+                return (
+                  <Box
+                    key={entry.id}
+                    component="button"
+                    onClick={() => handleAddEntry(entry)}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      px: 1,
+                      py: 0.5,
+                      background: "#fff",
+                      border: "2px solid #000",
+                      borderRadius: "0.75rem",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      "&:hover": { background: "#dcfce7" },
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={entry.sprites?.normal?.default ?? ""}
+                      alt={label}
+                      style={{ width: 40, height: 40, objectFit: "contain" }}
+                    />
+                    <Box
+                      sx={{
+                        fontSize: "0.72rem",
+                        fontWeight: 800,
+                        color: "#334155",
+                        minWidth: 44,
+                      }}
+                    >
+                      #{entry.id}
+                    </Box>
+                    <Box
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "0.9rem",
+                        textTransform: "capitalize",
+                        flex: 1,
+                      }}
+                    >
+                      {label}
+                    </Box>
+                    {wasRemoved && (
+                      <Box
+                        sx={{
+                          fontSize: "0.65rem",
+                          fontWeight: 700,
+                          color: "#92400e",
+                        }}
+                      >
+                        {t(tr.runPage.pokedexRemovedBadge, lang)}
+                      </Box>
+                    )}
+                    <Box sx={{ fontWeight: 900, color: "#16a34a" }}>＋</Box>
+                  </Box>
+                );
+              })
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ gap: 1, p: 2 }}>
+          <StyledButton
+            variant="secondary"
+            onClick={() => setShowAddDialog(false)}
+          >
+            {t(tr.runPage.close, lang)}
+          </StyledButton>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

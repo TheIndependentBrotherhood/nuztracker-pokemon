@@ -4,6 +4,7 @@ import {
   TYPES,
   loadTypeData,
   buildTypeDefensesFromJson,
+  TypeChartData,
 } from "./type-chart";
 
 /**
@@ -55,16 +56,13 @@ function isWonderGuard(abilityName: string): boolean {
  * Check if a type combination matches all observations
  * Considers both type-based and ability-based immunities
  */
-async function typeComboMatchesObservations(
+export function typeComboMatchesObservationsSync(
   types: string[],
   observations: TypeObservation[],
-  abilityPanel: string[] = [],
-  generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
-): Promise<boolean> {
+  abilityPanel: string[],
+  typeData: TypeChartData,
+): boolean {
   if (observations.length === 0) return true;
-
-  // Load type data for the generation
-  const typeData = await loadTypeData(generation);
 
   // Calculate the combined defense for this type combo
   const defenses = buildTypeDefensesFromJson(types, typeData);
@@ -118,10 +116,33 @@ async function typeComboMatchesObservations(
   return true;
 }
 
+async function typeComboMatchesObservations(
+  types: string[],
+  observations: TypeObservation[],
+  abilityPanel: string[] = [],
+  generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
+): Promise<boolean> {
+  if (observations.length === 0) return true;
+
+  // Load type data for the generation
+  const typeData = await loadTypeData(generation);
+
+  return typeComboMatchesObservationsSync(
+    types,
+    observations,
+    abilityPanel,
+    typeData,
+  );
+}
+
 /**
  * Get all possible type combinations (mono or dual type)
  */
-function generateAllTypeCombos(): string[][] {
+let allTypeCombosCache: string[][] | null = null;
+
+export function generateAllTypeCombos(): string[][] {
+  if (allTypeCombosCache) return allTypeCombosCache;
+
   const combos: string[][] = [];
 
   // Mono types
@@ -136,7 +157,38 @@ function generateAllTypeCombos(): string[][] {
     }
   }
 
+  allTypeCombosCache = combos;
   return combos;
+}
+
+/** Number of possible type combinations: 18 mono + C(18, 2) = 153 dual = 171 */
+export const TOTAL_TYPE_COMBOS = generateAllTypeCombos().length;
+
+/**
+ * Count the type combinations still compatible with the given observations.
+ * Synchronous variant used for aggregate computations (e.g. Pokédex progress).
+ */
+export function countPossibleTypeCombos(
+  observations: TypeObservation[],
+  abilityPanel: string[],
+  typeData: TypeChartData,
+): number {
+  if (observations.length === 0) return TOTAL_TYPE_COMBOS;
+
+  let count = 0;
+  for (const combo of generateAllTypeCombos()) {
+    if (
+      typeComboMatchesObservationsSync(
+        combo,
+        observations,
+        abilityPanel,
+        typeData,
+      )
+    ) {
+      count++;
+    }
+  }
+  return count;
 }
 
 /**

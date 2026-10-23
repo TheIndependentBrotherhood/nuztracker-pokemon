@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Tooltip,
 } from "@mui/material";
 import { Run, Zone, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import StatCard from "@/components/ui/StatCard";
@@ -30,6 +31,180 @@ interface Props {
     showTypes: boolean;
     tightTypes: boolean;
   }) => void;
+}
+
+const PROGRESS_CAPTURED_BG = "linear-gradient(to right, #22c55e, #16a34a)";
+const PROGRESS_DEAD_BG = "linear-gradient(to right, #4b5563, #1f2937)";
+const PROGRESS_LOST_BG =
+  "repeating-linear-gradient(135deg, #ef4444 0 6px, #f87171 6px 12px)";
+const PROGRESS_LOST_LEGEND_BG =
+  "repeating-linear-gradient(135deg, #ef4444 0 3px, #f87171 3px 6px)";
+
+function ProgressLegendItem({
+  background,
+  label,
+}: {
+  background: string;
+  label: string;
+}) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      <Box
+        sx={{
+          width: 10,
+          height: 10,
+          borderRadius: "2px",
+          border: "1px solid #000",
+          background,
+          flexShrink: 0,
+        }}
+      />
+      {label}
+    </Box>
+  );
+}
+
+/** Segmented zone progress bar: captured (green), dead (dark grey) and lost (red). */
+function ZoneProgressBar({
+  lang,
+  total,
+  captured,
+  dead,
+  lost,
+  kills,
+  playerName,
+  playerColor,
+}: {
+  lang: "fr" | "en";
+  total: number;
+  captured: number;
+  dead: number;
+  lost: number;
+  kills?: number;
+  playerName?: string;
+  playerColor?: string;
+}) {
+  const tr = translations;
+  const toPercent = (n: number) => (total > 0 ? (n / total) * 100 : 0);
+  const finished = captured + dead + lost;
+  const remaining = Math.max(0, total - finished);
+  const tooltipParts = [
+    t(tr.statsBar.progressCaptured, lang)(captured),
+    t(tr.statsBar.progressDead, lang)(dead),
+    t(tr.statsBar.progressLost, lang)(lost),
+    t(tr.statsBar.progressRemaining, lang)(remaining),
+  ];
+  if (kills !== undefined) {
+    tooltipParts.push(t(tr.statsBar.progressKills, lang)(kills));
+  }
+
+  return (
+    <Box
+      sx={
+        playerName
+          ? {
+              p: 1.25,
+              background: "#fff",
+              border: `2px solid ${playerColor ?? "#000"}`,
+              borderRadius: "0.75rem",
+            }
+          : undefined
+      }
+    >
+      {playerName && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.75,
+            mb: 0.75,
+            fontSize: "0.8rem",
+            fontWeight: 900,
+            color: playerColor ?? "#000",
+          }}
+        >
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: playerColor ?? "#000",
+              border: "1px solid #000",
+            }}
+          />
+          {playerName}
+        </Box>
+      )}
+      <Tooltip arrow title={tooltipParts.join(" · ")}>
+        <Box
+          sx={{
+            height: "12px",
+            background: "#fff",
+            border: "2px solid #000",
+            borderRadius: "999px",
+            overflow: "hidden",
+            display: "flex",
+          }}
+        >
+          <Box
+            sx={{
+              height: "100%",
+              transition: "width 700ms ease",
+              background: PROGRESS_CAPTURED_BG,
+              width: `${toPercent(captured)}%`,
+            }}
+          />
+          <Box
+            sx={{
+              height: "100%",
+              transition: "width 700ms ease",
+              background: PROGRESS_DEAD_BG,
+              width: `${toPercent(dead)}%`,
+            }}
+          />
+          <Box
+            sx={{
+              height: "100%",
+              transition: "width 700ms ease",
+              background: PROGRESS_LOST_BG,
+              width: `${toPercent(lost)}%`,
+            }}
+          />
+        </Box>
+      </Tooltip>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 1,
+          mt: 0.5,
+          px: 0.5,
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          color: "#475569",
+        }}
+      >
+        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+          <ProgressLegendItem
+            background={PROGRESS_CAPTURED_BG}
+            label={t(tr.statsBar.progressCaptured, lang)(captured)}
+          />
+          <ProgressLegendItem
+            background={PROGRESS_DEAD_BG}
+            label={t(tr.statsBar.progressDead, lang)(dead)}
+          />
+          <ProgressLegendItem
+            background={PROGRESS_LOST_LEGEND_BG}
+            label={t(tr.statsBar.progressLost, lang)(lost)}
+          />
+          {kills !== undefined && kills > 0 && (
+            <Box>☠️ {t(tr.statsBar.progressKills, lang)(kills)}</Box>
+          )}
+        </Box>
+        <Box sx={{ flexShrink: 0 }}>{Math.round(toPercent(finished))}%</Box>
+      </Box>
+    </Box>
+  );
 }
 
 function TeamPreviewPokemonTile({
@@ -155,7 +330,18 @@ export default function StatsBar({
 
   const captureRate =
     finished > 0 ? Math.round((captured / finished) * 100) : 0;
-  const progress = total > 0 ? (finished / total) * 100 : 0;
+  // Segmented progress: captured (alive), dead (captured then died) and lost zones
+  const isZoneDead = (z: Zone) =>
+    z.status === "captured" &&
+    z.captures.length > 0 &&
+    !z.captures.some((c: Capture) => !c.isDead);
+  const deadZoneCount = run.zones.filter(isZoneDead).length;
+  const capturedZoneCount =
+    run.zones.filter((z: Zone) => z.status === "captured").length -
+    deadZoneCount;
+  const lostZoneCount = run.zones.filter(
+    (z: Zone) => z.status === "lost",
+  ).length;
 
   // Get last 3 dead pokémons for RIP export (sorted by death time, most recent first)
   const deadPokemon = run.zones
@@ -203,6 +389,37 @@ export default function StatsBar({
               c.isDead && (c.playerIndex ?? 0) === player.playerIndex,
           ).length,
       }))
+    : [];
+
+  // Soul Link per-player zone progress (captured / dead / lost / kills)
+  const perPlayerProgress = isSoulLink
+    ? soulLinkPlayers.map((player) => {
+        let capturedCount = 0;
+        let deadCount = 0;
+        let lostCount = 0;
+        run.zones.forEach((z: Zone) => {
+          const playerCaptures = z.captures.filter(
+            (c: Capture) => (c.playerIndex ?? 0) === player.playerIndex,
+          );
+          if (playerCaptures.length === 0) return;
+          if (playerCaptures.some((c: Capture) => !c.isDead)) {
+            capturedCount++;
+          } else if (
+            playerCaptures.some((c: Capture) => c.isDead && !c.failedCapture)
+          ) {
+            deadCount++;
+          } else {
+            lostCount++;
+          }
+        });
+        const kills = run.zones
+          .flatMap((z: Zone) => z.captures)
+          .filter(
+            (c: Capture) =>
+              c.isDead && c.killedByPlayerIndex === player.playerIndex,
+          ).length;
+        return { player, capturedCount, deadCount, lostCount, kills };
+      })
     : [];
 
   // Export handlers for team stats card
@@ -780,26 +997,42 @@ export default function StatsBar({
         />
       </Stack>
 
-      {/* Global progress bar */}
-      <Box
-        sx={{
-          height: "12px",
-          background: "#fff",
-          border: "2px solid #000",
-          borderRadius: "999px",
-          overflow: "hidden",
-        }}
-      >
+      {/* Global progress bar: captured (green) + dead (dark) + lost (red) segments */}
+      <ZoneProgressBar
+        lang={lang}
+        total={total}
+        captured={capturedZoneCount}
+        dead={deadZoneCount}
+        lost={lostZoneCount}
+      />
+
+      {/* Soul Link: one progress bar per player */}
+      {isSoulLink && perPlayerProgress.length > 0 && (
         <Box
           sx={{
-            height: "100%",
-            borderRadius: "999px",
-            transition: "width 700ms ease",
-            background: "linear-gradient(to right, #3b82f6, #a855f7)",
-            width: `${progress}%`,
+            mt: 1.5,
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gap: 1.5,
           }}
-        />
-      </Box>
+        >
+          {perPlayerProgress.map(
+            ({ player, capturedCount, deadCount, lostCount, kills }) => (
+              <ZoneProgressBar
+                key={player.id}
+                lang={lang}
+                total={total}
+                captured={capturedCount}
+                dead={deadCount}
+                lost={lostCount}
+                kills={kills}
+                playerName={player.name}
+                playerColor={SOUL_LINK_PLAYER_COLORS[player.playerIndex]}
+              />
+            ),
+          )}
+        </Box>
+      )}
 
       {/* Export Dialog */}
       <Dialog

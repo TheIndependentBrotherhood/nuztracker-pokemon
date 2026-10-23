@@ -15,6 +15,7 @@ export async function generateStaticParams() {
     { step: "abilities" },
     { step: "pokemon-list" },
     { step: "regions" },
+    { step: "regional-pokedexes" },
     { step: "animated-sprites" },
     { step: "evolution-chains" },
   ];
@@ -72,6 +73,9 @@ export async function POST(
           break;
         case "regions":
           await syncRegions(send);
+          break;
+        case "regional-pokedexes":
+          await syncRegionalPokedexes(send);
           break;
         case "animated-sprites":
           await syncAnimatedSprites(send);
@@ -879,6 +883,130 @@ async function syncRegions(send: SendFn) {
     deleted,
     incoming: {
       regions: incomingRegions,
+      generatedAt: new Date().toISOString(),
+    },
+  });
+}
+
+// ─── regional pokedexes sync ─────────────────────────────────────────────────
+
+/**
+ * PokeAPI pokédexes merged per region. Remakes / alternative versions
+ * (Platinum, HGSS, ORAS, USUM, DLCs…) are combined with the original dex.
+ */
+const REGIONAL_POKEDEX_SOURCES: Record<string, string[]> = {
+  kanto: ["kanto"],
+  johto: ["original-johto", "updated-johto"],
+  hoenn: ["hoenn", "updated-hoenn"],
+  sinnoh: ["original-sinnoh", "extended-sinnoh"],
+  unova: ["original-unova", "updated-unova"],
+  kalos: ["kalos-central", "kalos-coastal", "kalos-mountain"],
+  alola: ["original-alola", "updated-alola"],
+  galar: ["galar", "isle-of-armor", "crown-tundra"],
+  hisui: ["hisui"],
+  paldea: ["paldea", "kitakami", "blueberry"],
+};
+
+interface RegionalPokedexEntry {
+  region: string;
+  pokedexes: string[];
+  speciesIds: number[];
+}
+
+async function syncRegionalPokedexes(send: SendFn) {
+  const POKEAPI = "https://pokeapi.co/api/v2";
+
+  const current = readCurrentFile<{ pokedexes: RegionalPokedexEntry[] }>(
+    "regional-pokedexes.json",
+  );
+  const currentByRegion = new Map(
+    (current?.pokedexes ?? []).map((p) => [p.region, p]),
+  );
+
+  const regionNames = Object.keys(REGIONAL_POKEDEX_SOURCES);
+  send({
+    type: "progress",
+    message: `📘 Fetching ${regionNames.length} regional pokédexes from PokeAPI…`,
+    current: 0,
+    total: regionNames.length,
+  });
+
+  const incoming: RegionalPokedexEntry[] = [];
+
+  for (let i = 0; i < regionNames.length; i++) {
+    const region = regionNames[i];
+    const sources = REGIONAL_POKEDEX_SOURCES[region];
+    const speciesIds: number[] = [];
+    const seen = new Set<number>();
+
+    for (const dexName of sources) {
+      send({
+        type: "progress",
+        message: `  📖 ${region}: pokédex "${dexName}"…`,
+        current: i,
+        total: regionNames.length,
+      });
+
+      const dex = await fetchJson<{
+        pokemon_entries: {
+          entry_number: number;
+          pokemon_species: { name: string; url: string };
+        }[];
+      }>(`${POKEAPI}/pokedex/${dexName}`, 100);
+
+      // Keep the dex order (entry_number) and append species not seen yet
+      const sorted = [...dex.pokemon_entries].sort(
+        (a, b) => a.entry_number - b.entry_number,
+      );
+      for (const entry of sorted) {
+        const match = entry.pokemon_species.url.match(/\/(\d+)\/?$/);
+        if (!match) continue;
+        const id = Number(match[1]);
+        if (!seen.has(id)) {
+          seen.add(id);
+          speciesIds.push(id);
+        }
+      }
+    }
+
+    incoming.push({ region, pokedexes: sources, speciesIds });
+    send({
+      type: "progress",
+      message: `✓ ${region}: ${speciesIds.length} species`,
+      current: i + 1,
+      total: regionNames.length,
+    });
+  }
+
+  const added: unknown[] = [];
+  const modified: unknown[] = [];
+  const deleted: unknown[] = [];
+
+  for (const entry of incoming) {
+    const existing = currentByRegion.get(entry.region);
+    if (!existing) {
+      added.push(entry);
+    } else if (JSON.stringify(existing) !== JSON.stringify(entry)) {
+      modified.push({ current: existing, incoming: entry });
+    }
+  }
+  const incomingRegions = new Set(incoming.map((e) => e.region));
+  for (const [region, entry] of currentByRegion) {
+    if (!incomingRegions.has(region)) deleted.push(entry);
+  }
+
+  send({
+    type: "progress",
+    message: `📊 Diff: +${added.length} | ~${modified.length} | -${deleted.length}`,
+  });
+
+  send({
+    type: "diff",
+    added,
+    modified,
+    deleted,
+    incoming: {
+      pokedexes: incoming,
       generatedAt: new Date().toISOString(),
     },
   });

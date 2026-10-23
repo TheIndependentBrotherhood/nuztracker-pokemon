@@ -36,6 +36,7 @@ function CaptureThumbnail({
   playerColor,
   playerLabel,
   isPlaceholder,
+  onPlaceholderClick,
 }: {
   capture: Capture;
   lang: "fr" | "en";
@@ -44,6 +45,8 @@ function CaptureThumbnail({
   playerColor?: string;
   playerLabel?: string;
   isPlaceholder?: boolean;
+  /** Soul Link empty slot: clicking opens the capture modal for that player */
+  onPlaceholderClick?: () => void;
 }) {
   const displayName = useCaptureDisplayName(capture, lang);
   const displayLabel = useCaptureDisplayLabel(capture, lang);
@@ -72,13 +75,15 @@ function CaptureThumbnail({
           component="button"
           onClick={(e) => {
             e.stopPropagation();
-            if (!isPlaceholder) setShowPokemonDetail(true);
+            if (isPlaceholder) onPlaceholderClick?.();
+            else setShowPokemonDetail(true);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               e.stopPropagation();
-              if (!isPlaceholder) setShowPokemonDetail(true);
+              if (isPlaceholder) onPlaceholderClick?.();
+              else setShowPokemonDetail(true);
             }
           }}
           sx={{
@@ -96,7 +101,8 @@ function CaptureThumbnail({
               ? `2px solid ${playerColor}`
               : `1px solid ${captureStyle.borderColor ?? "rgba(71, 85, 99, 0.3)"}`,
             borderRadius: "0.5rem",
-            cursor: isPlaceholder ? "default" : "pointer",
+            cursor:
+              isPlaceholder && !onPlaceholderClick ? "default" : "pointer",
             transition: "all 150ms ease",
             opacity: isPlaceholder ? 0.55 : 1,
             "&:hover": isPlaceholder
@@ -451,30 +457,17 @@ export default function ZoneItem({
                 playerIndex: player.playerIndex,
               };
               return (
-                <Box
+                <CaptureThumbnail
                   key={player.id}
-                  component="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openCapture(player.playerIndex);
-                  }}
-                  sx={{
-                    background: "none",
-                    border: "none",
-                    p: 0,
-                    cursor: "pointer",
-                  }}
-                >
-                  <CaptureThumbnail
-                    capture={placeholder}
-                    lang={lang}
-                    runId={runId}
-                    zoneId={zone.id}
-                    playerColor={color}
-                    playerLabel={label}
-                    isPlaceholder
-                  />
-                </Box>
+                  capture={placeholder}
+                  lang={lang}
+                  runId={runId}
+                  zoneId={zone.id}
+                  playerColor={color}
+                  playerLabel={label}
+                  isPlaceholder
+                  onPlaceholderClick={() => openCapture(player.playerIndex)}
+                />
               );
             })}
           </Box>

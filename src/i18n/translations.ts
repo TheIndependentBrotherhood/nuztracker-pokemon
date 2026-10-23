@@ -493,6 +493,26 @@ const translations = {
   statsBar: {
     caught: { fr: "Capturés", en: "Caught" },
     dead: { fr: "RIP", en: "RIP" },
+    progressCaptured: {
+      fr: (n: number) => `${n} capturée${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} captured`,
+    },
+    progressLost: {
+      fr: (n: number) => `${n} ratée${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} lost`,
+    },
+    progressDead: {
+      fr: (n: number) => `${n} mort${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} dead`,
+    },
+    progressKills: {
+      fr: (n: number) => `${n} kill${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} kill${n > 1 ? "s" : ""}`,
+    },
+    progressRemaining: {
+      fr: (n: number) => `${n} restante${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} remaining`,
+    },
     exportDimensionsHint: {
       fr: "De 440x720px à 1920x1080px",
       en: "From 440x720px to 1920x1080px",
@@ -682,6 +702,55 @@ const translations = {
     pokedexSortDex: { fr: "Trier par numéro", en: "Sort by Pokédex number" },
     pokedexSortName: { fr: "Trier par nom", en: "Sort by name" },
     pokedexSortType: { fr: "Trier par type", en: "Sort by type" },
+    pokedexRegionalTitle: {
+      fr: (region: string) => `📘 Pokédex de ${region}`,
+      en: (region: string) => `📘 ${region} Pokédex`,
+    },
+    pokedexNationalTitle: {
+      fr: "📘 Pokédex national",
+      en: "📘 National Pokédex",
+    },
+    pokedexEntryCount: {
+      fr: (n: number) => `${n} Pokémon`,
+      en: (n: number) => `${n} Pokémon`,
+    },
+    pokedexAddedCount: {
+      fr: (n: number) => `${n} ajouté${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} added`,
+    },
+    pokedexRemovedCount: {
+      fr: (n: number) => `${n} retiré${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} removed`,
+    },
+    pokedexAddButton: { fr: "➕ Ajouter un Pokémon", en: "➕ Add a Pokémon" },
+    pokedexAddTitle: {
+      fr: "Ajouter un Pokémon au Pokédex",
+      en: "Add a Pokémon to the Pokédex",
+    },
+    pokedexAddDescription: {
+      fr: "Ajoute un Pokémon absent du Pokédex régional (forme, Pokémon d'une autre région, Pokémon retiré par erreur…). Tu pourras le retirer à tout moment avec ✕.",
+      en: "Add a Pokémon missing from the regional Pokédex (form, Pokémon from another region, Pokémon removed by mistake…). You can remove it anytime with ✕.",
+    },
+    pokedexAddedBadge: { fr: "ajouté", en: "added" },
+    pokedexRemovedBadge: { fr: "retiré", en: "removed" },
+    pokedexRemoveTooltip: {
+      fr: "Retirer du Pokédex",
+      en: "Remove from Pokédex",
+    },
+    pokedexKnowledgeTitle: {
+      fr: "Connaissance des types",
+      en: "Type knowledge",
+    },
+    pokedexKnowledgeDetail: {
+      fr: (known: number, partial: number, total: number) =>
+        `${known} connu${known > 1 ? "s" : ""} · ${partial} en cours · ${total} Pokémon`,
+      en: (known: number, partial: number, total: number) =>
+        `${known} known · ${partial} in progress · ${total} Pokémon`,
+    },
+    pokedexKnowledgeHint: {
+      fr: "Un Pokémon aux types confirmés compte à 100 %. Sinon, chaque observation réduit les 171 combinaisons possibles et fait progresser la connaissance.",
+      en: "A Pokémon with confirmed types counts as 100%. Otherwise, each observation narrows the 171 possible combinations and increases knowledge.",
+    },
     analysis: { fr: "🔬 Analyse", en: "🔬 Analysis" },
     close: { fr: "Fermer", en: "Close" },
     loading: { fr: "Chargement...", en: "Loading..." },

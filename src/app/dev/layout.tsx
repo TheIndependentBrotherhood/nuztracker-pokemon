@@ -6,8 +6,17 @@ import { ReactNode } from "react";
 
 const STEPS = [
   { key: "pokemon-list", label: "📦 Pokémon List", file: "pokemon-list.json" },
-  { key: "evolution-chains", label: "🧬 Evolution Chains", file: "evolution-chains.json" },
+  {
+    key: "evolution-chains",
+    label: "🧬 Evolution Chains",
+    file: "evolution-chains.json",
+  },
   { key: "regions", label: "🗺️ Régions", file: "regions.json" },
+  {
+    key: "regional-pokedexes",
+    label: "📘 Pokédex régionaux",
+    file: "regional-pokedexes.json",
+  },
   { key: "type-charts", label: "📊 Types Charts", file: "type-charts.json" },
   { key: "type-sprites", label: "🎨 Type Sprites", file: "type-sprites.json" },
   {
