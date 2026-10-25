@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Button,
@@ -64,6 +64,21 @@ export default function TypeDeductionTool({
 
     return () => clearTimeout(timeout);
   }, [localNotes, notes, onNotesChange]);
+
+  // Flush pending notes when the tool unmounts (e.g. switching Pokémon in advanced comparison)
+  const pendingNotesRef = useRef({ localNotes, notes, onNotesChange });
+  useEffect(() => {
+    pendingNotesRef.current = { localNotes, notes, onNotesChange };
+  }, [localNotes, notes, onNotesChange]);
+  useEffect(
+    () => () => {
+      const pending = pendingNotesRef.current;
+      if (pending.localNotes !== pending.notes) {
+        pending.onNotesChange(pending.localNotes);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const loadPossibleTypes = async () => {

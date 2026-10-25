@@ -250,6 +250,7 @@ export default function AdvancedComparisonModal({
             )}
             <Box sx={{ maxHeight: "calc(90vh - 200px)", overflowY: "auto" }}>
               <PokemonDetailModal
+                key={selectedCaptureLeft.id}
                 pokemonCaptured={selectedCaptureLeft}
                 runId={runId}
                 onClose={() => {}} // Don't close when clicking inside
@@ -390,6 +391,7 @@ export default function AdvancedComparisonModal({
                   sx={{ maxHeight: "calc(90vh - 200px)", overflowY: "auto" }}
                 >
                   <PokemonDetailModal
+                    key={selectedCaptureRight.id}
                     pokemonCaptured={selectedCaptureRight}
                     runId={runId}
                     onClose={() => {}} // Don't close when clicking inside
