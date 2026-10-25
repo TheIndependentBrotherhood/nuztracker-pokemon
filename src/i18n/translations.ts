@@ -346,6 +346,16 @@ const translations = {
     },
   },
 
+  // ── Run Settings ───────────────────────────────────────────────────────────
+  runSettings: {
+    title: { fr: "⚙️ Paramètres du run", en: "⚙️ Run settings" },
+    button: { fr: "Paramètres du run", en: "Run settings" },
+    typeChartHint: {
+      fr: "La table des types est appliquée immédiatement à l'analyse d'équipe, aux comparaisons et à la déduction des types dans le Pokédex.",
+      en: "The type chart applies immediately to the team analysis, comparisons and Pokédex type deduction.",
+    },
+  },
+
   // ── Zone List ──────────────────────────────────────────────────────────────
   zoneList: {
     searchPlaceholder: {

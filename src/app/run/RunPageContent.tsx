@@ -13,6 +13,7 @@ import TeamColumn from "@/components/share/TeamColumn";
 import TypeAnalysis from "@/components/run/team/TypeAnalysis";
 import Header from "@/components/layout/Header";
 import StyledButton from "@/components/ui/StyledButton";
+import RunSettingsModal from "@/components/run/modals/RunSettingsModal";
 import { PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -42,6 +43,7 @@ export default function RunPageContent({ runId }: Props) {
   );
   const [exportShowTypes, setExportShowTypes] = useState(true);
   const [exportTightTypes, setExportTightTypes] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { lang } = useLanguage();
   const tr = translations;
   const effectiveRunId = runId ?? runIdFromUrl;
@@ -145,9 +147,22 @@ export default function RunPageContent({ runId }: Props) {
     );
   }
 
+  const settingsAction = (
+    <StyledButton
+      onClick={() => setShowSettings(true)}
+      variant="secondary"
+      title={t(tr.runSettings.button, lang)}
+      aria-label={t(tr.runSettings.button, lang)}
+      sx={{ px: 2, minWidth: 0 }}
+    >
+      ⚙️
+    </StyledButton>
+  );
+
   const statusActions =
     run.status === "in-progress" ? (
       <>
+        {settingsAction}
         <StyledButton
           onClick={() => updateRun({ ...run, status: "completed" })}
           variant="primary"
@@ -163,6 +178,7 @@ export default function RunPageContent({ runId }: Props) {
       </>
     ) : (
       <>
+        {settingsAction}
         <Box
           sx={{
             display: "inline-block",
@@ -220,7 +236,14 @@ export default function RunPageContent({ runId }: Props) {
                 flexShrink: 0,
               }}
             />
-            <Typography sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#000", lineHeight: 1 }}>
+            <Typography
+              sx={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                color: "#000",
+                lineHeight: 1,
+              }}
+            >
               {player.name}
             </Typography>
           </Box>
@@ -241,9 +264,16 @@ export default function RunPageContent({ runId }: Props) {
     </Box>
   );
 
+  const typeChartLabel = {
+    gen1: t(tr.createRun.gen1, lang),
+    "gen2-5": t(tr.createRun.gen25, lang),
+    "gen6+": t(tr.createRun.gen6, lang),
+  }[run.typeChartGeneration];
+
   const headerSubtitle = [
     run.region,
     run.difficulty,
+    `📊 ${typeChartLabel}`,
     run.isShinyHuntMode && "✨ Seconde chance (Shiny)",
     run.isRandomMode && "🎲 Random",
     run.isSoulLinkMode && "🔗 Soul Link",
@@ -277,6 +307,12 @@ export default function RunPageContent({ runId }: Props) {
           setExportShowTypes(options.showTypes);
           setExportTightTypes(options.tightTypes);
         }}
+      />
+
+      <RunSettingsModal
+        run={run}
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
       />
 
       <Box
