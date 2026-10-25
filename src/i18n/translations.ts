@@ -218,6 +218,10 @@ const translations = {
     removeAbility: { fr: "Retirer ce talent", en: "Remove this ability" },
     noAbilityResult: { fr: "Aucun talent trouvé", en: "No ability found" },
     soulLinkPlayer: { fr: "Joueur", en: "Player" },
+    soulLinkPlayerUnavailable: {
+      fr: "Ce joueur ne peut plus capturer ici : il a déjà une capture ou un partenaire a perdu la zone",
+      en: "This player can no longer capture here: they already have a capture or a partner lost the zone",
+    },
   },
   pokemonDetail: {
     loading: { fr: "Chargement...", en: "Loading..." },
@@ -395,6 +399,10 @@ const translations = {
       en: "Delete captures to change status",
     },
     captureFor: { fr: "Capturer pour", en: "Capture for" },
+    linkBroken: {
+      fr: "Lien brisé : le partenaire a raté ou perdu cette zone",
+      en: "Link broken: the partner lost this zone",
+    },
   },
 
   // ── Team View ──────────────────────────────────────────────────────────────
@@ -505,9 +513,22 @@ const translations = {
       fr: (n: number) => `${n} mort${n > 1 ? "s" : ""}`,
       en: (n: number) => `${n} dead`,
     },
-    progressKills: {
-      fr: (n: number) => `${n} kill${n > 1 ? "s" : ""}`,
-      en: (n: number) => `${n} kill${n > 1 ? "s" : ""}`,
+    progressLinkBroken: {
+      fr: (n: number) => `${n} inutilisable${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} unusable`,
+    },
+    progressLinkBrokenHint: {
+      fr: "Zone perdue à cause du partenaire : son Pokémon a été raté ou est mort, donc le Pokémon de ce joueur est inutilisable (ou la capture n'est plus possible).",
+      en: "Zone lost because of the partner: their Pokémon was lost or died, so this player's Pokémon is unusable (or the capture is no longer possible).",
+    },
+    progressLinksBrokenBy: {
+      fr: (n: number) =>
+        `${n} lien${n > 1 ? "s" : ""} brisé${n > 1 ? "s" : ""}`,
+      en: (n: number) => `${n} link${n > 1 ? "s" : ""} broken`,
+    },
+    progressLinksBrokenByHint: {
+      fr: "Ratés ou morts de ce joueur qui ont rendu inutilisable le Pokémon vivant d'un partenaire.",
+      en: "This player's failed captures or deaths that made a partner's alive Pokémon unusable.",
     },
     progressRemaining: {
       fr: (n: number) => `${n} restante${n > 1 ? "s" : ""}`,

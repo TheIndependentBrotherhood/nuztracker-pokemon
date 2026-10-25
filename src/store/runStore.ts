@@ -8,6 +8,7 @@ import {
 } from "@/lib/types";
 import { getRuns, saveRun, deleteRun as deleteRunStorage } from "@/lib/storage";
 import { getZonesForRegion } from "@/lib/zones";
+import { isZoneLockedForPlayer } from "@/lib/zone-progress";
 
 interface RunStore {
   runs: Run[];
@@ -44,6 +45,22 @@ function newId(): string {
   }
   // Fallback: timestamp + two random segments for collision resistance
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
+/**
+ * Zone status derived from the whole set of captures in the zone
+ * (relevant in Soul Link where several players share one zone).
+ */
+export function deriveZoneStatus(
+  captures: Capture[],
+  currentStatus: Zone["status"],
+): Zone["status"] {
+  if (captures.length === 0) return "not-visited";
+  if (captures.some((c) => !c.isDead)) return "captured";
+  if (captures.every((c) => c.failedCapture)) return "lost";
+  // Only dead-after-capture Pokémon left: the zone was captured
+  if (captures.some((c) => c.isDead && !c.failedCapture)) return "captured";
+  return currentStatus;
 }
 
 function normalizeRuns(runs: Run[]): Run[] {
@@ -160,6 +177,8 @@ export const useRunStore = create<RunStore>((set, get) => ({
       ) {
         return;
       }
+      // The link is broken for everyone once a partner lost the zone
+      if (zone && isZoneLockedForPlayer(zone, playerIdx)) return;
     } else {
       const maxCaptures = run.isShinyHuntMode ? 2 : 1;
       if (zone && zone.captures.length >= maxCaptures) return;
@@ -191,16 +210,9 @@ export const useRunStore = create<RunStore>((set, get) => ({
         abilityPanel.slice(0, 3);
     }
 
-    // Determine zone status
-    const determineZoneStatus = (
-      currentStatus: Zone["status"],
-    ): Zone["status"] => {
-      if (captureData.isDead && captureData.failedCapture) return "lost";
-      if (!captureData.isDead) {
-        return "captured";
-      }
-      return currentStatus;
-    };
+    // Determine zone status from the whole set of captures in the zone
+    // (relevant in Soul Link where several players share one zone)
+    const determineZoneStatus = deriveZoneStatus;
 
     const updatedRun = {
       ...run,
@@ -214,10 +226,11 @@ export const useRunStore = create<RunStore>((set, get) => ({
           : undefined,
       zones: run.zones.map((z) => {
         if (z.id !== zoneId) return z;
+        const nextCaptures = [...z.captures, capture];
         return {
           ...z,
-          status: determineZoneStatus(z.status),
-          captures: [...z.captures, capture],
+          status: determineZoneStatus(nextCaptures, z.status),
+          captures: nextCaptures,
           updatedAt: Date.now(),
         };
       }),
@@ -265,7 +278,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
         return {
           ...z,
           captures: remaining,
-          status: remaining.length === 0 ? ("not-visited" as const) : z.status,
+          status: deriveZoneStatus(remaining, z.status),
           updatedAt: Date.now(),
         };
       }),

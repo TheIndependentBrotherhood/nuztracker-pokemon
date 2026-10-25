@@ -19,6 +19,7 @@ import {
   useCaptureDisplayName,
 } from "@/lib/pokemon-display";
 import { getZoneDisplayName } from "@/lib/zones";
+import { isZoneLockedForPlayer } from "@/lib/zone-progress";
 
 interface Props {
   zone: Zone;
@@ -37,6 +38,7 @@ function CaptureThumbnail({
   playerLabel,
   isPlaceholder,
   onPlaceholderClick,
+  isLinkBroken,
 }: {
   capture: Capture;
   lang: "fr" | "en";
@@ -47,11 +49,14 @@ function CaptureThumbnail({
   isPlaceholder?: boolean;
   /** Soul Link empty slot: clicking opens the capture modal for that player */
   onPlaceholderClick?: () => void;
+  /** Soul Link: the zone was lost by a partner, this Pokémon is unusable / capture impossible */
+  isLinkBroken?: boolean;
 }) {
   const displayName = useCaptureDisplayName(capture, lang);
   const displayLabel = useCaptureDisplayLabel(capture, lang);
   const { removeCapture } = useRunStore();
   const [showPokemonDetail, setShowPokemonDetail] = useState(false);
+  const tr = translations;
 
   // Determine if this individual capture is lost
   const captureStatus =
@@ -98,13 +103,14 @@ function CaptureThumbnail({
               ? "rgba(148, 163, 184, 0.15)"
               : captureStyle.bgColor || "rgba(51, 65, 85, 0.4)",
             border: playerColor
-              ? `2px solid ${playerColor}`
+              ? `2px ${isLinkBroken ? "dashed" : "solid"} ${playerColor}`
               : `1px solid ${captureStyle.borderColor ?? "rgba(71, 85, 99, 0.3)"}`,
             borderRadius: "0.5rem",
             cursor:
-              isPlaceholder && !onPlaceholderClick ? "default" : "pointer",
+              isPlaceholder && !onPlaceholderClick ? "not-allowed" : "pointer",
             transition: "all 150ms ease",
-            opacity: isPlaceholder ? 0.55 : 1,
+            opacity: isPlaceholder ? 0.55 : isLinkBroken ? 0.7 : 1,
+            filter: isLinkBroken && !isPlaceholder ? "grayscale(0.8)" : "none",
             "&:hover": isPlaceholder
               ? {}
               : {
@@ -116,6 +122,13 @@ function CaptureThumbnail({
                 },
           }}
           aria-label={displayName}
+          title={
+            isLinkBroken
+              ? t(tr.zoneItem.linkBroken, lang)
+              : isPlaceholder
+                ? undefined
+                : displayName
+          }
         >
           {playerLabel && (
             <Typography
@@ -185,7 +198,7 @@ function CaptureThumbnail({
               <Typography
                 sx={{ fontSize: "0.6rem", color: "#94a3b8", lineHeight: 1 }}
               >
-                ???
+                {isLinkBroken ? "🔒" : "???"}
               </Typography>
             )}
           </Box>
@@ -282,11 +295,14 @@ export default function ZoneItem({
   );
   const players = run?.soulLinkPlayers ?? [];
 
+  // Soul Link: a player can still capture here if they have no capture and no partner lost the zone
+  const canPlayerCapture = (playerIndex: number) =>
+    !zone.captures.some((c) => (c.playerIndex ?? 0) === playerIndex) &&
+    !isZoneLockedForPlayer(zone, playerIndex);
+
   // Determine if captures are full
   const capturesFull = isSoulLink
-    ? players.every((player) =>
-        zone.captures.some((c) => (c.playerIndex ?? 0) === player.playerIndex),
-      )
+    ? !players.some((player) => canPlayerCapture(player.playerIndex))
     : zone.captures.length >= (isShinyHuntMode ? 2 : 1);
 
   useEffect(() => {
@@ -299,14 +315,9 @@ export default function ZoneItem({
     zone.captures.length >= 2 && !isSoulLink ? "multiple" : zone.status;
   const config = statusConfig[visualStatus] ?? statusConfig["not-visited"];
 
-  // Find the first player without a capture in this zone (for pre-filling)
+  // Find the first player who can still capture in this zone (for pre-filling)
   const nextPlayerWithoutCapture = isSoulLink
-    ? players.find(
-        (player) =>
-          !zone.captures.some(
-            (c) => (c.playerIndex ?? 0) === player.playerIndex,
-          ),
-      )
+    ? players.find((player) => canPlayerCapture(player.playerIndex))
     : undefined;
 
   function openCapture(playerIndex?: number) {
@@ -433,6 +444,10 @@ export default function ZoneItem({
               );
               const color = SOUL_LINK_PLAYER_COLORS[player.playerIndex];
               const label = `P${player.playerIndex + 1}`;
+              const lockedByPartner = isZoneLockedForPlayer(
+                zone,
+                player.playerIndex,
+              );
               if (playerCapture) {
                 return (
                   <CaptureThumbnail
@@ -443,10 +458,11 @@ export default function ZoneItem({
                     zoneId={zone.id}
                     playerColor={color}
                     playerLabel={label}
+                    isLinkBroken={lockedByPartner && !playerCapture.isDead}
                   />
                 );
               }
-              // Placeholder (MissingNo)
+              // Placeholder (MissingNo), locked when a partner already lost the zone
               const placeholder: Capture = {
                 id: `placeholder-${player.id}`,
                 pokemon: MISSINGNO_POKEMON,
@@ -466,7 +482,12 @@ export default function ZoneItem({
                   playerColor={color}
                   playerLabel={label}
                   isPlaceholder
-                  onPlaceholderClick={() => openCapture(player.playerIndex)}
+                  isLinkBroken={lockedByPartner}
+                  onPlaceholderClick={
+                    lockedByPartner
+                      ? undefined
+                      : () => openCapture(player.playerIndex)
+                  }
                 />
               );
             })}

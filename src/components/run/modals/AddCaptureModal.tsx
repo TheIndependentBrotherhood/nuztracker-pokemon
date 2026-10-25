@@ -29,6 +29,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
 import { getZoneDisplayName } from "@/lib/zones";
+import { isZoneLockedForPlayer } from "@/lib/zone-progress";
 
 interface Props {
   runId: string;
@@ -95,11 +96,25 @@ export default function AddCaptureModal({
   const [abilitySearch, setAbilitySearch] = useState("");
 
   // Soul Link: which player is capturing
-  const isSoulLink = Boolean(run?.isSoulLinkMode && run?.soulLinkPlayers?.length);
-  const soulLinkPlayers = run?.soulLinkPlayers ?? [];
-  const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number>(
-    defaultPlayerIndex ?? soulLinkPlayers[0]?.playerIndex ?? 0,
+  const isSoulLink = Boolean(
+    run?.isSoulLinkMode && run?.soulLinkPlayers?.length,
   );
+  const soulLinkPlayers = run?.soulLinkPlayers ?? [];
+  const zone = run?.zones.find((candidate) => candidate.id === zoneId);
+  // Soul Link: a player can only capture once per zone, and not once a partner lost the zone
+  const canPlayerCaptureHere = (playerIndex: number) =>
+    !zone ||
+    (!zone.captures.some((c) => (c.playerIndex ?? 0) === playerIndex) &&
+      !isZoneLockedForPlayer(zone, playerIndex));
+  const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number>(
+    defaultPlayerIndex ??
+      soulLinkPlayers.find((p) => canPlayerCaptureHere(p.playerIndex))
+        ?.playerIndex ??
+      soulLinkPlayers[0]?.playerIndex ??
+      0,
+  );
+  const selectedPlayerCanCapture =
+    !isSoulLink || canPlayerCaptureHere(selectedPlayerIndex);
 
   useEffect(() => {
     // Reset ability draft & panel when Pokémon changes; pre-fill panel from run
@@ -126,6 +141,7 @@ export default function AddCaptureModal({
 
   const canAddCapture = Boolean(
     selected &&
+    selectedPlayerCanCapture &&
     customAbilityDraft !== null &&
     (!randomTypesMode || customTypesDraft.length > 0),
   );
@@ -295,7 +311,7 @@ export default function AddCaptureModal({
   }
 
   function handleSkip() {
-    if (!selected) return;
+    if (!selected || !selectedPlayerCanCapture) return;
     // Mark as dead without filling form (loupé/tué) - cannot be resurrected
     addCapture(
       runId,
@@ -307,6 +323,7 @@ export default function AddCaptureModal({
         isDead: true,
         failedCapture: true,
         diedAt: Date.now(),
+        ...(isSoulLink ? { playerIndex: selectedPlayerIndex } : {}),
       },
       undefined,
     );
@@ -385,25 +402,40 @@ export default function AddCaptureModal({
                 const color =
                   SOUL_LINK_PLAYER_COLORS[player.playerIndex] ?? "#64748b";
                 const isActive = selectedPlayerIndex === player.playerIndex;
+                const canCapture = canPlayerCaptureHere(player.playerIndex);
                 return (
                   <Box
                     key={player.id}
                     component="button"
                     onClick={() => setSelectedPlayerIndex(player.playerIndex)}
+                    disabled={!canCapture}
+                    title={
+                      canCapture
+                        ? undefined
+                        : t(tr.addCapture.soulLinkPlayerUnavailable, lang)
+                    }
                     sx={{
                       fontSize: "0.75rem",
                       fontWeight: 700,
                       px: 1.25,
                       py: 0.5,
-                      border: `2px solid ${color}`,
+                      border: `2px ${canCapture ? "solid" : "dashed"} ${color}`,
                       borderRadius: "0.75rem",
                       background: isActive ? color : "transparent",
                       color: isActive ? "#fff" : color,
-                      cursor: "pointer",
+                      cursor: canCapture ? "pointer" : "not-allowed",
+                      opacity: canCapture ? 1 : 0.5,
                       transition: "all 150ms ease",
-                      "&:hover": { background: isActive ? color : `${color}22` },
+                      "&:hover": {
+                        background: isActive
+                          ? color
+                          : canCapture
+                            ? `${color}22`
+                            : "transparent",
+                      },
                     }}
                   >
+                    {canCapture ? "" : "🔒 "}
                     {player.name}
                   </Box>
                 );
@@ -1419,7 +1451,7 @@ export default function AddCaptureModal({
             </Button>
             <Button
               onClick={handleSkip}
-              disabled={!selected}
+              disabled={!selected || !selectedPlayerCanCapture}
               sx={{
                 flex: 1,
                 background: "#dc2626",

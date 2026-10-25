@@ -13,6 +13,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Run, Zone, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
+import {
+  countLinksBrokenByPlayer,
+  countZoneOutcomes,
+  getZoneOutcome,
+  getZoneOutcomeForPlayer,
+} from "@/lib/zone-progress";
 import StatCard from "@/components/ui/StatCard";
 import StyledTextField from "@/components/ui/StyledTextField";
 import { encodeTeam, buildShareUrl } from "@/lib/share";
@@ -34,6 +40,7 @@ interface Props {
 }
 
 const PROGRESS_CAPTURED_BG = "linear-gradient(to right, #22c55e, #16a34a)";
+const PROGRESS_LINK_BROKEN_BG = "linear-gradient(to right, #fb923c, #ea580c)";
 const PROGRESS_DEAD_BG = "linear-gradient(to right, #4b5563, #1f2937)";
 const PROGRESS_LOST_BG =
   "repeating-linear-gradient(135deg, #ef4444 0 6px, #f87171 6px 12px)";
@@ -43,12 +50,21 @@ const PROGRESS_LOST_LEGEND_BG =
 function ProgressLegendItem({
   background,
   label,
+  hint,
 }: {
   background: string;
   label: string;
+  hint?: string;
 }) {
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+  const item = (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        cursor: hint ? "help" : "default",
+      }}
+    >
       <Box
         sx={{
           width: 10,
@@ -62,16 +78,27 @@ function ProgressLegendItem({
       {label}
     </Box>
   );
+  return hint ? (
+    <Tooltip arrow title={hint}>
+      {item}
+    </Tooltip>
+  ) : (
+    item
+  );
 }
 
-/** Segmented zone progress bar: captured (green), dead (dark grey) and lost (red). */
+/**
+ * Segmented zone progress bar: captured (green), link broken (orange, Soul Link),
+ * dead (dark grey) and lost (red).
+ */
 function ZoneProgressBar({
   lang,
   total,
   captured,
   dead,
   lost,
-  kills,
+  linkBroken,
+  linksBrokenByPlayer,
   playerName,
   playerColor,
 }: {
@@ -80,22 +107,30 @@ function ZoneProgressBar({
   captured: number;
   dead: number;
   lost: number;
-  kills?: number;
+  /** Soul Link: alive but unusable Pokémon (partner lost or died) */
+  linkBroken?: number;
+  /** Soul Link: links this player broke for the partners */
+  linksBrokenByPlayer?: number;
   playerName?: string;
   playerColor?: string;
 }) {
   const tr = translations;
   const toPercent = (n: number) => (total > 0 ? (n / total) * 100 : 0);
-  const finished = captured + dead + lost;
+  const finished = captured + (linkBroken ?? 0) + dead + lost;
   const remaining = Math.max(0, total - finished);
-  const tooltipParts = [
-    t(tr.statsBar.progressCaptured, lang)(captured),
+  const tooltipParts = [t(tr.statsBar.progressCaptured, lang)(captured)];
+  if (linkBroken !== undefined) {
+    tooltipParts.push(t(tr.statsBar.progressLinkBroken, lang)(linkBroken));
+  }
+  tooltipParts.push(
     t(tr.statsBar.progressDead, lang)(dead),
     t(tr.statsBar.progressLost, lang)(lost),
     t(tr.statsBar.progressRemaining, lang)(remaining),
-  ];
-  if (kills !== undefined) {
-    tooltipParts.push(t(tr.statsBar.progressKills, lang)(kills));
+  );
+  if (linksBrokenByPlayer !== undefined) {
+    tooltipParts.push(
+      t(tr.statsBar.progressLinksBrokenBy, lang)(linksBrokenByPlayer),
+    );
   }
 
   return (
@@ -154,6 +189,16 @@ function ZoneProgressBar({
               width: `${toPercent(captured)}%`,
             }}
           />
+          {linkBroken !== undefined && (
+            <Box
+              sx={{
+                height: "100%",
+                transition: "width 700ms ease",
+                background: PROGRESS_LINK_BROKEN_BG,
+                width: `${toPercent(linkBroken)}%`,
+              }}
+            />
+          )}
           <Box
             sx={{
               height: "100%",
@@ -189,6 +234,13 @@ function ZoneProgressBar({
             background={PROGRESS_CAPTURED_BG}
             label={t(tr.statsBar.progressCaptured, lang)(captured)}
           />
+          {linkBroken !== undefined && (
+            <ProgressLegendItem
+              background={PROGRESS_LINK_BROKEN_BG}
+              label={t(tr.statsBar.progressLinkBroken, lang)(linkBroken)}
+              hint={t(tr.statsBar.progressLinkBrokenHint, lang)}
+            />
+          )}
           <ProgressLegendItem
             background={PROGRESS_DEAD_BG}
             label={t(tr.statsBar.progressDead, lang)(dead)}
@@ -197,8 +249,19 @@ function ZoneProgressBar({
             background={PROGRESS_LOST_LEGEND_BG}
             label={t(tr.statsBar.progressLost, lang)(lost)}
           />
-          {kills !== undefined && kills > 0 && (
-            <Box>☠️ {t(tr.statsBar.progressKills, lang)(kills)}</Box>
+          {linksBrokenByPlayer !== undefined && linksBrokenByPlayer > 0 && (
+            <Tooltip
+              arrow
+              title={t(tr.statsBar.progressLinksBrokenByHint, lang)}
+            >
+              <Box sx={{ cursor: "help" }}>
+                💔{" "}
+                {t(
+                  tr.statsBar.progressLinksBrokenBy,
+                  lang,
+                )(linksBrokenByPlayer)}
+              </Box>
+            </Tooltip>
           )}
         </Box>
         <Box sx={{ flexShrink: 0 }}>{Math.round(toPercent(finished))}%</Box>
@@ -330,18 +393,15 @@ export default function StatsBar({
 
   const captureRate =
     finished > 0 ? Math.round((captured / finished) * 100) : 0;
-  // Segmented progress: captured (alive), dead (captured then died) and lost zones
-  const isZoneDead = (z: Zone) =>
-    z.status === "captured" &&
-    z.captures.length > 0 &&
-    !z.captures.some((c: Capture) => !c.isDead);
-  const deadZoneCount = run.zones.filter(isZoneDead).length;
-  const capturedZoneCount =
-    run.zones.filter((z: Zone) => z.status === "captured").length -
-    deadZoneCount;
-  const lostZoneCount = run.zones.filter(
-    (z: Zone) => z.status === "lost",
-  ).length;
+
+  // Soul Link flag is needed for the zone outcome classification below
+  const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
+  const soulLinkPlayers = run.soulLinkPlayers ?? [];
+
+  // Segmented progress: captured / link broken (Soul Link) / dead / lost zones
+  const zoneOutcomes = countZoneOutcomes(run.zones, (z: Zone) =>
+    getZoneOutcome(z, isSoulLink),
+  );
 
   // Get last 3 dead pokémons for RIP export (sorted by death time, most recent first)
   const deadPokemon = run.zones
@@ -351,9 +411,6 @@ export default function StatsBar({
   const lastThreeDeadPokemon = deadPokemon.slice(0, 3);
 
   // Soul Link per-player stats
-  const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
-  const soulLinkPlayers = run.soulLinkPlayers ?? [];
-
   const perPlayerMissed = isSoulLink
     ? soulLinkPlayers.map((player) => {
         const missed = run.zones.filter((z: Zone) => {
@@ -391,35 +448,15 @@ export default function StatsBar({
       }))
     : [];
 
-  // Soul Link per-player zone progress (captured / dead / lost / kills)
+  // Soul Link per-player zone progress (captured / link broken / dead / lost)
   const perPlayerProgress = isSoulLink
-    ? soulLinkPlayers.map((player) => {
-        let capturedCount = 0;
-        let deadCount = 0;
-        let lostCount = 0;
-        run.zones.forEach((z: Zone) => {
-          const playerCaptures = z.captures.filter(
-            (c: Capture) => (c.playerIndex ?? 0) === player.playerIndex,
-          );
-          if (playerCaptures.length === 0) return;
-          if (playerCaptures.some((c: Capture) => !c.isDead)) {
-            capturedCount++;
-          } else if (
-            playerCaptures.some((c: Capture) => c.isDead && !c.failedCapture)
-          ) {
-            deadCount++;
-          } else {
-            lostCount++;
-          }
-        });
-        const kills = run.zones
-          .flatMap((z: Zone) => z.captures)
-          .filter(
-            (c: Capture) =>
-              c.isDead && c.killedByPlayerIndex === player.playerIndex,
-          ).length;
-        return { player, capturedCount, deadCount, lostCount, kills };
-      })
+    ? soulLinkPlayers.map((player) => ({
+        player,
+        outcomes: countZoneOutcomes(run.zones, (z: Zone) =>
+          getZoneOutcomeForPlayer(z, player.playerIndex),
+        ),
+        linksBroken: countLinksBrokenByPlayer(run.zones, player.playerIndex),
+      }))
     : [];
 
   // Export handlers for team stats card
@@ -997,13 +1034,14 @@ export default function StatsBar({
         />
       </Stack>
 
-      {/* Global progress bar: captured (green) + dead (dark) + lost (red) segments */}
+      {/* Global progress bar: captured / link broken (Soul Link) / dead / lost */}
       <ZoneProgressBar
         lang={lang}
         total={total}
-        captured={capturedZoneCount}
-        dead={deadZoneCount}
-        lost={lostZoneCount}
+        captured={zoneOutcomes.captured}
+        dead={zoneOutcomes.dead}
+        lost={zoneOutcomes.lost}
+        linkBroken={isSoulLink ? zoneOutcomes.linkBroken : undefined}
       />
 
       {/* Soul Link: one progress bar per player */}
@@ -1016,21 +1054,20 @@ export default function StatsBar({
             gap: 1.5,
           }}
         >
-          {perPlayerProgress.map(
-            ({ player, capturedCount, deadCount, lostCount, kills }) => (
-              <ZoneProgressBar
-                key={player.id}
-                lang={lang}
-                total={total}
-                captured={capturedCount}
-                dead={deadCount}
-                lost={lostCount}
-                kills={kills}
-                playerName={player.name}
-                playerColor={SOUL_LINK_PLAYER_COLORS[player.playerIndex]}
-              />
-            ),
-          )}
+          {perPlayerProgress.map(({ player, outcomes, linksBroken }) => (
+            <ZoneProgressBar
+              key={player.id}
+              lang={lang}
+              total={total}
+              captured={outcomes.captured}
+              linkBroken={outcomes.linkBroken}
+              dead={outcomes.dead}
+              lost={outcomes.lost}
+              linksBrokenByPlayer={linksBroken}
+              playerName={player.name}
+              playerColor={SOUL_LINK_PLAYER_COLORS[player.playerIndex]}
+            />
+          ))}
         </Box>
       )}
 
