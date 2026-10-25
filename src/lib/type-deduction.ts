@@ -116,25 +116,6 @@ export function typeComboMatchesObservationsSync(
   return true;
 }
 
-async function typeComboMatchesObservations(
-  types: string[],
-  observations: TypeObservation[],
-  abilityPanel: string[] = [],
-  generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
-): Promise<boolean> {
-  if (observations.length === 0) return true;
-
-  // Load type data for the generation
-  const typeData = await loadTypeData(generation);
-
-  return typeComboMatchesObservationsSync(
-    types,
-    observations,
-    abilityPanel,
-    typeData,
-  );
-}
-
 /**
  * Get all possible type combinations (mono or dual type)
  */
@@ -223,22 +204,17 @@ export async function deducePossibleTypes(
     }));
   }
 
-  const validCombos: string[][] = [];
-  for (const combo of generateAllTypeCombos()) {
-    if (
-      await typeComboMatchesObservations(
-        combo,
-        observations,
-        abilityPanel,
-        generation,
-      )
-    ) {
-      validCombos.push(combo);
-    }
-  }
-
-  // Load type data for displaying ability impacts
+  // Load the type chart once, then test every combination synchronously
   const typeData = await loadTypeData(generation);
+
+  const validCombos = generateAllTypeCombos().filter((combo) =>
+    typeComboMatchesObservationsSync(
+      combo,
+      observations,
+      abilityPanel,
+      typeData,
+    ),
+  );
 
   return validCombos.map((types) => ({
     types,

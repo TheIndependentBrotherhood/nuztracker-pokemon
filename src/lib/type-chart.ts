@@ -40,32 +40,45 @@ export interface TypeChartData {
   [key: string]: TypeData;
 }
 
-export async function loadTypeData(
+const typeDataCache = new Map<string, Promise<TypeChartData>>();
+
+export function loadTypeData(
   generation: "gen1" | "gen2-5" | "gen6+" = "gen6+",
 ): Promise<TypeChartData> {
-  try {
-    const response = await fetch(publicPath("/data/type-charts.json"));
-    const data = await response.json();
+  const cached = typeDataCache.get(generation);
+  if (cached) return cached;
 
-    // Each generation layer is cumulative:
-    // gen1     = gen1
-    // gen2-5   = gen1 + gen2-5
-    // gen6+    = gen1 + gen2-5 + gen6+
-    const layers: ("gen1" | "gen2-5" | "gen6+")[] = ["gen1"];
-    if (generation === "gen2-5" || generation === "gen6+")
-      layers.push("gen2-5");
-    if (generation === "gen6+") layers.push("gen6+");
-
-    const merged: TypeChartData = {};
-    for (const layer of layers) {
-      Object.assign(merged, data[layer]?.effectiveness ?? {});
-    }
-
-    return merged;
-  } catch (error) {
+  const pending = fetchTypeData(generation).catch((error) => {
+    // Do not cache failures so a later call can retry
+    typeDataCache.delete(generation);
     console.error("Failed to load type data:", error);
-    return {};
+    return {} as TypeChartData;
+  });
+  typeDataCache.set(generation, pending);
+  return pending;
+}
+
+async function fetchTypeData(
+  generation: "gen1" | "gen2-5" | "gen6+",
+): Promise<TypeChartData> {
+  const response = await fetch(publicPath("/data/type-charts.json"));
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+
+  // Each generation layer is cumulative:
+  // gen1     = gen1
+  // gen2-5   = gen1 + gen2-5
+  // gen6+    = gen1 + gen2-5 + gen6+
+  const layers: ("gen1" | "gen2-5" | "gen6+")[] = ["gen1"];
+  if (generation === "gen2-5" || generation === "gen6+") layers.push("gen2-5");
+  if (generation === "gen6+") layers.push("gen6+");
+
+  const merged: TypeChartData = {};
+  for (const layer of layers) {
+    Object.assign(merged, data[layer]?.effectiveness ?? {});
   }
+
+  return merged;
 }
 
 export const typeChart: Record<string, Record<string, number>> = {

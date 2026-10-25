@@ -81,16 +81,23 @@ export default function TypeDeductionTool({
   );
 
   useEffect(() => {
+    // Ignore results of an outdated computation (observations or Pokémon changed meanwhile)
+    let cancelled = false;
+
     const loadPossibleTypes = async () => {
       const types = await deducePossibleTypes(
         observations,
         abilityPanel,
         typeChartGeneration,
       );
-      setPossibleTypes(types);
+      if (!cancelled) setPossibleTypes(types);
     };
 
     loadPossibleTypes();
+
+    return () => {
+      cancelled = true;
+    };
   }, [observations, abilityPanel, typeChartGeneration]);
 
   function addObservation() {
