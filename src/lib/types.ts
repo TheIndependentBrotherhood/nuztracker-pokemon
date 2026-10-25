@@ -39,8 +39,10 @@ export interface Capture {
   originalCapturedPokemonId?: number;
   /** Soul Link: index (0-3) of the player who owns this capture */
   playerIndex?: number;
-  /** Soul Link: index (0-3) of the player whose action caused this Pokémon's death */
+  /** Soul Link: index (0-3) of the player whose failure or death caused this Pokémon's (linked) death */
   killedByPlayerIndex?: number;
+  /** Soul Link: true when this Pokémon died because the linked partner's Pokémon was lost or died */
+  linkedDeath?: boolean;
 }
 
 export interface RandomizerOptions {

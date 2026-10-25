@@ -403,6 +403,10 @@ const translations = {
       fr: "Lien brisé : le partenaire a raté ou perdu cette zone",
       en: "Link broken: the partner lost this zone",
     },
+    linkedDeath: {
+      fr: "Relâché : le Pokémon lié du partenaire a été raté ou est mort",
+      en: "Released: the partner's linked Pokémon was lost or died",
+    },
   },
 
   // ── Team View ──────────────────────────────────────────────────────────────
@@ -513,22 +517,14 @@ const translations = {
       fr: (n: number) => `${n} mort${n > 1 ? "s" : ""}`,
       en: (n: number) => `${n} dead`,
     },
-    progressLinkBroken: {
-      fr: (n: number) => `${n} inutilisable${n > 1 ? "s" : ""}`,
-      en: (n: number) => `${n} unusable`,
-    },
-    progressLinkBrokenHint: {
-      fr: "Zone perdue à cause du partenaire : son Pokémon a été raté ou est mort, donc le Pokémon de ce joueur est inutilisable (ou la capture n'est plus possible).",
-      en: "Zone lost because of the partner: their Pokémon was lost or died, so this player's Pokémon is unusable (or the capture is no longer possible).",
-    },
     progressLinksBrokenBy: {
       fr: (n: number) =>
         `${n} lien${n > 1 ? "s" : ""} brisé${n > 1 ? "s" : ""}`,
       en: (n: number) => `${n} link${n > 1 ? "s" : ""} broken`,
     },
     progressLinksBrokenByHint: {
-      fr: "Ratés ou morts de ce joueur qui ont rendu inutilisable le Pokémon vivant d'un partenaire.",
-      en: "This player's failed captures or deaths that made a partner's alive Pokémon unusable.",
+      fr: "Pokémon des partenaires relâchés (comptés morts) à cause des ratés ou des morts de ce joueur.",
+      en: "Partners' Pokémon released (counted as dead) because of this player's failed captures or deaths.",
     },
     progressRemaining: {
       fr: (n: number) => `${n} restante${n > 1 ? "s" : ""}`,

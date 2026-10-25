@@ -49,7 +49,7 @@ function CaptureThumbnail({
   isPlaceholder?: boolean;
   /** Soul Link empty slot: clicking opens the capture modal for that player */
   onPlaceholderClick?: () => void;
-  /** Soul Link: the zone was lost by a partner, this Pokémon is unusable / capture impossible */
+  /** Soul Link: empty slot locked because a partner lost the zone */
   isLinkBroken?: boolean;
 }) {
   const displayName = useCaptureDisplayName(capture, lang);
@@ -109,8 +109,7 @@ function CaptureThumbnail({
             cursor:
               isPlaceholder && !onPlaceholderClick ? "not-allowed" : "pointer",
             transition: "all 150ms ease",
-            opacity: isPlaceholder ? 0.55 : isLinkBroken ? 0.7 : 1,
-            filter: isLinkBroken && !isPlaceholder ? "grayscale(0.8)" : "none",
+            opacity: isPlaceholder ? 0.55 : 1,
             "&:hover": isPlaceholder
               ? {}
               : {
@@ -177,6 +176,14 @@ function CaptureThumbnail({
             {!isPlaceholder && capture.isShiny && (
               <Typography sx={{ fontSize: "0.6rem", lineHeight: 1 }}>
                 ✨
+              </Typography>
+            )}
+            {!isPlaceholder && capture.linkedDeath && (
+              <Typography
+                sx={{ fontSize: "0.6rem", lineHeight: 1 }}
+                title={t(tr.zoneItem.linkedDeath, lang)}
+              >
+                💔
               </Typography>
             )}
             {!isPlaceholder && (
@@ -458,7 +465,6 @@ export default function ZoneItem({
                     zoneId={zone.id}
                     playerColor={color}
                     playerLabel={label}
-                    isLinkBroken={lockedByPartner && !playerCapture.isDead}
                   />
                 );
               }

@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { Run, Zone, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import {
-  countLinksBrokenByPlayer,
+  countLinkedDeathsCausedByPlayer,
   countZoneOutcomes,
   getZoneOutcome,
   getZoneOutcomeForPlayer,
@@ -40,7 +40,6 @@ interface Props {
 }
 
 const PROGRESS_CAPTURED_BG = "linear-gradient(to right, #22c55e, #16a34a)";
-const PROGRESS_LINK_BROKEN_BG = "linear-gradient(to right, #fb923c, #ea580c)";
 const PROGRESS_DEAD_BG = "linear-gradient(to right, #4b5563, #1f2937)";
 const PROGRESS_LOST_BG =
   "repeating-linear-gradient(135deg, #ef4444 0 6px, #f87171 6px 12px)";
@@ -87,17 +86,13 @@ function ProgressLegendItem({
   );
 }
 
-/**
- * Segmented zone progress bar: captured (green), link broken (orange, Soul Link),
- * dead (dark grey) and lost (red).
- */
+/** Segmented zone progress bar: captured (green), dead (dark grey) and lost (red). */
 function ZoneProgressBar({
   lang,
   total,
   captured,
   dead,
   lost,
-  linkBroken,
   linksBrokenByPlayer,
   playerName,
   playerColor,
@@ -107,26 +102,21 @@ function ZoneProgressBar({
   captured: number;
   dead: number;
   lost: number;
-  /** Soul Link: alive but unusable Pokémon (partner lost or died) */
-  linkBroken?: number;
-  /** Soul Link: links this player broke for the partners */
+  /** Soul Link: partners' Pokémon released because of this player */
   linksBrokenByPlayer?: number;
   playerName?: string;
   playerColor?: string;
 }) {
   const tr = translations;
   const toPercent = (n: number) => (total > 0 ? (n / total) * 100 : 0);
-  const finished = captured + (linkBroken ?? 0) + dead + lost;
+  const finished = captured + dead + lost;
   const remaining = Math.max(0, total - finished);
-  const tooltipParts = [t(tr.statsBar.progressCaptured, lang)(captured)];
-  if (linkBroken !== undefined) {
-    tooltipParts.push(t(tr.statsBar.progressLinkBroken, lang)(linkBroken));
-  }
-  tooltipParts.push(
+  const tooltipParts = [
+    t(tr.statsBar.progressCaptured, lang)(captured),
     t(tr.statsBar.progressDead, lang)(dead),
     t(tr.statsBar.progressLost, lang)(lost),
     t(tr.statsBar.progressRemaining, lang)(remaining),
-  );
+  ];
   if (linksBrokenByPlayer !== undefined) {
     tooltipParts.push(
       t(tr.statsBar.progressLinksBrokenBy, lang)(linksBrokenByPlayer),
@@ -189,16 +179,6 @@ function ZoneProgressBar({
               width: `${toPercent(captured)}%`,
             }}
           />
-          {linkBroken !== undefined && (
-            <Box
-              sx={{
-                height: "100%",
-                transition: "width 700ms ease",
-                background: PROGRESS_LINK_BROKEN_BG,
-                width: `${toPercent(linkBroken)}%`,
-              }}
-            />
-          )}
           <Box
             sx={{
               height: "100%",
@@ -234,13 +214,6 @@ function ZoneProgressBar({
             background={PROGRESS_CAPTURED_BG}
             label={t(tr.statsBar.progressCaptured, lang)(captured)}
           />
-          {linkBroken !== undefined && (
-            <ProgressLegendItem
-              background={PROGRESS_LINK_BROKEN_BG}
-              label={t(tr.statsBar.progressLinkBroken, lang)(linkBroken)}
-              hint={t(tr.statsBar.progressLinkBrokenHint, lang)}
-            />
-          )}
           <ProgressLegendItem
             background={PROGRESS_DEAD_BG}
             label={t(tr.statsBar.progressDead, lang)(dead)}
@@ -383,25 +356,27 @@ export default function StatsBar({
     0,
   );
 
-  // Display values: count total captures slots and actual captures
-  const expectedCapturesPerZone = run.isShinyHuntMode ? 2 : 1;
-  const displayTotal = run.zones.length * expectedCapturesPerZone;
-  const displayFinished = run.zones.reduce(
-    (acc: number, z: Zone) => acc + z.captures.length,
-    0,
-  );
-
-  const captureRate =
-    finished > 0 ? Math.round((captured / finished) * 100) : 0;
-
   // Soul Link flag is needed for the zone outcome classification below
   const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
   const soulLinkPlayers = run.soulLinkPlayers ?? [];
 
-  // Segmented progress: captured / link broken (Soul Link) / dead / lost zones
-  const zoneOutcomes = countZoneOutcomes(run.zones, (z: Zone) =>
-    getZoneOutcome(z, isSoulLink),
-  );
+  // Segmented progress: captured / dead / lost zones
+  const zoneOutcomes = countZoneOutcomes(run.zones, getZoneOutcome);
+  const finishedZones =
+    zoneOutcomes.captured + zoneOutcomes.dead + zoneOutcomes.lost;
+
+  // Display values: capture slots in classic/shiny modes, finished zones in Soul Link
+  // (a locked zone can never be filled by every player)
+  const expectedCapturesPerZone = run.isShinyHuntMode ? 2 : 1;
+  const displayTotal = isSoulLink
+    ? run.zones.length
+    : run.zones.length * expectedCapturesPerZone;
+  const displayFinished = isSoulLink
+    ? finishedZones
+    : run.zones.reduce((acc: number, z: Zone) => acc + z.captures.length, 0);
+
+  const captureRate =
+    finished > 0 ? Math.round((captured / finished) * 100) : 0;
 
   // Get last 3 dead pokémons for RIP export (sorted by death time, most recent first)
   const deadPokemon = run.zones
@@ -448,14 +423,17 @@ export default function StatsBar({
       }))
     : [];
 
-  // Soul Link per-player zone progress (captured / link broken / dead / lost)
+  // Soul Link per-player zone progress (captured / dead / lost)
   const perPlayerProgress = isSoulLink
     ? soulLinkPlayers.map((player) => ({
         player,
         outcomes: countZoneOutcomes(run.zones, (z: Zone) =>
           getZoneOutcomeForPlayer(z, player.playerIndex),
         ),
-        linksBroken: countLinksBrokenByPlayer(run.zones, player.playerIndex),
+        linksBroken: countLinkedDeathsCausedByPlayer(
+          run.zones,
+          player.playerIndex,
+        ),
       }))
     : [];
 
@@ -1034,14 +1012,13 @@ export default function StatsBar({
         />
       </Stack>
 
-      {/* Global progress bar: captured / link broken (Soul Link) / dead / lost */}
+      {/* Global progress bar: captured / dead / lost */}
       <ZoneProgressBar
         lang={lang}
         total={total}
         captured={zoneOutcomes.captured}
         dead={zoneOutcomes.dead}
         lost={zoneOutcomes.lost}
-        linkBroken={isSoulLink ? zoneOutcomes.linkBroken : undefined}
       />
 
       {/* Soul Link: one progress bar per player */}
@@ -1060,7 +1037,6 @@ export default function StatsBar({
               lang={lang}
               total={total}
               captured={outcomes.captured}
-              linkBroken={outcomes.linkBroken}
               dead={outcomes.dead}
               lost={outcomes.lost}
               linksBrokenByPlayer={linksBroken}

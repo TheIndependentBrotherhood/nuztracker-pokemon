@@ -63,6 +63,58 @@ export function deriveZoneStatus(
   return currentStatus;
 }
 
+/**
+ * Soul Link rule: when a player fails a zone or loses the Pokémon caught there,
+ * the partners' Pokémon from that zone are released — they count as dead.
+ * Linked deaths are flagged so they can be reverted if the root cause is removed.
+ */
+export function applySoulLinkDeaths(run: Run): Run {
+  if (!run.isSoulLinkMode) return run;
+
+  let changed = false;
+  const now = Date.now();
+
+  const zones = run.zones.map((zone) => {
+    // Root causes: deaths that were not themselves caused by the link
+    const rootDeaths = zone.captures.filter((c) => c.isDead && !c.linkedDeath);
+    let zoneChanged = false;
+
+    const captures = zone.captures.map((capture) => {
+      const playerIdx = capture.playerIndex ?? 0;
+      const cause = rootDeaths.find((c) => (c.playerIndex ?? 0) !== playerIdx);
+
+      if (!capture.isDead && cause) {
+        zoneChanged = true;
+        return {
+          ...capture,
+          isDead: true,
+          linkedDeath: true,
+          diedAt: now,
+          killedByPlayerIndex: cause.playerIndex ?? 0,
+        };
+      }
+
+      if (capture.isDead && capture.linkedDeath && !cause) {
+        // The partner's failure/death was removed: the Pokémon comes back (in the reserve)
+        zoneChanged = true;
+        const revived = { ...capture, isDead: false };
+        delete revived.linkedDeath;
+        delete revived.diedAt;
+        delete revived.killedByPlayerIndex;
+        return revived;
+      }
+
+      return capture;
+    });
+
+    if (!zoneChanged) return zone;
+    changed = true;
+    return { ...zone, captures, updatedAt: now };
+  });
+
+  return changed ? { ...run, zones } : run;
+}
+
 function normalizeRuns(runs: Run[]): Run[] {
   const validStatuses: Zone["status"][] = ["not-visited", "captured", "lost"];
 
@@ -78,14 +130,47 @@ function normalizeRuns(runs: Run[]): Run[] {
   }));
 }
 
+/** Dead captures (by flag or by their state in zones) never stay in a team */
+function removeDeadFromTeam(team: Capture[], zones: Zone[]): Capture[] {
+  return team.filter(
+    (c) =>
+      !c.isDead &&
+      !zones.some((z) => z.captures.some((zc) => zc.id === c.id && zc.isDead)),
+  );
+}
+
+/** Apply run-wide invariants: Soul Link linked deaths, then teams without dead Pokémon */
+function finalizeRun(inputRun: Run): Run {
+  const run = applySoulLinkDeaths(inputRun);
+  const team = removeDeadFromTeam(run.team, run.zones);
+  const playerTeams: Record<number, Capture[]> | undefined = run.playerTeams
+    ? Object.fromEntries(
+        Object.entries(run.playerTeams).map(([idx, t]) => [
+          idx,
+          removeDeadFromTeam(t as Capture[], run.zones),
+        ]),
+      )
+    : undefined;
+
+  return {
+    ...run,
+    team,
+    ...(playerTeams !== undefined ? { playerTeams } : {}),
+  };
+}
+
 export const useRunStore = create<RunStore>((set, get) => ({
   runs: [],
   currentRun: null,
   selectedZoneId: null,
 
   loadRuns: () => {
-    let runs = getRuns();
-    runs = normalizeRuns(runs);
+    const stored = getRuns();
+    const runs = normalizeRuns(stored).map((run) => finalizeRun(run));
+    // Persist runs whose state was fixed on load (e.g. Soul Link linked deaths)
+    runs.forEach((run, index) => {
+      if (JSON.stringify(run) !== JSON.stringify(stored[index])) saveRun(run);
+    });
     set({ runs });
   },
 
@@ -126,27 +211,8 @@ export const useRunStore = create<RunStore>((set, get) => ({
     return run;
   },
 
-  updateRun: (run) => {
-    // Clean dead captures from team
-    const cleanedTeam = run.team.filter((capture) => !capture.isDead);
-    // Also clean dead captures from playerTeams if soul link mode
-    const cleanedPlayerTeams: Record<number, Capture[]> | undefined =
-      run.playerTeams
-        ? Object.fromEntries(
-            Object.entries(run.playerTeams).map(([idx, t]) => [
-              idx,
-              (t as Capture[]).filter((c) => !c.isDead),
-            ]),
-          )
-        : undefined;
-    const updated = {
-      ...run,
-      team: cleanedTeam,
-      ...(cleanedPlayerTeams !== undefined
-        ? { playerTeams: cleanedPlayerTeams }
-        : {}),
-      updatedAt: Date.now(),
-    };
+  updateRun: (inputRun) => {
+    const updated = { ...finalizeRun(inputRun), updatedAt: Date.now() };
     saveRun(updated);
     set((state) => ({
       runs: state.runs.map((r) => (r.id === updated.id ? updated : r)),
