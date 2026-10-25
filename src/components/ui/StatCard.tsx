@@ -10,7 +10,7 @@ interface Action {
 
 interface SubValue {
   label: string;
-  value: number;
+  value: number | string;
   color: string;
 }
 

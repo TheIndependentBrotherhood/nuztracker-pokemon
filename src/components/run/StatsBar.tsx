@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Run, Zone, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
+import { getAllTeamCaptures, getRunTeams } from "@/lib/team-utils";
 import {
   countLinkedDeathsCausedByPlayer,
   countZoneOutcomes,
@@ -246,9 +247,12 @@ function ZoneProgressBar({
 function TeamPreviewPokemonTile({
   pokemonCaptured,
   lang,
+  compact = false,
 }: {
   pokemonCaptured: Capture;
   lang: "fr" | "en";
+  /** Smaller tile used when several teams are stacked (Soul Link) */
+  compact?: boolean;
 }) {
   const displayName = useCaptureDisplayName(pokemonCaptured, lang);
   const displayLabel = useCaptureDisplayLabel(pokemonCaptured, lang);
@@ -278,33 +282,36 @@ function TeamPreviewPokemonTile({
             : pokemonCaptured.pokemon.sprites.normal.default;
           event.currentTarget.src = fallbackUrl;
         }}
+        title={displayLabel}
         style={{
-          width: "80px",
-          height: "80px",
+          width: compact ? "36px" : "80px",
+          height: compact ? "36px" : "80px",
           imageRendering: "pixelated",
         }}
       />
       {/* Badge with nickname/name */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "rgba(0, 0, 0, 0.7)",
-          color: "#fff",
-          padding: "4px 6px",
-          borderRadius: "0 0 4px 4px",
-          fontSize: "0.65rem",
-          fontWeight: 700,
-          textAlign: "center",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {displayLabel}
-      </Box>
+      {!compact && (
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "rgba(0, 0, 0, 0.7)",
+            color: "#fff",
+            padding: "4px 6px",
+            borderRadius: "0 0 4px 4px",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            textAlign: "center",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {displayLabel}
+        </Box>
+      )}
     </Box>
   );
 }
@@ -359,6 +366,9 @@ export default function StatsBar({
   // Soul Link flag is needed for the zone outcome classification below
   const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
   const soulLinkPlayers = run.soulLinkPlayers ?? [];
+  // Teams: one per player in Soul Link, the shared team otherwise
+  const runTeams = getRunTeams(run);
+  const allTeamCaptures = getAllTeamCaptures(run);
 
   // Segmented progress: captured / dead / lost zones
   const zoneOutcomes = countZoneOutcomes(run.zones, getZoneOutcome);
@@ -548,7 +558,7 @@ export default function StatsBar({
     });
 
     try {
-      const encoded = await encodeTeam(run.team);
+      const encoded = await encodeTeam(allTeamCaptures);
       const shareUrl = buildShareUrl(encoded, {
         showTypes: dialogShowTypes,
         tightTypes: dialogTightTypes,
@@ -670,13 +680,13 @@ export default function StatsBar({
       icon: "🖼️",
       title: t(tr.statsBar.exportTeamAsPng, lang),
       onClick: handleOpenExportPng,
-      disabled: exporting || run.team.length === 0,
+      disabled: exporting || allTeamCaptures.length === 0,
     },
     {
       icon: "🔗",
       title: t(tr.statsBar.generateShareableUrl, lang),
       onClick: handleOpenGenerateUrl,
-      disabled: run.team.length === 0,
+      disabled: allTeamCaptures.length === 0,
     },
   ];
 
@@ -919,25 +929,27 @@ export default function StatsBar({
     </Box>
   );
 
-  // Équipe hover content (team sprites)
-  const equipeHoverContent = (
+  // Équipe hover content (team sprites, one row per Soul Link player)
+  const renderTeamTiles = (team: Capture[], compact: boolean) => (
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        columnGap: { xs: 1, sm: 2, md: 3 },
-        rowGap: 1.5,
+        gridTemplateColumns: compact ? "repeat(6, 1fr)" : "repeat(3, 1fr)",
+        columnGap: compact ? 0.5 : { xs: 1, sm: 2, md: 3 },
+        rowGap: compact ? 0.5 : 1.5,
+        width: "100%",
       }}
     >
-      {run.team.map((pokemonCaptured: Capture) => (
+      {team.map((pokemonCaptured: Capture) => (
         <TeamPreviewPokemonTile
-          key={pokemonCaptured.pokemon.id}
+          key={pokemonCaptured.id}
           pokemonCaptured={pokemonCaptured}
           lang={lang}
+          compact={compact}
         />
       ))}
-      {run.team.length < 6 &&
-        Array.from({ length: 6 - run.team.length }).map((_, i) => (
+      {team.length < 6 &&
+        Array.from({ length: 6 - team.length }).map((_, i) => (
           <Box
             key={`empty-${i}`}
             sx={{
@@ -946,6 +958,7 @@ export default function StatsBar({
               alignItems: "center",
               justifyContent: "center",
               gap: 0.5,
+              minHeight: compact ? "36px" : undefined,
             }}
           >
             <Typography
@@ -953,14 +966,49 @@ export default function StatsBar({
             >
               ?
             </Typography>
-            <Typography
-              sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#000" }}
-            >
-              -
-            </Typography>
+            {!compact && (
+              <Typography
+                sx={{ fontSize: "0.65rem", fontWeight: 700, color: "#000" }}
+              >
+                -
+              </Typography>
+            )}
           </Box>
         ))}
     </Box>
+  );
+
+  const equipeHoverContent = isSoulLink ? (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 0.75,
+        width: "100%",
+      }}
+    >
+      {runTeams.map(({ player, team }) => (
+        <Box key={player?.id ?? "shared"} sx={{ width: "100%" }}>
+          <Typography
+            sx={{
+              fontSize: "0.65rem",
+              fontWeight: 900,
+              color: player
+                ? SOUL_LINK_PLAYER_COLORS[player.playerIndex]
+                : "#000",
+              textAlign: "left",
+              lineHeight: 1,
+              mb: 0.25,
+            }}
+          >
+            {player?.name} · {team.length}/6
+          </Typography>
+          {renderTeamTiles(team, true)}
+        </Box>
+      ))}
+    </Box>
+  ) : (
+    renderTeamTiles(run.team, false)
   );
 
   return (
@@ -1004,9 +1052,20 @@ export default function StatsBar({
           actions={ripActions}
         />
         <StatCard
-          value={`${run.team.length}/6`}
+          value={`${allTeamCaptures.length}/${6 * runTeams.length}`}
           label={t(tr.statsBar.team, lang)}
           color="#fff7e8"
+          subValues={
+            isSoulLink
+              ? runTeams.map(({ player, team }) => ({
+                  label: player?.name ?? "",
+                  value: `${team.length}/6`,
+                  color: player
+                    ? SOUL_LINK_PLAYER_COLORS[player.playerIndex]
+                    : "#000",
+                }))
+              : undefined
+          }
           hoverContent={equipeHoverContent}
           actions={teamActions}
         />

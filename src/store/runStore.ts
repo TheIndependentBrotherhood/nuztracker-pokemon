@@ -130,24 +130,26 @@ function normalizeRuns(runs: Run[]): Run[] {
   }));
 }
 
-/** Dead captures (by flag or by their state in zones) never stay in a team */
-function removeDeadFromTeam(team: Capture[], zones: Zone[]): Capture[] {
-  return team.filter(
-    (c) =>
-      !c.isDead &&
-      !zones.some((z) => z.captures.some((zc) => zc.id === c.id && zc.isDead)),
+/**
+ * Team entries are snapshots of zone captures: refresh them from the zones
+ * (types, ability, nickname, evolution…) and drop the dead ones.
+ */
+function syncTeamWithZones(team: Capture[], zones: Zone[]): Capture[] {
+  const capturesById = new Map(
+    zones.flatMap((z) => z.captures).map((c) => [c.id, c]),
   );
+  return team.map((c) => capturesById.get(c.id) ?? c).filter((c) => !c.isDead);
 }
 
-/** Apply run-wide invariants: Soul Link linked deaths, then teams without dead Pokémon */
+/** Apply run-wide invariants: Soul Link linked deaths, then teams in sync with zones */
 function finalizeRun(inputRun: Run): Run {
   const run = applySoulLinkDeaths(inputRun);
-  const team = removeDeadFromTeam(run.team, run.zones);
+  const team = syncTeamWithZones(run.team, run.zones);
   const playerTeams: Record<number, Capture[]> | undefined = run.playerTeams
     ? Object.fromEntries(
         Object.entries(run.playerTeams).map(([idx, t]) => [
           idx,
-          removeDeadFromTeam(t as Capture[], run.zones),
+          syncTeamWithZones(t as Capture[], run.zones),
         ]),
       )
     : undefined;

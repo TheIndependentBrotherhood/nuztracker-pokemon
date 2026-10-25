@@ -17,6 +17,8 @@ interface Props {
   runId: string;
   zone: string;
   onToggleDead?: (captureId: string) => void;
+  /** Removes the Pokémon from the team it belongs to (handles Soul Link player teams) */
+  onRemoveFromTeam?: (captureId: string) => void;
 }
 
 export default function TeamPokemonCard({
@@ -25,6 +27,7 @@ export default function TeamPokemonCard({
   runId,
   zone,
   onToggleDead,
+  onRemoveFromTeam,
 }: Props) {
   const { runs, updateTeam } = useRunStore();
   const { lang } = useLanguage();
@@ -58,7 +61,9 @@ export default function TeamPokemonCard({
         <Typography
           sx={{ color: "#64748b", fontSize: "0.75rem", fontWeight: 600 }}
         >
-          {(tr.teamView.slot as Record<string, (n: number) => string>)[lang](slotIndex + 1)}
+          {(tr.teamView.slot as Record<string, (n: number) => string>)[lang](
+            slotIndex + 1,
+          )}
         </Typography>
       </Box>
     );
@@ -88,6 +93,10 @@ export default function TeamPokemonCard({
             title: t(tr.pokemonCard.removeFromTeam, lang),
             className: "remove-btn",
             onClick: () => {
+              if (onRemoveFromTeam) {
+                onRemoveFromTeam(capture.id);
+                return;
+              }
               const run = runs.find((r) => r.id === runId);
               if (!run) return;
               updateTeam(

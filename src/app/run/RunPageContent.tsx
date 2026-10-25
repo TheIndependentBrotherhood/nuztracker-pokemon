@@ -18,6 +18,7 @@ import { PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getPokemonById } from "@/lib/pokemon-data";
+import { getAllTeamCaptures, getRunTeams } from "@/lib/team-utils";
 
 type Tab = "zones" | "team" | "pokedex";
 
@@ -59,12 +60,14 @@ export default function RunPageContent({ runId }: Props) {
     if (run) setCurrentRun(run);
   }, [run, setCurrentRun]);
 
-  // Load pokemon data for export display
+  // Load pokemon data for export display (all teams in Soul Link)
+  const exportCaptures = run ? getAllTeamCaptures(run) : [];
+  const exportCaptureKey = exportCaptures.map((c) => c.pokemon.id).join(",");
   useEffect(() => {
     let cancelled = false;
 
     const loadPokemonData = async () => {
-      if (!run || run.team.length === 0) {
+      if (exportCaptures.length === 0) {
         if (!cancelled) {
           setPokemonData({});
         }
@@ -73,7 +76,7 @@ export default function RunPageContent({ runId }: Props) {
 
       const dataMap: Record<number, PokemonData> = {};
       await Promise.all(
-        run.team.map(async (pokemonCaptured) => {
+        exportCaptures.map(async (pokemonCaptured) => {
           try {
             const data = await getPokemonById(pokemonCaptured.pokemon.id);
             if (data) {
@@ -98,7 +101,9 @@ export default function RunPageContent({ runId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [run]);
+    // Reload only when the set of Pokémon species in teams changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exportCaptureKey]);
 
   if (!mounted) return null;
 
@@ -270,6 +275,9 @@ export default function RunPageContent({ runId }: Props) {
     "gen6+": t(tr.createRun.gen6, lang),
   }[run.typeChartGeneration];
 
+  // Export columns: P1 left / P2 right in Soul Link, the shared team mirrored otherwise
+  const exportTeams = getRunTeams(run);
+
   const headerSubtitle = [
     run.region,
     run.difficulty,
@@ -405,14 +413,14 @@ export default function RunPageContent({ runId }: Props) {
             }}
           >
             <TeamColumn
-              team={run.team}
+              team={exportTeams[0]?.team ?? []}
               pokemonData={pokemonData}
               run={run}
               showTypes={exportShowTypes}
               tightTypes={exportTightTypes}
             />
             <TeamColumn
-              team={run.team}
+              team={(exportTeams[1] ?? exportTeams[0])?.team ?? []}
               pokemonData={pokemonData}
               run={run}
               showTypes={exportShowTypes}

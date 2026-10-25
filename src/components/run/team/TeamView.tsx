@@ -155,11 +155,12 @@ function TeamPanel({
                 ?.name ?? `P${(playerIndex ?? 0) + 1}`;
             showToast(
               (
-                tr.teamView.toastAdded[lang] as (
-                  p: string,
-                  n: string,
-                ) => string
-              )(pName, capturedPokemon.nickname ?? capturedPokemon.pokemon.technicalName),
+                tr.teamView.toastAdded[lang] as (p: string, n: string) => string
+              )(
+                pName,
+                capturedPokemon.nickname ??
+                  capturedPokemon.pokemon.technicalName,
+              ),
             );
           }
         }
@@ -231,7 +232,9 @@ function TeamPanel({
     const capturedPokemonId = e.dataTransfer.getData("capturedPokemonId");
     const pokemonId = e.dataTransfer.getData("pokemonId");
     if (capturedPokemonId) {
-      const cap = run.zones.flatMap((z) => z.captures).find((c) => c.id === capturedPokemonId);
+      const cap = run.zones
+        .flatMap((z) => z.captures)
+        .find((c) => c.id === capturedPokemonId);
       const updatedRun = {
         ...run,
         zones: run.zones.map((zone) => ({
@@ -248,7 +251,9 @@ function TeamPanel({
       toastDied(cap);
     } else if (pokemonId) {
       const updatedTeam = team.filter((p) => p.id !== pokemonId);
-      const cap = run.zones.flatMap((z) => z.captures).find((c) => c.id === pokemonId);
+      const cap = run.zones
+        .flatMap((z) => z.captures)
+        .find((c) => c.id === pokemonId);
       const updatedRun = {
         ...run,
         team: isSoulLink ? run.team : updatedTeam,
@@ -286,8 +291,8 @@ function TeamPanel({
       if (isSoulLink) {
         const cap = team.find((c) => c.id === pokemonId);
         const pName =
-          run.soulLinkPlayers?.find((p) => p.playerIndex === playerIndex)?.name ??
-          `P${(playerIndex ?? 0) + 1}`;
+          run.soulLinkPlayers?.find((p) => p.playerIndex === playerIndex)
+            ?.name ?? `P${(playerIndex ?? 0) + 1}`;
         showToast(
           (tr.teamView.toastRemoved[lang] as (p: string, n: string) => string)(
             pName,
@@ -320,10 +325,13 @@ function TeamPanel({
 
   const handleToggleDeadStatus = (captureId: string) => {
     const isInTeam = team.some((p) => p.id === captureId);
-    const capture = run.zones.flatMap((z) => z.captures).find((c) => c.id === captureId);
+    const capture = run.zones
+      .flatMap((z) => z.captures)
+      .find((c) => c.id === captureId);
     const willBeDead = !capture?.isDead;
 
-    const updatedTeam = willBeDead && isInTeam ? team.filter((p) => p.id !== captureId) : team;
+    const updatedTeam =
+      willBeDead && isInTeam ? team.filter((p) => p.id !== captureId) : team;
 
     const updatedRun = {
       ...run,
@@ -340,7 +348,11 @@ function TeamPanel({
         ...zone,
         captures: zone.captures.map((c) =>
           c.id === captureId
-            ? { ...c, isDead: !c.isDead, diedAt: !c.isDead ? Date.now() : undefined }
+            ? {
+                ...c,
+                isDead: !c.isDead,
+                diedAt: !c.isDead ? Date.now() : undefined,
+              }
             : c,
         ),
       })),
@@ -373,7 +385,9 @@ function TeamPanel({
             borderBottom: "2px solid #000",
           }}
         >
-          <Typography sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}>
+          <Typography
+            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
+          >
             {t(tr.teamView.team, lang)}
           </Typography>
         </Box>
@@ -387,7 +401,9 @@ function TeamPanel({
                 sx={{
                   transition: "all 200ms ease",
                   background:
-                    dragOverSlot === i ? "rgba(59, 130, 246, 0.1)" : "transparent",
+                    dragOverSlot === i
+                      ? "rgba(59, 130, 246, 0.1)"
+                      : "transparent",
                   borderRadius: "0.75rem",
                   p: dragOverSlot === i ? 1 : 0,
                   height: "100%",
@@ -399,10 +415,14 @@ function TeamPanel({
                   runId={run.id}
                   zone={
                     capture
-                      ? (getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang))
+                      ? (getZoneForCapture(capture.id) ??
+                        t(tr.teamView.unknown, lang))
                       : ""
                   }
                   onToggleDead={handleToggleDeadStatus}
+                  onRemoveFromTeam={(captureId) =>
+                    doUpdateTeam(team.filter((c) => c.id !== captureId))
+                  }
                 />
               </Box>
             </Grid>
@@ -430,7 +450,9 @@ function TeamPanel({
             mb: 2,
             pb: 1.5,
             borderBottom: "2px solid #000",
-            background: dragOverCaptured ? "rgba(59, 130, 246, 0.05)" : "transparent",
+            background: dragOverCaptured
+              ? "rgba(59, 130, 246, 0.05)"
+              : "transparent",
             transition: "all 200ms ease",
             mx: -2,
             px: 2,
@@ -440,7 +462,9 @@ function TeamPanel({
           role="button"
           tabIndex={0}
         >
-          <Typography sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}>
+          <Typography
+            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
+          >
             {(tr.teamView.capturedPokemon[lang] as (n: number) => string)(
               capturedNotInTeam.length,
             )}
@@ -475,7 +499,8 @@ function TeamPanel({
                       onAddToTeam={handleAddCapturedToTeam}
                       onToggleDead={handleToggleDeadStatus}
                       zone={
-                        getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)
+                        getZoneForCapture(capture.id) ??
+                        t(tr.teamView.unknown, lang)
                       }
                     />
                   </Grid>
@@ -515,8 +540,12 @@ function TeamPanel({
           role="button"
           tabIndex={0}
         >
-          <Typography sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}>
-            {(tr.teamView.deadPokemon[lang] as (n: number) => string)(deadPokemon.length)}
+          <Typography
+            sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#dc2626" }}
+          >
+            {(tr.teamView.deadPokemon[lang] as (n: number) => string)(
+              deadPokemon.length,
+            )}
           </Typography>
           <Typography sx={{ fontSize: "1.25rem", color: "#dc2626" }}>
             {expandedDead ? "▼" : "▶"}
@@ -547,7 +576,8 @@ function TeamPanel({
                       runId={run.id}
                       onResurrect={handleToggleDeadStatus}
                       zone={
-                        getZoneForCapture(capture.id) ?? t(tr.teamView.unknown, lang)
+                        getZoneForCapture(capture.id) ??
+                        t(tr.teamView.unknown, lang)
                       }
                     />
                   </Grid>
@@ -570,13 +600,21 @@ function TeamPanel({
   );
 }
 
-export default function TeamView({ run, id, onToggleAnalysis: _onToggleAnalysis }: Props) {
+export default function TeamView({
+  run,
+  id,
+  onToggleAnalysis: _onToggleAnalysis,
+}: Props) {
   const { lang } = useLanguage();
   const tr = translations;
   const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers);
   const players = run.soulLinkPlayers ?? [];
-  const [activePlayer, setActivePlayer] = useState(() => players[0]?.playerIndex ?? 0);
-  const resolvedActivePlayer = players.some((p) => p.playerIndex === activePlayer)
+  const [activePlayer, setActivePlayer] = useState(
+    () => players[0]?.playerIndex ?? 0,
+  );
+  const resolvedActivePlayer = players.some(
+    (p) => p.playerIndex === activePlayer,
+  )
     ? activePlayer
     : (players[0]?.playerIndex ?? 0);
 
@@ -618,9 +656,7 @@ export default function TeamView({ run, id, onToggleAnalysis: _onToggleAnalysis 
                 fontWeight: 700,
                 border: "none",
                 borderBottom: `4px solid ${isActive ? color : "transparent"}`,
-                backgroundColor: isActive
-                  ? `${color}22`
-                  : "transparent",
+                backgroundColor: isActive ? `${color}22` : "transparent",
                 color: isActive ? color : "#64748b",
                 cursor: "pointer",
                 transition: "all 200ms ease",

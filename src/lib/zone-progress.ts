@@ -68,8 +68,9 @@ export function countLinkedDeathsCausedByPlayer(
 ): number {
   return zones
     .flatMap((zone) => zone.captures)
-    .filter((c) => c.linkedDeath && c.killedByPlayerIndex === playerIndex)
-    .length;
+    .filter(
+      (c) => c.isDead && c.linkedDeath && c.killedByPlayerIndex === playerIndex,
+    ).length;
 }
 
 export function countZoneOutcomes(
