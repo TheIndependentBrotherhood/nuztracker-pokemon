@@ -30,6 +30,7 @@ import {
 import { useRunStore } from "@/store/runStore";
 import { useCache } from "@/context/CacheContext";
 import TypeDeductionTool from "@/components/pokedex/TypeDeductionTool";
+import CaptureRateBadge from "@/components/pokedex/CaptureRateBadge";
 import { PokemonEvolutionLineage } from "@/components/run/team/PokemonEvolutionLineage";
 import { EvolutionHistoryDialog } from "@/components/run/modals/EvolutionHistoryDialog";
 
@@ -2039,7 +2040,7 @@ export default function PokemonDetailModal({
 
             {/* Physical info */}
             <Grid container spacing={1}>
-              <Grid size={{ xs: 6 }}>
+              <Grid size={{ xs: data.captureRate !== undefined ? 4 : 6 }}>
                 <Box
                   sx={{
                     background: "#f0f4f8",
@@ -2062,7 +2063,7 @@ export default function PokemonDetailModal({
                   </Typography>
                 </Box>
               </Grid>
-              <Grid size={{ xs: 6 }}>
+              <Grid size={{ xs: data.captureRate !== undefined ? 4 : 6 }}>
                 <Box
                   sx={{
                     background: "#f0f4f8",
@@ -2085,6 +2086,11 @@ export default function PokemonDetailModal({
                   </Typography>
                 </Box>
               </Grid>
+              {data.captureRate !== undefined && (
+                <Grid size={{ xs: 4 }}>
+                  <CaptureRateBadge captureRate={data.captureRate} />
+                </Grid>
+              )}
             </Grid>
           </>
         ) : (

@@ -17,6 +17,11 @@ const STEPS = [
     label: "📘 Pokédex régionaux",
     file: "regional-pokedexes.json",
   },
+  {
+    key: "capture-rates",
+    label: "🎯 Taux de capture",
+    file: "pokemon-list.json",
+  },
   { key: "type-charts", label: "📊 Types Charts", file: "type-charts.json" },
   { key: "type-sprites", label: "🎨 Type Sprites", file: "type-sprites.json" },
   {

@@ -16,6 +16,7 @@ export async function generateStaticParams() {
     { step: "pokemon-list" },
     { step: "regions" },
     { step: "regional-pokedexes" },
+    { step: "capture-rates" },
     { step: "animated-sprites" },
     { step: "evolution-chains" },
   ];
@@ -76,6 +77,9 @@ export async function POST(
           break;
         case "regional-pokedexes":
           await syncRegionalPokedexes(send);
+          break;
+        case "capture-rates":
+          await syncCaptureRates(send);
           break;
         case "animated-sprites":
           await syncAnimatedSprites(send);
@@ -575,6 +579,7 @@ async function syncPokemonList(send: SendFn) {
 
     const species = await fetchJson<{
       generation: { name: string };
+      capture_rate?: number;
       names: { language: { name: string }; name: string }[];
     }>(details.species.url);
 
@@ -622,6 +627,9 @@ async function syncPokemonList(send: SendFn) {
       names,
       types: details.types.map((t) => t.type.name),
       generation: generation,
+      ...(typeof species.capture_rate === "number"
+        ? { captureRate: species.capture_rate }
+        : {}),
       abilities: details.abilities,
       height: details.height,
       weight: details.weight,
@@ -684,6 +692,7 @@ async function syncPokemonList(send: SendFn) {
         cur.id !== p.id ||
         cur.types?.join(",") !== p.types?.join(",") ||
         cur.generation !== p.generation ||
+        cur.captureRate !== p.captureRate ||
         cur.height !== p.height ||
         cur.weight !== p.weight ||
         cur.abilities?.join(",") !== p.abilities?.join(",") ||
@@ -1030,6 +1039,105 @@ async function syncRegionalPokedexes(send: SendFn) {
     deleted,
     incoming: {
       pokedexes: incoming,
+      generatedAt: new Date().toISOString(),
+    },
+  });
+}
+
+// ─── capture rates sync ──────────────────────────────────────────────────────
+
+/**
+ * Lightweight enrichment of pokemon-list.json with the species capture rate.
+ * Base Pokémon share their id with their species; forms (id > 10000) need one
+ * extra request to resolve their species.
+ */
+async function syncCaptureRates(send: SendFn) {
+  const POKEAPI = "https://pokeapi.co/api/v2";
+
+  const current = readCurrentFile<{
+    generatedAt?: string;
+    totalCount?: number;
+    pokemon: PokemonData[];
+  }>("pokemon-list.json");
+
+  if (!current?.pokemon?.length) {
+    throw new Error("pokemon-list.json est introuvable ou invalide.");
+  }
+
+  send({
+    type: "progress",
+    message: `🎯 Fetching capture rates for ${current.pokemon.length} Pokémon…`,
+    current: 0,
+    total: current.pokemon.length,
+  });
+
+  const captureRateBySpeciesId = new Map<number, number>();
+  const getSpeciesCaptureRate = async (speciesId: number) => {
+    const cached = captureRateBySpeciesId.get(speciesId);
+    if (cached !== undefined) return cached;
+    const species = await fetchJson<{ capture_rate: number }>(
+      `${POKEAPI}/pokemon-species/${speciesId}`,
+      60,
+    );
+    captureRateBySpeciesId.set(speciesId, species.capture_rate);
+    return species.capture_rate;
+  };
+
+  const incoming: PokemonData[] = [];
+  const modified: unknown[] = [];
+
+  for (let i = 0; i < current.pokemon.length; i++) {
+    const pokemon = current.pokemon[i];
+    let captureRate: number | undefined;
+
+    try {
+      let speciesId = pokemon.id;
+      if (pokemon.id > 10000) {
+        const details = await fetchJson<{ species: { url: string } }>(
+          `${POKEAPI}/pokemon/${pokemon.id}`,
+          60,
+        );
+        const match = details.species.url.match(/\/(\d+)\/?$/);
+        if (match) speciesId = Number(match[1]);
+      }
+      captureRate = await getSpeciesCaptureRate(speciesId);
+    } catch (error) {
+      send({
+        type: "progress",
+        message: `  ⚠️ ${pokemon.technicalName}: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+
+    const next =
+      captureRate !== undefined ? { ...pokemon, captureRate } : pokemon;
+    incoming.push(next);
+    if (next.captureRate !== pokemon.captureRate) {
+      modified.push({ current: pokemon, incoming: next });
+    }
+
+    if ((i + 1) % 50 === 0 || i + 1 === current.pokemon.length) {
+      send({
+        type: "progress",
+        message: `Fetched ${i + 1}/${current.pokemon.length} capture rates`,
+        current: i + 1,
+        total: current.pokemon.length,
+      });
+    }
+  }
+
+  send({
+    type: "progress",
+    message: `📊 Diff: +0 | ~${modified.length} | -0`,
+  });
+
+  send({
+    type: "diff",
+    added: [],
+    modified,
+    deleted: [],
+    incoming: {
+      ...current,
+      pokemon: incoming,
       generatedAt: new Date().toISOString(),
     },
   });

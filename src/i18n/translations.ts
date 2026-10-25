@@ -255,6 +255,29 @@ const translations = {
     cancelEditNickname: { fr: "Annuler", en: "Cancel" },
     height: { fr: "Taille", en: "Height" },
     weight: { fr: "Poids", en: "Weight" },
+    captureRate: { fr: "Taux de capture", en: "Catch rate" },
+    captureRateHint: {
+      fr: (rate: number, probability: string) =>
+        `Taux ${rate}/255 — environ ${probability} de chances par Poké Ball à PV max, sans altération de statut.`,
+      en: (rate: number, probability: string) =>
+        `Rate ${rate}/255 — about ${probability} chance per Poké Ball at full HP, no status condition.`,
+    },
+    captureDifficulty: {
+      fr: {
+        veryEasy: "Très facile",
+        easy: "Facile",
+        medium: "Moyen",
+        hard: "Difficile",
+        veryHard: "Très difficile",
+      },
+      en: {
+        veryEasy: "Very easy",
+        easy: "Easy",
+        medium: "Medium",
+        hard: "Hard",
+        veryHard: "Very hard",
+      },
+    },
     failedToLoad: {
       fr: "Impossible de charger les données",
       en: "Failed to load data",

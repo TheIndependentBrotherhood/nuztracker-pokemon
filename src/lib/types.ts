@@ -163,6 +163,8 @@ export interface PokemonData {
   alternativeTechnicalNames?: string[];
   names?: { fr?: string; en?: string };
   generation: number;
+  /** PokeAPI capture rate (0-255), from the species */
+  captureRate?: number;
   types: string[];
   abilities: PokemonAbility[];
   stats: PokemonStat[];

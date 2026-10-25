@@ -30,6 +30,7 @@ import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
 import { getZoneDisplayName } from "@/lib/zones";
 import { isZoneLockedForPlayer } from "@/lib/zone-progress";
+import CaptureRateBadge from "@/components/pokedex/CaptureRateBadge";
 
 interface Props {
   runId: string;
@@ -493,28 +494,41 @@ export default function AddCaptureModal({
               }}
             />
             {selected && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={
-                  isShiny
-                    ? selected.sprites.shiny.default
-                    : selected.sprites.normal.default
-                }
-                alt={`${isShiny ? "Shiny " : ""}${getLocalizedPokemonName(selected, lang)} sprite`}
-                onError={(event) => {
-                  const fallbackUrl = isShiny
-                    ? selected.sprites.shiny.default
-                    : selected.sprites.normal.default;
-                  event.currentTarget.src = fallbackUrl;
-                }}
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  objectFit: "contain",
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
                   flexShrink: 0,
-                  filter: "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))",
                 }}
-              />
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={
+                    isShiny
+                      ? selected.sprites.shiny.default
+                      : selected.sprites.normal.default
+                  }
+                  alt={`${isShiny ? "Shiny " : ""}${getLocalizedPokemonName(selected, lang)} sprite`}
+                  onError={(event) => {
+                    const fallbackUrl = isShiny
+                      ? selected.sprites.shiny.default
+                      : selected.sprites.normal.default;
+                    event.currentTarget.src = fallbackUrl;
+                  }}
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    objectFit: "contain",
+                    flexShrink: 0,
+                    filter: "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))",
+                  }}
+                />
+                <CaptureRateBadge
+                  captureRate={selected.captureRate}
+                  variant="chip"
+                />
+              </Box>
             )}
           </Box>
           {results.length > 0 && (
