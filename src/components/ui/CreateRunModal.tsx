@@ -17,12 +17,18 @@ import {
 import { useRunStore } from "@/store/runStore";
 import { useRouter } from "next/navigation";
 import { regions, loadRegions, type Region } from "@/lib/zones";
-import { RandomizerOptions, SoulLinkPlayer, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
+import {
+  RandomizerOptions,
+  SoulLinkPlayer,
+  SOUL_LINK_PLAYER_COLORS,
+} from "@/lib/types";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledTextField from "@/components/ui/StyledTextField";
 import StyledSelect from "@/components/ui/StyledSelect";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import GameVersionField from "@/components/tracker/GameVersionField";
+import { gameTypeChart, type GameVersionId } from "@/lib/game-catalog";
 
 interface Props {
   onClose: () => void;
@@ -36,6 +42,7 @@ export default function CreateRunModal({ onClose }: Props) {
 
   const [gameName, setGameName] = useState("");
   const [region, setRegion] = useState("kanto");
+  const [gameVersion, setGameVersion] = useState<GameVersionId>();
   const [typeChartGeneration, setTypeChartGeneration] = useState<
     "gen1" | "gen2-5" | "gen6+"
   >("gen6+");
@@ -60,6 +67,7 @@ export default function CreateRunModal({ onClose }: Props) {
       randomizeAbilities: false,
       randomizeEncounters: false,
       randomizeEvolvedForms: false,
+      randomizeStats: false,
     },
   );
 
@@ -78,6 +86,7 @@ export default function CreateRunModal({ onClose }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const value = (e.target as any).value;
     setRegion(value as string);
+    setGameVersion(undefined);
   };
 
   const handleTypeChartGenerationChange = (
@@ -115,11 +124,12 @@ export default function CreateRunModal({ onClose }: Props) {
     return players;
   }
 
-  function handleCreate() {
+  async function handleCreate() {
     if (!gameName.trim()) return;
     if (!soulLinkValid) return;
-    const run = createRun({
+    const run = await createRun({
       gameName: gameName.trim(),
+      gameVersion,
       region,
       typeChartGeneration,
       isShinyHuntMode,
@@ -129,14 +139,22 @@ export default function CreateRunModal({ onClose }: Props) {
         ? { isSoulLinkMode: true, soulLinkPlayers: buildSoulLinkPlayers() }
         : {}),
     });
+    if (!run) return;
     onClose();
     router.push(`/run/?id=${run.id}`);
   }
 
   const randomizerOptionsList = [
     { key: "randomizeTypes", label: t(tr.createRun.randomizeTypes, lang) },
-    { key: "randomizeAbilities", label: t(tr.createRun.randomizeAbilities, lang) },
-    { key: "randomizeEvolvedForms", label: t(tr.createRun.randomizeEvolvedForms, lang) },
+    {
+      key: "randomizeAbilities",
+      label: t(tr.createRun.randomizeAbilities, lang),
+    },
+    {
+      key: "randomizeEvolvedForms",
+      label: t(tr.createRun.randomizeEvolvedForms, lang),
+    },
+    { key: "randomizeStats", label: "Randomized stats (BST unchanged, + / - notes)" },
   ];
 
   const playerColors = SOUL_LINK_PLAYER_COLORS;
@@ -191,7 +209,7 @@ export default function CreateRunModal({ onClose }: Props) {
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
               e.key === "Enter" && handleCreate()
             }
-            helperText={`${gameName.length}/64 caractères`}
+            helperText={`${gameName.length}/64 characters`}
           />
 
           {/* Region Select */}
@@ -207,6 +225,15 @@ export default function CreateRunModal({ onClose }: Props) {
               </MenuItem>
             ))}
           </StyledSelect>
+
+          <GameVersionField
+            value={gameVersion}
+            region={region}
+            onChange={(version) => {
+              setGameVersion(version);
+              setTypeChartGeneration(gameTypeChart(version));
+            }}
+          />
 
           {/* Type Chart Generation Select */}
           <StyledSelect
@@ -416,7 +443,9 @@ export default function CreateRunModal({ onClose }: Props) {
                 {player3Name !== null && (
                   <>
                     {player4Name !== null ? (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <Box
                           sx={{
                             width: 12,

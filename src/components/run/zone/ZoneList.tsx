@@ -16,6 +16,7 @@ import { getZonesForRegionAsync, getZoneDisplayName } from "@/lib/zones";
 import ZoneItem from "./ZoneItem";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledTextField from "@/components/ui/StyledTextField";
+import ZoneIntel from "@/components/tracker/ZoneIntel";
 
 interface Props {
   run: Run;
@@ -24,7 +25,8 @@ interface Props {
 type FilterKey = "all" | "not-visited" | "lost" | "captured";
 
 export default function ZoneList({ run }: Props) {
-  const { selectedZoneId, updateRun } = useRunStore();
+  const { selectedZoneId, updateRun, canEditRun, reportError } = useRunStore();
+  const canManageZones = canEditRun(run.id);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
   const [zoneNamesMap, setZoneNamesMap] = useState<
@@ -45,8 +47,10 @@ export default function ZoneList({ run }: Props) {
 
   // Load correct zones for the region and sync if needed
   useEffect(() => {
+    let cancelled = false;
     const loadAndSync = async () => {
-      const correctZones = await getZonesForRegionAsync(run.region);
+      const correctZones = await getZonesForRegionAsync(run.region, run.gameVersion);
+      if (cancelled) return;
       setTemplateZoneIds(correctZones.map((z) => z.id));
 
       // Template zones explicitly removed by the user must not be re-added
@@ -77,7 +81,7 @@ export default function ZoneList({ run }: Props) {
       setZoneNamesMap(newMap);
 
       // For non-custom regions: sync zones if mismatch
-      if (run.region !== "custom" && zonesMismatch) {
+      if (canManageZones && run.region !== "custom" && zonesMismatch) {
         const syncedZones = expectedZones.map((expectedZone) => {
           const currentZone = run.zones.find((z) => z.id === expectedZone.id);
           return currentZone
@@ -95,13 +99,17 @@ export default function ZoneList({ run }: Props) {
                 updatedAt: 0,
               };
         });
-        updateRun({ ...run, zones: [...syncedZones, ...userAddedZones] });
+        await updateRun(
+          { ...run, zones: [...syncedZones, ...userAddedZones] },
+          run,
+        );
       }
     };
 
-    loadAndSync();
+    void loadAndSync().catch(reportError);
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run.id, run.region]);
+  }, [run.id, run.region, run.gameVersion, canManageZones]);
 
   // Derive display zones: run.zones enriched with translated names from map
   const zonesToDisplay = useMemo(
@@ -129,7 +137,7 @@ export default function ZoneList({ run }: Props) {
     return true;
   });
 
-  const handleAddZone = () => {
+  const handleAddZone = async () => {
     if (!newZoneName.trim()) return;
 
     const zoneId = `custom-zone-${Date.now()}`;
@@ -145,10 +153,16 @@ export default function ZoneList({ run }: Props) {
       updatedAt: Date.now(),
     };
 
-    updateRun({
-      ...run,
-      zones: [...run.zones, newZone],
-    });
+    if (
+      !(await updateRun(
+        {
+          ...run,
+          zones: [...run.zones, newZone],
+        },
+        run,
+      ))
+    )
+      return;
 
     setNewZoneName("");
     setShowAddZoneDialog(false);
@@ -158,7 +172,7 @@ export default function ZoneList({ run }: Props) {
     setZoneToDelete(zoneId);
   };
 
-  const confirmRemoveZone = () => {
+  const confirmRemoveZone = async () => {
     if (zoneToDelete) {
       // Get the zone to be deleted
       const zoneToRemove = run.zones.find((z) => z.id === zoneToDelete);
@@ -183,23 +197,31 @@ export default function ZoneList({ run }: Props) {
         : undefined;
 
       // Remove the zone, archive it for a possible restore and filter out team members from this zone
-      updateRun({
-        ...run,
-        zones: run.zones.filter((z) => z.id !== zoneToDelete),
-        removedZones: [
-          ...removedZones.filter((z) => z.id !== zoneToRemove.id),
-          { ...zoneToRemove, updatedAt: Date.now() },
-        ],
-        team: run.team.filter((member) => !captureIdsToRemove.has(member.id)),
-        ...(cleanedPlayerTeams !== undefined
-          ? { playerTeams: cleanedPlayerTeams }
-          : {}),
-      });
+      if (
+        !(await updateRun(
+          {
+            ...run,
+            zones: run.zones.filter((z) => z.id !== zoneToDelete),
+            removedZones: [
+              ...removedZones.filter((z) => z.id !== zoneToRemove.id),
+              { ...zoneToRemove, updatedAt: Date.now() },
+            ],
+            team: run.team.filter(
+              (member) => !captureIdsToRemove.has(member.id),
+            ),
+            ...(cleanedPlayerTeams !== undefined
+              ? { playerTeams: cleanedPlayerTeams }
+              : {}),
+          },
+          run,
+        ))
+      )
+        return;
       setZoneToDelete(null);
     }
   };
 
-  const handleRestoreZone = (zoneId: string) => {
+  const handleRestoreZone = async (zoneId: string) => {
     const zoneToRestore = removedZones.find((z) => z.id === zoneId);
     if (!zoneToRestore || run.zones.some((z) => z.id === zoneId)) return;
 
@@ -247,15 +269,21 @@ export default function ZoneList({ run }: Props) {
       });
     }
 
-    updateRun({
-      ...run,
-      zones: nextZones,
-      removedZones: removedZones.filter((z) => z.id !== zoneId),
-      team: nextTeam,
-      ...(nextPlayerTeams !== undefined
-        ? { playerTeams: nextPlayerTeams }
-        : {}),
-    });
+    if (
+      !(await updateRun(
+        {
+          ...run,
+          zones: nextZones,
+          removedZones: removedZones.filter((z) => z.id !== zoneId),
+          team: nextTeam,
+          ...(nextPlayerTeams !== undefined
+            ? { playerTeams: nextPlayerTeams }
+            : {}),
+        },
+        run,
+      ))
+    )
+      return;
 
     if (removedZones.length <= 1) setShowRemovedZonesDialog(false);
   };
@@ -272,6 +300,7 @@ export default function ZoneList({ run }: Props) {
           background: "linear-gradient(to right, #EFF6FF, #F3E8FF)",
         }}
       >
+        <ZoneIntel run={run} />
         <StyledTextField
           fullWidth
           placeholder={t(tr.zoneList.searchPlaceholder, lang)}
@@ -340,6 +369,7 @@ export default function ZoneList({ run }: Props) {
         <StyledButton
           variant="primary"
           onClick={() => setShowAddZoneDialog(true)}
+          disabled={!canManageZones}
           sx={{ width: "100%" }}
         >
           ➕ Ajouter une zone
@@ -350,6 +380,7 @@ export default function ZoneList({ run }: Props) {
           <StyledButton
             variant="secondary"
             onClick={() => setShowRemovedZonesDialog(true)}
+            disabled={!canManageZones}
             sx={{ width: "100%" }}
           >
             {t(tr.zoneList.removedZonesButton, lang)(removedZones.length)}
@@ -378,6 +409,7 @@ export default function ZoneList({ run }: Props) {
             <Box
               component="button"
               onClick={() => handleRemoveZone(zone.id)}
+              disabled={!canManageZones}
               sx={{
                 px: 1.5,
                 py: 0,

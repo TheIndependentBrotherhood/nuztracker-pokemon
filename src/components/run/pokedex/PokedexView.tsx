@@ -40,6 +40,7 @@ import translations, { t } from "@/i18n/translations";
 import { useRunStore } from "@/store/runStore";
 import { publicPath } from "@/lib/base-path";
 import { getDefaultSprite, getPokemonById } from "@/lib/pokemon-data";
+import { pokemonForGame } from "@/lib/game-reference";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -59,8 +60,8 @@ export default function PokedexView({ runId }: Props) {
   const [sortBy, setSortBy] = useState<SortOption>("dex");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [currentPage, setCurrentPage] = useState(0);
-  const [pokedexEntries, setPokedexEntries] = useState<PokemonData[]>([]);
-  const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
+  const [sourceEntries, setPokedexEntries] = useState<PokemonData[]>([]);
+  const [sourcePokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
     {},
   );
   const [selectedCapture, setSelectedCapture] = useState<Capture | null>(null);
@@ -72,6 +73,14 @@ export default function PokedexView({ runId }: Props) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [addSearch, setAddSearch] = useState("");
   const run = runId ? runs.find((candidate) => candidate.id === runId) : null;
+  const pokedexEntries = useMemo(
+    () => sourceEntries.map((entry) => pokemonForGame(entry, run?.gameVersion)),
+    [sourceEntries, run?.gameVersion],
+  );
+  const pokemonData = useMemo(
+    () => Object.fromEntries(Object.entries(sourcePokemonData).map(([id, entry]) => [id, pokemonForGame(entry, run?.gameVersion)])),
+    [sourcePokemonData, run?.gameVersion],
+  );
   const randomTypesMode = isRandomTypesMode(run);
   const typeChartGeneration = run?.typeChartGeneration;
   const regionalPokedex = run ? regionalPokedexes?.get(run.region) : undefined;
@@ -119,12 +128,12 @@ export default function PokedexView({ runId }: Props) {
 
   const handleAddEntry = (entry: PokemonData) => {
     if (!run) return;
-    updateRun(addPokedexEntryToRun(run, entry, regionalPokedex));
+    void updateRun(addPokedexEntryToRun(run, entry, regionalPokedex), run);
   };
 
   const handleRemoveEntry = (entry: PokemonData) => {
     if (!run) return;
-    updateRun(removePokedexEntryFromRun(run, entry, regionalPokedex));
+    void updateRun(removePokedexEntryFromRun(run, entry, regionalPokedex), run);
   };
 
   // Type chart is needed to count the type combinations compatible with observations
@@ -431,6 +440,7 @@ export default function PokedexView({ runId }: Props) {
             <StyledButton
               variant="primary"
               onClick={() => setShowAddDialog(true)}
+              disabled={!run || !useRunStore.getState().canEditRun(run.id)}
             >
               {t(tr.runPage.pokedexAddButton, lang)}
             </StyledButton>
@@ -768,6 +778,9 @@ export default function PokedexView({ runId }: Props) {
                     <Box
                       component="button"
                       onClick={() => handleRemoveEntry(entry)}
+                      disabled={
+                        !run || !useRunStore.getState().canEditRun(run.id)
+                      }
                       aria-label={t(tr.runPage.pokedexRemoveTooltip, lang)}
                       sx={{
                         px: 1,

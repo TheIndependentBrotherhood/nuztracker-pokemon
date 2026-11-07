@@ -61,6 +61,7 @@ export const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
+          boxSizing: "border-box",
           borderRadius: "9999px",
           border: "3px solid #000000",
           boxShadow: "4px 6px 0 rgba(0, 0, 0, 0.1)",
@@ -77,7 +78,6 @@ export const theme = createTheme({
         contained: {
           color: "#ffffff",
           fontWeight: 700,
-          padding: "12px 32px",
           "&.MuiButton-containedPrimary": {
             background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
           },
@@ -89,6 +89,24 @@ export const theme = createTheme({
           border: "3px solid #000000",
           color: "#000000",
           fontWeight: 700,
+        },
+        sizeSmall: {
+          minHeight: 32,
+          padding: "4px 12px",
+          fontSize: "0.8125rem",
+          lineHeight: "18px",
+        },
+        sizeMedium: {
+          minHeight: 40,
+          padding: "6px 16px",
+          fontSize: "0.875rem",
+          lineHeight: "20px",
+        },
+        sizeLarge: {
+          minHeight: 48,
+          padding: "8px 24px",
+          fontSize: "1rem",
+          lineHeight: "22px",
         },
       },
     },
@@ -106,48 +124,43 @@ export const theme = createTheme({
         },
       },
     },
-    MuiTextField: {
+    MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "1.5rem",
-            backgroundColor: "#ffffff",
-            border: "2px solid #000000",
-            "& fieldset": {
-              border: "none",
-            },
-            "&:hover": {
-              backgroundColor: "#ffffff",
-            },
-            "&.Mui-focused": {
-              backgroundColor: "#ffffff",
-              "& fieldset": {
-                border: "none",
-              },
-            },
+          borderRadius: "1rem",
+          backgroundColor: "#ffffff",
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#000000",
           },
-          "& .MuiOutlinedInput-input": {
-            color: "#000000",
-            fontWeight: 500,
-            "&::placeholder": {
-              color: "#a0a0a0",
-              opacity: 1,
-            },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#059669",
           },
+        },
+        notchedOutline: {
+          border: "2px solid #000000",
+        },
+        input: {
+          color: "#000000",
+          fontWeight: 500,
+          "&::placeholder": {
+            color: "#737373",
+            opacity: 1,
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
         },
       },
     },
     MuiSelect: {
       styleOverrides: {
-        root: {
-          borderRadius: "1.5rem",
-          backgroundColor: "#ffffff",
-          border: "2px solid #000000",
+        select: {
           color: "#000000",
           fontWeight: 600,
-          "& .MuiOutlinedInput-notchedOutline": {
-            border: "none",
-          },
         },
       },
     },

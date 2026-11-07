@@ -1,37 +1,55 @@
 {
-  "name": "nextapp",
+  "name": "nuztracker",
   "version": "0.1.0",
   "private": true,
+  "main": "dist-desktop/main.cjs",
   "engines": {
-    "node": ">=24.0.0",
-    "npm": ">=10.0.0"
+    "node": ">=24.0.0"
   },
+  "packageManager": "yarn@1.22.22",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "apply-sprite-corrections": "tsx scripts/apply-sprite-corrections.ts"
+    "format": "prettier --write",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts && fengari tests/firered-reader.test.lua",
+    "desktop:build": "node scripts/build-desktop.mjs",
+    "desktop": "yarn desktop:build && electron .",
+    "desktop:package": "yarn desktop:build && electron-builder --win portable",
+    "apply-sprite-corrections": "tsx scripts/apply-sprite-corrections.ts",
+    "data:games": "tsx scripts/build-game-references.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^9.0.0",
     "@mui/system": "^9.0.0",
+    "@pkmn/dex": "^0.10.15",
     "html2canvas": "^1.4.1",
     "next": "16.3.7",
     "pako": "^2.1.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zustand": "^5.0.12"
+    "zustand": "^5.0.12",
+    "ws": "^8.22.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^20.19.39",
+    "@types/node": "^24.0.0",
     "@types/pako": "^2.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.0",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
+    "fake-indexeddb": "^6.0.0",
+    "fengari-node-cli": "^0.1.0",
+    "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^5"
   }

@@ -43,6 +43,10 @@ export interface Capture {
   killedByPlayerIndex?: number;
   /** Soul Link: true when this Pokémon died because the linked partner's Pokémon was lost or died */
   linkedDeath?: boolean;
+  /** Stable game identity, independent of party slot, nickname and evolution. */
+  gameIdentity?: string;
+  /** Explicit SoulLink group; legacy captures use their zone as the group. */
+  soulLinkGroupId?: string;
 }
 
 export interface RandomizerOptions {
@@ -50,6 +54,7 @@ export interface RandomizerOptions {
   randomizeAbilities: boolean;
   randomizeEncounters: boolean;
   randomizeEvolvedForms: boolean;
+  randomizeStats?: boolean;
 }
 
 /** A player in a Soul Link run */
@@ -109,6 +114,7 @@ export interface Zone {
 export interface Run {
   id: string;
   gameName: string;
+  gameVersion?: GameVersionId;
   region: string;
   difficulty: "easy" | "normal" | "hard";
   isShinyHuntMode: boolean;
@@ -119,11 +125,14 @@ export interface Run {
   soulLinkPlayers?: SoulLinkPlayer[];
   /** Per-player teams in Soul Link mode. Key = playerIndex (0-3). */
   playerTeams?: Record<number, Capture[]>;
+  /** Isolated knowledge for each player once a run is connected. */
+  playerKnowledge?: Record<string, RunKnowledge>;
   randomizerOptions?: RandomizerOptions;
   /** User-discovered types for randomizer type mode, indexed by pokemon id. */
   customTypesByPokemonId?: Record<number, string[]>;
   /** Player-defined ability panel (up to 3) per Pokémon species in randomizer mode. */
   customAbilitiesByPokemonId?: Record<number, string[]>;
+  statAnnotationsByPokemonId?: Record<number, StatAnnotations>;
   /** Type observations for Pokédex exploration, indexed by pokemon id. Used for type deduction. */
   pokedexObservationsByPokemonId?: Record<number, TypeObservation[]>;
   /** Global notes for each Pokémon species in Pokédex, indexed by pokemon id. */
@@ -143,6 +152,16 @@ export interface Run {
   createdAt: number;
   updatedAt: number;
 }
+
+export type RunKnowledge = Pick<
+  Run,
+  | "customTypesByPokemonId"
+  | "customAbilitiesByPokemonId"
+  | "statAnnotationsByPokemonId"
+  | "pokedexObservationsByPokemonId"
+  | "pokedexNotesByPokemonId"
+  | "evolutionHistoryByPokemonId"
+>;
 
 export type ZoneStatus = "not-visited" | "captured" | "lost";
 
@@ -179,3 +198,10 @@ export interface PokemonData {
 export interface TypeEffectiveness {
   [attackingType: string]: number;
 }
+import type { GameVersionId } from "./game-catalog";
+
+export const POKEMON_STAT_NAMES = [
+  "hp", "attack", "defense", "special-attack", "special-defense", "speed",
+] as const;
+export type PokemonStatName = (typeof POKEMON_STAT_NAMES)[number];
+export type StatAnnotations = Partial<Record<PokemonStatName, "high" | "low">>;

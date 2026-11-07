@@ -2,11 +2,12 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Box } from "@mui/material";
-import { Capture, PokemonData, Run } from "@/lib/types";
+import { Alert, Box } from "@mui/material";
+import { Capture, Run } from "@/lib/types";
 import { decodeTeam } from "@/lib/share";
-import { getPokemonById } from "@/lib/pokemon-data";
 import TeamColumn from "@/components/share/TeamColumn";
+import { getGameVersion, gameTypeChart } from "@/lib/game-catalog";
+import { validationMessage } from "@/lib/tracker/schema";
 
 function ShareContent() {
   const searchParams = useSearchParams();
@@ -15,22 +16,25 @@ function ShareContent() {
   const isRipMode = searchParams.get("isRip") === "true";
   const [team, setTeam] = useState<Capture[]>([]);
   const [shareRun, setShareRun] = useState<Run | undefined>(undefined);
-  const [pokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
-    {},
-  );
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const encoded = searchParams.get("team");
-    if (!encoded) {
-      return;
-    }
-    decodeTeam(encoded).then(async (captures) => {
-      setTeam(captures);
-      const hasCustomTypes = captures.some(
-        (capture) => (capture.customTypes?.length ?? 0) > 0,
-      );
-      if (hasCustomTypes) {
+    let cancelled = false;
+    async function loadTeam() {
+      try {
+        const encoded = searchParams.get("team");
+        if (!encoded) throw new Error("This link does not contain a team.");
+        const game = searchParams.get("game");
+        const gameVersion = game ? getGameVersion(game)?.id : undefined;
+        if (game && !gameVersion) throw new Error("This link uses an unsupported game reference.");
+        const captures = await decodeTeam(encoded);
+        if (cancelled) return;
+        setTeam(captures);
+        setError("");
+        const hasCustomTypes = searchParams.get("randomTypes") === "true" || captures.some(
+          (capture) => (capture.customTypes?.length ?? 0) > 0,
+        );
         const customTypesByPokemonId: Record<number, string[]> = {};
         for (const capture of captures) {
           if (capture.customTypes && capture.customTypes.length > 0) {
@@ -41,12 +45,13 @@ function ShareContent() {
         setShareRun({
           id: "share",
           gameName: "share",
+          gameVersion,
           region: "share",
           difficulty: "normal",
           isShinyHuntMode: false,
-          isRandomMode: true,
+          isRandomMode: hasCustomTypes,
           randomizerOptions: {
-            randomizeTypes: true,
+            randomizeTypes: hasCustomTypes,
             randomizeAbilities: false,
             randomizeEncounters: false,
             randomizeEvolvedForms: false,
@@ -55,33 +60,21 @@ function ShareContent() {
           status: "in-progress",
           zones: [],
           team: captures,
-          typeChartGeneration: "gen6+",
+          typeChartGeneration: gameVersion ? gameTypeChart(gameVersion) : "gen6+",
           createdAt: 0,
           updatedAt: 0,
         });
-      } else {
-        setShareRun(undefined);
+      } catch (failure) {
+        if (!cancelled) setError(validationMessage(failure));
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      // Fetch pokemon data for types
-      const dataMap: Record<number, PokemonData> = {};
-      await Promise.all(
-        captures.map(async (c) => {
-          try {
-            const data = await getPokemonById(c.pokemon.id);
-            if (data) {
-              dataMap[c.pokemon.id] = data;
-            }
-          } catch {
-            // silently fail
-          }
-        }),
-      );
-      setPokemonData(dataMap);
-      setLoading(false);
-    });
+    }
+    void loadTeam();
+    return () => { cancelled = true; };
   }, [searchParams]);
 
+  if (error) return <Alert severity="error">{error}</Alert>;
   if (loading) {
     return (
       <Box
@@ -129,7 +122,7 @@ function ShareContent() {
         /* RIP mode - single horizontal line */
         <TeamColumn
           team={team}
-          pokemonData={pokemonData}
+          pokemonData={{}}
           run={shareRun}
           showTypes={showTypes}
           tightTypes={tightTypes}
@@ -140,7 +133,7 @@ function ShareContent() {
           {/* Left column */}
           <TeamColumn
             team={team}
-            pokemonData={pokemonData}
+            pokemonData={{}}
             run={shareRun}
             showTypes={showTypes}
             tightTypes={tightTypes}
@@ -150,7 +143,7 @@ function ShareContent() {
           {/* Right column - mirror */}
           <TeamColumn
             team={team}
-            pokemonData={pokemonData}
+            pokemonData={{}}
             run={shareRun}
             showTypes={showTypes}
             tightTypes={tightTypes}

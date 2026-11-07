@@ -1,0 +1,308 @@
+import { createServer, type Server } from "node:http";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { networkInterfaces } from "node:os";
+import { WebSocket, WebSocketServer } from "ws";
+import { z } from "zod";
+import type {
+  HostRoomOptions,
+  RoomParticipant,
+  RoomStatus,
+  RunRecord,
+} from "../src/lib/tracker/types";
+import { connectRun, type PokemonResolver } from "../src/lib/tracker/live";
+import { getPlayerIndex } from "../src/lib/tracker/knowledge";
+import { shareRecord } from "../src/lib/tracker/records";
+import { validationMessage } from "../src/lib/tracker/schema";
+import { TrackerDatabase } from "./database";
+import {
+  applyRoomCommand,
+  clientMessageSchema,
+  MAX_ROOM_MESSAGE_BYTES,
+  type ServerMessage,
+} from "./room-protocol";
+
+const credentialsSchema = z.object({
+  roomId: z.string(),
+  players: z.record(z.string(), z.string()),
+});
+const token = () => randomBytes(32).toString("base64url");
+const hash = (value: string) =>
+  createHash("sha256").update(value).digest("hex");
+
+function matches(value: string, expected: string): boolean {
+  const encoded = Buffer.from(hash(value), "hex");
+  const other = Buffer.from(expected, "hex");
+  return encoded.length === other.length && timingSafeEqual(encoded, other);
+}
+
+export class RoomHost {
+  private readonly server: Server;
+  private readonly sockets: WebSocketServer;
+  private readonly clients = new Map<
+    WebSocket,
+    { playerId?: string; alive: boolean }
+  >();
+  private readonly invitation = token();
+  private readonly credentials: z.infer<typeof credentialsSchema>;
+  private heartbeat?: ReturnType<typeof setInterval>;
+  private address = "";
+  private stopping = false;
+
+  constructor(
+    private readonly database: TrackerDatabase,
+    private readonly options: HostRoomOptions,
+    private readonly resolvePokemon: PokemonResolver,
+    private readonly onRecord: (record: RunRecord) => void,
+    private readonly onStatus: (status: RoomStatus) => void,
+  ) {
+    const record = database.require(options.runId);
+    if (!record.run.isSoulLinkMode)
+      throw new Error("Choose a SoulLink run before hosting a room.");
+    getPlayerIndex(record.run, options.playerId);
+    this.credentials = (!options.resetCredentials
+      ? database.readSetting(`host-${options.runId}`, credentialsSchema)
+      : undefined) ?? { roomId: token(), players: {} };
+    database.writeSetting(`host-${options.runId}`, this.credentials);
+    this.server = createServer((_request, response) => {
+      response.writeHead(404, { "Content-Type": "text/plain" });
+      response.end(
+        "This server accepts authenticated tracker connections only.",
+      );
+    });
+    this.sockets = new WebSocketServer({
+      noServer: true,
+      maxPayload: MAX_ROOM_MESSAGE_BYTES,
+      perMessageDeflate: false,
+    });
+    this.server.on("upgrade", (request, socket, head) => {
+      if (
+        request.url !== "/room" ||
+        request.headers.origin ||
+        this.clients.size >= 8
+      ) {
+        socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
+        socket.destroy();
+        return;
+      }
+      this.sockets.handleUpgrade(request, socket, head, (client) =>
+        this.sockets.emit("connection", client),
+      );
+    });
+    this.sockets.on("connection", (socket) => this.accept(socket));
+  }
+
+  get status(): RoomStatus {
+    return {
+      mode: "hosting",
+      runId: this.options.runId,
+      playerId: this.options.playerId,
+      address: this.address,
+      invitation: this.invitation,
+      participants: this.participants(),
+      pendingCount: 0,
+    };
+  }
+
+  async start(): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      const failed = (error: Error) => reject(error);
+      this.server.once("error", failed);
+      this.server.listen(
+        this.options.port,
+        this.options.allowLan ? "0.0.0.0" : "127.0.0.1",
+        () => {
+          this.server.off("error", failed);
+          resolve();
+        },
+      );
+    });
+    this.server.on("error", (error) =>
+      this.onStatus({ ...this.status, error: error.message }),
+    );
+    const address = this.server.address();
+    if (!address || typeof address === "string")
+      throw new Error("Could not determine the room's listening port.");
+    const lanAddress = Object.values(networkInterfaces())
+      .flat()
+      .find((entry) => entry?.family === "IPv4" && !entry.internal)?.address;
+    this.address = `ws://${this.options.allowLan && lanAddress ? lanAddress : "127.0.0.1"}:${address.port}/room`;
+    const record = this.database.save(
+      connectRun(
+        this.database.require(this.options.runId),
+        this.options.playerId,
+      ),
+      true,
+    );
+    this.onRecord(record);
+    this.heartbeat = setInterval(() => {
+      for (const [socket, client] of this.clients) {
+        if (!client.alive) {
+          socket.terminate();
+          continue;
+        }
+        client.alive = false;
+        socket.ping();
+      }
+    }, 15000);
+    this.heartbeat.unref();
+    this.onStatus(this.status);
+  }
+
+  private participants(): RoomParticipant[] {
+    return (
+      this.database.require(this.options.runId).run.soulLinkPlayers ?? []
+    ).map((player) => ({
+      playerId: player.id,
+      name: player.name,
+      connected:
+        player.id === this.options.playerId ||
+        [...this.clients.values()].some(
+          (client) => client.playerId === player.id,
+        ),
+    }));
+  }
+
+  private send(socket: WebSocket, message: ServerMessage): void {
+    if (socket.readyState !== WebSocket.OPEN) return;
+    if (socket.bufferedAmount > MAX_ROOM_MESSAGE_BYTES) {
+      socket.close(1013, "The connection cannot keep up with room updates.");
+      return;
+    }
+    socket.send(JSON.stringify(message));
+  }
+
+  private presence(): void {
+    const participants = this.participants();
+    for (const [socket, client] of this.clients) {
+      if (client.playerId)
+        this.send(socket, { type: "presence", participants });
+    }
+    this.onStatus(this.status);
+  }
+
+  private accept(socket: WebSocket): void {
+    const client: { playerId?: string; alive: boolean } = { alive: true };
+    this.clients.set(socket, client);
+    const deadline = setTimeout(() => {
+      if (!client.playerId) socket.close(1008, "Authentication required");
+    }, 5000);
+    deadline.unref();
+    socket.on("pong", () => {
+      client.alive = true;
+    });
+    socket.on("error", () => socket.terminate());
+    socket.on("close", () => {
+      clearTimeout(deadline);
+      this.clients.delete(socket);
+      if (!this.stopping && client.playerId) this.presence();
+    });
+    socket.on("message", (data) => {
+      let commandId: string | undefined;
+      try {
+        if (!client.playerId && data.toString().length > 2000)
+          throw new Error("Invalid authentication message.");
+        const message = clientMessageSchema.parse(JSON.parse(data.toString()));
+        if (message.type === "join") {
+          if (client.playerId)
+            throw new Error("This connection is already authenticated.");
+          getPlayerIndex(
+            this.database.require(this.options.runId).run,
+            message.playerId,
+          );
+          if (message.playerId === this.options.playerId)
+            throw new Error("The host's player slot is reserved.");
+          const expected = this.credentials.players[message.playerId];
+          const reconnecting = Boolean(
+            expected &&
+            message.credential &&
+            matches(message.credential, expected),
+          );
+          if (
+            !reconnecting &&
+            (expected || !matches(message.invitation, hash(this.invitation)))
+          ) {
+            throw new Error(
+              "Invalid invitation or reserved player slot. The host can reset player credentials if recovery is needed.",
+            );
+          }
+          if (
+            [...this.clients.values()].some(
+              (entry) => entry.playerId === message.playerId,
+            )
+          ) {
+            throw new Error("This player is already connected.");
+          }
+          const credential =
+            reconnecting && message.credential ? message.credential : token();
+          this.credentials.players[message.playerId] = hash(credential);
+          this.database.writeSetting(
+            `host-${this.options.runId}`,
+            this.credentials,
+          );
+          client.playerId = message.playerId;
+          clearTimeout(deadline);
+          this.send(socket, {
+            type: "welcome",
+            credential,
+            roomId: this.credentials.roomId,
+            record: shareRecord(this.database.require(this.options.runId)),
+            participants: this.participants(),
+          });
+          this.presence();
+          return;
+        }
+        commandId = message.command.id;
+        if (!client.playerId)
+          throw new Error("Authenticate before changing the run.");
+        const record = applyRoomCommand(
+          this.database.require(this.options.runId),
+          message.command,
+          client.playerId,
+          this.resolvePokemon,
+        );
+        const saved = this.database.save(
+          record,
+          message.command.kind !== "frame",
+        );
+        this.onRecord(saved);
+        this.publish(saved, socket, commandId);
+      } catch (error) {
+        this.send(socket, {
+          type: "error",
+          message: validationMessage(error),
+          commandId,
+        });
+        if (!client.playerId) socket.close(1008, "Authentication failed");
+      }
+    });
+  }
+
+  publish(
+    record: RunRecord,
+    acknowledgedSocket?: WebSocket,
+    acknowledgement?: string,
+  ): void {
+    for (const [socket, client] of this.clients) {
+      if (client.playerId)
+        this.send(socket, {
+          type: "record",
+          record: shareRecord(record),
+          ...(socket === acknowledgedSocket && acknowledgement
+            ? { acknowledgement }
+            : {}),
+        });
+    }
+  }
+
+  async stop(): Promise<void> {
+    this.stopping = true;
+    if (this.heartbeat) clearInterval(this.heartbeat);
+    for (const socket of this.clients.keys()) socket.terminate();
+    await new Promise<void>((resolve) => this.sockets.close(() => resolve()));
+    if (this.server.listening) {
+      await new Promise<void>((resolve, reject) =>
+        this.server.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  }
+}

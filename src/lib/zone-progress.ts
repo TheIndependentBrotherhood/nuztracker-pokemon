@@ -40,8 +40,19 @@ export function isZoneLockedForPlayer(
   zone: Zone,
   playerIndex: number,
 ): boolean {
+  const own = zone.captures.filter(
+    (capture) => (capture.playerIndex ?? 0) === playerIndex,
+  );
+  const groups = new Set(
+    own.length
+      ? own.map((capture) => capture.soulLinkGroupId ?? zone.id)
+      : [zone.id],
+  );
   return zone.captures.some(
-    (c) => (c.playerIndex ?? 0) !== playerIndex && c.isDead,
+    (c) =>
+      (c.playerIndex ?? 0) !== playerIndex &&
+      c.isDead &&
+      groups.has(c.soulLinkGroupId ?? zone.id),
   );
 }
 

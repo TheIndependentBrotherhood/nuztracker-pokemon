@@ -9,6 +9,7 @@ import DeadPokemonCard from "./DeadPokemonCard";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { getPlayerId } from "@/lib/tracker/knowledge";
 
 interface Props {
   run: Run;
@@ -27,7 +28,8 @@ function TeamPanel({
   playerIndex?: number;
 }) {
   const teamSlots = Array.from({ length: 6 }, (_, i) => team[i] ?? null);
-  const { updateTeam } = useRunStore();
+  const { updateTeam, canEditRun, reportError } = useRunStore();
+  const canEditTeam = canEditRun(run.id, getPlayerId(run, playerIndex));
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const [dragOverCaptured, setDragOverCaptured] = useState(false);
   const [dragOverDead, setDragOverDead] = useState(false);
@@ -95,7 +97,15 @@ function TeamPanel({
   }
 
   function doUpdateTeam(nextTeam: Capture[]) {
-    updateTeam(run.id, nextTeam, playerIndex);
+    return updateTeam(run, nextTeam, playerIndex);
+  }
+
+  function ensureEditable() {
+    if (canEditTeam) return true;
+    reportError(
+      new Error("Only this player's tracker or the host can edit this team."),
+    );
+    return false;
   }
 
   const handleDragOverSlot = (
@@ -112,12 +122,13 @@ function TeamPanel({
     setDragOverSlot(null);
   };
 
-  const handleDropOnSlot = (
+  const handleDropOnSlot = async (
     e: React.DragEvent<HTMLDivElement>,
     slotIndex: number,
   ) => {
     e.preventDefault();
     setDragOverSlot(null);
+    if (!ensureEditable()) return;
 
     const pokemonId = e.dataTransfer.getData("pokemonId");
     const capturedPokemonId = e.dataTransfer.getData("capturedPokemonId");
@@ -148,7 +159,7 @@ function TeamPanel({
           }
         }
         if (nextTeam.length <= 6) {
-          doUpdateTeam(nextTeam);
+          if (!(await doUpdateTeam(nextTeam))) return;
           if (isSoulLink) {
             const pName =
               run.soulLinkPlayers?.find((p) => p.playerIndex === playerIndex)
@@ -203,7 +214,7 @@ function TeamPanel({
         };
         if (nextTeam.length <= 6) {
           const { updateRun } = useRunStore.getState();
-          updateRun(updatedRun);
+          await updateRun(updatedRun, run);
         }
       }
     }
@@ -226,9 +237,10 @@ function TeamPanel({
   };
   const handleDragLeaveDead = () => setDragOverDead(false);
 
-  const handleDropOnDead = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDropOnDead = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOverDead(false);
+    if (!ensureEditable()) return;
     const capturedPokemonId = e.dataTransfer.getData("capturedPokemonId");
     const pokemonId = e.dataTransfer.getData("pokemonId");
     if (capturedPokemonId) {
@@ -247,7 +259,7 @@ function TeamPanel({
         })),
       };
       const { updateRun } = useRunStore.getState();
-      updateRun(updatedRun);
+      if (!(await updateRun(updatedRun, run))) return;
       toastDied(cap);
     } else if (pokemonId) {
       const updatedTeam = team.filter((p) => p.id !== pokemonId);
@@ -275,19 +287,20 @@ function TeamPanel({
         })),
       };
       const { updateRun } = useRunStore.getState();
-      updateRun(updatedRun);
+      if (!(await updateRun(updatedRun, run))) return;
       toastDied(cap);
     }
   };
 
-  const handleDropOnCaptured = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDropOnCaptured = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOverCaptured(false);
+    if (!ensureEditable()) return;
     const pokemonId = e.dataTransfer.getData("pokemonId");
     const deadPokemonId = e.dataTransfer.getData("deadPokemonId");
     if (pokemonId) {
       const updatedTeam = team.filter((p) => p.id !== pokemonId);
-      doUpdateTeam(updatedTeam);
+      if (!(await doUpdateTeam(updatedTeam))) return;
       if (isSoulLink) {
         const cap = team.find((c) => c.id === pokemonId);
         const pName =
@@ -313,17 +326,19 @@ function TeamPanel({
         })),
       };
       const { updateRun } = useRunStore.getState();
-      updateRun(updatedRun);
+      await updateRun(updatedRun, run);
     }
   };
 
   const handleAddCapturedToTeam = (capture: Capture) => {
+    if (!ensureEditable()) return;
     if (team.length < 6) {
       doUpdateTeam([...team, capture]);
     }
   };
 
-  const handleToggleDeadStatus = (captureId: string) => {
+  const handleToggleDeadStatus = async (captureId: string) => {
+    if (!ensureEditable()) return;
     const isInTeam = team.some((p) => p.id === captureId);
     const capture = run.zones
       .flatMap((z) => z.captures)
@@ -358,7 +373,7 @@ function TeamPanel({
       })),
     };
     const { updateRun } = useRunStore.getState();
-    updateRun(updatedRun);
+    if (!(await updateRun(updatedRun, run))) return;
     if (willBeDead) {
       toastDied(capture);
     }
@@ -389,6 +404,7 @@ function TeamPanel({
             sx={{ fontSize: "1.125rem", fontWeight: 700, color: "#000" }}
           >
             {t(tr.teamView.team, lang)}
+            {!canEditTeam && " (read-only)"}
           </Typography>
         </Box>
         <Grid container spacing={1.5}>

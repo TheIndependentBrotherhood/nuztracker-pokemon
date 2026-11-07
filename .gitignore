@@ -19,6 +19,13 @@
 
 # production
 /build
+/dist-desktop/
+/release/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.nuzrun
+NuzTracker-FireRed.lua
 
 # misc
 .DS_Store

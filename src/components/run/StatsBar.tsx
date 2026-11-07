@@ -558,10 +558,12 @@ export default function StatsBar({
     });
 
     try {
-      const encoded = await encodeTeam(allTeamCaptures);
+      const encoded = await encodeTeam(allTeamCaptures, run);
       const shareUrl = buildShareUrl(encoded, {
         showTypes: dialogShowTypes,
         tightTypes: dialogTightTypes,
+        gameVersion: run.gameVersion,
+        randomTypes: Boolean(run.isRandomMode && run.randomizerOptions?.randomizeTypes),
       });
       const link = document.createElement("a");
       link.href = shareUrl;
@@ -659,11 +661,13 @@ export default function StatsBar({
 
   async function handleOpenGenerateRipUrl() {
     try {
-      const encoded = await encodeTeam(lastThreeDeadPokemon);
+      const encoded = await encodeTeam(lastThreeDeadPokemon, run);
       const shareUrl = buildShareUrl(encoded, {
         showTypes: false,
         tightTypes: false,
         isRip: true,
+        gameVersion: run.gameVersion,
+        randomTypes: Boolean(run.isRandomMode && run.randomizerOptions?.randomizeTypes),
       });
       const link = document.createElement("a");
       link.href = shareUrl;

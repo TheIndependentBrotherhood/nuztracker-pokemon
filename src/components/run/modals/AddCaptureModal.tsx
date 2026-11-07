@@ -18,7 +18,6 @@ import { useRunStore } from "@/store/runStore";
 import {
   getAvailableCaptureSpriteOptions,
   getLocalizedPokemonName,
-  getPokemonById,
   searchPokemonByName,
   type CaptureSpriteOption,
 } from "@/lib/pokemon-data";
@@ -31,6 +30,9 @@ import { useCache } from "@/context/CacheContext";
 import { getZoneDisplayName } from "@/lib/zones";
 import { isZoneLockedForPlayer } from "@/lib/zone-progress";
 import CaptureRateBadge from "@/components/pokedex/CaptureRateBadge";
+import { getPlayerId, knowledgeForPlayer } from "@/lib/tracker/knowledge";
+import { pokemonForGame } from "@/lib/game-reference";
+import { getGameVersion } from "@/lib/game-catalog";
 
 interface Props {
   runId: string;
@@ -63,7 +65,6 @@ export default function AddCaptureModal({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PokemonData[]>([]);
   const [selected, setSelected] = useState<PokemonData | null>(null);
-  const [pokemonData, setPokemonData] = useState<PokemonData | null>(null);
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
   const [isShiny, setIsShiny] = useState(forceShiny);
@@ -81,6 +82,8 @@ export default function AddCaptureModal({
 
   const UNOWN_ID = 201;
   const run = runs.find((candidate) => candidate.id === runId);
+  const pokemonData = selected ? pokemonForGame(selected, run?.gameVersion) : null;
+  const hasAbilities = (getGameVersion(run?.gameVersion)?.generation ?? 9) >= 3;
   const randomTypesMode = isRandomTypesMode(run);
   const randomAbilitiesMode = Boolean(
     run?.isRandomMode && run.randomizerOptions?.randomizeAbilities,
@@ -104,9 +107,13 @@ export default function AddCaptureModal({
   const zone = run?.zones.find((candidate) => candidate.id === zoneId);
   // Soul Link: a player can only capture once per zone, and not once a partner lost the zone
   const canPlayerCaptureHere = (playerIndex: number) =>
-    !zone ||
-    (!zone.captures.some((c) => (c.playerIndex ?? 0) === playerIndex) &&
-      !isZoneLockedForPlayer(zone, playerIndex));
+    Boolean(
+      run &&
+      useRunStore.getState().canEditRun(run.id, getPlayerId(run, playerIndex)),
+    ) &&
+    (!zone ||
+      (!zone.captures.some((c) => (c.playerIndex ?? 0) === playerIndex) &&
+        !isZoneLockedForPlayer(zone, playerIndex)));
   const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number>(
     defaultPlayerIndex ??
       soulLinkPlayers.find((p) => canPlayerCaptureHere(p.playerIndex))
@@ -116,34 +123,28 @@ export default function AddCaptureModal({
   );
   const selectedPlayerCanCapture =
     !isSoulLink || canPlayerCaptureHere(selectedPlayerIndex);
+  const knowledge = run
+    ? knowledgeForPlayer(run, getPlayerId(run, selectedPlayerIndex))
+    : undefined;
+  const knownAbilityPanelKey = selected
+    ? (knowledge?.customAbilitiesByPokemonId?.[selected.id] ?? []).join("|")
+    : "";
 
   useEffect(() => {
-    // Reset ability draft & panel when Pokémon changes; pre-fill panel from run
-    // Load pokemon data
-    // Defer all setState calls to avoid cascading renders
     queueMicrotask(() => {
       setCustomAbilityDraft(null);
       setAbilitySearch("");
-      if (selected && run?.customAbilitiesByPokemonId) {
-        setAbilityPanelDraft(run.customAbilitiesByPokemonId[selected.id] ?? []);
-      } else {
-        setAbilityPanelDraft([]);
-      }
+      setAbilityPanelDraft(
+        knownAbilityPanelKey ? knownAbilityPanelKey.split("|") : [],
+      );
 
-      if (selected) {
-        getPokemonById(selected.id)
-          .then(setPokemonData)
-          .catch(() => setPokemonData(null));
-      } else {
-        setPokemonData(null);
-      }
     });
-  }, [selected, run?.customAbilitiesByPokemonId]);
+  }, [selected, knownAbilityPanelKey, run?.gameVersion]);
 
   const canAddCapture = Boolean(
     selected &&
     selectedPlayerCanCapture &&
-    customAbilityDraft !== null &&
+    (!hasAbilities || customAbilityDraft !== null) &&
     (!randomTypesMode || customTypesDraft.length > 0),
   );
 
@@ -210,7 +211,7 @@ export default function AddCaptureModal({
         setSearching(true);
       }
 
-      const r = await searchPokemonByName(query);
+      const r = await searchPokemonByName(query, run?.gameVersion);
 
       if (cancelled) return;
 
@@ -223,7 +224,7 @@ export default function AddCaptureModal({
       clearTimeout(timer);
       setSearching(false);
     };
-  }, [query, lang]);
+  }, [query, lang, run?.gameVersion]);
 
   async function handleSelect(pokemon: PokemonData) {
     setSelected(pokemon);
@@ -232,7 +233,7 @@ export default function AddCaptureModal({
     setSelectedSpriteUrl(null);
     setSpriteOptions([]);
 
-    const knownTypes = run?.customTypesByPokemonId?.[pokemon.id] ?? [];
+    const knownTypes = knowledge?.customTypesByPokemonId?.[pokemon.id] ?? [];
     setCustomTypesDraft(knownTypes);
     setShowSecondTypeSlot(Boolean(knownTypes[1]));
   }
@@ -274,12 +275,12 @@ export default function AddCaptureModal({
     setCustomTypesDraft(nextTypes.filter(Boolean));
   }
 
-  function handleAdd() {
+  async function handleAdd() {
     if (!selected || !canAddCapture) return;
     const selectedSprite =
       spriteOptions.find((option) => option.url === selectedSpriteUrl) ?? null;
 
-    addCapture(
+    const saved = await addCapture(
       runId,
       zoneId,
       {
@@ -288,7 +289,7 @@ export default function AddCaptureModal({
         gender,
         isShiny,
         isDead: false,
-        ...(customAbilityDraft ? { ability: customAbilityDraft } : {}),
+        ...(hasAbilities && customAbilityDraft ? { ability: customAbilityDraft } : {}),
         ...(randomTypesMode && customTypesDraft.length > 0
           ? { customTypes: customTypesDraft }
           : {}),
@@ -308,13 +309,13 @@ export default function AddCaptureModal({
         ? abilityPanelDraft
         : undefined,
     );
-    onClose();
+    if (saved) onClose();
   }
 
-  function handleSkip() {
+  async function handleSkip() {
     if (!selected || !selectedPlayerCanCapture) return;
     // Mark as dead without filling form (loupé/tué) - cannot be resurrected
-    addCapture(
+    const saved = await addCapture(
       runId,
       zoneId,
       {
@@ -328,7 +329,7 @@ export default function AddCaptureModal({
       },
       undefined,
     );
-    onClose();
+    if (saved) onClose();
   }
 
   return (
@@ -408,7 +409,20 @@ export default function AddCaptureModal({
                   <Box
                     key={player.id}
                     component="button"
-                    onClick={() => setSelectedPlayerIndex(player.playerIndex)}
+                    onClick={() => {
+                      setSelectedPlayerIndex(player.playerIndex);
+                      const nextKnowledge = run
+                        ? knowledgeForPlayer(run, player.id)
+                        : undefined;
+                      const nextTypes = selected
+                        ? (nextKnowledge?.customTypesByPokemonId?.[
+                            selected.id
+                          ] ?? [])
+                        : [];
+                      setCustomTypesDraft(nextTypes);
+                      setShowSecondTypeSlot(Boolean(nextTypes[1]));
+                      setCustomAbilityDraft(null);
+                    }}
                     disabled={!canCapture}
                     title={
                       canCapture
@@ -857,7 +871,7 @@ export default function AddCaptureModal({
             )}
 
             {/* Ability panel */}
-            <Box sx={{ mb: 2 }}>
+            {hasAbilities && <Box sx={{ mb: 2 }}>
               <Typography
                 component="label"
                 sx={{
@@ -1301,7 +1315,7 @@ export default function AddCaptureModal({
                   )}
                 </>
               )}
-            </Box>
+            </Box>}
 
             {/* Nickname */}
             <Box sx={{ mb: 1.5 }}>

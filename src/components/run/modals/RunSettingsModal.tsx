@@ -2,10 +2,12 @@
 
 import {
   Box,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   MenuItem,
   SelectChangeEvent,
   Typography,
@@ -16,6 +18,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledSelect from "@/components/ui/StyledSelect";
+import GameVersionField from "@/components/tracker/GameVersionField";
+import { gameTypeChart } from "@/lib/game-catalog";
 
 type TypeChartGeneration = Run["typeChartGeneration"];
 
@@ -26,14 +30,14 @@ interface Props {
 }
 
 export default function RunSettingsModal({ run, open, onClose }: Props) {
-  const { updateRun } = useRunStore();
+  const { updateRun, canEditRun } = useRunStore();
   const { lang } = useLanguage();
   const tr = translations;
 
   const handleTypeChartChange = (event: SelectChangeEvent<unknown>) => {
     const next = event.target.value as TypeChartGeneration;
     if (next === run.typeChartGeneration) return;
-    updateRun({ ...run, typeChartGeneration: next });
+    void updateRun({ ...run, typeChartGeneration: next }, run);
   };
 
   return (
@@ -64,10 +68,40 @@ export default function RunSettingsModal({ run, open, onClose }: Props) {
           overflow: "visible",
         }}
       >
+        <GameVersionField
+          value={run.gameVersion}
+          region={run.region}
+          disabled={!canEditRun(run.id)}
+          onChange={(gameVersion) => {
+            void updateRun({ ...run, gameVersion, typeChartGeneration: gameTypeChart(gameVersion) }, run);
+          }}
+        />
+        <FormControlLabel
+          label="Randomized stats: unchanged BST, + / - estimates"
+          control={<Checkbox
+            checked={Boolean(run.isRandomMode && run.randomizerOptions?.randomizeStats)}
+            disabled={!canEditRun(run.id)}
+            onChange={(event) => {
+              void updateRun({
+                ...run,
+                isRandomMode: event.target.checked || run.isRandomMode,
+                randomizerOptions: {
+                  randomizeTypes: false,
+                  randomizeAbilities: false,
+                  randomizeEncounters: false,
+                  randomizeEvolvedForms: false,
+                  ...run.randomizerOptions,
+                  randomizeStats: event.target.checked,
+                },
+              }, run);
+            }}
+          />}
+        />
         <Box sx={{ pt: 1 }}>
           <StyledSelect
             label={t(tr.createRun.typeChart, lang)}
             value={run.typeChartGeneration}
+            disabled={!canEditRun(run.id)}
             onChange={handleTypeChartChange}
             fullWidth
           >

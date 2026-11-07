@@ -1,4 +1,6 @@
 import { publicPath } from "@/lib/base-path";
+import type { GameVersionId } from "./game-catalog";
+import platinumMaps from "../../public/data/platinum-maps.json";
 
 export interface ZoneTemplate {
   id: string;
@@ -151,6 +153,7 @@ if (typeof window !== "undefined") {
 
 export async function getZonesForRegionAsync(
   region: string,
+  gameVersion?: GameVersionId,
 ): Promise<ZoneTemplate[]> {
   // Special case: custom region starts with no zones
   if (region === "custom") {
@@ -174,7 +177,7 @@ export async function getZonesForRegionAsync(
   const existing = regionZones[region];
   if (!existing) {
     regionZones[region] = templatesFromJson;
-    return templatesFromJson;
+    return zonesForGame(templatesFromJson, gameVersion);
   }
 
   // Merge existing runtime zones with JSON translations by id.
@@ -185,11 +188,20 @@ export async function getZonesForRegionAsync(
   }));
 
   regionZones[region] = enrichedExisting;
-  return enrichedExisting;
+  return zonesForGame(enrichedExisting, gameVersion);
 }
 
-export function getZonesForRegion(region: string): ZoneTemplate[] {
-  return regionZones[region] ?? [];
+export function getZonesForRegion(region: string, gameVersion?: GameVersionId): ZoneTemplate[] {
+  return zonesForGame(regionZones[region] ?? [], gameVersion);
+}
+
+const mapSlugs = platinumMaps.map((name) => name.toLowerCase().replaceAll(" ", "-"));
+export function zonesForGame(zones: ZoneTemplate[], gameVersion?: GameVersionId): ZoneTemplate[] {
+  if (gameVersion !== "platinum") return zones;
+  return zones.filter((zone) => {
+    const slug = zone.id.replace(/^sinnoh-/, "").replace(/-area(?=-|$)/g, "");
+    return mapSlugs.some((map) => map === slug || map.startsWith(`${slug}-`));
+  });
 }
 
 export function getZoneDisplayName(

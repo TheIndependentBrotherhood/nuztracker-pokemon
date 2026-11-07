@@ -1,379 +1,409 @@
 import { create } from "zustand";
-import {
+import type {
   Run,
-  Zone,
   Capture,
   RandomizerOptions,
   SoulLinkPlayer,
 } from "@/lib/types";
-import { getRuns, saveRun, deleteRun as deleteRunStorage } from "@/lib/storage";
+import {
+  getRecords,
+  createStoredRecord,
+  editStoredRun,
+  deleteStoredRun,
+  importStoredRecords,
+} from "@/lib/storage";
 import { getZonesForRegion } from "@/lib/zones";
 import { isZoneLockedForPlayer } from "@/lib/zone-progress";
+import { createRecord, newId } from "@/lib/tracker/records";
+import { deriveZoneStatus } from "@/lib/tracker/run-rules";
+import {
+  getPlayerId,
+  knowledgeForPlayer,
+  saveKnowledgeView,
+  viewRunForPlayer,
+} from "@/lib/tracker/knowledge";
+import { importAsCopies } from "@/lib/tracker/archive";
+import { validationMessage } from "@/lib/tracker/schema";
+import type { DesktopStatus, RunRecord } from "@/lib/tracker/types";
+
+export { deriveZoneStatus, applySoulLinkDeaths } from "@/lib/tracker/run-rules";
+
+interface CreateRunData {
+  gameName: string;
+  gameVersion?: Run["gameVersion"];
+  region: string;
+  isShinyHuntMode: boolean;
+  isRandomMode: boolean;
+  typeChartGeneration: Run["typeChartGeneration"];
+  randomizerOptions?: RandomizerOptions;
+  isSoulLinkMode?: boolean;
+  soulLinkPlayers?: SoulLinkPlayer[];
+}
 
 interface RunStore {
+  records: RunRecord[];
   runs: Run[];
   currentRun: Run | null;
   selectedZoneId: string | null;
-  loadRuns: () => void;
+  playerByRun: Record<string, string>;
+  loaded: boolean;
+  pending: number;
+  error: string | null;
+  desktopStatus: DesktopStatus | null;
+  loadRuns: () => Promise<void>;
   setCurrentRun: (run: Run | null) => void;
-  createRun: (data: {
-    gameName: string;
-    region: string;
-    isShinyHuntMode: boolean;
-    isRandomMode: boolean;
-    typeChartGeneration: "gen1" | "gen2-5" | "gen6+";
-    randomizerOptions?: RandomizerOptions;
-    isSoulLinkMode?: boolean;
-    soulLinkPlayers?: SoulLinkPlayer[];
-  }) => Run;
-  updateRun: (run: Run) => void;
-  deleteRun: (id: string) => void;
+  setPlayer: (runId: string, playerId: string) => void;
+  receiveRecord: (record: RunRecord) => void;
+  receiveDeleted: (runId: string) => void;
+  setDesktopStatus: (status: DesktopStatus) => void;
+  reportError: (error: unknown) => void;
+  clearError: () => void;
+  createRun: (data: CreateRunData) => Promise<Run | undefined>;
+  updateRun: (
+    run: Run,
+    before: Run,
+    knowledgePlayerId?: string,
+  ) => Promise<boolean>;
+  canEditRun: (runId: string, playerId?: string) => boolean;
+  deleteRun: (id: string) => Promise<boolean>;
+  importRecords: (records: RunRecord[]) => Promise<RunRecord[] | undefined>;
   addCapture: (
     runId: string,
     zoneId: string,
     capture: Omit<Capture, "id" | "createdAt">,
     abilityPanel?: string[],
-  ) => void;
-  removeCapture: (runId: string, zoneId: string, captureId: string) => void;
+  ) => Promise<boolean>;
+  removeCapture: (
+    runId: string,
+    zoneId: string,
+    captureId: string,
+  ) => Promise<boolean>;
   setSelectedZone: (zoneId: string | null) => void;
-  updateTeam: (runId: string, team: Capture[], playerIndex?: number) => void;
+  updateTeam: (
+    run: Run,
+    team: Capture[],
+    playerIndex?: number,
+  ) => Promise<boolean>;
 }
 
-function newId(): string {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback: timestamp + two random segments for collision resistance
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-}
-
-/**
- * Zone status derived from the whole set of captures in the zone
- * (relevant in Soul Link where several players share one zone).
- */
-export function deriveZoneStatus(
-  captures: Capture[],
-  currentStatus: Zone["status"],
-): Zone["status"] {
-  if (captures.length === 0) return "not-visited";
-  if (captures.some((c) => !c.isDead)) return "captured";
-  if (captures.every((c) => c.failedCapture)) return "lost";
-  // Only dead-after-capture Pokémon left: the zone was captured
-  if (captures.some((c) => c.isDead && !c.failedCapture)) return "captured";
-  return currentStatus;
-}
-
-/**
- * Soul Link rule: when a player fails a zone or loses the Pokémon caught there,
- * the partners' Pokémon from that zone are released — they count as dead.
- * Linked deaths are flagged so they can be reverted if the root cause is removed.
- */
-export function applySoulLinkDeaths(run: Run): Run {
-  if (!run.isSoulLinkMode) return run;
-
-  let changed = false;
-  const now = Date.now();
-
-  const zones = run.zones.map((zone) => {
-    // Root causes: deaths that were not themselves caused by the link
-    const rootDeaths = zone.captures.filter((c) => c.isDead && !c.linkedDeath);
-    let zoneChanged = false;
-
-    const captures = zone.captures.map((capture) => {
-      const playerIdx = capture.playerIndex ?? 0;
-      const cause = rootDeaths.find((c) => (c.playerIndex ?? 0) !== playerIdx);
-
-      if (!capture.isDead && cause) {
-        zoneChanged = true;
-        return {
-          ...capture,
-          isDead: true,
-          linkedDeath: true,
-          diedAt: now,
-          killedByPlayerIndex: cause.playerIndex ?? 0,
-        };
-      }
-
-      if (capture.isDead && capture.linkedDeath && !cause) {
-        // The partner's failure/death was removed: the Pokémon comes back (in the reserve)
-        zoneChanged = true;
-        const revived = { ...capture, isDead: false };
-        delete revived.linkedDeath;
-        delete revived.diedAt;
-        delete revived.killedByPlayerIndex;
-        return revived;
-      }
-
-      return capture;
-    });
-
-    if (!zoneChanged) return zone;
-    changed = true;
-    return { ...zone, captures, updatedAt: now };
-  });
-
-  return changed ? { ...run, zones } : run;
-}
-
-function normalizeRuns(runs: Run[]): Run[] {
-  const validStatuses: Zone["status"][] = ["not-visited", "captured", "lost"];
-
-  return runs.map((run) => ({
-    ...run,
-    zones: run.zones.map((zone) => ({
-      ...zone,
-      // Normalize unknown statuses to "not-visited"
-      status: validStatuses.includes(zone.status as Zone["status"])
-        ? (zone.status as Zone["status"])
-        : ("not-visited" as const),
-    })),
-  }));
-}
-
-/**
- * Team entries are snapshots of zone captures: refresh them from the zones
- * (types, ability, nickname, evolution…) and drop the dead ones.
- */
-function syncTeamWithZones(team: Capture[], zones: Zone[]): Capture[] {
-  const capturesById = new Map(
-    zones.flatMap((z) => z.captures).map((c) => [c.id, c]),
+function projectRecords(
+  records: RunRecord[],
+  playerByRun: Record<string, string>,
+): Run[] {
+  return records.map(({ run }) =>
+    viewRunForPlayer(run, playerByRun[run.id] ?? getPlayerId(run)),
   );
-  return team.map((c) => capturesById.get(c.id) ?? c).filter((c) => !c.isDead);
 }
 
-/** Apply run-wide invariants: Soul Link linked deaths, then teams in sync with zones */
-function finalizeRun(inputRun: Run): Run {
-  const run = applySoulLinkDeaths(inputRun);
-  const team = syncTeamWithZones(run.team, run.zones);
-  const playerTeams: Record<number, Capture[]> | undefined = run.playerTeams
-    ? Object.fromEntries(
-        Object.entries(run.playerTeams).map(([idx, t]) => [
-          idx,
-          syncTeamWithZones(t as Capture[], run.zones),
-        ]),
-      )
-    : undefined;
+export const useRunStore = create<RunStore>((set, get) => {
+  let loading: Promise<void> | undefined;
+
+  function refresh(records: RunRecord[], playerByRun = get().playerByRun) {
+    const runs = projectRecords(records, playerByRun);
+    set({
+      records,
+      runs,
+      playerByRun,
+      currentRun: runs.find((run) => run.id === get().currentRun?.id) ?? null,
+    });
+  }
+
+  async function perform<T>(
+    operation: () => Promise<T>,
+  ): Promise<T | undefined> {
+    set((state) => ({ pending: state.pending + 1 }));
+    try {
+      return await operation();
+    } catch (error) {
+      get().reportError(error);
+      return undefined;
+    } finally {
+      set((state) => ({ pending: state.pending - 1 }));
+    }
+  }
 
   return {
-    ...run,
-    team,
-    ...(playerTeams !== undefined ? { playerTeams } : {}),
-  };
-}
+    records: [],
+    runs: [],
+    currentRun: null,
+    selectedZoneId: null,
+    playerByRun: {},
+    loaded: false,
+    pending: 0,
+    error: null,
+    desktopStatus: null,
 
-export const useRunStore = create<RunStore>((set, get) => ({
-  runs: [],
-  currentRun: null,
-  selectedZoneId: null,
+    reportError: (error) => {
+      console.error("Tracker operation failed:", error);
+      set({ error: validationMessage(error) });
+    },
+    clearError: () => set({ error: null }),
 
-  loadRuns: () => {
-    const stored = getRuns();
-    const runs = normalizeRuns(stored).map((run) => finalizeRun(run));
-    // Persist runs whose state was fixed on load (e.g. Soul Link linked deaths)
-    runs.forEach((run, index) => {
-      if (JSON.stringify(run) !== JSON.stringify(stored[index])) saveRun(run);
-    });
-    set({ runs });
-  },
+    loadRuns: async () => {
+      if (get().loaded) return;
+      loading ??= (async () => {
+        await perform(async () => {
+          const records = await getRecords();
+          for (const record of records) get().receiveRecord(record);
+          if (window.nuztracker)
+            get().setDesktopStatus(await window.nuztracker.getStatus());
+          set({ loaded: true });
+        });
+      })();
+      await loading;
+      loading = undefined;
+    },
 
-  setCurrentRun: (run) => set({ currentRun: run, selectedZoneId: null }),
+    setCurrentRun: (run) =>
+      set((state) => ({
+        currentRun: run,
+        selectedZoneId:
+          state.currentRun?.id === run?.id ? state.selectedZoneId : null,
+      })),
 
-  createRun: (data) => {
-    const zoneTemplates = getZonesForRegion(data.region);
-    const zones: Zone[] = zoneTemplates.map((zt) => ({
-      id: zt.id,
-      zoneName: zt.zoneNames?.en ?? zt.regionArea ?? "Unknown",
-      zoneNames: zt.zoneNames,
-      regionArea: zt.regionArea,
-      status: "not-visited" as const,
-      captures: [],
-      updatedAt: Date.now(),
-    }));
+    setPlayer: (runId, playerId) =>
+      refresh(get().records, { ...get().playerByRun, [runId]: playerId }),
 
-    const run: Run = {
-      id: newId(),
-      ...data,
-      difficulty: "normal",
-      status: "in-progress",
-      zones,
-      team: [],
-      ...(data.isSoulLinkMode && data.soulLinkPlayers
-        ? {
-            isSoulLinkMode: true,
-            soulLinkPlayers: data.soulLinkPlayers,
-            playerTeams: {},
-          }
-        : {}),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
+    receiveRecord: (record) => {
+      const current = get().records.find(
+        (entry) => entry.run.id === record.run.id,
+      );
+      if (current && current.revision > record.revision) return;
+      refresh(
+        current
+          ? get().records.map((entry) =>
+              entry.run.id === record.run.id ? record : entry,
+            )
+          : [...get().records, record],
+      );
+    },
 
-    saveRun(run);
-    set((state) => ({ runs: [...state.runs, run] }));
-    return run;
-  },
+    receiveDeleted: (runId) =>
+      refresh(get().records.filter((entry) => entry.run.id !== runId)),
 
-  updateRun: (inputRun) => {
-    const updated = { ...finalizeRun(inputRun), updatedAt: Date.now() };
-    saveRun(updated);
-    set((state) => ({
-      runs: state.runs.map((r) => (r.id === updated.id ? updated : r)),
-      currentRun:
-        state.currentRun?.id === updated.id ? updated : state.currentRun,
-    }));
-  },
-
-  deleteRun: (id) => {
-    deleteRunStorage(id);
-    set((state) => ({
-      runs: state.runs.filter((r) => r.id !== id),
-      currentRun: state.currentRun?.id === id ? null : state.currentRun,
-    }));
-  },
-
-  addCapture: (runId, zoneId, captureData, abilityPanel) => {
-    const run = get().runs.find((r) => r.id === runId);
-    if (!run) return;
-    const zone = run.zones.find((z) => z.id === zoneId);
-
-    if (run.isSoulLinkMode) {
-      // In soul link mode: max 1 capture per player per zone
-      const playerIdx = captureData.playerIndex ?? 0;
-      if (
-        zone &&
-        zone.captures.some((c) => (c.playerIndex ?? 0) === playerIdx)
-      ) {
-        return;
+    setDesktopStatus: (status) => {
+      set({ desktopStatus: status });
+      if (status.room.runId && status.room.playerId) {
+        get().setPlayer(status.room.runId, status.room.playerId);
       }
-      // The link is broken for everyone once a partner lost the zone
-      if (zone && isZoneLockedForPlayer(zone, playerIdx)) return;
-    } else {
-      const maxCaptures = run.isShinyHuntMode ? 2 : 1;
-      if (zone && zone.captures.length >= maxCaptures) return;
-      // In shiny hunt mode, one of the two captures must be shiny
-      if (run.isShinyHuntMode && zone && zone.captures.length === 1) {
-        const existingIsShiny = zone.captures[0].isShiny;
-        if (!existingIsShiny && !captureData.isShiny) return;
-      }
-    }
+    },
 
-    const capture: Capture = {
-      ...captureData,
-      id: newId(),
-      createdAt: Date.now(),
-    };
-    const nextCustomTypesByPokemonId = {
-      ...(run.customTypesByPokemonId ?? {}),
-    };
-    if (captureData.customTypes && captureData.customTypes.length > 0) {
-      nextCustomTypesByPokemonId[captureData.pokemon.id] =
-        captureData.customTypes;
-    }
-    const nextCustomAbilitiesByPokemonId = {
-      ...(run.customAbilitiesByPokemonId ?? {}),
-    };
-    if (abilityPanel && abilityPanel.length > 0) {
-      // Cap at 3 to enforce the panel limit regardless of caller
-      nextCustomAbilitiesByPokemonId[captureData.pokemon.id] =
-        abilityPanel.slice(0, 3);
-    }
-
-    // Determine zone status from the whole set of captures in the zone
-    // (relevant in Soul Link where several players share one zone)
-    const determineZoneStatus = deriveZoneStatus;
-
-    const updatedRun = {
-      ...run,
-      customTypesByPokemonId:
-        Object.keys(nextCustomTypesByPokemonId).length > 0
-          ? nextCustomTypesByPokemonId
-          : undefined,
-      customAbilitiesByPokemonId:
-        Object.keys(nextCustomAbilitiesByPokemonId).length > 0
-          ? nextCustomAbilitiesByPokemonId
-          : undefined,
-      zones: run.zones.map((z) => {
-        if (z.id !== zoneId) return z;
-        const nextCaptures = [...z.captures, capture];
-        return {
-          ...z,
-          status: determineZoneStatus(nextCaptures, z.status),
-          captures: nextCaptures,
-          updatedAt: Date.now(),
+    createRun: (data) =>
+      perform(async () => {
+        if (!get().loaded)
+          throw new Error(
+            "Wait for local storage to finish loading before creating a run.",
+          );
+        const now = Date.now();
+        const run: Run = {
+          id: newId(),
+          ...data,
+          difficulty: "normal",
+          status: "in-progress",
+          zones: getZonesForRegion(data.region, data.gameVersion).map((zone) => ({
+            id: zone.id,
+            zoneName: zone.zoneNames?.en ?? zone.regionArea ?? "Unknown",
+            zoneNames: zone.zoneNames,
+            regionArea: zone.regionArea,
+            status: "not-visited",
+            captures: [],
+            updatedAt: now,
+          })),
+          team: [],
+          ...(data.isSoulLinkMode ? { playerTeams: {} } : {}),
+          createdAt: now,
+          updatedAt: now,
         };
+        const record = await createStoredRecord(createRecord(run));
+        get().receiveRecord(record);
+        return record.run;
       }),
-    };
 
-    if (run.isSoulLinkMode) {
-      // In soul link mode: add to the appropriate playerTeam
-      if (!captureData.isDead) {
-        const playerIdx = captureData.playerIndex ?? 0;
-        const currentPlayerTeam = updatedRun.playerTeams?.[playerIdx] ?? [];
-        if (currentPlayerTeam.length < 6) {
-          updatedRun.playerTeams = {
-            ...(updatedRun.playerTeams ?? {}),
-            [playerIdx]: [...currentPlayerTeam, capture],
-          };
+    canEditRun: (runId, playerId) => {
+      const room = get().desktopStatus?.room;
+      return (
+        !room ||
+        room.runId !== runId ||
+        room.mode === "offline" ||
+        room.mode === "hosting" ||
+        (playerId !== undefined && room.playerId === playerId)
+      );
+    },
+
+    updateRun: async (input, before, knowledgePlayerId) =>
+      Boolean(
+        await perform(async () => {
+          const record = get().records.find(
+            (entry) => entry.run.id === input.id,
+          );
+          if (!record) throw new Error("The run could not be found.");
+          if (before.id !== input.id)
+            throw new Error("The edit baseline belongs to another run.");
+          const playerId =
+            knowledgePlayerId ??
+            get().playerByRun[input.id] ??
+            getPlayerId(input);
+          const updated = await editStoredRun({
+            id: newId(),
+            runId: input.id,
+            playerId,
+            before: saveKnowledgeView(before, playerId),
+            after: saveKnowledgeView(input, playerId),
+          });
+          get().receiveRecord(updated);
+          return true;
+        }),
+      ),
+
+    deleteRun: async (id) =>
+      Boolean(
+        await perform(async () => {
+          await deleteStoredRun(id);
+          get().receiveDeleted(id);
+          return true;
+        }),
+      ),
+
+    importRecords: (records) =>
+      perform(async () => {
+        const imported = await importStoredRecords(importAsCopies(records));
+        for (const record of imported) get().receiveRecord(record);
+        return imported;
+      }),
+
+    addCapture: async (runId, zoneId, data, abilityPanel) => {
+      const run = get().runs.find((entry) => entry.id === runId);
+      const zone = run?.zones.find((entry) => entry.id === zoneId);
+      const fail = (message: string) => {
+        get().reportError(new Error(message));
+        return false;
+      };
+      if (!run || !zone)
+        return fail("The run or encounter zone could not be found.");
+      const index = data.playerIndex ?? 0;
+      if (run.isSoulLinkMode) {
+        if (
+          zone.captures.some((capture) => (capture.playerIndex ?? 0) === index)
+        ) {
+          return fail("This player already has a capture in this zone.");
+        }
+        if (isZoneLockedForPlayer(zone, index))
+          return fail("A linked loss has closed this encounter.");
+      } else {
+        if (zone.captures.length >= (run.isShinyHuntMode ? 2 : 1))
+          return fail("This zone has no remaining capture slots.");
+        if (
+          zone.captures.length === 1 &&
+          !zone.captures[0].isShiny &&
+          !data.isShiny
+        ) {
+          return fail("The extra capture must be shiny.");
         }
       }
-    } else {
-      // Classic mode: add to shared team
-      if (!captureData.isDead && updatedRun.team.length < 6) {
-        updatedRun.team = [...updatedRun.team, capture];
-      }
-    }
-
-    get().updateRun(updatedRun);
-  },
-
-  removeCapture: (runId, zoneId, captureId) => {
-    const run = get().runs.find((r) => r.id === runId);
-    if (!run) return;
-    const updatedPlayerTeams: Record<number, Capture[]> | undefined =
-      run.playerTeams
-        ? Object.fromEntries(
-            Object.entries(run.playerTeams).map(([idx, t]) => [
-              idx,
-              (t as Capture[]).filter((c) => c.id !== captureId),
-            ]),
-          )
-        : undefined;
-    const updatedRun = {
-      ...run,
-      zones: run.zones.map((z) => {
-        if (z.id !== zoneId) return z;
-        const remaining = z.captures.filter((c) => c.id !== captureId);
-        return {
-          ...z,
-          captures: remaining,
-          status: deriveZoneStatus(remaining, z.status),
-          updatedAt: Date.now(),
-        };
-      }),
-      team: run.team.filter((c) => c.id !== captureId),
-      ...(updatedPlayerTeams !== undefined
-        ? { playerTeams: updatedPlayerTeams }
-        : {}),
-    };
-    get().updateRun(updatedRun);
-  },
-
-  setSelectedZone: (zoneId) => set({ selectedZoneId: zoneId }),
-
-  updateTeam: (runId, team, playerIndex) => {
-    const run = get().runs.find((r) => r.id === runId);
-    if (!run) return;
-    if (run.isSoulLinkMode && playerIndex !== undefined) {
-      // Update the specific player's team
-      get().updateRun({
+      const capture: Capture = { ...data, id: newId(), createdAt: Date.now() };
+      const playerId = getPlayerId(run, index);
+      const knowledge = knowledgeForPlayer(run, playerId);
+      const nextKnowledge = {
+        ...knowledge,
+        ...(data.customTypes?.length
+          ? {
+              customTypesByPokemonId: {
+                ...knowledge.customTypesByPokemonId,
+                [data.pokemon.id]: data.customTypes,
+              },
+            }
+          : {}),
+        ...(abilityPanel?.length
+          ? {
+              customAbilitiesByPokemonId: {
+                ...knowledge.customAbilitiesByPokemonId,
+                [data.pokemon.id]: abilityPanel.slice(0, 3),
+              },
+            }
+          : {}),
+      };
+      const updated: Run = {
         ...run,
-        playerTeams: {
-          ...(run.playerTeams ?? {}),
-          [playerIndex]: team,
+        ...(run.playerKnowledge
+          ? {
+              playerKnowledge: {
+                ...run.playerKnowledge,
+                [playerId]: nextKnowledge,
+              },
+              ...((get().playerByRun[run.id] ?? getPlayerId(run)) === playerId
+                ? nextKnowledge
+                : {}),
+            }
+          : nextKnowledge),
+        zones: run.zones.map((entry) =>
+          entry.id === zoneId
+            ? {
+                ...entry,
+                captures: [...entry.captures, capture],
+                updatedAt: Date.now(),
+              }
+            : entry,
+        ),
+      };
+      if (!capture.isDead) {
+        if (run.isSoulLinkMode) {
+          const team = run.playerTeams?.[index] ?? [];
+          if (team.length < 6)
+            updated.playerTeams = {
+              ...run.playerTeams,
+              [index]: [...team, capture],
+            };
+        } else if (run.team.length < 6) updated.team = [...run.team, capture];
+      }
+      return get().updateRun(updated, run);
+    },
+
+    removeCapture: async (runId, zoneId, captureId) => {
+      const run = get().runs.find((entry) => entry.id === runId);
+      if (!run) {
+        get().reportError(new Error("The run could not be found."));
+        return false;
+      }
+      return get().updateRun(
+        {
+          ...run,
+          zones: run.zones.map((zone) => {
+            if (zone.id !== zoneId) return zone;
+            const captures = zone.captures.filter(
+              (capture) => capture.id !== captureId,
+            );
+            return {
+              ...zone,
+              captures,
+              status: deriveZoneStatus(captures, "not-visited"),
+              updatedAt: Date.now(),
+            };
+          }),
+          team: run.team.filter((capture) => capture.id !== captureId),
+          ...(run.playerTeams
+            ? {
+                playerTeams: Object.fromEntries(
+                  Object.entries(run.playerTeams).map(([index, team]) => [
+                    index,
+                    team.filter((capture) => capture.id !== captureId),
+                  ]),
+                ),
+              }
+            : {}),
         },
-      });
-    } else {
-      get().updateRun({ ...run, team });
-    }
-  },
-}));
+        run,
+      );
+    },
+
+    setSelectedZone: (selectedZoneId) => set({ selectedZoneId }),
+
+    updateTeam: async (run, team, index) => {
+      return get().updateRun(
+        run.isSoulLinkMode && index !== undefined
+          ? { ...run, playerTeams: { ...run.playerTeams, [index]: team } }
+          : { ...run, team },
+        run,
+      );
+    },
+  };
+});

@@ -1,7 +1,14 @@
-import { Capture } from "./types";
+import { z } from "zod";
+import { Capture, type Run } from "./types";
+import type { GameVersionId } from "./game-catalog";
+import { getCaptureTypesForRun } from "./capture-types";
+import { captureSchema } from "./tracker/schema";
 
-export async function encodeTeam(captures: Capture[]): Promise<string> {
-  const json = JSON.stringify(captures);
+export async function encodeTeam(captures: Capture[], run?: Run): Promise<string> {
+  const json = JSON.stringify(run ? captures.map((capture) => ({
+    ...capture,
+    customTypes: getCaptureTypesForRun(capture, run),
+  })) : captures);
   const encoder = new TextEncoder();
   const data = encoder.encode(json);
 
@@ -28,17 +35,19 @@ export async function decodeTeam(base64: string): Promise<Capture[]> {
     const decompressed = pako.ungzip(bytes);
     const decoder = new TextDecoder();
     const json = decoder.decode(decompressed);
-    return JSON.parse(json);
-  } catch {
-    return [];
+    return z.array(captureSchema).max(24).parse(JSON.parse(json));
+  } catch (error) {
+    throw new Error("This team link is invalid or damaged.", { cause: error });
   }
 }
 
 export function buildShareUrl(
   base64: string,
-  options: { showTypes?: boolean; tightTypes?: boolean; isRip?: boolean } = {},
+  options: { showTypes?: boolean; tightTypes?: boolean; isRip?: boolean; gameVersion?: GameVersionId; randomTypes?: boolean } = {},
 ): string {
   const params = new URLSearchParams({ team: base64 });
+  if (options.gameVersion) params.set("game", options.gameVersion);
+  if (options.randomTypes) params.set("randomTypes", "true");
   if (typeof options?.showTypes === "boolean") {
     params.set("showTypes", String(options.showTypes));
   }

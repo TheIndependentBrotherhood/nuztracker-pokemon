@@ -1,5 +1,7 @@
 "use client";
 
+import { getPlayerId, viewRunForPlayer } from "@/lib/tracker/knowledge";
+
 import { useState, useEffect } from "react";
 import {
   Box,
@@ -115,11 +117,13 @@ export default function EvolutionModal({
     if (!selectedEvolution) return;
 
     try {
+      const playerId = getPlayerId(run, pokemonCaptured.playerIndex);
+      const scopedRun = viewRunForPlayer(run, playerId);
       // Create the evolved capture
       const evolvedCapture = createEvolvedCapture(
         pokemonCaptured,
         selectedEvolution,
-        run.customTypesByPokemonId,
+        scopedRun.customTypesByPokemonId,
       );
 
       // Track evolution history at the original species level
@@ -130,7 +134,7 @@ export default function EvolutionModal({
 
       // Get existing history for the original species, or start a new one
       const currentHistory = getEvolutionHistoryForSpecies(
-        run,
+        scopedRun,
         originalPokemonId,
       );
       const newHistory =
@@ -150,7 +154,7 @@ export default function EvolutionModal({
 
       // Update the run with both the evolved capture and the evolution history
       let updatedRun = {
-        ...run,
+        ...scopedRun,
         team: run.team.map((teamCapture) =>
           teamCapture.id === pokemonCaptured.id ? evolvedCapture : teamCapture,
         ),
@@ -171,7 +175,7 @@ export default function EvolutionModal({
         updatedHistory,
       );
 
-      updateRun(updatedRun);
+      if (!(await updateRun(updatedRun, scopedRun, playerId))) return;
 
       // Call the callback to open PokemonDetailModal
       if (onEvolveComplete) {

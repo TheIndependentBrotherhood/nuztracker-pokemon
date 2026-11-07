@@ -1,0 +1,15 @@
+appId: games.nuztracker.desktop
+productName: NuzTracker
+directories:
+  app: build/desktop
+  output: release
+files:
+  - dist-desktop/**
+  - out/**
+  - connectors/**
+  - package.json
+  - "!node_modules{,/**/*}"
+win:
+  target: portable
+  signAndEditExecutable: false
+artifactName: NuzTracker-${version}-portable.${ext}
