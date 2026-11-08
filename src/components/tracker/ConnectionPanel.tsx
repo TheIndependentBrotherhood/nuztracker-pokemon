@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   Alert,
   Box,
@@ -62,6 +62,11 @@ export default function ConnectionPanel({
   const { desktopStatus, playerByRun, setPlayer } = useRunStore();
   const { lang } = useLanguage();
   const [view, setView] = useState<View | null>(null);
+  const isDesktop = useSyncExternalStore(
+    subscribeToNothing,
+    () => Boolean(window.nuztracker),
+    () => false,
+  );
   const playerId = run ? (playerByRun[run.id] ?? getPlayerId(run)) : "solo";
   const room = desktopStatus?.room;
   const roomActive = Boolean(room && room.mode !== "offline");
@@ -139,6 +144,14 @@ export default function ConnectionPanel({
       : view && view !== "home"
         ? [titles[view]]
         : [];
+
+  // The web version has no emulator, room or overlay support: only backups are useful.
+  if (!isDesktop)
+    return compact ? null : (
+      <Box sx={{ p: 2 }}>
+        <ArchiveControls runId={run?.id} />
+      </Box>
+    );
 
   return (
     <Box sx={{ p: minimal ? 0 : 2 }}>
@@ -244,9 +257,6 @@ export default function ConnectionPanel({
               <Typography variant="body2" color="text.secondary">
                 {t(hub.intro, lang)}
               </Typography>
-              {!desktopStatus && (
-                <Alert severity="info">{t(hub.desktopOnly, lang)}</Alert>
-              )}
               <List disablePadding>
                 {entries.map((entry) => (
                   <ListItemButton
@@ -314,6 +324,8 @@ export default function ConnectionPanel({
     </Box>
   );
 }
+
+const subscribeToNothing = () => () => {};
 
 function GameStateChip({
   state,

@@ -428,10 +428,6 @@ const translations = {
       fr: "Choisis ce que tu veux faire. Seules les options utiles pour cette run sont proposées.",
       en: "Choose what you want to do. Only the options that apply to this run are shown.",
     },
-    desktopOnly: {
-      fr: "La connexion à un émulateur, le SoulLink en ligne et l'overlay OBS nécessitent l'application desktop.",
-      en: "Emulator connection, online SoulLink and the OBS overlay require the desktop application.",
-    },
     gameTitle: { fr: "Connecter le jeu", en: "Connect the game" },
     gameDescription: {
       fr: (game: string, emulator: string) =>
