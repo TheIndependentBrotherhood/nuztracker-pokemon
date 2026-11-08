@@ -46,6 +46,15 @@ export const regions = [];
 
 let cachedRegions: Region[] | null = null;
 
+export const STARTER_ZONE_ID = "starter";
+
+// The starter gift is a Nuzlocke encounter of its own and is not a PokeAPI location.
+const STARTER_ZONE: ZoneTemplate = {
+  id: STARTER_ZONE_ID,
+  zoneNames: { fr: "Starter", en: "Starter" },
+  regionArea: "",
+};
+
 /** Build human readable names from a technical slug (e.g. "lake-verity-area" -> "lake verity area") */
 function namesFromSlug(
   slug: string,
@@ -65,7 +74,7 @@ function namesFromSlug(
  *   or whose areas have no translation produce a single zone for the location itself.
  */
 function buildZoneTemplates(region: Region): ZoneTemplate[] {
-  const zones: ZoneTemplate[] = [];
+  const zones: ZoneTemplate[] = region.id === "custom" ? [] : [STARTER_ZONE];
 
   region.locations?.forEach((loc) => {
     const locationLabel = loc.names?.en || loc.name;
@@ -191,14 +200,23 @@ export async function getZonesForRegionAsync(
   return zonesForGame(enrichedExisting, gameVersion);
 }
 
-export function getZonesForRegion(region: string, gameVersion?: GameVersionId): ZoneTemplate[] {
+export function getZonesForRegion(
+  region: string,
+  gameVersion?: GameVersionId,
+): ZoneTemplate[] {
   return zonesForGame(regionZones[region] ?? [], gameVersion);
 }
 
-const mapSlugs = platinumMaps.map((name) => name.toLowerCase().replaceAll(" ", "-"));
-export function zonesForGame(zones: ZoneTemplate[], gameVersion?: GameVersionId): ZoneTemplate[] {
+const mapSlugs = platinumMaps.map((name) =>
+  name.toLowerCase().replaceAll(" ", "-"),
+);
+export function zonesForGame(
+  zones: ZoneTemplate[],
+  gameVersion?: GameVersionId,
+): ZoneTemplate[] {
   if (gameVersion !== "platinum") return zones;
   return zones.filter((zone) => {
+    if (zone.id === STARTER_ZONE_ID) return true;
     const slug = zone.id.replace(/^sinnoh-/, "").replace(/-area(?=-|$)/g, "");
     return mapSlugs.some((map) => map === slug || map.startsWith(`${slug}-`));
   });

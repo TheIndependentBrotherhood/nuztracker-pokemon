@@ -21,7 +21,6 @@ import StyledButton from "@/components/ui/StyledButton";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import Header from "@/components/layout/Header";
-import ArchiveControls from "@/components/tracker/ArchiveControls";
 import ConnectionPanel from "@/components/tracker/ConnectionPanel";
 
 const SPRITE_SOURCES = [
@@ -90,7 +89,6 @@ export default function HomePage() {
       <Header />
       <Container maxWidth="lg" sx={{ py: 6, pb: 10 }}>
         <Box sx={{ mb: 3 }}>
-          <ArchiveControls />
           <ConnectionPanel />
         </Box>
         {/* Hero Section */}

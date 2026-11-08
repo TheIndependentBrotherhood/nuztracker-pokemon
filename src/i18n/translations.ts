@@ -414,13 +414,279 @@ const translations = {
     importCopies: { fr: "Importer les copies", en: "Import copies" },
   },
 
+  // ── Connection hub ─────────────────────────────────────────────────────────
+  hub: {
+    button: { fr: "Connexions", en: "Connections" },
+    ariaLabel: {
+      fr: "Connexions et sauvegardes",
+      en: "Connections and backups",
+    },
+    title: { fr: "Connexions", en: "Connections" },
+    back: { fr: "Retour", en: "Back" },
+    close: { fr: "Fermer", en: "Close" },
+    intro: {
+      fr: "Choisis ce que tu veux faire. Seules les options utiles pour cette run sont proposées.",
+      en: "Choose what you want to do. Only the options that apply to this run are shown.",
+    },
+    desktopOnly: {
+      fr: "La connexion à un émulateur, le SoulLink en ligne et l'overlay OBS nécessitent l'application desktop.",
+      en: "Emulator connection, online SoulLink and the OBS overlay require the desktop application.",
+    },
+    gameTitle: { fr: "Connecter le jeu", en: "Connect the game" },
+    gameDescription: {
+      fr: (game: string, emulator: string) =>
+        `${game} via ${emulator} : le tracker se met à jour tout seul.`,
+      en: (game: string, emulator: string) =>
+        `${game} via ${emulator}: the tracker updates automatically.`,
+    },
+    gameManual: {
+      fr: (game: string) =>
+        `${game} : pas de connexion automatique, le suivi reste manuel.`,
+      en: (game: string) =>
+        `${game}: no automatic connection, tracking stays manual.`,
+    },
+    noGameVersion: {
+      fr: "Aucune version de jeu choisie pour cette run.",
+      en: "No game version selected for this run.",
+    },
+    manualExplanation: {
+      fr: "Ce jeu n'a pas encore de connecteur automatique. Tu peux tout suivre à la main : zones, captures, équipe et morts. Jeux connectables aujourd'hui : Platine (MelonDS) et Rouge Feu anglais (BizHawk).",
+      en: "This game has no automatic connector yet. You can track everything manually: zones, captures, team and deaths. Connectable games today: Platinum (MelonDS) and English FireRed (BizHawk).",
+    },
+    pickGameVersion: {
+      fr: "Choisis la version du jeu dans les paramètres de la run pour savoir si une connexion automatique est possible.",
+      en: "Choose the game version in Run settings to find out whether automatic tracking is available.",
+    },
+    soulLinkTitle: { fr: "SoulLink en ligne", en: "Online SoulLink" },
+    soulLinkDescription: {
+      fr: "Héberger la partie ou rejoindre celle d'un partenaire.",
+      en: "Host the game or join a partner's.",
+    },
+    joinDescription: {
+      fr: "Rejoindre le salon SoulLink d'un partenaire.",
+      en: "Join a partner's SoulLink room.",
+    },
+    overlayTitle: {
+      fr: "Overlay OBS et Stream Deck",
+      en: "OBS overlay and Stream Deck",
+    },
+    overlayDescription: {
+      fr: "Afficher ton équipe en stream et la piloter à distance.",
+      en: "Show your team on stream and control it remotely.",
+    },
+    backupTitle: { fr: "Sauvegardes", en: "Backups" },
+    backupDescription: {
+      fr: "Exporter ou importer un fichier .nuzrun.",
+      en: "Export or import a .nuzrun file.",
+    },
+    backupInfo: {
+      fr: "Tes données sont enregistrées automatiquement sur cet appareil. Exporte une sauvegarde pour la garder ailleurs ou la transférer.",
+      en: "Your data is saved automatically on this device. Export a backup to keep it elsewhere or move it.",
+    },
+    compatibilityTitle: { fr: "Jeux compatibles", en: "Compatible games" },
+    compatibilityDescription: {
+      fr: "Jeux, consoles et émulateurs pris en charge.",
+      en: "Supported games, consoles and emulators.",
+    },
+    statusTracking: {
+      fr: (emulator: string) => `${emulator} : suivi en cours`,
+      en: (emulator: string) => `${emulator}: tracking`,
+    },
+    statusWaiting: {
+      fr: (emulator: string) => `${emulator} : en attente du jeu`,
+      en: (emulator: string) => `${emulator}: waiting for the game`,
+    },
+    statusOff: { fr: "Jeu non connecté", en: "Game not connected" },
+    next: { fr: "Suivant", en: "Next" },
+    previous: { fr: "Précédent", en: "Previous" },
+    done: { fr: "C'est fait", en: "Done" },
+    lightStep: { fr: "Ouvrir le tracker light", en: "Open the light tracker" },
+    lightExplanation: {
+      fr: "Une petite fenêtre s'ouvre et suit le jeu toute seule : le combat en cours pendant un combat, ton équipe sinon. Survole « Équipe » pour la déplier, clique sur un Pokémon pour sa fiche, et « Live » pour revenir au suivi automatique. Dans OBS, ajoute-la en capture de fenêtre.",
+      en: "A small window opens and follows the game on its own: the current battle during a fight, your team otherwise. Hover “Team” to expand it, click a Pokémon for its details, and “Live” to return to automatic tracking. In OBS, add it as a window capture.",
+    },
+    alreadyLight: {
+      fr: "Tu es déjà dans le tracker light : il se met à jour automatiquement.",
+      en: "You are already in the light tracker: it updates automatically.",
+    },
+    hostChoice: { fr: "J'héberge", en: "I host" },
+    joinChoice: { fr: "Je rejoins", en: "I join" },
+    teamButton: { fr: "Équipe", en: "Team" },
+  },
+
+  // ── MelonDS ────────────────────────────────────────────────────────────────
+  melonDs: {
+    title: { fr: "MelonDS (Platine)", en: "MelonDS (Platinum)" },
+    prepareStep: { fr: "Préparer MelonDS", en: "Prepare MelonDS" },
+    prepareIntro: {
+      fr: "À faire une seule fois, ROM Platine lancée dans MelonDS :",
+      en: "Only once, with your Platinum ROM running in MelonDS:",
+    },
+    prepareSettings: {
+      fr: "Ouvre Config → Emu settings.",
+      en: "Open Config → Emu settings.",
+    },
+    prepareJit: {
+      fr: "Onglet « CPU emulation » : décoche « Enable JIT recompiler ».",
+      en: "“CPU emulation” tab: uncheck “Enable JIT recompiler”.",
+    },
+    prepareGdb: {
+      fr: "Onglet « Devtools » : coche « Enable GDB stub », note le port ARM9 (3333 par défaut) et laisse « Break on startup » décoché.",
+      en: "“Devtools” tab: check “Enable GDB stub”, note the ARM9 port (3333 by default) and leave “Break on startup” unchecked.",
+    },
+    prepareReset: {
+      fr: "Valide, puis fais System → Reset. Pour garder ta progression : Save state avant, Load state après.",
+      en: "Confirm, then use System → Reset. To keep your progress: Save state before, Load state after.",
+    },
+    prepareSafety: {
+      fr: "Le tracker lit seulement la mémoire du jeu : il n'écrit jamais dans ta partie. N'ouvre pas ce port sur ta box.",
+      en: "The tracker only reads game memory: it never writes to your game. Do not forward this port on your router.",
+    },
+    platinumRequired: {
+      fr: "Sélectionne d'abord Platine dans les paramètres de la run.",
+      en: "Select Platinum in Run settings first.",
+    },
+    romStep: { fr: "Choisir la ROM", en: "Choose the ROM" },
+    romIntro: {
+      fr: "Sélectionne exactement le fichier .nds ouvert dans MelonDS, puis indique le même port ARM9.",
+      en: "Select the exact .nds file open in MelonDS, then enter the same ARM9 port.",
+    },
+    noRom: { fr: "Aucune ROM sélectionnée.", en: "No ROM selected." },
+    revision: { fr: "rév.", en: "rev." },
+    selectRom: { fr: "Choisir le fichier .nds", en: "Choose the .nds file" },
+    port: { fr: "Port ARM9", en: "ARM9 port" },
+    confirmRom: {
+      fr: "C'est bien la ROM ouverte dans MelonDS.",
+      en: "This is the ROM open in MelonDS.",
+    },
+    seedWarning: {
+      fr: "Pour une ROM randomisée, deux fichiers avec le même en-tête peuvent avoir une seed différente : choisis le bon fichier.",
+      en: "For a randomized ROM, two files with the same header can use different seeds: pick the right file.",
+    },
+    connectStep: { fr: "Se connecter", en: "Connect" },
+    connect: { fr: "Connecter MelonDS", en: "Connect MelonDS" },
+    disconnect: { fr: "Déconnecter", en: "Disconnect" },
+    tracking: {
+      fr: "Connecté : le tracker suit ta partie.",
+      en: "Connected: the tracker is following your game.",
+    },
+    waiting: {
+      fr: "Connecté à MelonDS, en attente des données du jeu. Charge ta partie si ce n'est pas fait.",
+      en: "Connected to MelonDS, waiting for game data. Load your save if you have not yet.",
+    },
+    troubleshoot: {
+      fr: "Ça ne se connecte pas ? MelonDS n'accepte une nouvelle connexion qu'après System → Reset (Save state avant, Load state après), puis réessaie.",
+      en: "Not connecting? MelonDS only accepts a new connection after System → Reset (Save state before, Load state after), then try again.",
+    },
+    desktopOnly: {
+      fr: "Le suivi MelonDS nécessite l'application desktop.",
+      en: "MelonDS tracking requires the desktop application.",
+    },
+  },
+
+  // ── BizHawk ────────────────────────────────────────────────────────────────
+  bizHawk: {
+    title: { fr: "BizHawk (Rouge Feu)", en: "BizHawk (FireRed)" },
+    requirement: {
+      fr: "Uniquement Rouge Feu anglais, révision 1.0 (BPRE). Les autres versions sont refusées sans rien envoyer.",
+      en: "English FireRed revision 1.0 (BPRE) only. Other versions are rejected without sending anything.",
+    },
+    bindStep: { fr: "Lier cette run", en: "Link this run" },
+    bindIntro: {
+      fr: "Le tracker attend le script de BizHawk pour cette run.",
+      en: "The tracker waits for the BizHawk script for this run.",
+    },
+    bind: { fr: "Lier cette run", en: "Link this run" },
+    rebind: { fr: "Lier à nouveau", en: "Link again" },
+    scriptStep: { fr: "Enregistrer le script", en: "Save the script" },
+    scriptIntro: {
+      fr: "Enregistre le script Lua où tu veux (par exemple à côté de ta ROM).",
+      en: "Save the Lua script wherever you like (for example next to your ROM).",
+    },
+    saveScript: { fr: "Enregistrer le script Lua", en: "Save Lua script" },
+    scriptSaved: { fr: "Script enregistré.", en: "Script saved." },
+    loadStep: { fr: "Le charger dans BizHawk", en: "Load it in BizHawk" },
+    loadInstructions: {
+      fr: "Lance ta ROM dans BizHawk, ouvre Tools → Lua Console, puis Script → Open Script et choisis le fichier enregistré. Les captures détectées te seront demandées en confirmation. Le script ne modifie jamais ta sauvegarde.",
+      en: "Start your ROM in BizHawk, open Tools → Lua Console, then Script → Open Script and choose the saved file. Detected captures will ask for your confirmation. The script never modifies your save.",
+    },
+    tracking: {
+      fr: "Le script envoie des données : le tracker suit ta partie.",
+      en: "The script is sending data: the tracker is following your game.",
+    },
+    waiting: {
+      fr: "En attente du script BizHawk…",
+      en: "Waiting for the BizHawk script…",
+    },
+  },
+
+  // ── Overlay controls ───────────────────────────────────────────────────────
+  overlayControls: {
+    obsTitle: { fr: "Source OBS", en: "OBS source" },
+    obsIntro: {
+      fr: "Dans OBS, ajoute une source « Navigateur » avec cette URL. Garde l'application ouverte ; l'URL ne fonctionne que sur cet ordinateur.",
+      en: "In OBS, add a “Browser” source with this URL. Keep the app open; the URL works on this computer only.",
+    },
+    getUrl: { fr: "Afficher les URL OBS", en: "Show OBS URLs" },
+    teamUrl: {
+      fr: "Équipe (colonnes, comme l'export PNG)",
+      en: "Team (columns, like the PNG export)",
+    },
+    ribbonUrl: { fr: "Bandeau compact", en: "Compact ribbon" },
+    copy: { fr: "Copier", en: "Copy" },
+    copied: { fr: "Copié.", en: "Copied." },
+    remoteTitle: {
+      fr: "Streamer.bot / Stream Deck",
+      en: "Streamer.bot / Stream Deck",
+    },
+    remoteIntro: {
+      fr: "Déclenche l'overlay depuis un raccourci : choisis une action, teste-la, puis copie la requête dans ton outil. Sans durée, l'action devient l'affichage par défaut.",
+      en: "Trigger the overlay from a shortcut: choose an action, test it, then copy the request into your tool. Without a duration, the action becomes the default view.",
+    },
+    action: { fr: "Action", en: "Action" },
+    showTeam: { fr: "Afficher l'équipe", en: "Show team" },
+    showPokemon: { fr: "Afficher un Pokémon", en: "Show a Pokémon" },
+    live: { fr: "Live automatique", en: "Automatic live" },
+    hide: { fr: "Masquer", en: "Hide" },
+    seconds: { fr: "Secondes", en: "Seconds" },
+    slot: { fr: "Position dans l'équipe", en: "Party slot" },
+    test: { fr: "Tester", en: "Test" },
+    applied: { fr: "Commande appliquée.", en: "Command applied." },
+    configure: {
+      fr: "Afficher la requête HTTP",
+      en: "Show HTTP request",
+    },
+    postUrl: { fr: "URL (POST)", en: "URL (POST)" },
+    authorization: {
+      fr: "En-tête Authorization",
+      en: "Authorization header",
+    },
+    authorizationHint: {
+      fr: "Jeton de contrôle séparé. Ne le mets jamais dans une URL OBS ni dans une sauvegarde partagée.",
+      en: "A separate control token. Never put it in an OBS URL or a shared backup.",
+    },
+    copyAuthorization: {
+      fr: "Copier l'en-tête Authorization",
+      en: "Copy authorization header",
+    },
+    authorizationCopied: {
+      fr: "En-tête Authorization copié.",
+      en: "Authorization header copied.",
+    },
+    body: { fr: "Corps JSON", en: "JSON body" },
+    bodyHint: {
+      fr: "À envoyer avec Content-Type: application/json. Les commandes restent sur cet ordinateur.",
+      en: "Send with Content-Type: application/json. Commands stay on this computer.",
+    },
+    desktopOnly: {
+      fr: "Le contrôle de l'overlay nécessite l'application desktop.",
+      en: "Overlay control requires the desktop application.",
+    },
+  },
+
   // ── Connections ────────────────────────────────────────────────────────────
   connections: {
     openLight: { fr: "Ouvrir le tracker light", en: "Open light tracker" },
-    button: { fr: "Connexions", en: "Connections" },
-    ariaLabel: { fr: "Connexions du tracker", en: "Tracker connections" },
-    title: { fr: "Connexions du tracker", en: "Tracker connections" },
-    sqliteStorage: { fr: "Stockage SQLite local", en: "Local SQLite storage" },
     browserStorage: {
       fr: "Stockage local du navigateur",
       en: "Local browser storage",
@@ -429,23 +695,7 @@ const translations = {
       fr: "Connaissances / joueur local",
       en: "Knowledge / local player",
     },
-    desktopOnly: {
-      fr: "Les connexions aux émulateurs et les salons hébergés nécessitent l'application desktop. Le suivi manuel et les sauvegardes portables restent disponibles ici.",
-      en: "Emulator connections and hosted rooms require the desktop application. Manual tracking and portable backups remain available here.",
-    },
     savedLocally: { fr: "Enregistré localement :", en: "Saved locally:" },
-    luaInfo: {
-      fr: "Connecteur Lua : BizHawk, FireRed anglais révision 1.0 (BPRE). Les captures doivent être confirmées ; les versions de jeu inconnues sont refusées. Le script lit le jeu et ne modifie jamais sa sauvegarde.",
-      en: "Lua connector: BizHawk, FireRed English revision 1.0 (BPRE). Captures require confirmation; unknown game versions are rejected. The script reads the game and never modifies its save.",
-    },
-    connectGame: { fr: "Connecter ce jeu", en: "Connect this game" },
-    reconnectGame: { fr: "Reconnecter ce jeu", en: "Reconnect this game" },
-    saveLua: { fr: "Enregistrer le connecteur Lua", en: "Save Lua connector" },
-    luaSaved: {
-      fr: "Script enregistré. Ouvre-le dans la console Lua de BizHawk après avoir chargé ton jeu.",
-      en: "Script saved. Open it in BizHawk's Lua Console after loading your game.",
-    },
-    room: { fr: "Salon SoulLink", en: "SoulLink room" },
     roomStatus: {
       fr: (mode: string, pending: number) =>
         `${mode} — ${pending} modification${pending > 1 ? "s" : ""} en attente de synchronisation.`,
@@ -497,37 +747,10 @@ const translations = {
       fr: "Utilise un réseau local ou un VPN de confiance. Les connexions par Internet public nécessitent WSS ; une invitation seule ne configure pas ton routeur.",
       en: "Use a trusted LAN or VPN. Public Internet connections require WSS; an invitation alone does not configure your router.",
     },
-    overlay: { fr: "Overlay OBS", en: "OBS overlay" },
-    getOverlayUrl: {
-      fr: "Obtenir l'URL de l'overlay live",
-      en: "Get live overlay URL",
-    },
-    overlayUrl: {
-      fr: "URL de source navigateur locale (lecture seule)",
-      en: "Read-only local browser-source URL",
-    },
-    overlayUrlHint: {
-      fr: "Garde l'application desktop ouverte. Cette URL ne fonctionne que sur cet ordinateur.",
-      en: "Keep the desktop app running. This URL works on this computer only.",
-    },
-    compactOverlayUrl: {
-      fr: "URL OBS du bandeau compact",
-      en: "Compact ribbon OBS URL",
-    },
-    overlayInfo: {
-      fr: "La source par défaut utilise les mêmes colonnes transparentes sprite/types que l'export PNG. La source compacte utilise un bandeau horizontal.",
-      en: "The default source uses the same transparent sprite/type columns as PNG export. The compact source uses a horizontal ribbon.",
-    },
-    close: { fr: "Fermer", en: "Close" },
   },
 
   // ── Game compatibility ─────────────────────────────────────────────────────
   compatibility: {
-    button: { fr: "Compatibilité", en: "Compatibility" },
-    title: {
-      fr: "Compatibilité des jeux et émulateurs",
-      en: "Games and emulator compatibility",
-    },
     noGameVersion: {
       fr: "Ce run n'a pas de version de jeu. Choisis-en une dans les paramètres du run ; une région seule ne suffit pas à identifier le jeu.",
       en: "This run has no game version. Choose one in Run settings; a region alone does not identify the game.",

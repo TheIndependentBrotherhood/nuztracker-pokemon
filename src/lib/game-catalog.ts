@@ -174,6 +174,15 @@ export function getGameName(
   return lang === "fr" ? game.nameFr : game.name;
 }
 
+export type GameConnector = "melonds" | "bizhawk";
+
+/** Automatic tracking connector available for a game version, if any. */
+export function getGameConnector(id?: string): GameConnector | undefined {
+  if (id === "platinum") return "melonds";
+  if (id === "firered") return "bizhawk";
+  return undefined;
+}
+
 export function gameTypeChart(id: GameVersionId): "gen1" | "gen2-5" | "gen6+" {
   const generation = getGameVersion(id)!.generation;
   return generation === 1 ? "gen1" : generation < 6 ? "gen2-5" : "gen6+";
