@@ -379,6 +379,62 @@ const translations = {
     },
   },
 
+  // ── Game compatibility ─────────────────────────────────────────────────────
+  compatibility: {
+    button: { fr: "Compatibilité", en: "Compatibility" },
+    title: {
+      fr: "Compatibilité des jeux et émulateurs",
+      en: "Games and emulator compatibility",
+    },
+    noGameVersion: {
+      fr: "Ce run n'a pas de version de jeu. Choisis-en une dans les paramètres du run ; une région seule ne suffit pas à identifier le jeu.",
+      en: "This run has no game version. Choose one in Run settings; a region alone does not identify the game.",
+    },
+    manualTracking: {
+      fr: "Le suivi manuel fonctionne dans le navigateur et sur desktop, avec n'importe quel émulateur ou console d'origine. Le suivi automatique nécessite l'application desktop et un connecteur compatible.",
+      en: "Manual tracking works in the browser and desktop, with any emulator or original console. Automatic tracking requires the desktop application and a matching connector.",
+    },
+    melonDsWarning: {
+      fr: "MelonDS 1.1 nécessite le serveur GDB ARM9, avec le JIT et l'arrêt au démarrage désactivés. Les ROM Platine doivent conserver une organisation mémoire prise en charge ; les traductions et patchs multijoueurs ne sont pas tous interchangeables.",
+      en: "MelonDS 1.1 requires the ARM9 GDB stub, with JIT disabled and break-on-startup disabled. Platinum ROMs must retain a supported memory layout; translations and multiplayer patches are not all interchangeable.",
+    },
+    tableLabel: { fr: "Compatibilité des jeux", en: "Game compatibility" },
+    regionGame: { fr: "Région / jeu", en: "Region / game" },
+    console: { fr: "Console", en: "Console" },
+    manual: { fr: "Manuel", en: "Manual" },
+    automatic: { fr: "Automatique", en: "Automatic" },
+    yes: { fr: "Oui", en: "Yes" },
+    fireRedConnector: {
+      fr: "Expérimental : BizHawk, BPRE anglais v1.0",
+      en: "Experimental: BizHawk, BPRE English v1.0",
+    },
+    platinumConnector: {
+      fr: "Expérimental : MelonDS 1.1 GDB, CPUE / CPUF v0-1",
+      en: "Experimental: MelonDS 1.1 GDB, CPUE / CPUF v0-1",
+    },
+    noConnector: { fr: "Aucun connecteur", en: "No connector" },
+    referenceNote: {
+      fr: "Les stats, types et talents de référence proviennent de tables locales propres à chaque génération. Ce n'est pas une extraction de la seed de ton randomizer. Les stats de base randomisées inconnues restent masquées ; les marqueurs + / - sont tes propres estimations. Les références de rencontres, quand elles sont affichées, décrivent le jeu non modifié.",
+      en: "Reference stats, types and abilities use local generation-specific tables. They are not a dump of your randomizer seed. Unknown randomized base stats remain hidden; + / - markers are your own estimates. Encounter references, when shown, describe the unmodified game.",
+    },
+  },
+
+  // ── Game version field ─────────────────────────────────────────────────────
+  gameVersion: {
+    label: { fr: "Version du jeu", en: "Game version" },
+    unspecified: { fr: "Non précisée", en: "Unspecified" },
+    reference: {
+      fr: (console: string, generation: number) =>
+        `Référence ${console} / génération ${generation}. Les modifications d'une ROM personnalisée peuvent différer.`,
+      en: (console: string, generation: number) =>
+        `${console} / Generation ${generation} reference. Custom ROM changes may differ.`,
+    },
+    hint: {
+      fr: "Choisis un jeu pour des stats, types et talents exacts. Les runs sans version gardent la référence générique.",
+      en: "Select a game for accurate stats, types and abilities. Unspecified runs retain the generic reference.",
+    },
+  },
+
   // ── Zone List ──────────────────────────────────────────────────────────────
   zoneList: {
     searchPlaceholder: {
