@@ -26,6 +26,8 @@ This builds the static interface and launches Electron. No separate database ser
 
 **Open live tracker** opens the compact party view. Move/stat panels expand on demand; backups remain available inside **Connections** in this view.
 
+The compact tracker automatically focuses on the first visible opponent during battles and returns to the party lead outside battle. Selecting a party member pins its card; **Live** clears that selection and closes the party drawer to restore the automatic view. Buttons below the sprite open private species notes (the same notes as in the Pokédex) and incoming type matchups using the run's type-chart generation. Unknown randomized types are not replaced with vanilla types, and the matchup table excludes ability and item modifiers. Opponent HP, hidden moves, abilities and actual stats are not fabricated.
+
 ```sh
 yarn desktop:build
 yarn desktop:package

@@ -1,6 +1,7 @@
 import type { AbilityEntry } from "@/context/CacheContext";
 import { publicPath } from "@/lib/base-path";
 import translations from "@/i18n/translations";
+import { Dex } from "@pkmn/dex";
 
 export const TYPES = [
   "normal",
@@ -240,6 +241,46 @@ export function buildTypeDefensesFromJson(
   }
 
   return defenses;
+}
+
+export function getTypeDefensesForGeneration(
+  types: string[],
+  generation: "gen1" | "gen2-5" | "gen6+",
+): Record<string, number> {
+  const availableTypes = TYPES.slice(
+    0,
+    generation === "gen1" ? 15 : generation === "gen2-5" ? 17 : 18,
+  );
+  const available = new Set<string>(availableTypes);
+  for (const type of types) {
+    if (!available.has(type))
+      throw new Error(`Type ${type} is unavailable in ${generation}.`);
+  }
+  const dex = Dex.mod(
+    generation === "gen1" ? "gen1" : generation === "gen2-5" ? "gen5" : "gen6",
+  );
+  const data: TypeChartData = {};
+  for (const type of types) {
+    const damage = dex.types.get(type).damageTaken;
+    const attacks = Object.entries(damage);
+    data[type] = {
+      weakTo: attacks
+        .filter(([, value]) => value === 1)
+        .map(([name]) => name.toLowerCase()),
+      resistsAgainst: attacks
+        .filter(([, value]) => value === 2)
+        .map(([name]) => name.toLowerCase()),
+      immuneTo: attacks
+        .filter(([, value]) => value === 3)
+        .map(([name]) => name.toLowerCase()),
+      strongAgainst: [],
+    };
+  }
+  return Object.fromEntries(
+    Object.entries(buildTypeDefensesFromJson(types, data)).filter(([type]) =>
+      available.has(type),
+    ),
+  );
 }
 
 export function buildTypeOffensesFromJson(

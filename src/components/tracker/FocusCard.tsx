@@ -353,10 +353,14 @@ export default function FocusCard({
   member,
   gameVersion,
   onSpriteChange,
+  actions,
+  opponentLevel,
 }: {
   member: OverlayMember;
   gameVersion?: GameVersionId;
   onSpriteChange?: (sprite: CaptureSpriteOption) => void;
+  actions?: ReactNode;
+  opponentLevel?: number;
 }) {
   const { lang } = useLanguage();
   const gameText = useGameText();
@@ -449,12 +453,16 @@ export default function FocusCard({
           alignItems: "start",
         }}
       >
-        <SpriteBox
-          member={member}
-          status={status}
-          lang={lang}
-          onSpriteChange={onSpriteChange}
-        />
+        <Box sx={{ width: 68 }}>
+          <SpriteBox
+            key={member.id}
+            member={member}
+            status={status}
+            lang={lang}
+            onSpriteChange={onSpriteChange}
+          />
+          {actions}
+        </Box>
         <Box sx={{ minWidth: 0 }}>
           <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
             <Typography
@@ -462,11 +470,11 @@ export default function FocusCard({
             >
               {name}
             </Typography>
-            {live && (
+            {(live || opponentLevel !== undefined) && (
               <Typography
                 sx={{ fontSize: "0.72rem", color: muted, flex: "none" }}
               >
-                {t(text.level, lang)} {live.level}
+                {t(text.level, lang)} {live?.level ?? opponentLevel}
               </Typography>
             )}
           </Box>
@@ -556,7 +564,10 @@ export default function FocusCard({
             </>
           ) : (
             <Typography sx={{ fontSize: "0.68rem", color: "#b8c7d5" }}>
-              {t(text.manual, lang)}
+              {t(
+                opponentLevel === undefined ? text.manual : text.opponentInfo,
+                lang,
+              )}
             </Typography>
           )}
         </Box>

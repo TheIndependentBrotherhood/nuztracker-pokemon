@@ -1542,6 +1542,39 @@ const translations = {
 
   // ── Compact Pokémon card (light tracker and OBS overlay) ────────────────────
   focusCard: {
+    notes: { fr: "Notes", en: "Notes" },
+    typesAction: { fr: "Types", en: "Types" },
+    typeMatchups: {
+      fr: "Faiblesses / résistances",
+      en: "Weaknesses / resistances",
+    },
+    typeMatchupsHint: {
+      fr: "Dégâts reçus selon les types connus et la table de la run. Les talents et objets ne sont pas pris en compte.",
+      en: "Incoming damage based on known types and the run's type chart. Abilities and items are not included.",
+    },
+    unknownTypes: {
+      fr: "Types inconnus : confirme-les dans le Pokédex pour calculer les faiblesses.",
+      en: "Unknown types: confirm them in the Pokédex to calculate weaknesses.",
+    },
+    typeChartError: {
+      fr: "Impossible de calculer la table : vérifie que les types confirmés existent dans la génération de ta run.",
+      en: "Unable to calculate matchups: check that the confirmed types exist in your run's generation.",
+    },
+    notesHint: {
+      fr: "Notes par espèce pour cette run, communes au Pokédex et au tracker. Elles restent privées en SoulLink.",
+      en: "Species notes for this run, shared with the Pokédex and tracker. They remain private in SoulLink.",
+    },
+    notesError: {
+      fr: "La sauvegarde a échoué. Tes notes restent dans ce panneau ; réessaie.",
+      en: "Saving failed. Your notes are still in this panel; please retry.",
+    },
+    saveAction: { fr: "Enregistrer", en: "Save" },
+    closeAction: { fr: "Fermer", en: "Close" },
+    cancelAction: { fr: "Annuler", en: "Cancel" },
+    opponentInfo: {
+      fr: "Adversaire · seules les informations connues sont affichées.",
+      en: "Opponent · only known information is displayed.",
+    },
     stats: {
       hp: { fr: "PV", en: "HP" },
       attack: { fr: "Atq", en: "Atk" },

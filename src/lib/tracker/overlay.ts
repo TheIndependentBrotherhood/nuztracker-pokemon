@@ -1,6 +1,21 @@
-import type { BridgeStatus, LivePokemon, RunRecord } from "./types";
-import type { Capture, PokemonStat, StatAnnotations } from "../types";
-import { getPlayerId, knowledgeForCapture } from "./knowledge";
+import type {
+  BattleOpponent,
+  BridgeStatus,
+  LivePokemon,
+  RunRecord,
+} from "./types";
+import type {
+  Capture,
+  PokemonData,
+  PokemonStat,
+  Run,
+  StatAnnotations,
+} from "../types";
+import {
+  getPlayerId,
+  knowledgeForCapture,
+  knowledgeForPlayer,
+} from "./knowledge";
 import { pokemonForGame } from "../game-reference";
 import { getCaptureTypesForRun } from "../capture-types";
 import { defaultOverlayControl, type OverlayControl } from "./overlay-control";
@@ -204,6 +219,53 @@ export type SpriteMember = Pick<
   | "types"
   | "isDead"
 >;
+
+export function opponentMember(
+  run: Run,
+  playerId: string,
+  opponent: BattleOpponent,
+  reference: PokemonData,
+): OverlayMember {
+  const pokemon = pokemonForGame(reference, run.gameVersion);
+  const knowledge = knowledgeForPlayer(run, playerId);
+  const randomStats = Boolean(
+    run.isRandomMode && run.randomizerOptions?.randomizeStats,
+  );
+  return {
+    id: `opponent-${opponent.identity}`,
+    identity: opponent.identity,
+    pokemonId: pokemon.id,
+    name: pokemon.names?.en ?? pokemon.technicalName,
+    names: pokemon.names,
+    spriteUrl: pokemon.sprites.normal.default,
+    fallbackSpriteUrl: pokemon.sprites.normal.default,
+    types:
+      run.isRandomMode && run.randomizerOptions?.randomizeTypes
+        ? (knowledge.customTypesByPokemonId?.[pokemon.id] ?? [])
+        : pokemon.types,
+    bst: pokemon.stats.reduce((sum, stat) => sum + stat.base_stat, 0),
+    baseStats: randomStats ? undefined : pokemon.stats,
+    annotations: knowledge.statAnnotationsByPokemonId?.[pokemon.id],
+    randomStats,
+  };
+}
+
+export function lightFocusMember(
+  team: OverlayTeam,
+  opponent: OverlayMember | undefined,
+  selectedId?: string,
+): OverlayMember | undefined {
+  if (selectedId)
+    return team.members.find((member) => member.id === selectedId);
+  if (team.inBattle) return opponent;
+  return (
+    team.members.find(
+      (member) => member.identity && member.identity === team.activeIdentity,
+    ) ??
+    team.members.find((member) => !member.isDead) ??
+    team.members[0]
+  );
+}
 
 /** Tracked team plus dead Pokémon still carried in the game party, in party order. */
 function partyMembers(

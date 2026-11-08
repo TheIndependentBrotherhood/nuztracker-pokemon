@@ -33,7 +33,11 @@ import TypeDeductionTool from "@/components/pokedex/TypeDeductionTool";
 import CaptureRateBadge from "@/components/pokedex/CaptureRateBadge";
 import { PokemonEvolutionLineage } from "@/components/run/team/PokemonEvolutionLineage";
 import { EvolutionHistoryDialog } from "@/components/run/modals/EvolutionHistoryDialog";
-import { getPlayerId, viewRunForPlayer } from "@/lib/tracker/knowledge";
+import {
+  getPlayerId,
+  viewRunForPlayer,
+  withSpeciesNotes,
+} from "@/lib/tracker/knowledge";
 import { pokemonForGame } from "@/lib/game-reference";
 import StatAnnotations from "@/components/tracker/StatAnnotations";
 
@@ -160,8 +164,11 @@ export default function PokemonDetailModal({
   const pokemonDisplayName = useCaptureDisplayName(pokemonCaptured, lang);
   const pokemonDisplayLabel = useCaptureDisplayLabel(pokemonCaptured, lang);
   const sourceRun = runId ? runs.find((r) => r.id === runId) : null;
-  const data = referenceData ? pokemonForGame(referenceData, sourceRun?.gameVersion) : null;
-  const baseStatTotal = data?.stats.reduce((sum, stat) => sum + stat.base_stat, 0) ?? 0;
+  const data = referenceData
+    ? pokemonForGame(referenceData, sourceRun?.gameVersion)
+    : null;
+  const baseStatTotal =
+    data?.stats.reduce((sum, stat) => sum + stat.base_stat, 0) ?? 0;
   const detailsPlayerId = sourceRun
     ? pokemonCaptured.id.startsWith("pokedex-")
       ? (playerByRun[sourceRun.id] ?? getPlayerId(sourceRun))
@@ -528,25 +535,9 @@ export default function PokemonDetailModal({
   async function persistPokedexNotes(nextNotes: string) {
     if (!runToUpdate || !isPokedexCapture) return;
 
-    const nextNotesByPokemonId = {
-      ...(runToUpdate.pokedexNotesByPokemonId ?? {}),
-    };
-
-    if (nextNotes.trim()) {
-      nextNotesByPokemonId[pokemonCaptured.pokemon.id] = nextNotes.trim();
-    } else {
-      delete nextNotesByPokemonId[pokemonCaptured.pokemon.id];
-    }
-
     if (
       !(await updateRun(
-        {
-          ...runToUpdate,
-          pokedexNotesByPokemonId:
-            Object.keys(nextNotesByPokemonId).length > 0
-              ? nextNotesByPokemonId
-              : undefined,
-        },
+        withSpeciesNotes(runToUpdate, pokemonCaptured.pokemon.id, nextNotes),
         runToUpdate,
         detailsPlayerId,
       ))
@@ -2056,16 +2047,23 @@ export default function PokemonDetailModal({
               >
                 {t(tr.pokemonDetail.baseStats, lang)}
               </Typography>
-              {runToUpdate?.isRandomMode && runToUpdate.randomizerOptions?.randomizeStats ? (
-                <StatAnnotations run={runToUpdate} pokemonId={pokemonCaptured.pokemon.id} playerId={detailsPlayerId} />
-              ) : data.stats.map((s) => (
-                <StatBar
-                  key={s.stat.name}
-                  name={s.stat.name}
-                  value={s.base_stat}
-                  speedLabel={t(tr.pokemonDetail.statSpeed, lang)}
+              {runToUpdate?.isRandomMode &&
+              runToUpdate.randomizerOptions?.randomizeStats ? (
+                <StatAnnotations
+                  run={runToUpdate}
+                  pokemonId={pokemonCaptured.pokemon.id}
+                  playerId={detailsPlayerId}
                 />
-              ))}
+              ) : (
+                data.stats.map((s) => (
+                  <StatBar
+                    key={s.stat.name}
+                    name={s.stat.name}
+                    value={s.base_stat}
+                    speedLabel={t(tr.pokemonDetail.statSpeed, lang)}
+                  />
+                ))
+              )}
               <Box
                 sx={{
                   display: "flex",

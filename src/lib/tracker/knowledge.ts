@@ -48,6 +48,20 @@ export function viewRunForPlayer(run: Run, playerId: string): Run {
   return { ...run, ...pickKnowledge(knowledgeForPlayer(run, playerId)) };
 }
 
+export function withSpeciesNotes(
+  run: Run,
+  pokemonId: number,
+  notes: string,
+): Run {
+  const next = { ...run.pokedexNotesByPokemonId };
+  if (notes.trim()) next[pokemonId] = notes.trim();
+  else delete next[pokemonId];
+  return {
+    ...run,
+    pokedexNotesByPokemonId: Object.keys(next).length ? next : undefined,
+  };
+}
+
 export function saveKnowledgeView(run: Run, playerId: string): Run {
   if (!run.playerKnowledge) return run;
   return {

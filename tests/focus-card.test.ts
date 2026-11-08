@@ -2,7 +2,18 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GameText } from "../src/lib/game-text";
 import { hpColor } from "../src/lib/tracker/hp";
-import { overlayData } from "../src/lib/tracker/overlay";
+import {
+  lightFocusMember,
+  opponentMember,
+  overlayData,
+} from "../src/lib/tracker/overlay";
+import {
+  saveKnowledgeView,
+  viewRunForPlayer,
+  withSpeciesNotes,
+  withoutPrivateNotes,
+} from "../src/lib/tracker/knowledge";
+import { getTypeDefensesForGeneration } from "../src/lib/type-chart";
 import { ingestFrame } from "../src/lib/tracker/live";
 import type { LivePokemon } from "../src/lib/tracker/types";
 import gameTextData from "../public/data/game-text.json";
@@ -109,5 +120,124 @@ test("a dead Pokémon still in the in-game party stays visible in party order", 
       ["fallen", true],
       ["alive", false],
     ],
+  );
+});
+
+test("Live focuses on the opponent in battle, while party selection pins the player's card", () => {
+  const current = record();
+  current.run.team = [capture("lead"), capture("second")];
+  const team = overlayData(current).teams[0];
+  assert.equal(lightFocusMember(team, undefined)?.id, "lead");
+  const enemy = opponentMember(
+    current.run,
+    "solo",
+    { identity: "enemy-1", pokemonId: 48, level: 3 },
+    pokemon(48),
+  );
+  team.inBattle = true;
+  assert.equal(
+    lightFocusMember(team, undefined),
+    undefined,
+    "Do not show the player while the opponent loads.",
+  );
+  assert.equal(lightFocusMember(team, enemy)?.id, "opponent-enemy-1");
+  assert.equal(lightFocusMember(team, enemy, "second")?.id, "second");
+  assert.equal(
+    lightFocusMember(team, enemy)?.id,
+    "opponent-enemy-1",
+    "Live clears the party selection.",
+  );
+  assert.equal(lightFocusMember(team, enemy, "missing"), undefined);
+  const replacement = { ...enemy, id: "opponent-enemy-2" };
+  assert.equal(lightFocusMember(team, replacement)?.id, "opponent-enemy-2");
+  team.inBattle = false;
+  assert.equal(lightFocusMember(team, enemy)?.id, "lead");
+});
+
+test("opponent cards use game references and only the selected player's randomized knowledge", () => {
+  const current = record(true);
+  current.run.gameVersion = "platinum";
+  const reference = {
+    ...pokemon(81),
+    technicalName: "magnemite",
+    types: ["electric", "steel"],
+  };
+  const enemy = { identity: "enemy", pokemonId: 81, level: 8 };
+  const standard = opponentMember(current.run, "p1", enemy, reference);
+  assert.deepEqual(standard.types, ["electric", "steel"]);
+  assert.equal(standard.bst, 325);
+  assert.equal(
+    standard.live,
+    undefined,
+    "No fabricated enemy HP, abilities or moves.",
+  );
+  current.run.isRandomMode = true;
+  current.run.randomizerOptions = {
+    randomizeStats: true,
+    randomizeTypes: true,
+    randomizeAbilities: false,
+    randomizeEncounters: false,
+    randomizeEvolvedForms: false,
+  };
+  current.run.playerKnowledge = {
+    p1: { customTypesByPokemonId: { 81: ["fire"] } },
+    p2: { customTypesByPokemonId: { 81: ["water"] } },
+  };
+  const randomized = opponentMember(current.run, "p1", enemy, reference);
+  assert.deepEqual(randomized.types, ["fire"]);
+  assert.equal(randomized.baseStats, undefined);
+  assert.equal(randomized.bst, 325);
+  delete current.run.playerKnowledge.p1.customTypesByPokemonId;
+  assert.deepEqual(
+    opponentMember(current.run, "p1", enemy, reference).types,
+    [],
+  );
+});
+
+test("compact notes share Pokédex knowledge without changing the other player's private notes", () => {
+  const current = record(true);
+  current.run.playerKnowledge = {
+    p1: { pokedexNotesByPokemonId: { 1: "Existing" } },
+    p2: { pokedexNotesByPokemonId: { 1: "Partner note" } },
+  };
+  const view = viewRunForPlayer(current.run, "p1");
+  const edited = withSpeciesNotes(view, 1, "  Updated from compact  ");
+  const persisted = saveKnowledgeView(edited, "p1");
+  assert.equal(
+    persisted.playerKnowledge?.p1.pokedexNotesByPokemonId?.[1],
+    "Updated from compact",
+  );
+  assert.equal(
+    persisted.playerKnowledge?.p2.pokedexNotesByPokemonId?.[1],
+    "Partner note",
+  );
+  assert.equal(view.pokedexNotesByPokemonId?.[1], "Existing");
+  assert.equal(
+    withSpeciesNotes(edited, 1, "  ").pokedexNotesByPokemonId,
+    undefined,
+  );
+  assert.equal(
+    withoutPrivateNotes(persisted).playerKnowledge?.p1.pokedexNotesByPokemonId,
+    undefined,
+  );
+});
+
+test("type matchups combine both types and preserve the run's generation and immunities", () => {
+  const defenses = getTypeDefensesForGeneration(["rock", "ground"], "gen2-5");
+  assert.equal(defenses.water, 4);
+  assert.equal(defenses.grass, 4);
+  assert.equal(defenses.normal, 0.5);
+  assert.equal(defenses.electric, 0);
+  assert.equal(getTypeDefensesForGeneration(["steel"], "gen2-5").dark, 0.5);
+  assert.equal(getTypeDefensesForGeneration(["steel"], "gen6+").dark, 1);
+  assert.equal(getTypeDefensesForGeneration(["psychic"], "gen1").ghost, 0);
+  assert.equal(getTypeDefensesForGeneration(["psychic"], "gen2-5").ghost, 2);
+  assert.equal(
+    "fairy" in getTypeDefensesForGeneration(["grass"], "gen2-5"),
+    false,
+  );
+  assert.throws(
+    () => getTypeDefensesForGeneration(["fairy"], "gen1"),
+    /unavailable/,
   );
 });

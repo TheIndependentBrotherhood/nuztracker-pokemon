@@ -15,17 +15,22 @@ import {
 } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getPlayerId, viewRunForPlayer } from "@/lib/tracker/knowledge";
-import { isOverlayTeamLive, overlayData } from "@/lib/tracker/overlay";
+import {
+  isOverlayTeamLive,
+  lightFocusMember,
+  opponentMember,
+  overlayData,
+} from "@/lib/tracker/overlay";
 import SpriteTeam from "@/components/share/SpriteTeam";
 import ConnectionPanel from "./ConnectionPanel";
-import FocusCard from "./FocusCard";
+import InteractiveFocusCard from "./InteractiveFocusCard";
 import FaintedPokemon, { faintedInParty } from "./FaintedPokemon";
 import PendingCaptures from "./PendingCaptures";
 import StatAnnotations from "./StatAnnotations";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
-import type { CaptureSpriteOption } from "@/lib/pokemon-data";
-import type { Capture } from "@/lib/types";
+import { getPokemonById, type CaptureSpriteOption } from "@/lib/pokemon-data";
+import type { Capture, PokemonData } from "@/lib/types";
 
 const lightTheme = createTheme({
   palette: {
@@ -67,6 +72,7 @@ export default function LightTracker() {
     setPlayer,
     updateRun,
     canEditRun,
+    reportError,
   } = useRunStore();
   const { lang } = useLanguage();
   const run = runs.find((entry) => entry.id === runId);
@@ -75,6 +81,38 @@ export default function LightTracker() {
   const [pinnedTeam, setPinnedTeam] = useState(false);
   const [selectedId, setSelectedId] = useState<string>();
   const [now, setNow] = useState(0);
+  const [reference, setReference] = useState<PokemonData>();
+  const [referenceError, setReferenceError] = useState<number>();
+  const currentPlayerId = run
+    ? (playerByRun[run.id] ?? getPlayerId(run))
+    : "solo";
+  const opponent =
+    record?.tracking[currentPlayerId]?.latest.battle?.opponents[0];
+  const opponentId = !selectedId ? opponent?.pokemonId : undefined;
+  useEffect(() => {
+    if (opponentId === undefined) return;
+    let cancelled = false;
+    void getPokemonById(opponentId)
+      .then((pokemon) => {
+        if (!pokemon)
+          throw new Error(
+            `Local reference data for species ${opponentId} is unavailable.`,
+          );
+        if (!cancelled) {
+          setReference(pokemon);
+          setReferenceError(undefined);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setReferenceError(opponentId);
+          reportError(error);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [opponentId, reportError]);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -110,13 +148,12 @@ export default function LightTracker() {
     ) ?? teams[0];
   if (!team) return <Alert severity="error">{t(text.noPlayer, lang)}</Alert>;
   const playerId = team.playerId;
-  const member = selectedId
-    ? team.members.find((entry) => entry.id === selectedId)
-    : (team.members.find(
-        (entry) => entry.identity && entry.identity === team.activeIdentity,
-      ) ??
-      team.members.find((entry) => !entry.isDead) ??
-      team.members[0]);
+  const enemy =
+    opponent && reference?.id === opponent.pokemonId
+      ? opponentMember(run, playerId, opponent, reference)
+      : undefined;
+  const member = lightFocusMember(team, enemy, selectedId);
+  const showingOpponent = !selectedId && team.inBattle;
   const runForPlayer = viewRunForPlayer(run, playerId);
   async function changeSprite(captureId: string, sprite: CaptureSpriteOption) {
     const selectedSprite = {
@@ -214,7 +251,12 @@ export default function LightTracker() {
           <Button
             size="small"
             variant={!selectedId ? "contained" : "outlined"}
-            onClick={() => setSelectedId(undefined)}
+            onClick={() => {
+              setSelectedId(undefined);
+              clearTimeout(hoverTimer.current);
+              setHovered(false);
+              setPinnedTeam(false);
+            }}
           >
             {t(text.liveButton, lang)}
           </Button>
@@ -291,24 +333,43 @@ export default function LightTracker() {
               </Typography>
             )}
           </Box>
-          {member ? (
-            <FocusCard
-              member={member}
-              gameVersion={run.gameVersion}
-              onSpriteChange={
-                canEditRun(run.id, playerId) &&
-                runForPlayer.zones.some((zone) =>
-                  zone.captures.some((capture) => capture.id === member.id),
-                )
-                  ? (sprite) => void changeSprite(member.id, sprite)
-                  : undefined
-              }
-            />
-          ) : selectedId || !faintedInParty(record, playerId).length ? (
-            <Alert severity="info">
-              {t(selectedId ? text.notInTeam : text.addTeamHint, lang)}
-            </Alert>
-          ) : null}
+          <InteractiveFocusCard
+            run={run}
+            playerId={playerId}
+            member={member}
+            opponentLevel={showingOpponent ? opponent?.level : undefined}
+            onSpriteChange={
+              member &&
+              canEditRun(run.id, playerId) &&
+              runForPlayer.zones.some((zone) =>
+                zone.captures.some((capture) => capture.id === member.id),
+              )
+                ? (sprite) => void changeSprite(member.id, sprite)
+                : undefined
+            }
+            fallback={
+              showingOpponent ? (
+                <Alert
+                  severity={
+                    referenceError === opponentId && opponentId !== undefined
+                      ? "error"
+                      : "info"
+                  }
+                >
+                  {t(
+                    referenceError === opponentId && opponentId !== undefined
+                      ? translations.focusCard.noReference
+                      : text.loading,
+                    lang,
+                  )}
+                </Alert>
+              ) : selectedId || !faintedInParty(record, playerId).length ? (
+                <Alert severity="info">
+                  {t(selectedId ? text.notInTeam : text.addTeamHint, lang)}
+                </Alert>
+              ) : null
+            }
+          />
         </Box>
         {member?.randomStats && (
           <Box sx={{ mt: 1 }}>
