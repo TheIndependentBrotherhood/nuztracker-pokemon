@@ -26,6 +26,10 @@ import ArchiveControls from "./ArchiveControls";
 import CompatibilityInfo from "./CompatibilityInfo";
 import OverlayControls from "./OverlayControls";
 import MelonDsPanel from "./MelonDsPanel";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
+
+const tr = translations.connections;
 
 export default function ConnectionPanel({
   run,
@@ -43,6 +47,7 @@ export default function ConnectionPanel({
     setDesktopStatus,
     reportError,
   } = useRunStore();
+  const { lang } = useLanguage();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [allowLan, setAllowLan] = useState(false);
@@ -97,20 +102,28 @@ export default function ConnectionPanel({
                 : undefined
             }
           >
-            Open light tracker
+            {t(tr.openLight, lang)}
           </Button>
         )}
-        <Button size={minimal ? "small" : "medium"} aria-label="Tracker connections" variant="outlined" onClick={() => setOpen(true)}>
-          {minimal ? "..." : "Connections"}
+        <Button
+          size={minimal ? "small" : "medium"}
+          aria-label={t(tr.ariaLabel, lang)}
+          variant="outlined"
+          onClick={() => setOpen(true)}
+        >
+          {minimal ? "..." : t(tr.button, lang)}
         </Button>
         {!compact && <CompatibilityInfo run={run} />}
         {run && !compact && <ArchiveControls runId={run.id} />}
-        {!minimal && <Chip
-          size="small"
-          label={
-            desktopStatus ? "Local SQLite storage" : "Local browser storage"
-          }
-        />}
+        {!minimal && (
+          <Chip
+            size="small"
+            label={t(
+              desktopStatus ? tr.sqliteStorage : tr.browserStorage,
+              lang,
+            )}
+          />
+        )}
         {!minimal && roomActive && (
           <Chip
             size="small"
@@ -126,7 +139,7 @@ export default function ConnectionPanel({
           <TextField
             select
             size="small"
-            label="Knowledge / local player"
+            label={t(tr.knowledgePlayer, lang)}
             value={playerId}
             disabled={busy || ownRun}
             onChange={(event) => setPlayer(run.id, event.target.value)}
@@ -153,33 +166,24 @@ export default function ConnectionPanel({
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Tracker connections</DialogTitle>
+        <DialogTitle>{t(tr.title, lang)}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {compact && <CompatibilityInfo run={run} />}
             {compact && run && <ArchiveControls runId={run.id} />}
             {!desktopStatus ? (
-              <Alert severity="info">
-                Emulator connections and hosted rooms require the desktop
-                application. Manual tracking and portable backups remain
-                available here.
-              </Alert>
+              <Alert severity="info">{t(tr.desktopOnly, lang)}</Alert>
             ) : (
               <>
                 <Typography variant="body2">
-                  Saved locally: {desktopStatus.storagePath}
+                  {t(tr.savedLocally, lang)} {desktopStatus.storagePath}
                 </Typography>
                 {run && (
                   <>
                     <MelonDsPanel run={run} />
                     <Divider />
                     <Typography variant="h6">BizHawk / FireRed</Typography>
-                    <Alert severity="info">
-                      Lua connector: BizHawk, FireRed English revision 1.0
-                      (BPRE). Captures require confirmation; unknown game
-                      versions are rejected. The script reads the game and never
-                      modifies its save.
-                    </Alert>
+                    <Alert severity="info">{t(tr.luaInfo, lang)}</Alert>
                     <Stack direction="row" spacing={1}>
                       <Button
                         variant="outlined"
@@ -196,20 +200,18 @@ export default function ConnectionPanel({
                           })
                         }
                       >
-                        {isBound ? "Reconnect this game" : "Connect this game"}
+                        {t(isBound ? tr.reconnectGame : tr.connectGame, lang)}
                       </Button>
                       <Button
                         disabled={busy || !isBound}
                         onClick={() =>
                           void perform(async () => {
                             if (await window.nuztracker?.saveConnector())
-                              setNotice(
-                                "Script saved. Open it in BizHawk's Lua Console after loading your game.",
-                              );
+                              setNotice(t(tr.luaSaved, lang));
                           })
                         }
                       >
-                        Save Lua connector
+                        {t(tr.saveLua, lang)}
                       </Button>
                     </Stack>
                     {desktopStatus.bridge.error && (
@@ -220,32 +222,31 @@ export default function ConnectionPanel({
                     <Divider />
                   </>
                 )}
-                <Typography variant="h6">SoulLink room</Typography>
+                <Typography variant="h6">{t(tr.room, lang)}</Typography>
                 {roomActive ? (
                   <>
                     <Alert
                       severity={room.mode === "conflict" ? "warning" : "info"}
                     >
-                      {room.mode} — {room.pendingCount} changes waiting to
-                      synchronize.
-                      {room.playerId && ` You control ${room.playerId}.`}
+                      {t(tr.roomStatus, lang)(room.mode, room.pendingCount)}
+                      {room.playerId && t(tr.youControl, lang)(room.playerId)}
                     </Alert>
                     {room.participants.map((player) => (
                       <Chip
                         key={player.playerId}
-                        label={`${player.name}: ${player.connected ? "connected" : "offline"}`}
+                        label={`${player.name}: ${t(player.connected ? tr.connected : tr.offline, lang)}`}
                         color={player.connected ? "success" : "default"}
                       />
                     ))}
                     {room.mode === "hosting" && (
                       <>
                         <TextField
-                          label="Room address"
+                          label={t(tr.roomAddress, lang)}
                           value={room.address ?? ""}
                           slotProps={{ input: { readOnly: true } }}
                         />
                         <TextField
-                          label="Invitation (share only with your partners)"
+                          label={t(tr.invitationShare, lang)}
                           value={room.invitation ?? ""}
                           slotProps={{ input: { readOnly: true } }}
                         />
@@ -264,19 +265,14 @@ export default function ConnectionPanel({
                             })
                           }
                         >
-                          Reconnect
+                          {t(tr.reconnect, lang)}
                         </Button>
                       )}
                       <Button
                         color="warning"
                         disabled={busy}
                         onClick={() => {
-                          if (
-                            !window.confirm(
-                              "Leave this room? Unsent changes, if any, will be kept in a separate local copy.",
-                            )
-                          )
-                            return;
+                          if (!window.confirm(t(tr.leaveConfirm, lang))) return;
                           void perform(async () => {
                             if (window.nuztracker)
                               setDesktopStatus(
@@ -285,7 +281,7 @@ export default function ConnectionPanel({
                           });
                         }}
                       >
-                        Leave room safely
+                        {t(tr.leave, lang)}
                       </Button>
                     </Stack>
                   </>
@@ -294,7 +290,7 @@ export default function ConnectionPanel({
                     {run?.isSoulLinkMode && (
                       <>
                         <TextField
-                          label="Host port"
+                          label={t(tr.hostPort, lang)}
                           type="number"
                           value={port}
                           onChange={(event) => setPort(event.target.value)}
@@ -308,7 +304,7 @@ export default function ConnectionPanel({
                               }
                             />
                           }
-                          label="Allow connections from my trusted LAN / VPN"
+                          label={t(tr.allowLan, lang)}
                         />
                         <FormControlLabel
                           control={
@@ -319,7 +315,7 @@ export default function ConnectionPanel({
                               }
                             />
                           }
-                          label="Reset previous player credentials"
+                          label={t(tr.resetCredentials, lang)}
                         />
                         <Button
                           variant="contained"
@@ -339,27 +335,27 @@ export default function ConnectionPanel({
                             })
                           }
                         >
-                          Host this SoulLink run
+                          {t(tr.host, lang)}
                         </Button>
                         <Divider />
                       </>
                     )}
                     <TextField
-                      label="Room address"
+                      label={t(tr.roomAddress, lang)}
                       placeholder="ws://192.168.1.10:47070/room"
                       value={address}
                       onChange={(event) => setAddress(event.target.value)}
                     />
                     <TextField
-                      label="Invitation"
+                      label={t(tr.invitation, lang)}
                       value={invitation}
                       onChange={(event) => setInvitation(event.target.value)}
                     />
                     <TextField
-                      label="Player ID assigned by the host"
+                      label={t(tr.joinPlayerId, lang)}
                       value={joinPlayerId}
                       onChange={(event) => setJoinPlayerId(event.target.value)}
-                      helperText="Usually p2, p3 or p4. The host's player slot is reserved."
+                      helperText={t(tr.joinPlayerHint, lang)}
                     />
                     <Button
                       variant="outlined"
@@ -374,25 +370,21 @@ export default function ConnectionPanel({
                                 playerId: joinPlayerId.trim(),
                               }),
                             );
-                          setNotice(
-                            "Room joined. Its run is now available on the home screen.",
-                          );
+                          setNotice(t(tr.joined, lang));
                         })
                       }
                     >
-                      Join room
+                      {t(tr.join, lang)}
                     </Button>
                     <Alert severity="warning">
-                      Use a trusted LAN or VPN. Public Internet connections
-                      require WSS; an invitation alone does not configure your
-                      router.
+                      {t(tr.networkWarning, lang)}
                     </Alert>
                   </>
                 )}
                 {run && (
                   <>
                     <Divider />
-                    <Typography variant="h6">OBS overlay</Typography>
+                    <Typography variant="h6">{t(tr.overlay, lang)}</Typography>
                     <Button
                       disabled={busy}
                       onClick={() =>
@@ -404,24 +396,29 @@ export default function ConnectionPanel({
                         })
                       }
                     >
-                      Get live overlay URL
+                      {t(tr.getOverlayUrl, lang)}
                     </Button>
                     {overlayUrl && (
                       <>
-                      <TextField
-                        label="Read-only local browser-source URL"
-                        value={overlayUrl}
-                        slotProps={{ input: { readOnly: true } }}
-                        helperText="Keep the desktop app running. This URL works on this computer only."
-                      />
-                      <TextField
-                        label="Compact ribbon OBS URL"
-                        value={overlayUrl.replace("/overlay/?", "/overlay/?style=compact&")}
-                        slotProps={{ input: { readOnly: true } }}
-                      />
+                        <TextField
+                          label={t(tr.overlayUrl, lang)}
+                          value={overlayUrl}
+                          slotProps={{ input: { readOnly: true } }}
+                          helperText={t(tr.overlayUrlHint, lang)}
+                        />
+                        <TextField
+                          label={t(tr.compactOverlayUrl, lang)}
+                          value={overlayUrl.replace(
+                            "/overlay/?",
+                            "/overlay/?style=compact&",
+                          )}
+                          slotProps={{ input: { readOnly: true } }}
+                        />
                       </>
                     )}
-                    <Typography variant="body2">The default source uses the same transparent sprite/type columns as PNG export. The compact source uses a horizontal ribbon.</Typography>
+                    <Typography variant="body2">
+                      {t(tr.overlayInfo, lang)}
+                    </Typography>
                     <OverlayControls run={run} />
                   </>
                 )}
@@ -432,7 +429,7 @@ export default function ConnectionPanel({
         </DialogContent>
         <DialogActions>
           <Button disabled={busy} onClick={() => setOpen(false)}>
-            Close
+            {t(tr.close, lang)}
           </Button>
         </DialogActions>
       </Dialog>

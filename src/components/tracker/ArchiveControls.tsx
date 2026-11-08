@@ -19,10 +19,15 @@ import {
 } from "@/lib/tracker/archive";
 import type { RunRecord } from "@/lib/tracker/types";
 import { useRunStore } from "@/store/runStore";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
+
+const tr = translations.archive;
 
 export default function ArchiveControls({ runId }: { runId?: string }) {
   const { records, loaded, pending, importRecords, reportError } =
     useRunStore();
+  const { lang } = useLanguage();
   const fileInput = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<RunRecord[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -53,8 +58,7 @@ export default function ArchiveControls({ runId }: { runId?: string }) {
     if (!file) return;
     setBusy(true);
     try {
-      if (file.size > MAX_ARCHIVE_BYTES)
-        throw new Error("The archive exceeds the 50 MB import limit.");
+      if (file.size > MAX_ARCHIVE_BYTES) throw new Error(t(tr.tooLarge, lang));
       const content = await file.text();
       const parsed: unknown = JSON.parse(content);
       setPreview(
@@ -88,21 +92,21 @@ export default function ArchiveControls({ runId }: { runId?: string }) {
           disabled={!loaded || busy || pending > 0}
           onClick={() => fileInput.current?.click()}
         >
-          Import backup
+          {t(tr.importBackup, lang)}
         </Button>
         <Button
           variant="outlined"
           disabled={!loaded || !records.length || busy || pending > 0}
           onClick={() => void download("personal")}
         >
-          Export {runId ? "run" : "all runs"}
+          {t(runId ? tr.exportRun : tr.exportAll, lang)}
         </Button>
         {runId && (
           <Button
             disabled={busy || pending > 0}
             onClick={() => void download("shared")}
           >
-            Export shared copy
+            {t(tr.exportShared, lang)}
           </Button>
         )}
       </Stack>
@@ -111,7 +115,7 @@ export default function ArchiveControls({ runId }: { runId?: string }) {
         hidden
         type="file"
         accept=".nuzrun,.json"
-        aria-label="Import NuzTracker backup"
+        aria-label={t(tr.fileLabel, lang)}
         onChange={(event) => void inspectFile(event.target.files?.[0])}
       />
       <Dialog
@@ -122,33 +126,34 @@ export default function ArchiveControls({ runId }: { runId?: string }) {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Import backup as new runs</DialogTitle>
+        <DialogTitle>{t(tr.previewTitle, lang)}</DialogTitle>
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Existing runs will not be overwritten. Emulator saves and room
-            credentials are not part of this backup.
+            {t(tr.previewInfo, lang)}
           </Alert>
           {preview?.map((record, index) => (
             <Typography key={`${record.run.id}-${index}`} sx={{ mb: 1 }}>
               {record.run.gameName} —{" "}
-              {record.run.zones.reduce(
-                (count, zone) => count + zone.captures.length,
-                0,
-              )}{" "}
-              captures, {record.observations.length} observations
+              {t(tr.previewCounts, lang)(
+                record.run.zones.reduce(
+                  (count, zone) => count + zone.captures.length,
+                  0,
+                ),
+                record.observations.length,
+              )}
             </Typography>
           ))}
         </DialogContent>
         <DialogActions>
           <Button disabled={busy} onClick={() => setPreview(null)}>
-            Cancel
+            {t(tr.cancel, lang)}
           </Button>
           <Button
             variant="contained"
             disabled={busy}
             onClick={() => void restore()}
           >
-            Import copies
+            {t(tr.importCopies, lang)}
           </Button>
         </DialogActions>
       </Dialog>

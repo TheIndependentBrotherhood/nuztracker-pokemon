@@ -50,6 +50,22 @@ test("legacy randomized runs migrate without losing data or modifying localStora
   await reopened.close();
 });
 
+test("legacy alternative sprites keep their long URL label", async () => {
+  const original = randomizedRecord();
+  const url = `https://example.com/sprites/${"a".repeat(660)}.png`;
+  original.run.zones[0].captures[0].selectedSprite = {
+    url,
+    source: "alternatives",
+    label: url,
+  };
+  const repository = new BrowserRepository(new IDBFactory(), {
+    getItem: () => JSON.stringify([original.run]),
+  });
+  const [loaded] = await repository.list();
+  assert.equal(loaded.run.zones[0].captures[0].selectedSprite?.label, url);
+  await repository.close();
+});
+
 test("invalid random stat settings abort migration and allow recovery on retry", async () => {
   const original = randomizedRecord();
   const invalid = {

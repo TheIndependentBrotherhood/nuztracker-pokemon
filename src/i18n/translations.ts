@@ -379,6 +379,148 @@ const translations = {
     },
   },
 
+  // ── Backups ────────────────────────────────────────────────────────────────
+  archive: {
+    importBackup: { fr: "Importer une sauvegarde", en: "Import backup" },
+    exportRun: { fr: "Exporter le run", en: "Export run" },
+    exportAll: { fr: "Exporter tous les runs", en: "Export all runs" },
+    exportShared: {
+      fr: "Exporter une copie partagée",
+      en: "Export shared copy",
+    },
+    fileLabel: {
+      fr: "Importer une sauvegarde NuzTracker",
+      en: "Import NuzTracker backup",
+    },
+    tooLarge: {
+      fr: "L'archive dépasse la limite d'import de 50 Mo.",
+      en: "The archive exceeds the 50 MB import limit.",
+    },
+    previewTitle: {
+      fr: "Importer la sauvegarde comme nouveaux runs",
+      en: "Import backup as new runs",
+    },
+    previewInfo: {
+      fr: "Les runs existants ne seront pas écrasés. Les sauvegardes d'émulateur et les identifiants de salon ne font pas partie de cette sauvegarde.",
+      en: "Existing runs will not be overwritten. Emulator saves and room credentials are not part of this backup.",
+    },
+    previewCounts: {
+      fr: (captures: number, observations: number) =>
+        `${captures} capture${captures > 1 ? "s" : ""}, ${observations} observation${observations > 1 ? "s" : ""}`,
+      en: (captures: number, observations: number) =>
+        `${captures} captures, ${observations} observations`,
+    },
+    cancel: { fr: "Annuler", en: "Cancel" },
+    importCopies: { fr: "Importer les copies", en: "Import copies" },
+  },
+
+  // ── Connections ────────────────────────────────────────────────────────────
+  connections: {
+    openLight: { fr: "Ouvrir le tracker light", en: "Open light tracker" },
+    button: { fr: "Connexions", en: "Connections" },
+    ariaLabel: { fr: "Connexions du tracker", en: "Tracker connections" },
+    title: { fr: "Connexions du tracker", en: "Tracker connections" },
+    sqliteStorage: { fr: "Stockage SQLite local", en: "Local SQLite storage" },
+    browserStorage: {
+      fr: "Stockage local du navigateur",
+      en: "Local browser storage",
+    },
+    knowledgePlayer: {
+      fr: "Connaissances / joueur local",
+      en: "Knowledge / local player",
+    },
+    desktopOnly: {
+      fr: "Les connexions aux émulateurs et les salons hébergés nécessitent l'application desktop. Le suivi manuel et les sauvegardes portables restent disponibles ici.",
+      en: "Emulator connections and hosted rooms require the desktop application. Manual tracking and portable backups remain available here.",
+    },
+    savedLocally: { fr: "Enregistré localement :", en: "Saved locally:" },
+    luaInfo: {
+      fr: "Connecteur Lua : BizHawk, FireRed anglais révision 1.0 (BPRE). Les captures doivent être confirmées ; les versions de jeu inconnues sont refusées. Le script lit le jeu et ne modifie jamais sa sauvegarde.",
+      en: "Lua connector: BizHawk, FireRed English revision 1.0 (BPRE). Captures require confirmation; unknown game versions are rejected. The script reads the game and never modifies its save.",
+    },
+    connectGame: { fr: "Connecter ce jeu", en: "Connect this game" },
+    reconnectGame: { fr: "Reconnecter ce jeu", en: "Reconnect this game" },
+    saveLua: { fr: "Enregistrer le connecteur Lua", en: "Save Lua connector" },
+    luaSaved: {
+      fr: "Script enregistré. Ouvre-le dans la console Lua de BizHawk après avoir chargé ton jeu.",
+      en: "Script saved. Open it in BizHawk's Lua Console after loading your game.",
+    },
+    room: { fr: "Salon SoulLink", en: "SoulLink room" },
+    roomStatus: {
+      fr: (mode: string, pending: number) =>
+        `${mode} — ${pending} modification${pending > 1 ? "s" : ""} en attente de synchronisation.`,
+      en: (mode: string, pending: number) =>
+        `${mode} — ${pending} changes waiting to synchronize.`,
+    },
+    youControl: {
+      fr: (playerId: string) => ` Tu contrôles ${playerId}.`,
+      en: (playerId: string) => ` You control ${playerId}.`,
+    },
+    connected: { fr: "connecté", en: "connected" },
+    offline: { fr: "hors ligne", en: "offline" },
+    roomAddress: { fr: "Adresse du salon", en: "Room address" },
+    invitationShare: {
+      fr: "Invitation (à partager uniquement avec tes partenaires)",
+      en: "Invitation (share only with your partners)",
+    },
+    reconnect: { fr: "Reconnecter", en: "Reconnect" },
+    leaveConfirm: {
+      fr: "Quitter ce salon ? Les modifications non envoyées seront conservées dans une copie locale séparée.",
+      en: "Leave this room? Unsent changes, if any, will be kept in a separate local copy.",
+    },
+    leave: { fr: "Quitter le salon en sécurité", en: "Leave room safely" },
+    hostPort: { fr: "Port d'hébergement", en: "Host port" },
+    allowLan: {
+      fr: "Autoriser les connexions depuis mon réseau local / VPN de confiance",
+      en: "Allow connections from my trusted LAN / VPN",
+    },
+    resetCredentials: {
+      fr: "Réinitialiser les identifiants des joueurs précédents",
+      en: "Reset previous player credentials",
+    },
+    host: { fr: "Héberger ce run SoulLink", en: "Host this SoulLink run" },
+    invitation: { fr: "Invitation", en: "Invitation" },
+    joinPlayerId: {
+      fr: "ID joueur attribué par l'hôte",
+      en: "Player ID assigned by the host",
+    },
+    joinPlayerHint: {
+      fr: "Généralement p2, p3 ou p4. L'emplacement de l'hôte est réservé.",
+      en: "Usually p2, p3 or p4. The host's player slot is reserved.",
+    },
+    joined: {
+      fr: "Salon rejoint. Son run est maintenant disponible sur l'accueil.",
+      en: "Room joined. Its run is now available on the home screen.",
+    },
+    join: { fr: "Rejoindre le salon", en: "Join room" },
+    networkWarning: {
+      fr: "Utilise un réseau local ou un VPN de confiance. Les connexions par Internet public nécessitent WSS ; une invitation seule ne configure pas ton routeur.",
+      en: "Use a trusted LAN or VPN. Public Internet connections require WSS; an invitation alone does not configure your router.",
+    },
+    overlay: { fr: "Overlay OBS", en: "OBS overlay" },
+    getOverlayUrl: {
+      fr: "Obtenir l'URL de l'overlay live",
+      en: "Get live overlay URL",
+    },
+    overlayUrl: {
+      fr: "URL de source navigateur locale (lecture seule)",
+      en: "Read-only local browser-source URL",
+    },
+    overlayUrlHint: {
+      fr: "Garde l'application desktop ouverte. Cette URL ne fonctionne que sur cet ordinateur.",
+      en: "Keep the desktop app running. This URL works on this computer only.",
+    },
+    compactOverlayUrl: {
+      fr: "URL OBS du bandeau compact",
+      en: "Compact ribbon OBS URL",
+    },
+    overlayInfo: {
+      fr: "La source par défaut utilise les mêmes colonnes transparentes sprite/types que l'export PNG. La source compacte utilise un bandeau horizontal.",
+      en: "The default source uses the same transparent sprite/type columns as PNG export. The compact source uses a horizontal ribbon.",
+    },
+    close: { fr: "Fermer", en: "Close" },
+  },
+
   // ── Game compatibility ─────────────────────────────────────────────────────
   compatibility: {
     button: { fr: "Compatibilité", en: "Compatibility" },

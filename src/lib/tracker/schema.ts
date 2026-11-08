@@ -78,7 +78,8 @@ export const captureSchema = z.object({
     .object({
       url: z.string().max(4000),
       source: z.enum(["alternatives", "default"]),
-      label: text.optional(),
+      // Older versions stored the alternative sprite URL as its label.
+      label: z.string().max(4000).optional(),
       unownLetter: text.optional(),
     })
     .optional(),
