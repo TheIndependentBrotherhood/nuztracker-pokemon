@@ -47,9 +47,6 @@ export default function StyledButton({
         {
           border: "3px solid #000",
           fontWeight: 700,
-          fontSize: "1rem",
-          px: 4,
-          py: 1.5,
           boxShadow: "4px 4px 0 rgba(0, 0, 0, 0.3)",
           transition: "all 0.2s ease-in-out",
           textTransform: "none",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import {
   Capture,
   Zone,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/pokemon-display";
 import { getZoneDisplayName } from "@/lib/zones";
 import { isZoneLockedForPlayer } from "@/lib/zone-progress";
+import { getPlayerId } from "@/lib/tracker/knowledge";
 
 interface Props {
   zone: Zone;
@@ -54,8 +55,13 @@ function CaptureThumbnail({
 }) {
   const displayName = useCaptureDisplayName(capture, lang);
   const displayLabel = useCaptureDisplayLabel(capture, lang);
-  const { removeCapture } = useRunStore();
+  const { removeCapture, runs, canEditRun } = useRunStore();
+  const run = runs.find((entry) => entry.id === runId);
+  const canEditCapture = Boolean(
+    run && canEditRun(run.id, getPlayerId(run, capture.playerIndex)),
+  );
   const [showPokemonDetail, setShowPokemonDetail] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const tr = translations;
 
   // Determine if this individual capture is lost
@@ -63,21 +69,31 @@ function CaptureThumbnail({
     capture.isDead || capture.failedCapture ? "lost" : "captured";
   const captureStyle = statusConfig[captureStatus] ?? statusConfig["captured"];
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    removeCapture(runId, zoneId, capture.id);
+    setDeleting(true);
+    try {
+      await removeCapture(runId, zoneId, capture.id);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <>
       <Box
         sx={{
-          position: "relative",
-          display: "inline-block",
+          display: "inline-flex",
+          flexDirection: "column",
+          alignItems: "stretch",
+          width: 88,
+          minHeight: 124,
+          gap: 0.5,
         }}
       >
         <Box
           component="button"
+          disabled={isPlaceholder && !canEditCapture}
           onClick={(e) => {
             e.stopPropagation();
             if (isPlaceholder) onPlaceholderClick?.();
@@ -211,37 +227,30 @@ function CaptureThumbnail({
           </Box>
         </Box>
 
-        {/* Delete button — not shown for placeholders */}
-        {!isPlaceholder && (
-          <Box
-            component="button"
+        {!isPlaceholder && canEditCapture && (
+          <Button
+            type="button"
+            size="small"
+            color="error"
+            disabled={deleting}
             onClick={handleDelete}
+            onKeyDown={(event) => event.stopPropagation()}
             sx={{
-              position: "absolute",
-              top: "-6px",
-              right: "-6px",
-              width: "18px",
-              height: "18px",
-              borderRadius: "999px",
-              background: "#ef4444",
+              width: "100%",
+              borderRadius: "0.5rem",
               border: "1px solid #dc2626",
-              color: "#fff",
-              fontSize: "0.65rem",
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              transition: "all 150ms",
+              boxShadow: "none",
+              fontSize: "0.75rem",
               "&:hover": {
-                background: "#dc2626",
-                transform: "scale(1.2)",
+                background: "#fee2e2",
+                boxShadow: "none",
+                transform: "none",
               },
             }}
-            aria-label={lang === "fr" ? "Supprimer" : "Delete"}
+            aria-label={`Remove ${displayName}${playerLabel ? ` (${playerLabel})` : ""}`}
           >
-            ✕
-          </Box>
+            Remove
+          </Button>
         )}
       </Box>
 

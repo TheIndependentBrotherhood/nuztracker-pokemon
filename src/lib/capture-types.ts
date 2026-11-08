@@ -1,4 +1,6 @@
 import { Capture, Run } from "@/lib/types";
+import { knowledgeForCapture } from "./tracker/knowledge";
+import { pokemonForGame } from "./game-reference";
 
 export function isRandomTypesMode(run: Run | null | undefined): boolean {
   return Boolean(run?.isRandomMode && run.randomizerOptions?.randomizeTypes);
@@ -14,12 +16,18 @@ export function getCaptureTypesForRun(
   }
 
   if (!isRandomTypesMode(run)) {
-    return fallbackTypes;
+    return run?.gameVersion
+      ? pokemonForGame(pokemonCaptured.pokemon, run.gameVersion).types
+      : fallbackTypes;
   }
 
   const knownTypes =
     pokemonCaptured.customTypes ??
-    run?.customTypesByPokemonId?.[pokemonCaptured.pokemon.id] ??
+    (run
+      ? knowledgeForCapture(run, pokemonCaptured).customTypesByPokemonId?.[
+          pokemonCaptured.pokemon.id
+        ]
+      : undefined) ??
     [];
 
   return knownTypes.filter(Boolean);

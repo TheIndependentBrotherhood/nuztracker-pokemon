@@ -3,6 +3,7 @@ import { CacheProvider } from "@/context/CacheContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import HtmlLangSync from "@/components/layout/HtmlLangSync";
 import { MuiProvider } from "@/components/layout/MuiProvider";
+import WorkspaceProvider from "@/components/tracker/WorkspaceProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,7 +23,9 @@ export default function RootLayout({
         <MuiProvider>
           <LanguageProvider>
             <HtmlLangSync />
-            <CacheProvider>{children}</CacheProvider>
+            <CacheProvider>
+              <WorkspaceProvider>{children}</WorkspaceProvider>
+            </CacheProvider>
           </LanguageProvider>
         </MuiProvider>
       </body>

@@ -1,36 +1,41 @@
-import { Run } from './types';
+import { BrowserRepository } from "./tracker/browser-repository";
+import type { RunEdit, RunRecord } from "./tracker/types";
 
-const STORAGE_KEY = 'nuztracker-runs';
+let browserRepository: BrowserRepository | undefined;
 
-export function getRuns(): Run[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) return [];
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+function browserStorage(): BrowserRepository {
+  if (typeof window === "undefined")
+    throw new Error("Local storage is only available in the application.");
+  browserRepository ??= new BrowserRepository(
+    window.indexedDB,
+    window.localStorage,
+  );
+  return browserRepository;
 }
 
-export function saveRuns(runs: Run[]): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(runs));
+export function getRecords(): Promise<RunRecord[]> {
+  return window.nuztracker?.listRuns() ?? browserStorage().list();
 }
 
-export function getRun(id: string): Run | null {
-  return getRuns().find((r) => r.id === id) ?? null;
+export async function createStoredRecord(
+  record: RunRecord,
+): Promise<RunRecord> {
+  if (window.nuztracker) return window.nuztracker.createRun(record);
+  return (await browserStorage().add([record]))[0];
 }
 
-export function saveRun(run: Run): void {
-  const runs = getRuns();
-  const idx = runs.findIndex((r) => r.id === run.id);
-  if (idx >= 0) runs[idx] = run;
-  else runs.push(run);
-  saveRuns(runs);
+export function editStoredRun(edit: RunEdit): Promise<RunRecord> {
+  return window.nuztracker?.editRun(edit) ?? browserStorage().edit(edit);
 }
 
-export function deleteRun(id: string): void {
-  saveRuns(getRuns().filter((r) => r.id !== id));
+export function deleteStoredRun(id: string): Promise<void> {
+  return window.nuztracker?.deleteRun(id) ?? browserStorage().delete(id);
+}
+
+export function importStoredRecords(
+  records: RunRecord[],
+): Promise<RunRecord[]> {
+  return (
+    window.nuztracker?.importRuns(records) ?? browserStorage().add(records)
+  );
 }

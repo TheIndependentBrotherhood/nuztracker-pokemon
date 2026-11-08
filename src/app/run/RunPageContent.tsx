@@ -4,7 +4,6 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Typography } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
-import { getRun } from "@/lib/storage";
 import StatsBar from "@/components/run/StatsBar";
 import ZoneList from "@/components/run/zone/ZoneList";
 import TeamView from "@/components/run/team/TeamView";
@@ -19,6 +18,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getPokemonById } from "@/lib/pokemon-data";
 import { getAllTeamCaptures, getRunTeams } from "@/lib/team-utils";
+import ConnectionPanel from "@/components/tracker/ConnectionPanel";
 
 type Tab = "zones" | "team" | "pokedex";
 
@@ -27,7 +27,7 @@ interface Props {
 }
 export default function RunPageContent({ runId }: Props) {
   const router = useRouter();
-  const { runs, loadRuns, setCurrentRun, updateRun } = useRunStore();
+  const { runs, loaded, loadRuns, setCurrentRun, updateRun } = useRunStore();
   const [tab, setTab] = useState<Tab>("zones");
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -53,9 +53,7 @@ export default function RunPageContent({ runId }: Props) {
     loadRuns();
   }, [loadRuns]);
 
-  const run =
-    runs.find((r) => r.id === effectiveRunId) ??
-    (mounted ? getRun(effectiveRunId) : null);
+  const run = runs.find((r) => r.id === effectiveRunId);
   useEffect(() => {
     if (run) setCurrentRun(run);
   }, [run, setCurrentRun]);
@@ -105,7 +103,7 @@ export default function RunPageContent({ runId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exportCaptureKey]);
 
-  if (!mounted) return null;
+  if (!mounted || !loaded) return null;
 
   if (!run) {
     return (
@@ -169,13 +167,15 @@ export default function RunPageContent({ runId }: Props) {
       <>
         {settingsAction}
         <StyledButton
-          onClick={() => updateRun({ ...run, status: "completed" })}
+          onClick={() => updateRun({ ...run, status: "completed" }, run)}
+          disabled={!useRunStore.getState().canEditRun(run.id)}
           variant="primary"
         >
           {t(tr.runPage.finish, lang)}
         </StyledButton>
         <StyledButton
-          onClick={() => updateRun({ ...run, status: "abandoned" })}
+          onClick={() => updateRun({ ...run, status: "abandoned" }, run)}
+          disabled={!useRunStore.getState().canEditRun(run.id)}
           variant="danger"
         >
           {t(tr.runPage.abandon, lang)}
@@ -201,7 +201,8 @@ export default function RunPageContent({ runId }: Props) {
             : t(tr.runPage.abandoned, lang)}
         </Box>
         <StyledButton
-          onClick={() => updateRun({ ...run, status: "in-progress" })}
+          onClick={() => updateRun({ ...run, status: "in-progress" }, run)}
+          disabled={!useRunStore.getState().canEditRun(run.id)}
           variant="secondary"
         >
           {t(tr.runPage.resume, lang)}
@@ -316,6 +317,8 @@ export default function RunPageContent({ runId }: Props) {
           setExportTightTypes(options.tightTypes);
         }}
       />
+
+      <ConnectionPanel run={run} />
 
       <RunSettingsModal
         run={run}

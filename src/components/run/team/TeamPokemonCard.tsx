@@ -100,7 +100,7 @@ export default function TeamPokemonCard({
               const run = runs.find((r) => r.id === runId);
               if (!run) return;
               updateTeam(
-                runId,
+                run,
                 run.team.filter((cardCapture) => cardCapture.id !== capture.id),
               );
             },

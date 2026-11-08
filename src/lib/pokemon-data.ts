@@ -1,6 +1,8 @@
-import { PokemonData } from "./types";
+import { PokemonData, type Run } from "./types";
 import { Lang } from "@/i18n/translations";
 import { publicPath } from "@/lib/base-path";
+import { pokemonForGame } from "./game-reference";
+import type { GameVersionId } from "./game-catalog";
 
 export interface CaptureSpriteOption {
   url: string;
@@ -125,6 +127,7 @@ function getTechnicalNames(entry: {
  */
 export async function searchPokemonByName(
   query: string,
+  gameVersion?: GameVersionId,
 ): Promise<PokemonData[]> {
   if (!query || query.length < 2) return [];
 
@@ -146,6 +149,8 @@ export async function searchPokemonByName(
     if (pokemonListJsonCache) {
       return pokemonListJsonCache
         .filter((p) => {
+          if (gameVersion && pokemonForGame(p, gameVersion).stats.length === 0)
+            return false;
           const nameFr = p.names?.fr?.toLowerCase() ?? "";
           const nameEn =
             p.names?.en?.toLowerCase() ?? p.technicalName.toLowerCase();
@@ -305,9 +310,7 @@ export async function getEvolutionChain(pId: number): Promise<PokemonData[]> {
  */
 export async function getAvailableEvolutions(
   pokemon: PokemonData,
-  run?: {
-    isRandomMode: boolean;
-  },
+  run?: Pick<Run, "isRandomMode" | "randomizerOptions" | "gameVersion">,
 ): Promise<PokemonData[]> {
   const chain = await getEvolutionChain(pokemon.id);
 
@@ -315,14 +318,14 @@ export async function getAvailableEvolutions(
 
   // Remove current pokémon from the list
   const otherEvolutions = (await getPokemonList()).filter(
-    (e) => e.id !== pokemon.id,
+    (e) => e.id !== pokemon.id && pokemonForGame(e, run?.gameVersion).stats.length > 0,
   );
 
   if (!run) return otherEvolutions;
 
   // Normal mode: only allow evolutions in the same family (chain)
-  if (!run.isRandomMode) {
-    return chain.filter((e) => e.id !== pokemon.id);
+  if (!run.isRandomMode || run.randomizerOptions?.randomizeEvolvedForms === false) {
+    return chain.filter((e) => e.id !== pokemon.id && pokemonForGame(e, run.gameVersion).stats.length > 0);
   } else {
     // Random mode: allow any evolution (full pokedex) except the current form
     return otherEvolutions;

@@ -5,6 +5,7 @@ import { Box, Typography, Tooltip } from "@mui/material";
 import { Capture } from "@/lib/types";
 import { useRunStore } from "@/store/runStore";
 import { getCaptureTypesForRun } from "@/lib/capture-types";
+import { getPlayerId } from "@/lib/tracker/knowledge";
 import { typeColors, getTypeTranslation } from "@/lib/type-chart";
 import PokemonDetailModal from "../modals/PokemonDetailModal";
 import { Lang } from "@/i18n/translations";
@@ -56,10 +57,13 @@ export default function PokemonDisplayCard({
 }: Props) {
   const [showDetail, setShowDetail] = useState(false);
   const [fallbackTypes, setFallbackTypes] = useState<string[]>([]);
-  const { runs } = useRunStore();
+  const { runs, canEditRun } = useRunStore();
   const pokemonDisplayName = useCaptureDisplayName(capture, lang);
   const cardLabel = useCaptureDisplayLabel(capture, lang);
   const run = runId ? runs.find((candidate) => candidate.id === runId) : null;
+  const canEditCapture = Boolean(
+    run && canEditRun(run.id, getPlayerId(run, capture.playerIndex)),
+  );
   const resolvedTypes = getCaptureTypesForRun(capture, run, fallbackTypes);
   const displayedTypes =
     run?.isRandomMode && run.randomizerOptions?.randomizeTypes
@@ -136,9 +140,9 @@ export default function PokemonDisplayCard({
             },
           }}
           onClick={() => setShowDetail(true)}
-          draggable={Boolean(draggableData)}
+          draggable={Boolean(draggableData) && canEditCapture}
           onDragStart={(event) => {
-            if (!draggableData) return;
+            if (!draggableData || !canEditCapture) return;
             event.dataTransfer?.setData(draggableData.key, capture.id);
             event.dataTransfer!.effectAllowed = draggableData.effectAllowed;
           }}
@@ -151,7 +155,7 @@ export default function PokemonDisplayCard({
             </Typography>
           )}
 
-          {actions.map((action, index) => (
+          {(canEditCapture ? actions : []).map((action, index) => (
             <Box
               key={`${action.title}-${index}`}
               component="button"

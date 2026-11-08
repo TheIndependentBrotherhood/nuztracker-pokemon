@@ -33,6 +33,9 @@ import TypeDeductionTool from "@/components/pokedex/TypeDeductionTool";
 import CaptureRateBadge from "@/components/pokedex/CaptureRateBadge";
 import { PokemonEvolutionLineage } from "@/components/run/team/PokemonEvolutionLineage";
 import { EvolutionHistoryDialog } from "@/components/run/modals/EvolutionHistoryDialog";
+import { getPlayerId, viewRunForPlayer } from "@/lib/tracker/knowledge";
+import { pokemonForGame } from "@/lib/game-reference";
+import StatAnnotations from "@/components/tracker/StatAnnotations";
 
 interface Props {
   pokemonCaptured: Capture;
@@ -60,6 +63,7 @@ function StatBar({
     defense: "Def",
     "special-attack": "SpA",
     "special-defense": "SpD",
+    special: "Spc",
     speed: speedLabel,
   };
 
@@ -122,7 +126,7 @@ export default function PokemonDetailModal({
   onEnterAdvancedMode,
   hiddenInAdvancedMode = false,
 }: Props) {
-  const [data, setData] = useState<PokemonData | null>(null);
+  const [referenceData, setData] = useState<PokemonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingSpriteOptions, setLoadingSpriteOptions] = useState(true);
   const [spriteOptions, setSpriteOptions] = useState<CaptureSpriteOption[]>([]);
@@ -150,15 +154,28 @@ export default function PokemonDetailModal({
   } | null>(null);
   const [showEvolutionHistory, setShowEvolutionHistory] = useState(false);
   const { lang } = useLanguage();
-  const { runs, updateRun } = useRunStore();
+  const { runs, updateRun, playerByRun, canEditRun } = useRunStore();
   const { abilities: abilitiesCache } = useCache();
   const tr = translations;
   const pokemonDisplayName = useCaptureDisplayName(pokemonCaptured, lang);
   const pokemonDisplayLabel = useCaptureDisplayLabel(pokemonCaptured, lang);
-  const baseStatTotal = data
-    ? data.stats.reduce((sum, stat) => sum + stat.base_stat, 0)
-    : 0;
-  const runToUpdate = runId ? runs.find((r) => r.id === runId) : null;
+  const sourceRun = runId ? runs.find((r) => r.id === runId) : null;
+  const data = referenceData ? pokemonForGame(referenceData, sourceRun?.gameVersion) : null;
+  const baseStatTotal = data?.stats.reduce((sum, stat) => sum + stat.base_stat, 0) ?? 0;
+  const detailsPlayerId = sourceRun
+    ? pokemonCaptured.id.startsWith("pokedex-")
+      ? (playerByRun[sourceRun.id] ?? getPlayerId(sourceRun))
+      : getPlayerId(sourceRun, pokemonCaptured.playerIndex)
+    : "solo";
+  const runToUpdate = sourceRun
+    ? viewRunForPlayer(sourceRun, detailsPlayerId)
+    : null;
+  const canEditDetails = Boolean(
+    runToUpdate && canEditRun(runToUpdate.id, detailsPlayerId),
+  );
+  const ownsSpeciesKnowledge = (capture: Capture) =>
+    !sourceRun?.playerKnowledge ||
+    getPlayerId(sourceRun, capture.playerIndex) === detailsPlayerId;
   const currentNickname = pokemonCaptured.nickname ?? "";
   const runCustomTypes =
     runToUpdate?.customTypesByPokemonId?.[pokemonCaptured.pokemon.id];
@@ -252,8 +269,8 @@ export default function PokemonDetailModal({
         : null;
   const genderColor = pokemonCaptured.gender === "male" ? "#60a5fa" : "#ec4899";
 
-  function updateCaptureInRun(updater: (target: Capture) => Capture) {
-    if (!runToUpdate) return;
+  async function updateCaptureInRun(updater: (target: Capture) => Capture) {
+    if (!runToUpdate) return false;
 
     const updatedRun = {
       ...runToUpdate,
@@ -272,10 +289,10 @@ export default function PokemonDetailModal({
       })),
     };
 
-    updateRun(updatedRun);
+    return updateRun(updatedRun, runToUpdate, detailsPlayerId);
   }
 
-  function handleSaveNickname() {
+  async function handleSaveNickname() {
     if (!runToUpdate) return;
 
     const normalizedNickname = nicknameDraft.trim();
@@ -287,25 +304,34 @@ export default function PokemonDetailModal({
       return;
     }
 
-    updateCaptureInRun((target) => ({ ...target, nickname: nextNickname }));
+    if (
+      !(await updateCaptureInRun((target) => ({
+        ...target,
+        nickname: nextNickname,
+      })))
+    )
+      return;
     setIsEditingNickname(false);
   }
 
-  function handleSelectSprite(url: string) {
-    setSelectedSpriteUrl(url);
+  async function handleSelectSprite(url: string) {
     if (!runToUpdate) return;
 
     const selectedOption = spriteOptions.find((option) => option.url === url);
     if (!selectedOption) return;
 
-    updateCaptureInRun((target) => ({
-      ...target,
-      selectedSprite: {
-        url: selectedOption.url,
-        source: selectedOption.source,
-        label: selectedOption.label,
-      },
-    }));
+    if (
+      !(await updateCaptureInRun((target) => ({
+        ...target,
+        selectedSprite: {
+          url: selectedOption.url,
+          source: selectedOption.source,
+          label: selectedOption.label,
+        },
+      })))
+    )
+      return;
+    setSelectedSpriteUrl(url);
   }
 
   function openTypePicker(slot: 0 | 1, event: React.MouseEvent<HTMLElement>) {
@@ -340,7 +366,8 @@ export default function PokemonDetailModal({
           ? customTypesByPokemonId
           : undefined,
       team: runToUpdate.team.map((teamCapture) =>
-        teamCapture.pokemon.id === pokemonCaptured.pokemon.id
+        teamCapture.pokemon.id === pokemonCaptured.pokemon.id &&
+        ownsSpeciesKnowledge(teamCapture)
           ? {
               ...teamCapture,
               customTypes: compactTypes.length > 0 ? compactTypes : undefined,
@@ -350,7 +377,8 @@ export default function PokemonDetailModal({
       zones: runToUpdate.zones.map((zone) => ({
         ...zone,
         captures: zone.captures.map((zoneCapture) =>
-          zoneCapture.pokemon.id === pokemonCaptured.pokemon.id
+          zoneCapture.pokemon.id === pokemonCaptured.pokemon.id &&
+          ownsSpeciesKnowledge(zoneCapture)
             ? {
                 ...zoneCapture,
                 customTypes: compactTypes.length > 0 ? compactTypes : undefined,
@@ -360,7 +388,7 @@ export default function PokemonDetailModal({
       })),
     };
 
-    updateRun(nextRun);
+    void updateRun(nextRun, runToUpdate, detailsPlayerId);
   }
 
   function setCustomType(slot: 0 | 1, typeName: string) {
@@ -406,7 +434,7 @@ export default function PokemonDetailModal({
     }));
   }
 
-  function persistAbilityPanel(nextPanel: string[]) {
+  async function persistAbilityPanel(nextPanel: string[]) {
     if (!runToUpdate) return;
 
     const nextCustomAbilitiesByPokemonId = {
@@ -422,25 +450,36 @@ export default function PokemonDetailModal({
     // of this species that were using it — so no capture ends up with an
     // impossible ability value (mirrors what persistCustomTypes does for types).
     const clearAbilityIfRemoved = (c: Capture) => {
-      if (c.pokemon.id !== pokemonCaptured.pokemon.id) return c;
+      if (
+        c.pokemon.id !== pokemonCaptured.pokemon.id ||
+        !ownsSpeciesKnowledge(c)
+      )
+        return c;
       if (c.ability && !nextPanel.includes(c.ability)) {
         return { ...c, ability: undefined };
       }
       return c;
     };
 
-    updateRun({
-      ...runToUpdate,
-      customAbilitiesByPokemonId:
-        Object.keys(nextCustomAbilitiesByPokemonId).length > 0
-          ? nextCustomAbilitiesByPokemonId
-          : undefined,
-      team: runToUpdate.team.map(clearAbilityIfRemoved),
-      zones: runToUpdate.zones.map((zone) => ({
-        ...zone,
-        captures: zone.captures.map(clearAbilityIfRemoved),
-      })),
-    });
+    if (
+      !(await updateRun(
+        {
+          ...runToUpdate,
+          customAbilitiesByPokemonId:
+            Object.keys(nextCustomAbilitiesByPokemonId).length > 0
+              ? nextCustomAbilitiesByPokemonId
+              : undefined,
+          team: runToUpdate.team.map(clearAbilityIfRemoved),
+          zones: runToUpdate.zones.map((zone) => ({
+            ...zone,
+            captures: zone.captures.map(clearAbilityIfRemoved),
+          })),
+        },
+        runToUpdate,
+        detailsPlayerId,
+      ))
+    )
+      return;
 
     // Also update local draft if the currently-shown capture's ability was removed
     if (abilityDraft && !nextPanel.includes(abilityDraft)) {
@@ -448,7 +487,9 @@ export default function PokemonDetailModal({
     }
   }
 
-  function persistPokedexObservations(nextObservations: TypeObservation[]) {
+  async function persistPokedexObservations(
+    nextObservations: TypeObservation[],
+  ) {
     if (!runToUpdate || !isPokedexCapture) return;
 
     const nextObservationsByPokemonId = {
@@ -462,13 +503,20 @@ export default function PokemonDetailModal({
       delete nextObservationsByPokemonId[pokemonCaptured.pokemon.id];
     }
 
-    updateRun({
-      ...runToUpdate,
-      pokedexObservationsByPokemonId:
-        Object.keys(nextObservationsByPokemonId).length > 0
-          ? nextObservationsByPokemonId
-          : undefined,
-    });
+    if (
+      !(await updateRun(
+        {
+          ...runToUpdate,
+          pokedexObservationsByPokemonId:
+            Object.keys(nextObservationsByPokemonId).length > 0
+              ? nextObservationsByPokemonId
+              : undefined,
+        },
+        runToUpdate,
+        detailsPlayerId,
+      ))
+    )
+      return;
 
     setPokedexDraft({
       pokemonId: pokemonCaptured.pokemon.id,
@@ -477,7 +525,7 @@ export default function PokemonDetailModal({
     });
   }
 
-  function persistPokedexNotes(nextNotes: string) {
+  async function persistPokedexNotes(nextNotes: string) {
     if (!runToUpdate || !isPokedexCapture) return;
 
     const nextNotesByPokemonId = {
@@ -490,13 +538,20 @@ export default function PokemonDetailModal({
       delete nextNotesByPokemonId[pokemonCaptured.pokemon.id];
     }
 
-    updateRun({
-      ...runToUpdate,
-      pokedexNotesByPokemonId:
-        Object.keys(nextNotesByPokemonId).length > 0
-          ? nextNotesByPokemonId
-          : undefined,
-    });
+    if (
+      !(await updateRun(
+        {
+          ...runToUpdate,
+          pokedexNotesByPokemonId:
+            Object.keys(nextNotesByPokemonId).length > 0
+              ? nextNotesByPokemonId
+              : undefined,
+        },
+        runToUpdate,
+        detailsPlayerId,
+      ))
+    )
+      return;
 
     setPokedexDraft({
       pokemonId: pokemonCaptured.pokemon.id,
@@ -681,7 +736,7 @@ export default function PokemonDetailModal({
                           <IconButton
                             size="small"
                             onClick={handleSaveNickname}
-                            disabled={!runToUpdate}
+                            disabled={!canEditDetails}
                             aria-label={t(tr.pokemonDetail.saveNickname, lang)}
                             title={t(tr.pokemonDetail.saveNickname, lang)}
                             sx={{
@@ -792,7 +847,7 @@ export default function PokemonDetailModal({
                             border: "2px solid #000",
                             cursor: runToUpdate ? "pointer" : "default",
                           }}
-                          disabled={!runToUpdate}
+                          disabled={!canEditDetails}
                         >
                           {firstType
                             ? getTypeTranslation(firstType, lang)
@@ -810,7 +865,7 @@ export default function PokemonDetailModal({
                               persistCustomTypes([]);
                               setShowSecondTypeSlot(false);
                             }}
-                            disabled={!runToUpdate}
+                            disabled={!canEditDetails}
                             sx={{
                               border: "2px solid #000",
                               borderRadius: "999px",
@@ -833,7 +888,7 @@ export default function PokemonDetailModal({
                           <IconButton
                             size="small"
                             onClick={addSecondType}
-                            disabled={!runToUpdate}
+                            disabled={!canEditDetails}
                             sx={{
                               border: "2px solid #000",
                               borderRadius: "999px",
@@ -869,7 +924,7 @@ export default function PokemonDetailModal({
                                 border: "2px solid #000",
                                 cursor: runToUpdate ? "pointer" : "default",
                               }}
-                              disabled={!runToUpdate}
+                              disabled={!canEditDetails}
                             >
                               {secondType
                                 ? getTypeTranslation(secondType, lang)
@@ -883,7 +938,7 @@ export default function PokemonDetailModal({
                             <IconButton
                               size="small"
                               onClick={removeSecondType}
-                              disabled={!runToUpdate}
+                              disabled={!canEditDetails}
                               sx={{
                                 border: "2px solid #000",
                                 borderRadius: "999px",
@@ -1146,7 +1201,7 @@ export default function PokemonDetailModal({
                                   );
                                 }
                               }}
-                              disabled={!runToUpdate}
+                              disabled={!canEditDetails}
                               title={
                                 isCapture
                                   ? t(tr.pokemonDetail.removeAbility, lang)
@@ -1453,7 +1508,7 @@ export default function PokemonDetailModal({
                                 <Box
                                   component="button"
                                   onClick={() => persistAbility(abilityName)}
-                                  disabled={!runToUpdate}
+                                  disabled={!canEditDetails}
                                   sx={{
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -1564,7 +1619,7 @@ export default function PokemonDetailModal({
                                 <Box
                                   component="button"
                                   onClick={() => persistAbility(abilityName)}
-                                  disabled={!runToUpdate}
+                                  disabled={!canEditDetails}
                                   sx={{
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -1763,7 +1818,7 @@ export default function PokemonDetailModal({
                                 <Box
                                   component="button"
                                   onClick={() => persistAbility(abilityName)}
-                                  disabled={!runToUpdate}
+                                  disabled={!canEditDetails}
                                   sx={{
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -1863,7 +1918,7 @@ export default function PokemonDetailModal({
                                 <Box
                                   component="button"
                                   onClick={() => persistAbility(abilityName)}
-                                  disabled={!runToUpdate}
+                                  disabled={!canEditDetails}
                                   sx={{
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -2001,7 +2056,9 @@ export default function PokemonDetailModal({
               >
                 {t(tr.pokemonDetail.baseStats, lang)}
               </Typography>
-              {data.stats.map((s) => (
+              {runToUpdate?.isRandomMode && runToUpdate.randomizerOptions?.randomizeStats ? (
+                <StatAnnotations run={runToUpdate} pokemonId={pokemonCaptured.pokemon.id} playerId={detailsPlayerId} />
+              ) : data.stats.map((s) => (
                 <StatBar
                   key={s.stat.name}
                   name={s.stat.name}
@@ -2033,7 +2090,7 @@ export default function PokemonDetailModal({
                 <Typography
                   sx={{ fontSize: "0.875rem", fontWeight: 800, color: "#000" }}
                 >
-                  {baseStatTotal}
+                  {baseStatTotal || "Unavailable for this game"}
                 </Typography>
               </Box>
             </Box>
