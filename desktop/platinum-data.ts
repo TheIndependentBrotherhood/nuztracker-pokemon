@@ -4,8 +4,31 @@ import type { DecodedPk4 } from "./pk4";
 import { NdsRom } from "./nds-rom";
 import { readGen4Message } from "./nds-text";
 
-const types = ["normal", "fighting", "flying", "poison", "ground", "rock", "bug", "ghost", "steel", "???", "fire", "water", "grass", "electric", "psychic", "ice", "dragon", "dark"];
-const forms: Record<number, { last: number; personal: number; pokemon: number }> = {
+const types = [
+  "normal",
+  "fighting",
+  "flying",
+  "poison",
+  "ground",
+  "rock",
+  "bug",
+  "ghost",
+  "steel",
+  "???",
+  "fire",
+  "water",
+  "grass",
+  "electric",
+  "psychic",
+  "ice",
+  "dragon",
+  "dark",
+];
+const moveCategories = ["physical", "special", "status"] as const;
+const forms: Record<
+  number,
+  { last: number; personal: number; pokemon: number }
+> = {
   386: { last: 3, personal: 496, pokemon: 10001 },
   413: { last: 2, personal: 499, pokemon: 10004 },
   487: { last: 1, personal: 501, pokemon: 10007 },
@@ -17,32 +40,83 @@ export async function loadPlatinumData(rom: NdsRom) {
   const personal = await rom.archive("poketool/personal/pl_personal.narc");
   const moveData = await rom.archive("poketool/waza/pl_waza_tbl.narc");
   const messages = await rom.archive("msgdata/pl_msg.narc");
-  if (!messages[624]) throw new Error("This ROM has no supported type-name table.");
-  const ninthType = readGen4Message(messages[624], 9)?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (!messages[624])
+    throw new Error("This ROM has no supported type-name table.");
+  const ninthType = readGen4Message(messages[624], 9)
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
   const romTypes = [...types];
   if (ninthType === "fairy" || ninthType === "fee") romTypes[9] = "fairy";
   const dex = Dex.mod("gen4");
-  const moves = new Map(dex.moves.all().filter((move) => move.gen <= 4).map((move) => [move.num, move.name]));
-  const abilities = new Map(dex.abilities.all().filter((ability) => ability.gen <= 4).map((ability) => [ability.num, ability.name]));
-  const items = new Map(dex.items.all().filter((item) => item.gen <= 4).map((item) => [item.num, item.name]));
+  const moves = new Map(
+    dex.moves
+      .all()
+      .filter((move) => move.gen <= 4)
+      .map((move) => [move.num, move.name]),
+  );
+  const abilities = new Map(
+    dex.abilities
+      .all()
+      .filter((ability) => ability.gen <= 4)
+      .map((ability) => [ability.num, ability.name]),
+  );
+  const items = new Map(
+    dex.items
+      .all()
+      .filter((item) => item.gen <= 4)
+      .map((item) => [item.num, item.name]),
+  );
   return (decoded: DecodedPk4): LivePokemon => {
     const species = decoded.pokemon.pokemonId;
     const form = forms[species];
-    const alternate = Boolean(form && decoded.form > 0 && decoded.form <= form.last);
-    const row = personal[alternate ? form.personal + decoded.form - 1 : species];
-    if (!row || row.length < 44 || row[6] >= types.length || row[7] >= types.length)
+    const alternate = Boolean(
+      form && decoded.form > 0 && decoded.form <= form.last,
+    );
+    const row =
+      personal[alternate ? form.personal + decoded.form - 1 : species];
+    if (
+      !row ||
+      row.length < 44 ||
+      row[6] >= types.length ||
+      row[7] >= types.length
+    )
       throw new Error("This ROM's personal-data table is unsupported.");
     return {
       ...decoded.pokemon,
       pokemonId: alternate ? form.pokemon + decoded.form - 1 : species,
       types: [...new Set([romTypes[row[6]], romTypes[row[7]]])],
-      ability: abilities.get(decoded.abilityId) ?? `Unknown ability #${decoded.abilityId}`,
-      heldItem: decoded.heldItemId ? items.get(decoded.heldItemId) ?? `Unknown item #${decoded.heldItemId}` : undefined,
-      moves: decoded.pokemon.moves.map((move) => {
+      ability:
+        abilities.get(decoded.abilityId) ??
+        `Unknown ability #${decoded.abilityId}`,
+      ...(decoded.abilityId ? { abilityId: decoded.abilityId } : {}),
+      heldItem: decoded.heldItemId
+        ? (items.get(decoded.heldItemId) ??
+          `Unknown item #${decoded.heldItemId}`)
+        : undefined,
+      ...(decoded.heldItemId ? { heldItemId: decoded.heldItemId } : {}),
+      moves: decoded.pokemon.moves.map((move, index) => {
         const data = moveData[move.id];
         if (!data || data.length < 16 || data[4] >= types.length)
           throw new Error(`Move #${move.id} uses an unsupported ROM layout.`);
-        return { ...move, name: moves.get(move.id) ?? `Unknown move #${move.id}`, type: romTypes[data[4]], power: data[3], accuracy: data[5] };
+        const category = moveCategories[data[2]];
+        const ppUps = decoded.ppUps[index] ?? 0;
+        return {
+          ...move,
+          name: moves.get(move.id) ?? `Unknown move #${move.id}`,
+          type: romTypes[data[4]],
+          power: data[3],
+          accuracy: data[5],
+          ...(category ? { category } : {}),
+          ...(data[6]
+            ? {
+                maxPp: Math.max(
+                  move.pp,
+                  Math.floor((data[6] * (5 + ppUps)) / 5),
+                ),
+              }
+            : {}),
+        };
       }),
     };
   };

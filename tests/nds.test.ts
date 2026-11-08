@@ -210,6 +210,10 @@ function platinumBattleRam(type = 0) {
   ram.writeUInt32LE(1, at(root + 0xb0));
   pk4Fixture().copy(ram, at(root + 0xb4));
   ram.writeUInt32LE(3, at(root + 0x1294));
+  ram.writeUInt16LE(4, at(root + 0xd00));
+  ram.writeUInt16LE(5, at(root + 0xd02));
+  ram.writeUInt16LE(1, at(root + 0xd04));
+  ram.writeUInt16LE(2, at(root + 0xd06));
   ram.writeUInt32LE(100, 0x3ffc3c);
   ram.write("CPUE", 0x3ffe0c);
   ram[0x3ffe1e] = 1;
@@ -294,6 +298,7 @@ test("Platinum battles use the player's battle party copy and only the opponents
     opponents: [{ identity: "12345678-1", pokemonId: 48, level: 3 }],
   });
   assert.deepEqual(frame.warnings, []);
+  assert.equal(frame.pokeBalls, 7);
   assert.ok(
     battle.addresses.every(
       (address) =>

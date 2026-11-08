@@ -19,7 +19,8 @@
     "desktop": "yarn desktop:build && electron .",
     "desktop:package": "yarn desktop:build && electron-builder --win portable",
     "apply-sprite-corrections": "tsx scripts/apply-sprite-corrections.ts",
-    "data:games": "tsx scripts/build-game-references.mjs"
+    "data:games": "tsx scripts/build-game-references.mjs",
+    "data:text": "node scripts/build-game-text.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

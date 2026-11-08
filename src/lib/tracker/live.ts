@@ -3,7 +3,10 @@ import type {
   GameFrame,
   GameIdentity,
   LinkPokemonInput,
+  LivePokemon,
   MapZoneInput,
+  PendingDetail,
+  PlayerTracking,
   RunRecord,
 } from "./types";
 import {
@@ -14,6 +17,7 @@ import {
 import { addHistory, newId, sameValue } from "./records";
 import { finalizeRun } from "./run-rules";
 import { gameFrameSchema, recordSchema } from "./schema";
+import { STARTER_ZONE_ID, zoneIdForMapName } from "../zones";
 
 export type PokemonResolver = (pokemonId: number) => PokemonData | undefined;
 
@@ -102,6 +106,7 @@ export function ingestFrame(
   rawFrame: GameFrame,
   resolvePokemon: PokemonResolver,
   now = Date.now(),
+  autoLink = true,
 ): RunRecord {
   const frame = gameFrameSchema.parse(rawFrame);
   const index = getPlayerIndex(input.run, playerId);
@@ -122,6 +127,19 @@ export function ingestFrame(
     previous && (frame.stateLoaded || frame.frame < previous.frame),
   );
   const suspended = Boolean(previous?.suspended || rewound);
+  const nuzlockeStartedAt =
+    previous?.nuzlockeStartedAt ??
+    ((frame.pokeBalls ?? 0) > 0 ||
+    record.run.zones.some(
+      (zone) =>
+        zone.id !== STARTER_ZONE_ID &&
+        zone.captures.some((capture) => (capture.playerIndex ?? 0) === index),
+    )
+      ? now
+      : undefined);
+  // Connectors that cannot read the bag keep the classic rule: every faint is a death.
+  const automaticDeaths =
+    nuzlockeStartedAt !== undefined || frame.pokeBalls === undefined;
   const ownCaptures = record.run.zones
     .flatMap((zone) => zone.captures)
     .filter((capture) => (capture.playerIndex ?? 0) === index);
@@ -149,10 +167,19 @@ export function ingestFrame(
   if (frame.battle?.kind === "wild" && frame.location) {
     for (const opponent of frame.battle.opponents) {
       const id = JSON.stringify([frame.battle.id, opponent.identity]);
-      if (!seenEncounters.some((entry) => entry.id === id && entry.gameKey === gameKey(frame.game))) {
+      if (
+        !seenEncounters.some(
+          (entry) => entry.id === id && entry.gameKey === gameKey(frame.game),
+        )
+      ) {
         seenEncounters.push({
-          id, gameKey: gameKey(frame.game), locationId: frame.location.id,
-          pokemonId: opponent.pokemonId, level: opponent.level, observedAt: now,
+          id,
+          gameKey: gameKey(frame.game),
+          locationId: frame.location.id,
+          ...(frame.location.name ? { locationName: frame.location.name } : {}),
+          pokemonId: opponent.pokemonId,
+          level: opponent.level,
+          observedAt: now,
         });
       }
     }
@@ -171,7 +198,13 @@ export function ingestFrame(
         lastSeenAt: now,
         latest: frame,
         suspended,
+        ...(nuzlockeStartedAt === undefined ? {} : { nuzlockeStartedAt }),
         pendingPokemon: [...pending.values()],
+        pendingDetails: Object.fromEntries(
+          Object.entries(previous?.pendingDetails ?? {}).filter(([identity]) =>
+            pending.has(identity),
+          ),
+        ),
         ignoredIdentities: [...ignored],
         zoneMappings: previous?.zoneMappings ?? {},
         retiredSessions:
@@ -263,12 +296,29 @@ export function ingestFrame(
       const oldLive = previous?.latest.party.find(
         (pokemon) => pokemon.identity === live.identity,
       );
-      if (!updated.isDead && oldLive && oldLive.hp > 0 && live.hp === 0) {
-        updated = { ...updated, isDead: true, linkedDeath: false, diedAt: now };
-        changes.push({
-          kind: "death",
-          message: `${updated.nickname ?? updated.pokemon.technicalName} fainted.`,
-        });
+      if (
+        !updated.isDead &&
+        !updated.faintPendingAt &&
+        oldLive &&
+        oldLive.hp > 0 &&
+        live.hp === 0
+      ) {
+        const name = updated.nickname ?? updated.pokemon.technicalName;
+        if (automaticDeaths) {
+          updated = {
+            ...updated,
+            isDead: true,
+            linkedDeath: false,
+            diedAt: now,
+          };
+          changes.push({ kind: "death", message: `${name} fainted.` });
+        } else {
+          updated = { ...updated, faintPendingAt: now };
+          changes.push({
+            kind: "death",
+            message: `${name} fainted before the first Poké Ball. Waiting for the player's decision.`,
+          });
+        }
       }
       return updated;
     }),
@@ -296,7 +346,133 @@ export function ingestFrame(
   }
 
   next.run = finalizeRun({ ...next.run, updatedAt: now }, now);
-  return recordSchema.parse(next);
+  const parsed = recordSchema.parse(next);
+  return autoLink
+    ? autoLinkPending(parsed, playerId, resolvePokemon, now)
+    : parsed;
+}
+
+function opponentPid(encounterId: string): string | undefined {
+  try {
+    const [, identity] = JSON.parse(encounterId) as [string, string];
+    return identity.split("-")[0];
+  } catch {
+    return undefined;
+  }
+}
+
+function zoneForLocation(
+  record: RunRecord,
+  tracking: PlayerTracking,
+  location?: { id: string; name?: string },
+): PendingDetail | { zoneId: string; reason?: undefined } {
+  if (!location) return { reason: "unknown-zone" };
+  const mapped = tracking.zoneMappings[location.id];
+  if (mapped && record.run.zones.some((zone) => zone.id === mapped))
+    return { zoneId: mapped };
+  const found = location.name
+    ? zoneIdForMapName(record.run.zones, location.name)
+    : undefined;
+  if (found === "ambiguous") return { reason: "ambiguous-zone" };
+  return found ? { zoneId: found } : { reason: "unknown-zone" };
+}
+
+/**
+ * Guess the encounter zone of a new party Pokémon:
+ * - the first and only Pokémon of a player without captures is the starter;
+ * - a wild Pokémon keeps its personality value once caught, so the wild battle it was met in gives the zone,
+ *   even when it went to the PC and was withdrawn later.
+ * Anything else (gift, trade, hatched egg) only gets a suggestion and needs the player's choice.
+ */
+function guessZone(
+  record: RunRecord,
+  playerId: string,
+  pokemon: LivePokemon,
+): PendingDetail | { zoneId: string; reason?: undefined } {
+  const tracking = record.tracking[playerId];
+  const index = getPlayerIndex(record.run, playerId);
+  const party = tracking.latest.party.filter((entry) => !entry.isEgg);
+  const hasCapture = record.run.zones.some((zone) =>
+    zone.captures.some((capture) => (capture.playerIndex ?? 0) === index),
+  );
+  if (
+    !hasCapture &&
+    party.length === 1 &&
+    party[0].identity === pokemon.identity &&
+    record.run.zones.some((zone) => zone.id === STARTER_ZONE_ID)
+  )
+    return { zoneId: STARTER_ZONE_ID };
+  const pid = pokemon.identity.split("-")[0];
+  const key = gameKey(tracking.game);
+  const encounter = [...(tracking.seenEncounters ?? [])]
+    .reverse()
+    .find((entry) => entry.gameKey === key && opponentPid(entry.id) === pid);
+  if (encounter)
+    return zoneForLocation(record, tracking, {
+      id: encounter.locationId,
+      name: encounter.locationName,
+    });
+  const suggestion = zoneForLocation(
+    record,
+    tracking,
+    tracking.latest.location,
+  );
+  return {
+    reason: "no-encounter",
+    ...(suggestion.zoneId ? { zoneId: suggestion.zoneId } : {}),
+  };
+}
+
+// Link new party Pokémon automatically; doubtful ones are kept with a reason so the player can choose.
+function autoLinkPending(
+  record: RunRecord,
+  playerId: string,
+  resolvePokemon: PokemonResolver,
+  now: number,
+): RunRecord {
+  const initial = record.tracking[playerId];
+  if (!initial || initial.suspended) return record;
+  const details: Record<string, PendingDetail> = {};
+  let next = record;
+  for (const pokemon of initial.pendingPokemon) {
+    const known = initial.pendingDetails?.[pokemon.identity];
+    if (known) {
+      details[pokemon.identity] = known;
+      continue;
+    }
+    const guess = guessZone(next, playerId, pokemon);
+    if (guess.reason) {
+      details[pokemon.identity] = guess;
+      continue;
+    }
+    try {
+      next = linkPokemon(
+        next,
+        {
+          runId: next.run.id,
+          playerId,
+          identity: pokemon.identity,
+          zoneId: guess.zoneId,
+        },
+        resolvePokemon,
+        now,
+      );
+    } catch {
+      details[pokemon.identity] = {
+        reason: "zone-taken",
+        zoneId: guess.zoneId,
+      };
+    }
+  }
+  const tracking = next.tracking[playerId];
+  if (sameValue(tracking.pendingDetails ?? {}, details)) return next;
+  return recordSchema.parse({
+    ...next,
+    tracking: {
+      ...next.tracking,
+      [playerId]: { ...tracking, pendingDetails: details },
+    },
+  });
 }
 
 export function linkPokemon(
@@ -392,6 +568,11 @@ export function linkPokemon(
         pendingPokemon: tracking.pendingPokemon.filter(
           (item) => item.identity !== live.identity,
         ),
+        pendingDetails: Object.fromEntries(
+          Object.entries(tracking.pendingDetails ?? {}).filter(
+            ([identity]) => identity !== live.identity,
+          ),
+        ),
       },
     },
   };
@@ -414,6 +595,7 @@ export function linkPokemon(
     },
     resolvePokemon,
     now,
+    false,
   );
   next.tracking[input.playerId].sequence = tracking.sequence;
   next.run = finalizeRun(next.run, now);
@@ -451,12 +633,22 @@ export function resumeTracking(
   );
 }
 
-export function mapZone(record: RunRecord, input: MapZoneInput, now = Date.now()): RunRecord {
-  if (record.run.id !== input.runId) throw new Error("The zone belongs to another run.");
+export function mapZone(
+  record: RunRecord,
+  input: MapZoneInput,
+  now = Date.now(),
+): RunRecord {
+  if (record.run.id !== input.runId)
+    throw new Error("The zone belongs to another run.");
   getPlayerIndex(record.run, input.playerId);
   const tracking = record.tracking[input.playerId];
-  if (!tracking?.latest.location || tracking.latest.location.id !== input.locationId)
-    throw new Error("The game location changed. Select the current location again.");
+  if (
+    !tracking?.latest.location ||
+    tracking.latest.location.id !== input.locationId
+  )
+    throw new Error(
+      "The game location changed. Select the current location again.",
+    );
   if (!record.run.zones.some((zone) => zone.id === input.zoneId))
     throw new Error("Select an existing encounter zone.");
   return recordSchema.parse({
@@ -466,7 +658,10 @@ export function mapZone(record: RunRecord, input: MapZoneInput, now = Date.now()
       ...record.tracking,
       [input.playerId]: {
         ...tracking,
-        zoneMappings: { ...tracking.zoneMappings, [input.locationId]: input.zoneId },
+        zoneMappings: {
+          ...tracking.zoneMappings,
+          [input.locationId]: input.zoneId,
+        },
       },
     },
     run: { ...record.run, updatedAt: now },

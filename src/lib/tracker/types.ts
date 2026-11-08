@@ -1,5 +1,9 @@
 import type { Run } from "../types";
-import type { OverlayCommand, OverlayControl, OverlayControlConfig } from "./overlay-control";
+import type {
+  OverlayCommand,
+  OverlayControl,
+  OverlayControlConfig,
+} from "./overlay-control";
 
 export interface GameIdentity {
   gameCode: string;
@@ -9,11 +13,15 @@ export interface GameIdentity {
   trainerId: string;
 }
 
+export type MoveCategory = "physical" | "special" | "status";
+
 export interface LiveMove {
   id: number;
   name?: string;
   pp: number;
+  maxPp?: number;
   type?: string;
+  category?: MoveCategory;
   power?: number;
   accuracy?: number;
 }
@@ -31,8 +39,10 @@ export interface LivePokemon {
   gender: "male" | "female" | "unknown";
   nature?: string;
   ability?: string;
+  abilityId?: number;
   types?: string[];
   heldItem?: string;
+  heldItemId?: number;
   experience?: number;
   stats?: Record<string, number>;
   moves: LiveMove[];
@@ -71,6 +81,8 @@ export interface GameFrame {
   };
   observations: GameObservation[];
   stateLoaded?: boolean;
+  // Total items in the Poké Ball pocket, when the connector can read the bag.
+  pokeBalls?: number;
   warnings?: string[];
 }
 
@@ -78,6 +90,15 @@ export interface SavedObservation extends GameObservation {
   playerId: string;
   gameKey: string;
   observedAt: number;
+}
+
+// Why a new party Pokémon could not be linked to a zone automatically.
+export type PendingReason =
+  "zone-taken" | "unknown-zone" | "ambiguous-zone" | "no-encounter";
+
+export interface PendingDetail {
+  reason: PendingReason;
+  zoneId?: string;
 }
 
 export interface PlayerTracking {
@@ -88,7 +109,10 @@ export interface PlayerTracking {
   lastSeenAt: number;
   latest: GameFrame;
   suspended: boolean;
+  // Set once the player first holds a Poké Ball; deaths before it need the player's decision.
+  nuzlockeStartedAt?: number;
   pendingPokemon: LivePokemon[];
+  pendingDetails?: Record<string, PendingDetail>;
   ignoredIdentities: string[];
   zoneMappings: Record<string, string>;
   retiredSessions: string[];
@@ -96,6 +120,7 @@ export interface PlayerTracking {
     id: string;
     gameKey: string;
     locationId: string;
+    locationName?: string;
     pokemonId: number;
     level: number;
     observedAt: number;
@@ -251,7 +276,10 @@ export interface TrackerDesktopApi {
   getOverlayUrl(runId: string): Promise<string>;
   getOverlayControlConfig(runId: string): Promise<OverlayControlConfig>;
   getOverlayControl(runId: string): Promise<OverlayControl>;
-  commandOverlay(input: { runId: string; command: OverlayCommand }): Promise<OverlayControl>;
+  commandOverlay(input: {
+    runId: string;
+    command: OverlayCommand;
+  }): Promise<OverlayControl>;
   subscribe(listener: (event: DesktopEvent) => void): () => void;
 }
 

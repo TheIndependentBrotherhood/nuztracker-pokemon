@@ -681,6 +681,310 @@ const translations = {
   },
 
   // ── Connections ────────────────────────────────────────────────────────────
+  liveView: {
+    loading: { fr: "Chargement du tracker…", en: "Loading tracker…" },
+    runNotFound: { fr: "Run introuvable.", en: "Run not found." },
+    openRuns: { fr: "Ouvrir les runs", en: "Open runs" },
+    noPlayer: {
+      fr: "Aucun joueur n'est configuré pour cette run.",
+      en: "No player is configured for this run.",
+    },
+    fullRun: { fr: "Run complète", en: "Full run" },
+    liveButton: { fr: "Direct", en: "Live" },
+    statusLive: { fr: "En direct", en: "Live" },
+    statusLead: { fr: "Direct · en tête", en: "Live · lead" },
+    statusBattle: { fr: "Combat · auto", en: "Battle · auto" },
+    statusPinned: { fr: "Épinglé", en: "Pinned" },
+    statusManual: {
+      fr: "Manuel · dernier état connu",
+      en: "Manual · last known state",
+    },
+    statusDisconnected: {
+      fr: "Déconnecté · dernier état connu",
+      en: "Disconnected · last known state",
+    },
+    timelinePaused: { fr: "Chronologie en pause", en: "Timeline paused" },
+    lastKnownState: {
+      fr: (names: string) => `Dernier état connu : ${names}`,
+      en: (names: string) => `Last known state: ${names}`,
+    },
+    noPartyMembers: {
+      fr: "Aucun membre d'équipe confirmé.",
+      en: "No confirmed party members.",
+    },
+    notInTeam: {
+      fr: "Ce Pokémon n'est plus dans l'équipe. Reviens en direct.",
+      en: "This Pokémon is no longer in the team. Return to Live.",
+    },
+    noMatchingMember: {
+      fr: "Aucun membre correspondant. Mets à jour l'équipe ou reviens en direct.",
+      en: "No matching team member. Update the team or return to Live.",
+    },
+    addTeamHint: {
+      fr: "Ajoute ton équipe à la main ou rattache les Pokémon détectés depuis Détails.",
+      en: "Add your team manually or link detected Pokémon from Details.",
+    },
+    noMappedZone: { fr: "Aucune zone associée", en: "No mapped zone" },
+    player: { fr: "Joueur", en: "Player" },
+    pausedReconcile: {
+      fr: "Chronologie en pause. Réconcilie-la depuis Détails.",
+      en: "Timeline paused. Reconcile it from Details.",
+    },
+    solo: { fr: "Solo", en: "Solo" },
+    map: {
+      fr: (name: string) => `Carte : ${name}`,
+      en: (name: string) => `Map: ${name}`,
+    },
+    connectHint: {
+      fr: "Connecte un émulateur compatible depuis Connexions. Toutes les fonctionnalités manuelles de la run restent disponibles.",
+      en: "Connect a compatible emulator from Connections. All existing manual run features remain available.",
+    },
+    resumeConfirm: {
+      fr: "Reprendre à partir de l'état actuel du jeu ? Les morts et découvertes existantes sont conservées.",
+      en: "Resume from the current game state? Existing deaths and discoveries will be preserved.",
+    },
+    reconcile: { fr: "Réconcilier", en: "Reconcile" },
+    backwardJump: {
+      fr: "Un retour en arrière a été détecté. Les mises à jour de l'équipe sont en pause jusqu'à ce que tu confirmes cette chronologie. Les nouvelles observations restent enregistrées.",
+      en: "A backward jump was detected. Team updates are paused until you confirm this timeline. New observations are still saved.",
+    },
+    participant: {
+      fr: (name: string, online: boolean) =>
+        `${name} : ${online ? "en ligne" : "hors ligne"}`,
+      en: (name: string, online: boolean) =>
+        `${name}: ${online ? "online" : "offline"}`,
+    },
+    party: { fr: "Équipe", en: "Party" },
+    level: {
+      fr: (level: number) => `N. ${level}`,
+      en: (level: number) => `Lv. ${level}`,
+    },
+    hp: {
+      fr: (hp: number, maxHp: number) => `${hp}/${maxHp} PV`,
+      en: (hp: number, maxHp: number) => `${hp}/${maxHp} HP`,
+    },
+    unavailableSoulLink: {
+      fr: "Indisponible à cause du SoulLink",
+      en: "Unavailable through SoulLink",
+    },
+    markedDead: { fr: "Marqué comme mort", en: "Marked as dead" },
+    removeFromPlay: {
+      fr: "— retire ce Pokémon du jeu.",
+      en: "— remove this Pokémon from play.",
+    },
+    egg: {
+      fr: "Œuf — confirme sa rencontre après l'éclosion",
+      en: "Egg — confirm its encounter after hatching",
+    },
+    movesAndStats: { fr: "Attaques et stats", en: "Moves & stats" },
+    move: {
+      fr: (id: number) => `Attaque n°${id}`,
+      en: (id: number) => `Move #${id}`,
+    },
+    power: {
+      fr: (power: number) => `Puissance ${power}`,
+      en: (power: number) => `Power ${power}`,
+    },
+    species: {
+      fr: (id: number) => `Espèce n°${id}`,
+      en: (id: number) => `Species #${id}`,
+    },
+    opponentTitle: {
+      fr: "Adversaire — informations observées uniquement",
+      en: "Opponent — observed information only",
+    },
+    noObservations: {
+      fr: "Aucune attaque ni talent observé pour l'instant.",
+      en: "No moves or abilities observed yet.",
+    },
+    observed: { fr: "Observé", en: "Observed" },
+    previouslySeen: { fr: "Déjà vu", en: "Previously seen" },
+    history: { fr: "Historique de la run", en: "Run history" },
+    historyEmpty: {
+      fr: "Les événements seront enregistrés ici pendant que tu joues.",
+      en: "Events will be saved here as you play.",
+    },
+    showEarlier: {
+      fr: "Afficher les événements précédents",
+      en: "Show earlier events",
+    },
+  },
+  zoneGuide: {
+    open: { fr: "Guide de zone / découvertes", en: "Zone guide / discoveries" },
+    title: {
+      fr: "Guide de zone et rencontres observées",
+      en: "Zone guide and observed encounters",
+    },
+    current: {
+      fr: (zone: string, mapped: boolean) =>
+        `Lieu actuel : ${zone}${mapped ? "" : " (non associé)"}`,
+      en: (zone: string, mapped: boolean) =>
+        `Current: ${zone}${mapped ? "" : " (unmapped)"}`,
+    },
+    zone: { fr: "Zone de rencontre", en: "Encounter zone" },
+    mapHere: { fr: "Associer ici", en: "Map here" },
+    mapExplanation: {
+      fr: (location: string) =>
+        `Lieu dans le jeu : ${location}. L'association relie ce lieu à la zone choisie ; elle ne crée jamais de capture. Rattacher une ancienne capture ne modifie pas l'association du lieu actuel.`,
+      en: (location: string) =>
+        `Game location: ${location}. Mapping associates this location with the selected zone; it never creates a capture. Linking an older capture does not remap your current location.`,
+    },
+    observedTitle: {
+      fr: "Observé dans la run de ce joueur",
+      en: "Observed in this player's run",
+    },
+    observedScope: {
+      fr: (player: string) =>
+        `${player} / ROM et dresseur actuels uniquement. Les observations répétées d'une même rencontre comptent une fois ; les découvertes survivent au retour à une save state.`,
+      en: (player: string) =>
+        `${player} / current ROM and trainer only. Repeated observations in the same encounter are counted once; discoveries survive save-state rollback.`,
+    },
+    encounterSummary: {
+      fr: (count: number, min: number, max: number) =>
+        `${count} rencontre${count > 1 ? "s" : ""} / N. ${min}-${max}`,
+      en: (count: number, min: number, max: number) =>
+        `${count} encounter${count > 1 ? "s" : ""} / Lv. ${min}-${max}`,
+    },
+    noObserved: {
+      fr: "Aucune rencontre sauvage observée n'est encore associée à cette zone.",
+      en: "No observed wild encounters mapped to this zone yet.",
+    },
+    referenceTitle: {
+      fr: "Référence du jeu original",
+      en: "Original game reference",
+    },
+    noGame: { fr: "Aucun jeu sélectionné", en: "No game selected" },
+    referenceWarning: {
+      fr: (game: string) =>
+        `${game} : ces espèces, taux et niveaux décrivent le jeu non modifié, jamais ta seed randomisée. Les dons et rencontres scénarisées ne sont pas entièrement couverts par cette référence.`,
+      en: (game: string) =>
+        `${game}: these species, rates and levels describe the unmodified game, never your randomized seed. Gifts and special scripted encounters are not a complete part of this reference.`,
+    },
+    ratesHint: {
+      fr: "Les taux concernent chaque emplacement de rencontre dans les conditions indiquées, pas la probabilité cumulée d'une espèce. Les emplacements identiques sont regroupés.",
+      en: "Rates are for individual encounter slots under the listed conditions, not cumulative species probabilities. Identical slot descriptions are grouped.",
+    },
+    noReference: {
+      fr: "Aucune table de rencontres originale n'est disponible pour ce jeu / cette zone.",
+      en: "No original encounter table is available for this game / zone.",
+    },
+    originalVersion: { fr: "Version originale", en: "Original version" },
+    entry: {
+      fr: (method: string, min: number, max: number, chance: number) =>
+        `${method} / N. ${min}-${max} / emplacement : ${chance} %`,
+      en: (method: string, min: number, max: number, chance: number) =>
+        `${method} / Lv. ${min}-${max} / slot: ${chance}%`,
+    },
+    close: { fr: "Fermer", en: "Close" },
+    namesError: {
+      fr: "Impossible de charger les noms des Pokémon.",
+      en: "Pokémon names could not be loaded.",
+    },
+    referencesError: {
+      fr: "Impossible de charger les références de rencontres.",
+      en: "Encounter references could not be loaded.",
+    },
+    connectFirst: {
+      fr: "Connecte un jeu et choisis d'abord une zone.",
+      en: "Connect a game and choose a zone first.",
+    },
+  },
+  faintedPokemon: {
+    dead: { fr: "Mort", en: "Dead" },
+    title: { fr: "Pokémon KO", en: "Fainted Pokémon" },
+    intro: {
+      fr: "Règle Nuzlocke : un Pokémon tombé à 0 PV est mort et quitte l'équipe suivie, même s'il est soigné ensuite dans le jeu. Si ta run fait une exception (premier combat contre le rival, faux positif…), annule la mort.",
+      en: "Nuzlocke rule: a Pokémon that drops to 0 HP is dead and leaves the tracked team, even if the game heals it afterwards. If your run makes an exception (first rival battle, false positive…), undo the death.",
+    },
+    fainted: {
+      fr: (name: string) => `${name} est mort (KO).`,
+      en: (name: string) => `${name} died (fainted).`,
+    },
+    linked: {
+      fr: (name: string) => `${name} est mort à cause du SoulLink.`,
+      en: (name: string) => `${name} died through the SoulLink.`,
+    },
+    undo: { fr: "Annuler la mort", en: "Undo death" },
+    confirm: {
+      fr: "Annuler cette mort et remettre le Pokémon dans l'équipe ?",
+      en: "Undo this death and put the Pokémon back in the team?",
+    },
+    pendingTitle: {
+      fr: "KO avant ta première Poké Ball",
+      en: "Fainted before your first Poké Ball",
+    },
+    pendingIntro: {
+      fr: "Le Nuzlocke commence quand tu obtiens ta première Poké Ball. Avant ça, c'est toi qui décides si un KO compte comme une mort.",
+      en: "The Nuzlocke starts when you get your first Poké Ball. Until then, you decide whether a faint counts as a death.",
+    },
+    pendingLine: {
+      fr: (name: string) => `${name} est tombé KO.`,
+      en: (name: string) => `${name} fainted.`,
+    },
+    countDeath: { fr: "Compter comme mort", en: "Count as death" },
+    ignore: { fr: "Ce n'est pas une mort", en: "Not a death" },
+  },
+  pendingCaptures: {
+    title: { fr: "Captures à vérifier", en: "Captures to check" },
+    intro: {
+      fr: "Le tracker range tout seul tes nouveaux Pokémon dans leur zone. Pour ceux-ci, il a un doute : choisis la zone.",
+      en: "The tracker files your new Pokémon in their zone on its own. It is unsure about these ones: choose their zone.",
+    },
+    compactSummary: {
+      fr: (count: number) =>
+        count > 1 ? `${count} captures à vérifier` : "1 capture à vérifier",
+      en: (count: number) =>
+        count > 1 ? `${count} captures to check` : "1 capture to check",
+    },
+    reasons: {
+      "zone-taken": {
+        fr: "Tu as déjà une capture dans cette zone.",
+        en: "You already have a capture in this zone.",
+      },
+      "unknown-zone": {
+        fr: "Le lieu de capture ne correspond à aucune zone.",
+        en: "The capture location does not match any zone.",
+      },
+      "ambiguous-zone": {
+        fr: "Plusieurs zones correspondent à ce lieu.",
+        en: "Several zones match this location.",
+      },
+      "no-encounter": {
+        fr: "Obtenu sans combat sauvage (don, échange, œuf…).",
+        en: "Obtained without a wild battle (gift, trade, egg…).",
+      },
+    },
+    suggestion: {
+      fr: (zone: string) => `Zone proposée : ${zone}`,
+      en: (zone: string) => `Suggested zone: ${zone}`,
+    },
+    dialogTitle: {
+      fr: (name: string) => `Où as-tu obtenu ${name} ?`,
+      en: (name: string) => `Where did you get ${name}?`,
+    },
+    zone: { fr: "Zone de rencontre", en: "Encounter zone" },
+    choose: { fr: "Choisir", en: "Choose" },
+    level: {
+      fr: (level: number) => `N. ${level}`,
+      en: (level: number) => `Lv. ${level}`,
+    },
+    association: { fr: "Capture", en: "Capture" },
+    newCapture: { fr: "Nouvelle capture", en: "New capture" },
+    existingHint: {
+      fr: "Choisis une capture existante si tu l'avais déjà ajoutée à la main.",
+      en: "Pick an existing capture if you already added it manually.",
+    },
+    groupId: {
+      fr: "Groupe SoulLink (optionnel)",
+      en: "SoulLink group (optional)",
+    },
+    groupHelp: {
+      fr: "Par défaut, la zone choisie. Ton partenaire peut utiliser le même groupe dans une autre zone.",
+      en: "Defaults to the chosen zone. Your partner can use the same group in another zone.",
+    },
+    cancel: { fr: "Annuler", en: "Cancel" },
+    confirm: { fr: "Confirmer", en: "Confirm" },
+  },
   connections: {
     openLight: { fr: "Ouvrir le tracker light", en: "Open light tracker" },
     browserStorage: {
@@ -1234,6 +1538,101 @@ const translations = {
     analysis: { fr: "🔬 Analyse", en: "🔬 Analysis" },
     close: { fr: "Fermer", en: "Close" },
     loading: { fr: "Chargement...", en: "Loading..." },
+  },
+
+  // ── Compact Pokémon card (light tracker and OBS overlay) ────────────────────
+  focusCard: {
+    stats: {
+      hp: { fr: "PV", en: "HP" },
+      attack: { fr: "Atq", en: "Atk" },
+      defense: { fr: "Déf", en: "Def" },
+      "special-attack": { fr: "A.Spé", en: "SpA" },
+      "special-defense": { fr: "D.Spé", en: "SpD" },
+      speed: { fr: "Vit", en: "Spe" },
+      special: { fr: "Spé", en: "Spc" },
+      total: { fr: "Total", en: "BST" },
+    },
+    statNames: {
+      hp: { fr: "PV", en: "HP" },
+      attack: { fr: "Attaque", en: "Attack" },
+      defense: { fr: "Défense", en: "Defense" },
+      "special-attack": { fr: "Attaque Spéciale", en: "Special Attack" },
+      "special-defense": { fr: "Défense Spéciale", en: "Special Defense" },
+      speed: { fr: "Vitesse", en: "Speed" },
+    },
+    level: { fr: "N.", en: "Lv." },
+    nature: { fr: "Nature", en: "Nature" },
+    ability: { fr: "Talent", en: "Ability" },
+    item: { fr: "Objet", en: "Item" },
+    noItem: { fr: "Aucun", en: "None" },
+    unknown: { fr: "Inconnu", en: "Unknown" },
+    neutralNature: {
+      fr: "Nature neutre : aucune stat modifiée.",
+      en: "Neutral nature: no stat changed.",
+    },
+    natureEffect: {
+      fr: (up: string, down: string) => `+10 % ${up} · −10 % ${down}`,
+      en: (up: string, down: string) => `+10% ${up} · −10% ${down}`,
+    },
+    moves: { fr: "Capacités", en: "Moves" },
+    pp: { fr: "PP", en: "PP" },
+    power: { fr: "Puis.", en: "Pow" },
+    accuracy: { fr: "Préc.", en: "Acc" },
+    powerFull: { fr: "Puissance", en: "Power" },
+    accuracyFull: { fr: "Précision", en: "Accuracy" },
+    categories: {
+      physical: { fr: "Physique", en: "Physical" },
+      special: { fr: "Spéciale", en: "Special" },
+      status: { fr: "Statut", en: "Status" },
+    },
+    statusShort: {
+      sleep: { fr: "SOM", en: "SLP" },
+      poison: { fr: "PSN", en: "PSN" },
+      toxic: { fr: "TOX", en: "TOX" },
+      burn: { fr: "BRÛ", en: "BRN" },
+      freeze: { fr: "GEL", en: "FRZ" },
+      paralysis: { fr: "PAR", en: "PAR" },
+      fainted: { fr: "K.O.", en: "FNT" },
+    },
+    statusFull: {
+      sleep: { fr: "Endormi", en: "Asleep" },
+      poison: { fr: "Empoisonné", en: "Poisoned" },
+      toxic: { fr: "Gravement empoisonné", en: "Badly poisoned" },
+      burn: { fr: "Brûlé", en: "Burned" },
+      freeze: { fr: "Gelé", en: "Frozen" },
+      paralysis: { fr: "Paralysé", en: "Paralyzed" },
+      fainted: { fr: "K.O.", en: "Fainted" },
+    },
+    deadInParty: {
+      fr: "Mort selon les règles Nuzlocke, mais encore dans ton équipe en jeu.",
+      en: "Dead under the Nuzlocke rules, but still in your in-game party.",
+    },
+    manual: {
+      fr: "Manuel · pas de valeurs en jeu",
+      en: "Manual · no in-game values",
+    },
+    inGameStats: { fr: "Stats en jeu", en: "In-game stats" },
+    estimates: { fr: "Tes estimations", en: "Your estimates" },
+    baseStats: { fr: "Stats de base", en: "Base stats" },
+    noReference: {
+      fr: "Pas de stats de base pour ce jeu.",
+      en: "No base-stat reference for the selected game.",
+    },
+    changeSprite: {
+      fr: "Clique pour changer de sprite",
+      en: "Click to change the sprite",
+    },
+    previousSprite: { fr: "Sprite précédent", en: "Previous sprite" },
+    nextSprite: { fr: "Sprite suivant", en: "Next sprite" },
+    confirmSprite: {
+      fr: "Clique sur le sprite pour le garder · Échap pour annuler",
+      en: "Click the sprite to keep it · Esc to cancel",
+    },
+    cancelSprite: { fr: "Annuler", en: "Cancel" },
+    noOtherSprite: {
+      fr: "Aucun autre sprite disponible.",
+      en: "No other sprite available.",
+    },
   },
 
   // ── Pokemon Types ─────────────────────────────────────────────────────────

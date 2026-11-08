@@ -1,71 +1,739 @@
 "use client";
 
-import { Box, LinearProgress, Typography } from "@mui/material";
+import { useState, type ReactElement, type ReactNode } from "react";
+import { Box, Tooltip, Typography } from "@mui/material";
 import type { OverlayMember } from "@/lib/tracker/overlay";
+import type { MoveCategory } from "@/lib/tracker/types";
 import { typeColors } from "@/lib/type-chart";
 import { POKEMON_STAT_NAMES } from "@/lib/types";
 import { getGameVersion, type GameVersionId } from "@/lib/game-catalog";
+import {
+  getAvailableCaptureSpriteOptions,
+  type CaptureSpriteOption,
+} from "@/lib/pokemon-data";
+import { useGameText } from "@/lib/game-text";
+import { hpColor } from "@/lib/tracker/hp";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t, type Lang } from "@/i18n/translations";
+import PixelIcon, {
+  PHYSICAL_ICON,
+  SKULL_ICON,
+  SPECIAL_ICON,
+  STATUS_ICON,
+} from "./PixelIcon";
 
-const labels: Record<string, string> = {
-  hp: "HP", attack: "Atk", defense: "Def", "special-attack": "SpA",
-  "special-defense": "SpD", special: "Spc", speed: "Spe",
+const text = translations.focusCard;
+type StatusKey = keyof typeof text.statusShort;
+type StatKey = keyof typeof text.stats;
+
+const statusColors: Record<StatusKey, string> = {
+  sleep: "#94a3b8",
+  poison: "#c084fc",
+  toxic: "#9333ea",
+  burn: "#f97316",
+  freeze: "#38bdf8",
+  paralysis: "#eab308",
+  fainted: "#ef4444",
 };
 
-export default function FocusCard({ member, gameVersion }: { member: OverlayMember; gameVersion?: GameVersionId }) {
-  const live = member.live;
-  const base = new Map(member.baseStats?.map((stat) => [stat.stat.name, stat.base_stat]));
-  const singleSpecial = getGameVersion(gameVersion)?.generation === 1;
-  const stats = POKEMON_STAT_NAMES.filter((stat) => !singleSpecial || stat !== "special-defense");
+const muted = "#a5b6c8";
+
+function CategoryIcon({
+  category,
+  lang,
+}: {
+  category?: MoveCategory;
+  lang: Lang;
+}) {
+  if (category === "physical")
+    return (
+      <PixelIcon
+        rows={PHYSICAL_ICON}
+        color="#fb923c"
+        label={t(text.categories.physical, lang)}
+      />
+    );
+  if (category === "special")
+    return (
+      <PixelIcon
+        rows={SPECIAL_ICON}
+        color="#60a5fa"
+        label={t(text.categories.special, lang)}
+      />
+    );
+  if (category === "status")
+    return (
+      <PixelIcon
+        rows={STATUS_ICON}
+        color="#cbd5e1"
+        label={t(text.categories.status, lang)}
+      />
+    );
+  // Unknown category: keep the column aligned.
+  return <Box sx={{ width: 11, flex: "none" }} />;
+}
+
+function Hint({
+  title,
+  children,
+}: {
+  title: ReactNode;
+  children: ReactElement;
+}) {
+  if (!title) return children;
   return (
-    <Box data-testid="focus-card" sx={{ bgcolor: "#17212b", color: "#edf4fa", border: "1px solid #526173", borderRadius: 1, p: 1.25, fontFamily: '"Segoe UI", sans-serif' }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, alignItems: "baseline" }}>
-        <Typography sx={{ fontWeight: 800, fontSize: "1rem", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{member.name}</Typography>
-        <Typography sx={{ fontSize: "0.75rem", whiteSpace: "nowrap" }}>BST {member.bst || "?"}{live && ` / Lv. ${live.level}`}</Typography>
+    <Tooltip
+      title={title}
+      arrow
+      enterTouchDelay={0}
+      slotProps={{
+        tooltip: {
+          sx: {
+            maxWidth: "min(260px, calc(100vw - 16px))",
+            fontSize: "0.7rem",
+            lineHeight: 1.35,
+            bgcolor: "#0b1218",
+            border: "1px solid #526173",
+          },
+        },
+        arrow: { sx: { color: "#0b1218" } },
+        popper: {
+          modifiers: [
+            { name: "preventOverflow", options: { padding: 8 } },
+            { name: "flip", options: { padding: 8 } },
+          ],
+        },
+      }}
+    >
+      {children}
+    </Tooltip>
+  );
+}
+
+function TooltipBody({
+  title,
+  lines,
+}: {
+  title: string;
+  lines: (string | undefined)[];
+}) {
+  return (
+    <>
+      <Box component="strong" sx={{ display: "block" }}>
+        {title}
       </Box>
-      <Box sx={{ display: "grid", gridTemplateColumns: "86px minmax(0, 1fr)", gap: 1.25, mt: 0.75 }}>
-        <Box sx={{ textAlign: "center" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={member.spriteUrl || undefined} alt={member.name} width={80} height={80}
-            onError={(event) => {
-              if (member.fallbackSpriteUrl && event.currentTarget.src !== member.fallbackSpriteUrl)
-                event.currentTarget.src = member.fallbackSpriteUrl;
-            }}
-            style={{ objectFit: "contain", imageRendering: "pixelated" }} />
-          {(member.types.length ? member.types : ["???"]).map((type) => (
-            <Box key={type} sx={{ bgcolor: typeColors[type] ?? "#526173", fontSize: "0.65rem", borderRadius: 0.5, px: 0.75, py: 0.2, mt: 0.35, textTransform: "capitalize", fontWeight: 700 }}>{type}</Box>
-          ))}
+      {lines.filter(Boolean).map((line) => (
+        <Box key={line} sx={{ mt: 0.25 }}>
+          {line}
         </Box>
-        <Box>
-          {live ? <>
-            <Typography sx={{ fontSize: "0.75rem", fontVariantNumeric: "tabular-nums" }}>{live.hp} / {live.maxHp} HP <Box component="span" sx={{ color: "#a5b6c8" }}> / {live.status}</Box></Typography>
-            <LinearProgress variant="determinate" value={100 * live.hp / live.maxHp} sx={{ my: 0.5, height: 5, borderRadius: 1 }} />
-          </> : <Typography sx={{ fontSize: "0.7rem", color: "#b8c7d5", mb: 0.5 }}>Manual / no in-game values</Typography>}
-          <Typography sx={{ fontSize: "0.6rem", color: "#a5b6c8", textTransform: "uppercase" }}>{live ? "In-game stats" : member.randomStats ? "Your stat estimates" : "Reference base stats"}</Typography>
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 0.6, mt: 0.5 }}>
-            {stats.map((stat) => {
-              const value = live
-                ? stat === "hp" ? live.maxHp : live.stats?.[stat]
-                : member.randomStats ? undefined : base.get(stat) ?? (stat === "special-attack" ? base.get("special") : undefined);
-              const estimate = member.annotations?.[stat];
-              return <Box key={stat} sx={{ fontSize: "0.7rem", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-                <Box component="span" sx={{ color: "#a5b6c8" }}>{singleSpecial && stat === "special-attack" ? "Spc" : labels[stat]} </Box>
-                <strong>{value ?? "?"}</strong>
-                {member.randomStats && estimate && <Box component="span" sx={{ ml: 0.25, color: estimate === "high" ? "#86efac" : "#fda4af" }}>{estimate === "high" ? "+" : "-"}</Box>}
-              </Box>;
-            })}
+      ))}
+    </>
+  );
+}
+
+const ellipsis = {
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+} as const;
+
+function SpriteBox({
+  member,
+  status,
+  lang,
+  onSpriteChange,
+}: {
+  member: OverlayMember;
+  status?: StatusKey;
+  lang: Lang;
+  onSpriteChange?: (sprite: CaptureSpriteOption) => void;
+}) {
+  const [options, setOptions] = useState<CaptureSpriteOption[]>();
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const browsing = Boolean(options && options.length > 1);
+  const preview = browsing ? options![index] : undefined;
+  const name = member.names?.[lang] ?? member.name;
+
+  async function startBrowsing() {
+    if (!onSpriteChange || loading) return;
+    setLoading(true);
+    try {
+      const loaded = await getAvailableCaptureSpriteOptions({
+        pokemonId: member.pokemonId,
+        isShiny: Boolean(member.isShiny),
+      });
+      const current = loaded.findIndex(
+        (option) => option.url === member.spriteUrl,
+      );
+      setIndex(Math.max(current, 0));
+      setOptions(loaded);
+    } finally {
+      setLoading(false);
+    }
+  }
+  function cancel() {
+    setOptions(undefined);
+  }
+  function step(delta: number) {
+    if (!options) return;
+    setIndex((value) => (value + delta + options.length) % options.length);
+  }
+  function confirm() {
+    if (preview && preview.url !== member.spriteUrl) onSpriteChange?.(preview);
+    cancel();
+  }
+  const arrow = (delta: number, label: string, side: "left" | "right") => (
+    <Box
+      component="button"
+      type="button"
+      aria-label={label}
+      tabIndex={-1}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={(event) => {
+        event.stopPropagation();
+        step(delta);
+      }}
+      sx={{
+        position: "absolute",
+        top: "50%",
+        [side]: 0,
+        transform: "translateY(-50%)",
+        width: 16,
+        height: 28,
+        p: 0,
+        border: 0,
+        borderRadius: 0.5,
+        bgcolor: "#0b1218cc",
+        color: "#edf4fa",
+        cursor: "pointer",
+        fontSize: "0.9rem",
+        lineHeight: 1,
+      }}
+    >
+      {delta < 0 ? "‹" : "›"}
+    </Box>
+  );
+  const canBrowse = Boolean(onSpriteChange);
+  const hint = browsing
+    ? t(text.confirmSprite, lang)
+    : options?.length === 1
+      ? t(text.noOtherSprite, lang)
+      : canBrowse
+        ? t(text.changeSprite, lang)
+        : "";
+
+  return (
+    <Hint title={hint}>
+      <Box
+        role={canBrowse ? "button" : undefined}
+        tabIndex={canBrowse ? 0 : undefined}
+        aria-label={canBrowse ? t(text.changeSprite, lang) : undefined}
+        data-testid="focus-sprite"
+        onClick={() => (browsing ? confirm() : void startBrowsing())}
+        onKeyDown={(event) => {
+          if (!canBrowse) return;
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            if (browsing) confirm();
+            else void startBrowsing();
+          } else if (browsing && event.key === "Escape") {
+            event.stopPropagation();
+            cancel();
+          } else if (browsing && event.key === "ArrowLeft") step(-1);
+          else if (browsing && event.key === "ArrowRight") step(1);
+        }}
+        onBlur={cancel}
+        sx={{
+          position: "relative",
+          width: 68,
+          height: 68,
+          borderRadius: 1,
+          bgcolor: "#0f1922",
+          border: "1px solid",
+          borderColor: browsing ? "#8ed6f8" : "#2c3b4a",
+          cursor: canBrowse ? "pointer" : "default",
+          outline: "none",
+          "&:focus-visible": { borderColor: "#8ed6f8" },
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={preview?.url ?? (member.spriteUrl || undefined)}
+          alt={name}
+          width={64}
+          height={64}
+          onError={(event) => {
+            if (
+              !preview &&
+              member.fallbackSpriteUrl &&
+              event.currentTarget.src !== member.fallbackSpriteUrl
+            )
+              event.currentTarget.src = member.fallbackSpriteUrl;
+          }}
+          style={{
+            display: "block",
+            margin: 1,
+            objectFit: "contain",
+            imageRendering: "pixelated",
+            filter: member.isDead ? "grayscale(1) brightness(0.8)" : undefined,
+            opacity: loading ? 0.6 : 1,
+          }}
+        />
+        {status && (
+          <Hint title={t(text.statusFull[status], lang)}>
+            <Box
+              data-testid="focus-status"
+              sx={{
+                position: "absolute",
+                top: 2,
+                right: 2,
+                px: 0.4,
+                borderRadius: 0.5,
+                bgcolor: statusColors[status],
+                color: "#0b1218",
+                fontSize: "0.55rem",
+                fontWeight: 800,
+                lineHeight: 1.5,
+              }}
+            >
+              {t(text.statusShort[status], lang)}
+            </Box>
+          </Hint>
+        )}
+        {member.isDead && (
+          <Hint title={t(text.deadInParty, lang)}>
+            <Box
+              data-testid="focus-dead"
+              sx={{
+                position: "absolute",
+                left: 2,
+                bottom: 2,
+                p: 0.35,
+                borderRadius: 0.5,
+                bgcolor: "#0b1218d9",
+              }}
+            >
+              <PixelIcon
+                rows={SKULL_ICON}
+                color="#f1f5f9"
+                size={12}
+                label={t(translations.faintedPokemon.dead, lang)}
+              />
+            </Box>
+          </Hint>
+        )}
+        {browsing && (
+          <>
+            {arrow(-1, t(text.previousSprite, lang), "left")}
+            {arrow(1, t(text.nextSprite, lang), "right")}
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 1,
+                left: 0,
+                right: 0,
+                textAlign: "center",
+                fontSize: "0.55rem",
+                color: "#edf4fa",
+                textShadow: "0 0 2px #000",
+              }}
+            >
+              {index + 1}/{options!.length}
+            </Box>
+          </>
+        )}
+      </Box>
+    </Hint>
+  );
+}
+
+export default function FocusCard({
+  member,
+  gameVersion,
+  onSpriteChange,
+}: {
+  member: OverlayMember;
+  gameVersion?: GameVersionId;
+  onSpriteChange?: (sprite: CaptureSpriteOption) => void;
+}) {
+  const { lang } = useLanguage();
+  const gameText = useGameText();
+  const live = member.live;
+  const generation = getGameVersion(gameVersion)?.generation ?? 4;
+  const singleSpecial = generation === 1;
+  const base = new Map(
+    member.baseStats?.map((stat) => [stat.stat.name, stat.base_stat]),
+  );
+  const stats = POKEMON_STAT_NAMES.filter(
+    (stat) => !singleSpecial || stat !== "special-defense",
+  );
+  const name = member.names?.[lang] ?? member.name;
+  const status =
+    live && live.status in text.statusShort
+      ? (live.status as StatusKey)
+      : undefined;
+  const nature = live && gameText?.nature(live, lang);
+  const ability = live && gameText?.ability(live, lang);
+  const item = live && gameText?.item(live, lang, generation);
+  const neutral =
+    nature && (!nature.increased || nature.increased === nature.decreased);
+  const statName = (stat?: string) =>
+    stat && stat in text.statNames
+      ? t(text.statNames[stat as keyof typeof text.statNames], lang)
+      : (stat ?? "?");
+  const natureLine = nature
+    ? neutral
+      ? t(text.neutralNature, lang)
+      : text.natureEffect[lang](
+          statName(nature.increased),
+          statName(nature.decreased),
+        )
+    : undefined;
+  const typeName = (type: string) =>
+    type in translations.pokemonTypes
+      ? t(
+          translations.pokemonTypes[
+            type as keyof typeof translations.pokemonTypes
+          ],
+          lang,
+        )
+      : type;
+
+  const detail = (
+    label: string,
+    value: string | undefined,
+    tooltip: ReactNode,
+  ) => (
+    <Hint title={value ? tooltip : ""}>
+      <Box
+        tabIndex={value ? 0 : undefined}
+        sx={{ ...ellipsis, fontSize: "0.68rem", lineHeight: 1.45 }}
+      >
+        <Box component="span" sx={{ color: muted }}>
+          {label}{" "}
+        </Box>
+        {value ?? t(text.unknown, lang)}
+      </Box>
+    </Hint>
+  );
+
+  const statValue = (stat: string) =>
+    live
+      ? stat === "hp"
+        ? live.maxHp
+        : live.stats?.[stat]
+      : member.randomStats
+        ? undefined
+        : (base.get(stat) ??
+          (stat === "special-attack" ? base.get("special") : undefined));
+
+  return (
+    <Box
+      data-testid="focus-card"
+      sx={{
+        bgcolor: "#17212b",
+        color: "#edf4fa",
+        border: "1px solid #526173",
+        borderRadius: 1,
+        p: 1,
+        fontFamily: '"Segoe UI", sans-serif',
+      }}
+    >
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "68px minmax(0, 1fr) auto",
+          columnGap: 1,
+          alignItems: "start",
+        }}
+      >
+        <SpriteBox
+          member={member}
+          status={status}
+          lang={lang}
+          onSpriteChange={onSpriteChange}
+        />
+        <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+            <Typography
+              sx={{ ...ellipsis, fontWeight: 800, fontSize: "0.95rem" }}
+            >
+              {name}
+            </Typography>
+            {live && (
+              <Typography
+                sx={{ fontSize: "0.72rem", color: muted, flex: "none" }}
+              >
+                {t(text.level, lang)} {live.level}
+              </Typography>
+            )}
           </Box>
-          {member.bst === 0 && <Typography sx={{ color: "#fcd34d", fontSize: "0.65rem", mt: 0.5 }}>No base-stat reference for the selected game.</Typography>}
+          <Box sx={{ display: "flex", gap: 0.4, my: 0.35, flexWrap: "nowrap" }}>
+            {(member.types.length ? member.types : ["???"]).map((type) => (
+              <Box
+                key={type}
+                sx={{
+                  ...ellipsis,
+                  bgcolor: typeColors[type] ?? "#526173",
+                  fontSize: "0.6rem",
+                  borderRadius: 0.5,
+                  px: 0.6,
+                  lineHeight: 1.6,
+                  fontWeight: 700,
+                  textShadow: "0 1px 1px #0008",
+                }}
+              >
+                {typeName(type)}
+              </Box>
+            ))}
+          </Box>
+          {live ? (
+            <>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: "0.68rem",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                <Box component="span" sx={{ color: muted }}>
+                  {t(text.stats.hp, lang)}
+                </Box>
+                <span>
+                  {live.hp}/{live.maxHp}
+                </span>
+              </Box>
+              <Box
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={live.maxHp}
+                aria-valuenow={live.hp}
+                sx={{
+                  height: 5,
+                  borderRadius: 1,
+                  bgcolor: "#2c3b4a",
+                  overflow: "hidden",
+                  mb: 0.35,
+                }}
+              >
+                <Box
+                  data-testid="focus-hp-bar"
+                  sx={{
+                    height: "100%",
+                    width: `${live.maxHp ? (100 * live.hp) / live.maxHp : 0}%`,
+                    bgcolor: hpColor(live.hp, live.maxHp),
+                    transition: "width 300ms ease",
+                  }}
+                />
+              </Box>
+              {detail(
+                t(text.nature, lang),
+                nature?.name ?? live.nature,
+                nature && (
+                  <TooltipBody title={nature.name} lines={[natureLine]} />
+                ),
+              )}
+              {detail(
+                t(text.ability, lang),
+                ability?.name ?? live.ability,
+                ability && (
+                  <TooltipBody
+                    title={ability.name}
+                    lines={[ability.description]}
+                  />
+                ),
+              )}
+              {detail(
+                t(text.item, lang),
+                item?.name ?? live.heldItem ?? t(text.noItem, lang),
+                item && (
+                  <TooltipBody title={item.name} lines={[item.description]} />
+                ),
+              )}
+            </>
+          ) : (
+            <Typography sx={{ fontSize: "0.68rem", color: "#b8c7d5" }}>
+              {t(text.manual, lang)}
+            </Typography>
+          )}
         </Box>
+        <Hint
+          title={t(
+            live
+              ? text.inGameStats
+              : member.randomStats
+                ? text.estimates
+                : text.baseStats,
+            lang,
+          )}
+        >
+          <Box
+            tabIndex={0}
+            data-testid="focus-stats"
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "auto auto",
+              columnGap: 0.75,
+              fontSize: "0.68rem",
+              lineHeight: 1.45,
+              fontVariantNumeric: "tabular-nums",
+              borderLeft: "1px solid #3f4e5f",
+              pl: 0.75,
+            }}
+          >
+            {stats.map((stat) => {
+              const key: StatKey =
+                singleSpecial && stat === "special-attack"
+                  ? "special"
+                  : (stat as StatKey);
+              const boosted = !neutral && nature?.increased === stat;
+              const lowered = !neutral && nature?.decreased === stat;
+              const estimate = member.annotations?.[stat];
+              return [
+                <Box
+                  key={`${stat}-label`}
+                  component="span"
+                  sx={{
+                    color: boosted ? "#86efac" : lowered ? "#fda4af" : muted,
+                  }}
+                >
+                  {t(text.stats[key], lang)}
+                  {boosted ? "+" : lowered ? "−" : ""}
+                </Box>,
+                <Box
+                  key={`${stat}-value`}
+                  component="span"
+                  sx={{ textAlign: "right", fontWeight: 700 }}
+                >
+                  {statValue(stat) ?? "?"}
+                  {member.randomStats && estimate && (
+                    <Box
+                      component="span"
+                      sx={{
+                        ml: 0.25,
+                        color: estimate === "high" ? "#86efac" : "#fda4af",
+                      }}
+                    >
+                      {estimate === "high" ? "+" : "−"}
+                    </Box>
+                  )}
+                </Box>,
+              ];
+            })}
+            <Box component="span" sx={{ color: muted }}>
+              {t(text.stats.total, lang)}
+            </Box>
+            <Box component="span" sx={{ textAlign: "right", fontWeight: 700 }}>
+              {member.bst || "?"}
+            </Box>
+          </Box>
+        </Hint>
       </Box>
-      {live && <Typography sx={{ fontSize: "0.7rem", my: 1, color: "#c6d4e1", textTransform: "capitalize" }}>
-        {live.nature ?? "Nature unknown"} / {live.ability ?? "Ability unknown"} / {live.heldItem ?? "No item"}
-      </Typography>}
-      {live && <Box sx={{ borderTop: "1px solid #3f4e5f", pt: 0.5 }}>
-        {live.moves.map((move) => <Box key={move.id} sx={{ display: "flex", justifyContent: "space-between", gap: 1, fontSize: "0.75rem", py: 0.4 }}>
-          <Box component="span" sx={{ color: move.type ? typeColors[move.type] ?? "#edf4fa" : "#edf4fa" }}>{move.name ?? `Move #${move.id}`}</Box>
-          <Box component="span" sx={{ color: "#b8c7d5", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{move.power !== undefined && `${move.power || "-"} PWR / `}{move.pp} PP</Box>
-        </Box>)}
-      </Box>}
+      {member.bst === 0 && (
+        <Typography sx={{ color: "#fcd34d", fontSize: "0.65rem", mt: 0.5 }}>
+          {t(text.noReference, lang)}
+        </Typography>
+      )}
+      {live && live.moves.length > 0 && (
+        <Box
+          data-testid="focus-moves"
+          sx={{
+            mt: 0.75,
+            borderTop: "1px solid #3f4e5f",
+            pt: 0.5,
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
+            columnGap: 1,
+            rowGap: 0.2,
+            fontSize: "0.72rem",
+            fontVariantNumeric: "tabular-nums",
+            alignItems: "center",
+          }}
+        >
+          {[text.moves, text.pp, text.power, text.accuracy].map(
+            (header, column) => (
+              <Box
+                key={header.en}
+                sx={{
+                  color: muted,
+                  fontSize: "0.6rem",
+                  textTransform: "uppercase",
+                  textAlign: column ? "right" : "left",
+                }}
+              >
+                {t(header, lang)}
+              </Box>
+            ),
+          )}
+          {live.moves.map((move, slot) => {
+            const word = gameText?.move(move, lang, generation) ?? {
+              name: move.name ?? `#${move.id}`,
+              category: move.category,
+              type: move.type,
+              power: move.power,
+              accuracy: move.accuracy,
+            };
+            const typeColor = word.type ? typeColors[word.type] : undefined;
+            const tooltip = (
+              <TooltipBody
+                title={word.name}
+                lines={[
+                  [
+                    word.type && typeName(word.type),
+                    word.category && t(text.categories[word.category], lang),
+                  ]
+                    .filter(Boolean)
+                    .join(" · "),
+                  `${t(text.powerFull, lang)} ${word.power || "—"} · ${t(text.accuracyFull, lang)} ${word.accuracy || "—"}`,
+                  word.description,
+                ]}
+              />
+            );
+            const low = move.maxPp && move.pp * 4 <= move.maxPp;
+            return [
+              <Hint key={`${slot}-name`} title={tooltip}>
+                <Box
+                  tabIndex={0}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    minWidth: 0,
+                  }}
+                >
+                  <CategoryIcon category={word.category} lang={lang} />
+                  <Box
+                    component="span"
+                    sx={{ ...ellipsis, color: typeColor ?? "#edf4fa" }}
+                  >
+                    {word.name}
+                  </Box>
+                </Box>
+              </Hint>,
+              <Box
+                key={`${slot}-pp`}
+                sx={{
+                  textAlign: "right",
+                  color:
+                    move.pp === 0 ? "#ef4444" : low ? "#facc15" : "#c6d4e1",
+                }}
+              >
+                {move.pp}
+                {move.maxPp ? `/${move.maxPp}` : ""}
+              </Box>,
+              <Box key={`${slot}-power`} sx={{ textAlign: "right" }}>
+                {word.power || "—"}
+              </Box>,
+              <Box key={`${slot}-accuracy`} sx={{ textAlign: "right" }}>
+                {word.accuracy || "—"}
+              </Box>,
+            ];
+          })}
+        </Box>
+      )}
     </Box>
   );
 }

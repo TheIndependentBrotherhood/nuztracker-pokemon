@@ -7,7 +7,11 @@ import {
   resumeTracking,
 } from "../src/lib/tracker/live";
 import { applyRunEdit } from "../src/lib/tracker/records";
-import { finalizeRun } from "../src/lib/tracker/run-rules";
+import {
+  finalizeRun,
+  resolvePendingFaint,
+  reviveCapture,
+} from "../src/lib/tracker/run-rules";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { frame, record, pokemon, capture } from "./fixtures";
 
@@ -126,6 +130,213 @@ test("an explicitly linked Pokémon keeps its identity through evolution and rec
   const healed = { ...evolved, sequence: 4, frame: 40 };
   current = ingestFrame(current, "solo", healed, pokemon, 104);
   assert.equal(current.run.zones[0].captures[0].isDead, true);
+  current = {
+    ...current,
+    run: reviveCapture(current.run, captureId, 105),
+  };
+  assert.equal(current.run.zones[0].captures[0].isDead, false);
+  assert.equal(current.run.zones[0].captures[0].diedAt, undefined);
+  assert.equal(current.run.team[0].id, captureId);
+  current = ingestFrame(
+    current,
+    "solo",
+    { ...healed, sequence: 5, frame: 50 },
+    pokemon,
+    106,
+  );
+  assert.equal(current.run.zones[0].captures[0].isDead, false);
+  assert.equal(current.run.team[0].id, captureId);
+  assert.throws(() => reviveCapture(current.run, captureId));
+});
+
+test("the first and only party Pokémon is linked to the Starter zone automatically", () => {
+  const initial = record();
+  initial.run.zones.unshift({
+    id: "starter",
+    zoneName: "Starter",
+    regionArea: "Kanto",
+    status: "not-visited",
+    captures: [],
+    updatedAt: 1,
+  });
+  let current = ingestFrame(initial, "solo", frame(), pokemon, 100);
+  const starter = current.run.zones.find((zone) => zone.id === "starter")!;
+  assert.equal(starter.captures.length, 1);
+  assert.equal(starter.captures[0].gameIdentity, "pokemon-identity-1");
+  assert.equal(current.run.team.length, 1);
+  assert.equal(current.tracking.solo.pendingPokemon.length, 0);
+  const second = frame(2);
+  second.party.push({ ...second.party[0], identity: "pokemon-identity-2" });
+  current = ingestFrame(current, "solo", second, pokemon, 101);
+  assert.equal(starter.captures.length, 1);
+  assert.equal(current.tracking.solo.pendingPokemon.length, 1);
+});
+
+test("faints before the first Poké Ball wait for the player's decision", () => {
+  const initial = record();
+  initial.run.zones.unshift({
+    id: "starter",
+    zoneName: "Starter",
+    regionArea: "Kanto",
+    status: "not-visited",
+    captures: [],
+    updatedAt: 1,
+  });
+  const at = (sequence: number, hp: number, pokeBalls: number) => {
+    const next = frame(sequence);
+    next.frame = sequence * 10;
+    next.party[0].hp = hp;
+    next.pokeBalls = pokeBalls;
+    return next;
+  };
+  let current = ingestFrame(initial, "solo", at(1, 20, 0), pokemon, 100);
+  const starter = () =>
+    current.run.zones.find((zone) => zone.id === "starter")!.captures[0];
+  current = ingestFrame(current, "solo", at(2, 0, 0), pokemon, 101);
+  assert.equal(starter().isDead, false);
+  assert.equal(starter().faintPendingAt, 101);
+  assert.equal(current.run.team.length, 1);
+  assert.equal(current.tracking.solo.nuzlockeStartedAt, undefined);
+  current = {
+    ...current,
+    run: resolvePendingFaint(current.run, starter().id, false, 102),
+  };
+  assert.equal(starter().faintPendingAt, undefined);
+  assert.equal(starter().isDead, false);
+  current = ingestFrame(current, "solo", at(3, 20, 0), pokemon, 103);
+  current = ingestFrame(current, "solo", at(4, 0, 0), pokemon, 104);
+  current = {
+    ...current,
+    run: resolvePendingFaint(current.run, starter().id, true, 105),
+  };
+  assert.equal(starter().isDead, true);
+  assert.equal(starter().diedAt, 104);
+  assert.equal(current.run.team.length, 0);
+  current = {
+    ...current,
+    run: reviveCapture(current.run, starter().id, 106),
+  };
+  current = ingestFrame(current, "solo", at(5, 20, 5), pokemon, 107);
+  assert.equal(current.tracking.solo.nuzlockeStartedAt, 107);
+  current = ingestFrame(current, "solo", at(6, 20, 0), pokemon, 108);
+  current = ingestFrame(current, "solo", at(7, 0, 0), pokemon, 109);
+  assert.equal(current.tracking.solo.nuzlockeStartedAt, 107);
+  assert.equal(starter().isDead, true);
+  assert.equal(starter().faintPendingAt, undefined);
+});
+
+function wildRun() {
+  const initial = record();
+  initial.run.zones = [
+    {
+      id: "starter",
+      zoneName: "Starter",
+      regionArea: "",
+      status: "not-visited",
+      captures: [],
+      updatedAt: 1,
+    },
+    ...[
+      "sinnoh-route-201-area",
+      "lake-verity-before-galactic-intervention",
+      "lake-verity-after-galactic-intervention",
+    ].map((id) => ({
+      id,
+      zoneName: id,
+      regionArea: "",
+      status: "not-visited" as const,
+      captures: [],
+      updatedAt: 1,
+    })),
+  ];
+  return ingestFrame(initial, "solo", frame(), pokemon, 100);
+}
+
+function withWildCapture(
+  current: ReturnType<typeof wildRun>,
+  mapName: string,
+  pid: string,
+  sequence: number,
+) {
+  const battle = frame(sequence);
+  battle.location = {
+    id: `map-${mapName.replaceAll(" ", "-")}`,
+    name: mapName,
+  };
+  battle.battle = {
+    id: `battle-${sequence}`,
+    kind: "wild",
+    opponents: [{ identity: `${pid}-1`, pokemonId: 2, level: 3 }],
+  };
+  current = ingestFrame(current, "solo", battle, pokemon, 100 + sequence);
+  const caught = frame(sequence + 1);
+  caught.location = {
+    id: "map-pokecenter",
+    name: "Jubilife City Pokecenter 1F",
+  };
+  caught.party.push({
+    ...caught.party[0],
+    identity: `${pid}-00000123`,
+    pokemonId: 2,
+  });
+  return ingestFrame(current, "solo", caught, pokemon, 101 + sequence);
+}
+
+test("a caught wild Pokémon is linked to the zone of its wild battle", () => {
+  const current = withWildCapture(wildRun(), "Route 201", "0000abcd", 2);
+  const route = current.run.zones.find(
+    (zone) => zone.id === "sinnoh-route-201-area",
+  )!;
+  assert.equal(route.captures[0]?.gameIdentity, "0000abcd-00000123");
+  assert.equal(current.tracking.solo.pendingPokemon.length, 0);
+  assert.equal(current.run.team.length, 2);
+});
+
+test("doubtful captures stay pending with a reason and a suggestion", () => {
+  let current = withWildCapture(wildRun(), "Route 201", "0000abcd", 2);
+  current = withWildCapture(current, "Route 201", "0000beef", 4);
+  assert.deepEqual(
+    current.tracking.solo.pendingDetails?.["0000beef-00000123"],
+    {
+      reason: "zone-taken",
+      zoneId: "sinnoh-route-201-area",
+    },
+  );
+  current = withWildCapture(current, "Lake Verity", "0000cafe", 6);
+  assert.equal(
+    current.tracking.solo.pendingDetails?.["0000cafe-00000123"]?.reason,
+    "ambiguous-zone",
+  );
+  const gift = frame(8);
+  gift.location = { id: "map-201", name: "Route 201" };
+  gift.party = [
+    ...current.tracking.solo.latest.party,
+    { ...gift.party[0], identity: "0000f00d-00000123" },
+  ];
+  current = ingestFrame(current, "solo", gift, pokemon, 200);
+  assert.deepEqual(
+    current.tracking.solo.pendingDetails?.["0000f00d-00000123"],
+    {
+      reason: "no-encounter",
+      zoneId: "sinnoh-route-201-area",
+    },
+  );
+  current = linkPokemon(
+    current,
+    {
+      runId: current.run.id,
+      playerId: "solo",
+      identity: "0000cafe-00000123",
+      zoneId: "lake-verity-before-galactic-intervention",
+    },
+    pokemon,
+    201,
+  );
+  assert.equal(
+    current.tracking.solo.pendingDetails?.["0000cafe-00000123"],
+    undefined,
+  );
+  assert.equal(current.tracking.solo.pendingPokemon.length, 2);
 });
 
 test("SoulLink losses propagate by explicit group rather than matching route names", () => {

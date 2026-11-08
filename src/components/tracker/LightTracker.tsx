@@ -19,9 +19,13 @@ import { isOverlayTeamLive, overlayData } from "@/lib/tracker/overlay";
 import SpriteTeam from "@/components/share/SpriteTeam";
 import ConnectionPanel from "./ConnectionPanel";
 import FocusCard from "./FocusCard";
+import FaintedPokemon, { faintedInParty } from "./FaintedPokemon";
+import PendingCaptures from "./PendingCaptures";
 import StatAnnotations from "./StatAnnotations";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import type { CaptureSpriteOption } from "@/lib/pokemon-data";
+import type { Capture } from "@/lib/types";
 
 const lightTheme = createTheme({
   palette: {
@@ -54,8 +58,16 @@ export default function LightTracker() {
     () => new URLSearchParams(window.location.search).get("id") ?? "",
     () => "",
   );
-  const { runs, records, loaded, desktopStatus, playerByRun, setPlayer } =
-    useRunStore();
+  const {
+    runs,
+    records,
+    loaded,
+    desktopStatus,
+    playerByRun,
+    setPlayer,
+    updateRun,
+    canEditRun,
+  } = useRunStore();
   const { lang } = useLanguage();
   const run = runs.find((entry) => entry.id === runId);
   const record = records.find((entry) => entry.run.id === runId);
@@ -81,12 +93,14 @@ export default function LightTracker() {
     clearTimeout(hoverTimer.current);
     hoverTimer.current = setTimeout(() => setHovered(false), 180);
   }
+  const text = translations.liveView;
   if (!loaded || !runId)
-    return <Box sx={{ p: 2 }}>Loading light tracker...</Box>;
+    return <Box sx={{ p: 2 }}>{t(text.loading, lang)}</Box>;
   if (!run || !record)
     return (
       <Alert severity="error">
-        Run not found. <NextLink href="/">Open runs</NextLink>
+        {t(text.runNotFound, lang)}{" "}
+        <NextLink href="/">{t(text.openRuns, lang)}</NextLink>
       </Alert>
     );
   const teams = overlayData(record, desktopStatus?.bridge).teams;
@@ -94,16 +108,37 @@ export default function LightTracker() {
     teams.find(
       (entry) => entry.playerId === (playerByRun[run.id] ?? getPlayerId(run)),
     ) ?? teams[0];
-  if (!team)
-    return (
-      <Alert severity="error">No player is configured for this run.</Alert>
-    );
+  if (!team) return <Alert severity="error">{t(text.noPlayer, lang)}</Alert>;
   const playerId = team.playerId;
   const member = selectedId
     ? team.members.find((entry) => entry.id === selectedId)
     : (team.members.find(
         (entry) => entry.identity && entry.identity === team.activeIdentity,
-      ) ?? team.members[0]);
+      ) ??
+      team.members.find((entry) => !entry.isDead) ??
+      team.members[0]);
+  const runForPlayer = viewRunForPlayer(run, playerId);
+  async function changeSprite(captureId: string, sprite: CaptureSpriteOption) {
+    const selectedSprite = {
+      url: sprite.url,
+      source: sprite.source,
+      label: sprite.label.slice(0, 500),
+    };
+    const update = (capture: Capture) =>
+      capture.id === captureId ? { ...capture, selectedSprite } : capture;
+    await updateRun(
+      {
+        ...runForPlayer,
+        team: runForPlayer.team.map(update),
+        zones: runForPlayer.zones.map((zone) => ({
+          ...zone,
+          captures: zone.captures.map(update),
+        })),
+      },
+      runForPlayer,
+      playerId,
+    );
+  }
   const tracking = record.tracking[playerId];
   const live = Boolean(desktopStatus && isOverlayTeamLive(team, now));
   const expanded = hovered || pinnedTeam;
@@ -181,14 +216,7 @@ export default function LightTracker() {
             variant={!selectedId ? "contained" : "outlined"}
             onClick={() => setSelectedId(undefined)}
           >
-            Live
-          </Button>
-          <Button
-            size="small"
-            component={NextLink}
-            href={`/live/?id=${run.id}`}
-          >
-            Details
+            {t(text.liveButton, lang)}
           </Button>
           <Typography
             sx={{
@@ -197,13 +225,16 @@ export default function LightTracker() {
               color: live ? "#86efac" : "#fcd34d",
             }}
           >
-            {selectedId
-              ? "Pinned"
-              : live
-                ? team.inBattle
-                  ? "Battle / auto"
-                  : "Live / lead"
-                : "Manual / last known"}
+            {t(
+              selectedId
+                ? text.statusPinned
+                : live
+                  ? team.inBattle
+                    ? text.statusBattle
+                    : text.statusLead
+                  : text.statusManual,
+              lang,
+            )}
           </Typography>
         </Stack>
         <Box sx={{ position: "relative" }}>
@@ -256,19 +287,28 @@ export default function LightTracker() {
               />
             ) : (
               <Typography sx={{ p: 1, fontSize: "0.75rem" }}>
-                No confirmed party members.
+                {t(text.noPartyMembers, lang)}
               </Typography>
             )}
           </Box>
           {member ? (
-            <FocusCard member={member} gameVersion={run.gameVersion} />
-          ) : (
+            <FocusCard
+              member={member}
+              gameVersion={run.gameVersion}
+              onSpriteChange={
+                canEditRun(run.id, playerId) &&
+                runForPlayer.zones.some((zone) =>
+                  zone.captures.some((capture) => capture.id === member.id),
+                )
+                  ? (sprite) => void changeSprite(member.id, sprite)
+                  : undefined
+              }
+            />
+          ) : selectedId || !faintedInParty(record, playerId).length ? (
             <Alert severity="info">
-              {selectedId
-                ? "This Pokemon is no longer in the team. Return to Live."
-                : "Add your team manually or link detected Pokemon from Details."}
+              {t(selectedId ? text.notInTeam : text.addTeamHint, lang)}
             </Alert>
-          )}
+          ) : null}
         </Box>
         {member?.randomStats && (
           <Box sx={{ mt: 1 }}>
@@ -280,13 +320,13 @@ export default function LightTracker() {
           </Box>
         )}
         <Typography sx={{ mt: 0.75, fontSize: "0.65rem", color: "#b8c7d5" }}>
-          {team.name} / {team.location ?? "No mapped zone"}
+          {team.name} / {team.location ?? t(text.noMappedZone, lang)}
         </Typography>
         {run.isSoulLinkMode && (
           <TextField
             select
             size="small"
-            label="Player"
+            label={t(text.player, lang)}
             value={playerId}
             onChange={(event) => {
               setPlayer(run.id, event.target.value);
@@ -304,15 +344,11 @@ export default function LightTracker() {
         )}
         {tracking?.suspended && (
           <Alert severity="warning" sx={{ mt: 1 }}>
-            Timeline paused. Reconcile from Details.
+            {t(text.pausedReconcile, lang)}
           </Alert>
         )}
-        {Boolean(tracking?.pendingPokemon.length) && (
-          <Alert severity="info" sx={{ mt: 1 }}>
-            {tracking!.pendingPokemon.length} Pokemon waiting to be linked in
-            Details.
-          </Alert>
-        )}
+        <FaintedPokemon run={run} compact />
+        <PendingCaptures run={run} compact />
         {desktopStatus?.bridge.runId === run.id &&
           desktopStatus.bridge.error && (
             <Alert severity="error" sx={{ mt: 1 }}>

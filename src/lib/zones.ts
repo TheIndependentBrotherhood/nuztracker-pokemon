@@ -210,6 +210,47 @@ export function getZonesForRegion(
 const mapSlugs = platinumMaps.map((name) =>
   name.toLowerCase().replaceAll(" ", "-"),
 );
+
+function zoneSlug(zoneId: string): string {
+  return zoneId.replace(/^sinnoh-/, "").replace(/-area(?=-|$)/g, "");
+}
+
+/**
+ * Find the encounter zone of an in-game map from its name
+ * (e.g. "Route 201" -> "sinnoh-route-201-area", "Mt Coronet 2F" -> "mt-coronet-2f").
+ * Returns "ambiguous" when several zones fit equally (e.g. Lake Verity before/after Galactic).
+ */
+export function zoneIdForMapName(
+  zones: { id: string }[],
+  mapName: string,
+): string | "ambiguous" | undefined {
+  const map = mapName.toLowerCase().replaceAll(" ", "-");
+  const candidates = zones.filter((zone) => zone.id !== STARTER_ZONE_ID);
+  const pick = (matches: { id: string }[]) =>
+    matches.length === 1
+      ? matches[0].id
+      : matches.length
+        ? "ambiguous"
+        : undefined;
+  const exact = candidates.filter((zone) => zoneSlug(zone.id) === map);
+  if (exact.length) return pick(exact);
+  // The map is a part of a zone, e.g. "Eterna Forest Outside" in "eterna-forest".
+  const containing = candidates.filter((zone) =>
+    map.startsWith(`${zoneSlug(zone.id)}-`),
+  );
+  if (containing.length) {
+    const longest = Math.max(
+      ...containing.map((zone) => zoneSlug(zone.id).length),
+    );
+    return pick(
+      containing.filter((zone) => zoneSlug(zone.id).length === longest),
+    );
+  }
+  // The map has several zones, e.g. "Lake Verity" before/after Galactic intervention.
+  return pick(
+    candidates.filter((zone) => zoneSlug(zone.id).startsWith(`${map}-`)),
+  );
+}
 export function zonesForGame(
   zones: ZoneTemplate[],
   gameVersion?: GameVersionId,
@@ -217,7 +258,7 @@ export function zonesForGame(
   if (gameVersion !== "platinum") return zones;
   return zones.filter((zone) => {
     if (zone.id === STARTER_ZONE_ID) return true;
-    const slug = zone.id.replace(/^sinnoh-/, "").replace(/-area(?=-|$)/g, "");
+    const slug = zoneSlug(zone.id);
     return mapSlugs.some((map) => map === slug || map.startsWith(`${slug}-`));
   });
 }

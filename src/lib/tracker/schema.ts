@@ -85,6 +85,7 @@ export const captureSchema = z.object({
     .optional(),
   createdAt: timestamp,
   diedAt: timestamp.optional(),
+  faintPendingAt: timestamp.optional(),
   originalCapturedPokemonId: speciesId.optional(),
   playerIndex: playerIndex.optional(),
   killedByPlayerIndex: playerIndex.optional(),
@@ -252,8 +253,10 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
     gender: z.enum(["male", "female", "unknown"]),
     nature: text.optional(),
     ability: text.optional(),
+    abilityId: z.number().int().min(1).max(10000).optional(),
     types: typeNames.optional(),
     heldItem: text.optional(),
+    heldItemId: z.number().int().min(1).max(65535).optional(),
     experience: z.number().int().nonnegative().optional(),
     stats: z
       .record(
@@ -274,7 +277,9 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
             id: z.number().int().min(1).max(10000),
             name: text.optional(),
             pp: z.number().int().min(0).max(255),
+            maxPp: z.number().int().min(1).max(255).optional(),
             type: text.optional(),
+            category: z.enum(["physical", "special", "status"]).optional(),
             power: z.number().min(0).max(65535).optional(),
             accuracy: z.number().min(0).max(100).optional(),
           })
@@ -326,6 +331,7 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
       .optional(),
     observations: z.array(z.object(observationShape).strict()).max(1000),
     stateLoaded: z.boolean().optional(),
+    pokeBalls: z.number().int().nonnegative().max(100000).optional(),
     warnings: z.array(z.string().max(1000)).max(10).optional(),
   })
   .strict()
@@ -400,7 +406,22 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
       lastSeenAt: timestamp,
       latest: gameFrameSchema,
       suspended: z.boolean(),
+      nuzlockeStartedAt: timestamp.optional(),
       pendingPokemon: z.array(livePokemonSchema).max(1000),
+      pendingDetails: z
+        .record(
+          id,
+          z.object({
+            reason: z.enum([
+              "zone-taken",
+              "unknown-zone",
+              "ambiguous-zone",
+              "no-encounter",
+            ]),
+            zoneId: id.optional(),
+          }),
+        )
+        .optional(),
       ignoredIdentities: z.array(id).max(10000),
       zoneMappings: z.record(id, id),
       retiredSessions: z.array(id).max(10000).default([]),
@@ -410,6 +431,7 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
             id: z.string().max(1000),
             gameKey: id,
             locationId: id,
+            locationName: text.optional(),
             pokemonId: z.number().int().min(1).max(100000),
             level: z.number().int().min(1).max(100),
             observedAt: timestamp,

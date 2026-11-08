@@ -3,6 +3,9 @@
 import { Box } from "@mui/material";
 import { typeColors } from "@/lib/type-chart";
 import type { SpriteMember } from "@/lib/tracker/overlay";
+import { useLanguage } from "@/context/LanguageContext";
+import translations, { t } from "@/i18n/translations";
+import PixelIcon, { SKULL_ICON } from "@/components/tracker/PixelIcon";
 
 interface Props {
   members: SpriteMember[];
@@ -25,6 +28,16 @@ export default function SpriteTeam({
   ribbon = false,
   onSelect,
 }: Props) {
+  const { lang } = useLanguage();
+  const typeLabel = (type: string) =>
+    type in translations.pokemonTypes
+      ? t(
+          translations.pokemonTypes[
+            type as keyof typeof translations.pokemonTypes
+          ],
+          lang,
+        )
+      : type;
   return (
     <Box
       sx={{
@@ -40,6 +53,7 @@ export default function SpriteTeam({
     >
       {members.map((member) => {
         const types = member.types.length ? member.types : ["???"];
+        const name = member.names?.[lang] ?? member.name;
 
         return (
           <Box
@@ -47,28 +61,30 @@ export default function SpriteTeam({
             data-member-id={member.id}
             role={onSelect ? "button" : undefined}
             tabIndex={onSelect ? 0 : undefined}
-            aria-label={member.name}
+            aria-label={name}
             onClick={onSelect ? () => onSelect(member.id) : undefined}
-            onKeyDown={onSelect ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onSelect(member.id);
-              }
-            } : undefined}
+            onKeyDown={
+              onSelect
+                ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelect(member.id);
+                    }
+                  }
+                : undefined
+            }
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              flexDirection: isRipMode || ribbon
-                ? "column"
-                : mirror
-                  ? "row-reverse"
-                  : "row",
-              height: isRipMode || ribbon
-                ? "auto"
-                : fullHeight
-                  ? "calc(100% / 6)"
-                  : "180px",
+              flexDirection:
+                isRipMode || ribbon ? "column" : mirror ? "row-reverse" : "row",
+              height:
+                isRipMode || ribbon
+                  ? "auto"
+                  : fullHeight
+                    ? "calc(100% / 6)"
+                    : "180px",
               width: ribbon ? "100%" : "auto",
               minHeight: isRipMode || ribbon ? "auto" : "120px",
               minWidth: isRipMode || ribbon ? 0 : "200px",
@@ -78,7 +94,12 @@ export default function SpriteTeam({
               py: isRipMode ? 0 : ribbon ? 1 : 2,
               cursor: onSelect ? "pointer" : undefined,
               borderRadius: ribbon ? 1 : 0,
-              "&:hover, &:focus-visible": onSelect ? { backgroundColor: "rgba(148,163,184,0.2)", outline: "2px solid #94a3b8" } : {},
+              "&:hover, &:focus-visible": onSelect
+                ? {
+                    backgroundColor: "rgba(148,163,184,0.2)",
+                    outline: "2px solid #94a3b8",
+                  }
+                : {},
             }}
           >
             {/* Sprite */}
@@ -90,13 +111,14 @@ export default function SpriteTeam({
                 width: ribbon ? "48px" : isRipMode ? "80px" : "120px",
                 height: ribbon ? "48px" : isRipMode ? "80px" : "120px",
                 flexShrink: 0,
+                position: "relative",
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={member.spriteUrl || undefined}
                 data-export-fallback-src={member.fallbackSpriteUrl}
-                alt={member.name}
+                alt={name}
                 onError={(event) => {
                   const fallbackUrl = member.fallbackSpriteUrl;
                   if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
@@ -108,8 +130,31 @@ export default function SpriteTeam({
                   height: ribbon ? "44px" : isRipMode ? "64px" : "96px",
                   objectFit: "contain",
                   imageRendering: "pixelated",
+                  filter: member.isDead
+                    ? "grayscale(1) brightness(0.8)"
+                    : undefined,
                 }}
               />
+              {member.isDead && (
+                <Box
+                  data-testid="member-dead"
+                  sx={{
+                    position: "absolute",
+                    left: 2,
+                    bottom: 2,
+                    p: "2px",
+                    borderRadius: 0.5,
+                    bgcolor: "#0b1218d9",
+                  }}
+                >
+                  <PixelIcon
+                    rows={SKULL_ICON}
+                    color="#f1f5f9"
+                    size={ribbon ? 9 : 12}
+                    label={t(translations.faintedPokemon.dead, lang)}
+                  />
+                </Box>
+              )}
             </Box>
 
             {/* Types - stacked vertically (hidden in RIP mode) */}
@@ -141,7 +186,7 @@ export default function SpriteTeam({
                       textAlign: "center",
                     }}
                   >
-                    {typeName}
+                    {typeLabel(typeName)}
                   </Box>
                 ))}
               </Box>

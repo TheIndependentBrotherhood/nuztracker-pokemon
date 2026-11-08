@@ -35,6 +35,8 @@ export interface Capture {
   createdAt: number;
   /** Timestamp when the Pokémon died (marked as RIP) */
   diedAt?: number;
+  // A faint observed before the Nuzlocke started, waiting for the player's decision.
+  faintPendingAt?: number;
   /** ID of the original Pokémon species when first captured. Used to track evolution history in random evo mode. */
   originalCapturedPokemonId?: number;
   /** Soul Link: index (0-3) of the player who owns this capture */
@@ -201,7 +203,12 @@ export interface TypeEffectiveness {
 import type { GameVersionId } from "./game-catalog";
 
 export const POKEMON_STAT_NAMES = [
-  "hp", "attack", "defense", "special-attack", "special-defense", "speed",
+  "hp",
+  "attack",
+  "defense",
+  "special-attack",
+  "special-defense",
+  "speed",
 ] as const;
 export type PokemonStatName = (typeof POKEMON_STAT_NAMES)[number];
 export type StatAnnotations = Partial<Record<PokemonStatName, "high" | "low">>;

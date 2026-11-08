@@ -149,15 +149,30 @@ test("overlay freshness never reports a disconnected, suspended or future snapsh
     "solo",
     frame(),
     pokemon,
-    1000,
+    10000,
   ).tracking.solo;
   const team = overlayData(current).teams[0];
-  assert.equal(isOverlayTeamLive(team, 999), false);
-  assert.equal(isOverlayTeamLive(team, 1000), true);
-  assert.equal(isOverlayTeamLive(team, 5999), true);
-  assert.equal(isOverlayTeamLive(team, 6000), false);
-  assert.equal(isOverlayTeamLive({ ...team, sourceError: true }, 2000), false);
-  assert.equal(isOverlayTeamLive({ ...team, suspended: true }, 2000), false);
+  assert.equal(isOverlayTeamLive(team, 7000), false);
+  assert.equal(isOverlayTeamLive(team, 9500), true);
+  assert.equal(isOverlayTeamLive(team, 10000), true);
+  assert.equal(isOverlayTeamLive(team, 17999), true);
+  assert.equal(isOverlayTeamLive(team, 18000), false);
+  assert.equal(isOverlayTeamLive({ ...team, lastSeenAt: 0 }, 10000), false);
+  assert.equal(isOverlayTeamLive({ ...team, suspended: true }, 11000), false);
+});
+
+test("a short source error does not flip the live status", () => {
+  const current = record();
+  current.tracking.solo = ingestFrame(
+    current,
+    "solo",
+    frame(),
+    pokemon,
+    10000,
+  ).tracking.solo;
+  const team = { ...overlayData(current).teams[0], sourceError: true };
+  assert.equal(isOverlayTeamLive(team, 12000), true);
+  assert.equal(isOverlayTeamLive(team, 13000), false);
 });
 
 test("static shares preserve game-specific types, keep legacy links readable and reject damaged data", async () => {

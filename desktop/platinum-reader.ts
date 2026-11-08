@@ -34,6 +34,10 @@ const BATTLE_COPY_BACK_FRAMES = 600;
 // The overworld re-encrypts party records across frame boundaries, so a record can need a few tries.
 const RECORD_ATTEMPTS = 4;
 const UNSTABLE_REPORT_MS = 5000;
+const TRANSIENT_ERROR_REPORT_MS = 2500;
+const POKE_BALL_POCKET_OFFSET = 0xd00;
+const POKE_BALL_POCKET_SLOTS = 15;
+const MAX_ITEM_ID = 0x3ff;
 const partyChanged = () =>
   new SnapshotError(
     "The party changed while reading. Waiting for a consistent snapshot.",
@@ -89,6 +93,24 @@ export class PlatinumReader {
 
   private async u32(address: number): Promise<number> {
     return (await this.memory.readMemory(address, 4)).readUInt32LE(0);
+  }
+
+  // Total count in the bag's Poké Ball pocket (save offset 0xCEC, mapped 0x14 after the party root).
+  // Returns undefined when the pocket does not look like valid ball entries.
+  private async readPokeBalls(root: number): Promise<number | undefined> {
+    const pocket = await this.memory.readMemory(
+      root + POKE_BALL_POCKET_OFFSET,
+      POKE_BALL_POCKET_SLOTS * 4,
+    );
+    let total = 0;
+    for (let slot = 0; slot < POKE_BALL_POCKET_SLOTS; slot++) {
+      const item = pocket.readUInt16LE(slot * 4);
+      const count = pocket.readUInt16LE(slot * 4 + 2);
+      if (!item) continue;
+      if (item > MAX_ITEM_ID || count > 999) return undefined;
+      total += count;
+    }
+    return total;
   }
 
   // Every record is fetched with one GDB request, which MelonDS answers from a single emulated
@@ -175,6 +197,7 @@ export class PlatinumReader {
       throw partyChanged();
     const savedParty = fingerprint(saved);
     const map = await this.u32(root + 0x1294);
+    const pokeBalls = await this.readPokeBalls(root);
     const stateLoaded =
       this.previousFrame !== undefined && counter < this.previousFrame;
     let battle = await this.readBattle(
@@ -236,6 +259,7 @@ export class PlatinumReader {
         name: this.maps[map] ?? `Platinum map #${map}`,
       },
       ...(battle ? { battle: battle.battle } : {}),
+      ...(pokeBalls === undefined ? {} : { pokeBalls }),
       observations: [],
       stateLoaded,
       warnings,
@@ -458,7 +482,14 @@ export class MelonDsConnector {
               onError(error, false);
           } else {
             delay = 1000;
-            if (!this.stopped) onError(error, !memory.isConnected);
+            // Transitions can briefly expose an unreadable state; only a lasting failure or a disconnection is reported.
+            unstableSince ??= Date.now();
+            if (
+              !this.stopped &&
+              (!memory.isConnected ||
+                Date.now() - unstableSince >= TRANSIENT_ERROR_REPORT_MS)
+            )
+              onError(error, !memory.isConnected);
           }
         } finally {
           if (!this.stopped && memory.isConnected)

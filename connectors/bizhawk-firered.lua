@@ -72,11 +72,13 @@ local function nationalId(species)
     return id
 end
 
-local function readMove(id, pp)
+local function readMove(id, pp, ppUps)
     if id < 1 or id > 354 then error("Unsupported move ID: " .. id) end
     local address = addresses.moves + id * 12
+    local basePp = read8(address + 4)
     return {
         id = id, name = textAt(addresses.moveNames + id * 13, 13), pp = pp,
+        maxPp = basePp > 0 and math.max(pp, math.floor(basePp * (5 + ppUps) / 5)) or nil,
         power = read8(address + 1), type = typeNames[read8(address + 2)],
         accuracy = read8(address + 3),
     }
@@ -129,7 +131,8 @@ local function readPokemon(address)
     local status = read32(address + 80)
     local statusName = "healthy"
     if bit.band(status, 7) ~= 0 then statusName = "sleep"
-    elseif bit.band(status, 0x88) ~= 0 then statusName = "poison"
+    elseif bit.band(status, 0x80) ~= 0 then statusName = "toxic"
+    elseif bit.band(status, 0x08) ~= 0 then statusName = "poison"
     elseif bit.band(status, 0x10) ~= 0 then statusName = "burn"
     elseif bit.band(status, 0x20) ~= 0 then statusName = "freeze"
     elseif bit.band(status, 0x40) ~= 0 then statusName = "paralysis" end
@@ -137,9 +140,12 @@ local function readPokemon(address)
     local secondType = typeNames[read8(info + 7)]
     if secondType and secondType ~= types[1] then types[#types + 1] = secondType end
     local moves = array()
+    local ppBonuses = value8(0, 8)
     for slot = 0, 3 do
         local moveId = value16(1, slot * 2)
-        if moveId ~= 0 then moves[#moves + 1] = readMove(moveId, value8(1, 8 + slot)) end
+        if moveId ~= 0 then
+            moves[#moves + 1] = readMove(moveId, value8(1, 8 + slot), math.floor(ppBonuses / 4 ^ slot) % 4)
+        end
     end
     local ability
     if abilityId > 0 and abilityId <= 77 then
@@ -154,7 +160,9 @@ local function readPokemon(address)
         hp = read16(address + 86), maxHp = read16(address + 88), status = statusName,
         isEgg = false, isShiny = shinyValue < 8, gender = gender,
         nature = natures[personality % 25 + 1], ability = ability, types = types,
+        abilityId = abilityId > 0 and abilityId <= 77 and abilityId or nil,
         heldItem = itemId > 0 and itemId <= 374 and textAt(addresses.items + itemId * 44, 14) or nil,
+        heldItemId = itemId > 0 and itemId <= 374 and itemId or nil,
         experience = value32(0, 4),
         stats = {
             attack = read16(address + 90), defense = read16(address + 92), speed = read16(address + 94),
