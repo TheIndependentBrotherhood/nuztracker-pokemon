@@ -42,6 +42,9 @@ The Windows portable executable is generated in `release`. Packaged builds do no
 - Archives contain versioned JSON, a SHA-256 integrity checksum, captures, teams, deaths, knowledge, observations, evolution history and tracking state. The checksum detects corruption; it is not an authenticity signature.
 - **Export shared copy** and room synchronization exclude private Pokédex notes. Personal exports include them. Room credentials and connector tokens are not part of either export.
 - Legacy JSON arrays exported from localStorage can also be imported.
+- Older runs without `randomizerOptions.randomizeStats` load with stat randomization disabled; explicit settings are preserved. This compatibility rule applies to localStorage migration, IndexedDB, desktop storage and backup imports.
+
+Web updates should not delete runs. A validation error can prevent saved runs from loading without erasing them. Do not clear site data: keep the same browser profile and origin, and export a backup once loading is restored. In browser developer tools, the original `nuztracker-runs` key remains under Local Storage after migration; current records are in the `runs` store of the `nuztracker-local` IndexedDB database. Copy the original value before attempting manual recovery. Changing the domain, protocol or port uses separate browser storage.
 
 Keep an exported backup outside the browser/computer. IndexedDB is still subject to browser storage policies. To copy the entire desktop database manually, close the application first so SQLite can checkpoint its WAL.
 

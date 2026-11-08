@@ -168,7 +168,7 @@ export const runSchema: z.ZodType<Run> = z
         randomizeAbilities: z.boolean(),
         randomizeEncounters: z.boolean(),
         randomizeEvolvedForms: z.boolean(),
-        randomizeStats: z.boolean(),
+        randomizeStats: z.boolean().default(false),
       })
       .optional(),
     ...knowledgeShape,
@@ -329,9 +329,16 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
   })
   .strict()
   .superRefine((frame, context) => {
-    if (frame.battle?.activePlayerIdentity &&
-        !frame.party.some((pokemon) => pokemon.identity === frame.battle?.activePlayerIdentity)) {
-      context.addIssue({ code: "custom", message: "The active player Pokemon must belong to the party." });
+    if (
+      frame.battle?.activePlayerIdentity &&
+      !frame.party.some(
+        (pokemon) => pokemon.identity === frame.battle?.activePlayerIdentity,
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "The active player Pokemon must belong to the party.",
+      });
     }
     if (
       new Set(frame.party.map((pokemon) => pokemon.identity)).size !==
@@ -396,12 +403,19 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
       ignoredIdentities: z.array(id).max(10000),
       zoneMappings: z.record(id, id),
       retiredSessions: z.array(id).max(10000).default([]),
-      seenEncounters: z.array(z.object({
-        id: z.string().max(1000), gameKey: id, locationId: id,
-        pokemonId: z.number().int().min(1).max(100000),
-        level: z.number().int().min(1).max(100),
-        observedAt: timestamp,
-      })).max(100000).optional(),
+      seenEncounters: z
+        .array(
+          z.object({
+            id: z.string().max(1000),
+            gameKey: id,
+            locationId: id,
+            pokemonId: z.number().int().min(1).max(100000),
+            level: z.number().int().min(1).max(100),
+            observedAt: timestamp,
+          }),
+        )
+        .max(100000)
+        .optional(),
     }),
   ),
   observations: z
@@ -439,17 +453,21 @@ export const joinRoomSchema = z.object({
 });
 
 export const bindBridgeSchema = z.object({ runId: id, playerId: id });
-export const connectMelonDsSchema = bindBridgeSchema.extend({
-  port: z.number().int().min(1024).max(65535),
-  confirmRomMatch: z.literal(true),
-}).strict();
+export const connectMelonDsSchema = bindBridgeSchema
+  .extend({
+    port: z.number().int().min(1024).max(65535),
+    confirmRomMatch: z.literal(true),
+  })
+  .strict();
 export const linkPokemonSchema = bindBridgeSchema.extend({
   identity: id,
   zoneId: id,
   captureId: id.optional(),
   soulLinkGroupId: id.optional(),
 });
-export const mapZoneSchema = bindBridgeSchema.extend({ locationId: id, zoneId: id }).strict();
+export const mapZoneSchema = bindBridgeSchema
+  .extend({ locationId: id, zoneId: id })
+  .strict();
 
 export const desktopStatusSchema: z.ZodType<DesktopStatus> = z.object({
   room: z.object({
@@ -480,15 +498,17 @@ export const desktopStatusSchema: z.ZodType<DesktopStatus> = z.object({
     error: z.string().optional(),
   }),
   storagePath: z.string(),
-  melonDs: z.object({
-    romName: z.string(),
-    gameCode: z.string(),
-    revision: z.number().int().nonnegative(),
-    port: z.number().int().optional(),
-    state: z.enum(["disconnected", "waiting", "tracking"]),
-    attached: z.boolean(),
-    layout: z.enum(["standard", "project-pm"]).optional(),
-  }).optional(),
+  melonDs: z
+    .object({
+      romName: z.string(),
+      gameCode: z.string(),
+      revision: z.number().int().nonnegative(),
+      port: z.number().int().optional(),
+      state: z.enum(["disconnected", "waiting", "tracking"]),
+      attached: z.boolean(),
+      layout: z.enum(["standard", "project-pm"]).optional(),
+    })
+    .optional(),
 });
 
 export const desktopEventSchema: z.ZodType<DesktopEvent> = z.discriminatedUnion(
