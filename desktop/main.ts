@@ -129,10 +129,25 @@ async function initialize(): Promise<void> {
         await readFile(join(root, "out", "data", "platinum-maps.json"), "utf8"),
       ),
     );
+  const gameText = z
+    .object({
+      moves: z.record(
+        z.string(),
+        z.object({ name: z.record(z.string(), z.string()).optional() }),
+      ),
+    })
+    .parse(
+      JSON.parse(
+        await readFile(join(root, "out", "data", "game-text.json"), "utf8"),
+      ),
+    );
   const tracker = new TrackerService(
     database,
     (id) => pokemon.get(id),
     platinumMaps,
+    Object.fromEntries(
+      Object.entries(gameText.moves).map(([id, move]) => [id, move.name ?? {}]),
+    ),
   );
   service = tracker;
   const server = new LocalServer(tracker, join(root, "out"));

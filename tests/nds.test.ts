@@ -15,6 +15,7 @@ import { NdsRom } from "../desktop/nds-rom";
 import { PlatinumReader } from "../desktop/platinum-reader";
 import {
   loadPlatinumData,
+  sameMoveName,
   type PlatinumBattleData,
 } from "../desktop/platinum-data";
 import { pk4Fixture, messageBank, ndsRomFixture } from "./nds-fixtures";
@@ -525,8 +526,21 @@ const syntheticBattleData: PlatinumBattleData = {
     )[id as 5 | 45 | 52 | 89],
   speciesTypes: (species) =>
     species === 48 ? ["bug", "poison"] : species === 25 ? ["electric"] : [],
-  moveName: (id) => ({ 52: "Ember" })[id as 52],
+  moveName: (id) => ({ 52: "Ember", 461: "Pouvoir Lunaire" })[id as 52 | 461],
+  customMove: (id) =>
+    id === 461
+      ? {
+          name: "Pouvoir Lunaire",
+          type: "fairy",
+          power: 95,
+          category: "special",
+          accuracy: 100,
+        }
+      : undefined,
+  maxMoveId: 471,
   abilityName: (id) => ({ 22: "Intimidate" })[id as 22],
+  customAbility: () => false,
+  maxAbilityId: 123,
   learnLevels: (species) => (species === 48 ? [1, 1, 5, 11] : undefined),
   evolutions: (species) =>
     species === 48 ? [{ method: 4, param: 31, target: 49 }] : undefined,
@@ -654,14 +668,6 @@ test("Platinum reports the type matchups computed by the game once a move result
   assert.equal((await observed())[0]?.attackType, "water");
   battle.ram.writeUInt32LE(0, context + 0x21a0);
 
-  battle.ram[enemy + 0x24] = 13;
-  assert.equal(
-    await outcome(52, 1 << 1, -20),
-    undefined,
-    "Types changed in battle no longer describe the species.",
-  );
-  battle.ram[enemy + 0x24] = 6;
-
   battle.ram.writeUInt32LE(1 << 29, enemy + 0x70);
   assert.equal(await outcome(5, 0, -10), undefined, "Foresight");
   assert.equal(await outcome(52, 0, -10), "neutral");
@@ -677,6 +683,70 @@ test("Platinum reports the type matchups computed by the game once a move result
     await observed(),
     [],
     "A sample that changed between polls is not reported.",
+  );
+
+  battle.ram.writeUInt32LE(0, context + 0x180);
+  battle.ram[enemy + 0x24] = 13;
+  assert.equal(
+    await outcome(52, 1 << 1, -20),
+    undefined,
+    "Types changed in battle no longer describe the species.",
+  );
+  battle.ram[enemy + 0x24] = 6;
+  assert.equal(
+    await outcome(52, 1 << 1, -20),
+    undefined,
+    "A battler whose types changed gives no clue for the rest of the battle.",
+  );
+});
+
+test("Platinum ignores clues for a battler that used a type-changing move", async () => {
+  const battle = platinumBattleRam(0, syntheticBattleData);
+  const context = battle.at(0x02020000);
+  battle.ram[context + 0x2d80 + 0xc0 + 0x24] = 6;
+  battle.ram[context + 0x2d80 + 0xc0 + 0x25] = 3;
+  const run = async (
+    attacker: number,
+    defender: number,
+    moveCur: number,
+    flags: number,
+    damage: number,
+  ) => {
+    battle.ram.writeUInt32LE(attacker, context + 0x64);
+    battle.ram.writeUInt32LE(defender, context + 0x6c);
+    battle.ram.writeUInt32LE(moveCur, context + 0x3084);
+    battle.ram.writeUInt32LE(flags, context + 0x21ac);
+    battle.ram.writeInt32LE(damage, context + 0x2184);
+    await battle.reader.read();
+    return (await battle.reader.read()).frame.observations.find(
+      (observation) => observation.kind === "effectiveness",
+    )?.value;
+  };
+  // Conversion ("Adaptation") is seen while animating, before the types change in memory.
+  await run(1, 0, 160, 0, 0);
+  assert.equal(await run(0, 1, 52, 1 << 1, -20), undefined);
+});
+
+test("Platinum reports type matchups in double battles", async () => {
+  const battle = platinumBattleRam(0, syntheticBattleData);
+  const context = battle.at(0x02020000);
+  battle.ram.writeUInt32LE(4, battle.at(battle.system + 0x44));
+  battle.battler(2, 25, 12, 0x8000000f);
+  battle.battler(3, 48, 3, 0x22222222);
+  battle.ram[context + 0x2d80 + 3 * 0xc0 + 0x24] = 6;
+  battle.ram[context + 0x2d80 + 3 * 0xc0 + 0x25] = 3;
+  battle.ram.writeUInt32LE(2, context + 0x64);
+  battle.ram.writeUInt32LE(3, context + 0x6c);
+  battle.ram.writeUInt32LE(52, context + 0x3084);
+  battle.ram.writeUInt32LE(1 << 1, context + 0x21ac);
+  battle.ram.writeInt32LE(-20, context + 0x2184);
+  await battle.reader.read();
+  const { frame } = await battle.reader.read();
+  assert.equal(
+    frame.observations.find(
+      (observation) => observation.kind === "effectiveness",
+    )?.value,
+    "weakness",
   );
 });
 
@@ -1049,4 +1119,12 @@ test("Platinum battles expose stat stages and battler gender", async () => {
   assert.equal(frame.battle?.opponents[0].gender, "female");
   assert.deepEqual(frame.party[0].statStages, { speed: -2 });
   assert.equal(typeof frame.party[0].friendship, "number");
+});
+
+test("ROM move names tolerate Gen 4 abbreviations and respellings but not new moves", () => {
+  assert.equal(sameMoveName("Puis. Cachée", "Puissance Cachée"), true);
+  assert.equal(sameMoveName("Poing-Karaté", "Poing Karaté"), true);
+  assert.equal(sameMoveName("Stalagtite", "Stalactite"), true);
+  assert.equal(sameMoveName("Pouvoir Lunaire", "Danse Lune"), false);
+  assert.equal(sameMoveName("Tunnelier", "Empal'Korne"), false);
 });

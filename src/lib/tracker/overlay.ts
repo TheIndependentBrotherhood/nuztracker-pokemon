@@ -2,6 +2,7 @@ import type {
   BattleOpponent,
   BridgeStatus,
   LiveEvolution,
+  LiveMove,
   LivePokemon,
   RunRecord,
   StatStages,
@@ -29,6 +30,11 @@ import { GAME_VERSIONS, type GameVersionId } from "../game-catalog";
 import { zoneIdForMapName } from "../zones";
 import { gameKey } from "./live";
 
+export interface CustomSeen {
+  moves: Record<number, LiveMove>;
+  abilities: Record<number, string>;
+}
+
 export interface OverlayMember {
   id: string;
   pokemonId: number;
@@ -48,6 +54,8 @@ export interface OverlayMember {
   evolutions?: LiveEvolution[];
   /** Opponent only: moves seen used by this species, most recent first. */
   seenMoves?: number[];
+  // ROM data of seen moves and abilities that a hack put over vanilla ids.
+  customSeen?: CustomSeen;
   /** Opponent only: abilities the game revealed for this species, most recent first. */
   seenAbilities?: number[];
   bst: number;
@@ -276,6 +284,7 @@ export function opponentMember(
   reference: PokemonData,
   seenMoves: number[] = [],
   seenAbilities: number[] = [],
+  customSeen?: CustomSeen,
 ): OverlayMember {
   const pokemon = pokemonForGame(reference, run.gameVersion);
   const knowledge = knowledgeForPlayer(run, playerId);
@@ -302,6 +311,7 @@ export function opponentMember(
     ...(opponent.evolutions ? { evolutions: opponent.evolutions } : {}),
     seenMoves,
     ...(seenAbilities.length ? { seenAbilities } : {}),
+    ...(customSeen ? { customSeen } : {}),
     ...(opponent.gender ? { gender: opponent.gender } : {}),
     ...(opponent.statStages ? { statStages: opponent.statStages } : {}),
     ...(hidesEvolutionTargets(run) ? { hideEvolutionTargets: true } : {}),
@@ -341,6 +351,41 @@ export function seenMoveIds(
   pokemonId: number,
 ): number[] {
   return seenIds(record, playerId, pokemonId, "move");
+}
+
+/** Moves and abilities a hack put over vanilla ids, as observed for a species in this player's current game. */
+export function customSeenWords(
+  record: RunRecord,
+  playerId: string,
+  pokemonId: number,
+): CustomSeen | undefined {
+  const game = record.tracking[playerId]?.game;
+  const source = game && gameKey(game);
+  const seen: CustomSeen = { moves: {}, abilities: {} };
+  let found = false;
+  for (const observation of record.observations) {
+    if (
+      !observation.custom ||
+      observation.playerId !== playerId ||
+      observation.pokemonId !== pokemonId ||
+      (source && observation.gameKey !== source)
+    )
+      continue;
+    if (observation.kind === "move" && observation.moveId) {
+      seen.moves[observation.moveId] = {
+        id: observation.moveId,
+        name: observation.value,
+        pp: 0,
+        custom: true,
+        ...observation.move,
+      };
+      found = true;
+    } else if (observation.kind === "ability" && observation.abilityId) {
+      seen.abilities[observation.abilityId] = observation.value;
+      found = true;
+    }
+  }
+  return found ? seen : undefined;
 }
 
 /** Abilities the game revealed for a species in this player's current game, most recent first. */

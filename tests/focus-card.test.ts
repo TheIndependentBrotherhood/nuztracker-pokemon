@@ -6,6 +6,7 @@ import {
   learnProgress,
   lightFocusMember,
   opponentMember,
+  customSeenWords,
   overlayData,
   seenAbilityIds,
   seenMoveIds,
@@ -351,4 +352,39 @@ test("type matchups combine both types and preserve the run's generation and imm
     () => getTypeDefensesForGeneration(["fairy"], "gen1"),
     /unavailable/,
   );
+});
+
+test("custom ROM moves and abilities seen in battle keep their ROM names and data", () => {
+  let current = connectRun(record(true), "p1");
+  const next = frame(1);
+  next.observations = [
+    {
+      id: "move-battle-1-461",
+      encounterId: "battle-1",
+      pokemonId: 48,
+      kind: "move",
+      value: "Pouvoir Lunaire",
+      moveId: 461,
+      custom: true,
+      move: { type: "fairy", category: "special", power: 95, accuracy: 100 },
+    },
+    {
+      id: "ability-battle-1-125",
+      encounterId: "battle-1",
+      pokemonId: 48,
+      kind: "ability",
+      value: "Farceur",
+      abilityId: 125,
+      custom: true,
+    },
+  ];
+  current = ingestFrame(current, "p1", next, pokemon, 100);
+  const seen = customSeenWords(current, "p1", 48);
+  assert.equal(seen?.abilities[125], "Farceur");
+  const move = gameText.move(seen!.moves[461], "fr");
+  assert.equal(move.name, "Pouvoir Lunaire");
+  assert.equal(move.type, "fairy");
+  assert.equal(move.power, 95);
+  assert.equal(gameText.move({ id: 461, pp: 10 }, "fr").name, "Danse Lune");
+  assert.equal(customSeenWords(current, "p1", 4), undefined);
 });

@@ -26,6 +26,7 @@ const MOVE_STATUS_NO_TYPE_RESULT = [0, 6, 11, 12, 14, 15, 16, 17, 18, 19, 20]
 const FIELD_CONDITION_GRAVITY = 0x7000;
 const TURN_FLAG_ROOSTING = 1 << 6;
 const VOLATILE_CONDITION_FORESIGHT = 1 << 29;
+const VOLATILE_CONDITION_TRANSFORM = 1 << 21;
 const MOVE_EFFECT_INGRAIN = 1 << 10;
 const MOVE_EFFECT_MIRACLE_EYE = 1 << 22;
 const ABILITY_NORMALIZE = 96;
@@ -35,6 +36,12 @@ const ITEM_IRON_BALL = 278;
 const UNRELIABLE_MOVES = new Set([165, 248, 251, 353]);
 // Species whose form changes its types, which the base personal data does not describe.
 const FORM_SPECIES = new Set([351, 386, 413, 479, 487, 492, 493]);
+// Transform, Conversion (named "Adaptation" in older French games), Conversion 2 and Camouflage
+// replace the user's types until it leaves the field.
+export const TYPE_CHANGING_MOVES = new Set([144, 160, 176, 293]);
+// Color Change, Forecast and Multitype change the holder's types during battle.
+const TYPE_CHANGING_ABILITIES = new Set([16, 59, 121]);
+export const MAX_BATTLERS = 4;
 
 export type EffectivenessOutcome =
   "immunity" | "weakness" | "resistance" | "neutral";
@@ -109,8 +116,8 @@ export function classifyEffectiveness(
     !sample.moveCur ||
     UNRELIABLE_MOVES.has(sample.moveCur) ||
     sample.attacker === sample.defender ||
-    sample.attacker > 1 ||
-    sample.defender > 1 ||
+    sample.attacker >= MAX_BATTLERS ||
+    sample.defender >= MAX_BATTLERS ||
     flags & MOVE_STATUS_NO_TYPE_RESULT
   )
     return undefined;
@@ -169,4 +176,29 @@ export function classifyEffectiveness(
             ? "neutral"
             : undefined;
   return outcome && { pokemonId: species, attackType, outcome };
+}
+
+/**
+ * True when a battler's current types may differ from its species' types: a type-changing
+ * ability, a form species, Transform or types that no longer match the ROM personal data.
+ */
+export function mayShiftTypes(
+  mon: EffectivenessMon,
+  data: PlatinumBattleData,
+): boolean {
+  if (
+    TYPE_CHANGING_ABILITIES.has(mon.ability) ||
+    FORM_SPECIES.has(mon.species) ||
+    mon.statusVolatile & VOLATILE_CONDITION_TRANSFORM
+  )
+    return true;
+  const speciesTypes = data.speciesTypes(mon.species);
+  if (!speciesTypes) return false;
+  const battleTypes = [
+    ...new Set([data.typeName(mon.type1), data.typeName(mon.type2)]),
+  ];
+  return (
+    battleTypes.length !== speciesTypes.length ||
+    battleTypes.some((type) => !type || !speciesTypes.includes(type))
+  );
 }

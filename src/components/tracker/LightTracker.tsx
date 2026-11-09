@@ -21,6 +21,7 @@ import {
   opponentMember,
   seenAbilityIds,
   seenMoveIds,
+  customSeenWords,
   overlayData,
 } from "@/lib/tracker/overlay";
 import SpriteTeam from "@/components/share/SpriteTeam";
@@ -196,6 +197,7 @@ export default function LightTracker() {
           opponentReferences[opponent.identity],
           seenMoveIds(record, playerId, opponent.pokemonId),
           seenAbilityIds(record, playerId, opponent.pokemonId),
+          customSeenWords(record, playerId, opponent.pokemonId),
         )
       : undefined;
   const member = lightFocusMember(team, enemy, selectedId);

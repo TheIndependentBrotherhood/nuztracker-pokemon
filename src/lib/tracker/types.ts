@@ -24,6 +24,8 @@ export interface LiveMove {
   category?: MoveCategory;
   power?: number;
   accuracy?: number;
+  // The ROM replaced this move id (hacks): its name and data come from the ROM, not vanilla tables.
+  custom?: boolean;
 }
 
 /** Battle stats that in-game moves and abilities raise or lower by stages. */
@@ -54,6 +56,8 @@ export interface LivePokemon {
   nature?: string;
   ability?: string;
   abilityId?: number;
+  // The ROM replaced this ability id: `ability` holds its ROM name.
+  customAbility?: boolean;
   types?: string[];
   heldItem?: string;
   heldItemId?: number;
@@ -96,6 +100,9 @@ export interface GameObservation {
   attackType?: string;
   moveId?: number;
   abilityId?: number;
+  // The ROM replaced this move or ability id: `value` and `move` describe it instead of vanilla tables.
+  custom?: boolean;
+  move?: Pick<LiveMove, "type" | "category" | "power" | "accuracy">;
 }
 
 export interface GameFrame {

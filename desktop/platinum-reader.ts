@@ -9,7 +9,11 @@ import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { sharedGdbClient, type ReadOnlyGdbClient } from "./gdb-client";
 import { NdsRom } from "./nds-rom";
 import { decodePk4, SnapshotError, type DecodedPk4 } from "./pk4";
-import { loadPlatinumData, type PlatinumBattleData } from "./platinum-data";
+import {
+  loadPlatinumData,
+  type PlatinumBattleData,
+  type VanillaMoveNames,
+} from "./platinum-data";
 import {
   CONTEXT_BATTLERS_OFFSET,
   CONTEXT_DAMAGE_BLOCK_SIZE,
@@ -21,7 +25,9 @@ import {
   classifyEffectiveness,
   damageBlockFields,
   hasMoveResult,
+  mayShiftTypes,
   readEffectivenessMon,
+  TYPE_CHANGING_MOVES,
   type EffectivenessOutcome,
   type EffectivenessSample,
 } from "./platinum-effectiveness";
@@ -40,6 +46,7 @@ const BATTLE_MON_SIZE = 0xc0;
 // and clears it when the battler switches out. It therefore only holds abilities revealed on screen.
 const CONTEXT_REVEALED_ABILITIES_OFFSET = 0x390;
 const MAX_ABILITY_ID = 123;
+const MAX_MOVE_ID = 467;
 // BattleMon fields (pret/pokeplatinum include/battle/battle_mon.h).
 const BATTLE_MON_MOVES = 0x0c;
 // s8 statBoosts[8]: HP, Attack, Defense, Speed, Sp. Atk, Sp. Def, Accuracy, Evasion; 6 is neutral.
@@ -144,6 +151,9 @@ export class PlatinumReader {
     expiresAt: number;
   };
   private pendingEffectiveness?: string;
+  // Battlers whose types changed during the current battle never give type clues again.
+  private typeShifted = new Set<string>();
+  private typeShiftedSystem?: number;
   // Opponent moves and PP from the previous poll, keyed by battle system and battler identity.
   private opponentMoves = new Map<string, OpponentMoves>();
   private opponentMovesSystem?: number;
@@ -159,8 +169,9 @@ export class PlatinumReader {
     memory: ReadOnlyGdbClient,
     rom: NdsRom,
     maps: string[],
+    moveNames?: VanillaMoveNames,
   ): Promise<PlatinumReader> {
-    const data = await loadPlatinumData(rom);
+    const data = await loadPlatinumData(rom, moveNames);
     return new PlatinumReader(memory, rom, data.enrich, maps, data.battle);
   }
 
@@ -297,6 +308,8 @@ export class PlatinumReader {
     } else {
       this.battleState = undefined;
       this.pendingEffectiveness = undefined;
+      this.typeShifted.clear();
+      this.typeShiftedSystem = undefined;
       this.opponentMoves.clear();
       this.opponentMovesSystem = undefined;
       const after = this.afterBattle;
@@ -354,16 +367,32 @@ export class PlatinumReader {
               },
             ]
           : []),
-        ...(battle?.usedMoves ?? []).map((used) => ({
-          // One observation per battle and opponent keeps the latest sighting without flooding the history.
-          id: `move-${battle!.battle.id}-${used.identity}-${used.moveId}`,
-          encounterId: battle!.battle.id,
-          pokemonId: used.pokemonId,
-          kind: "move" as const,
-          value:
-            this.battleData?.moveName(used.moveId) ?? `Move #${used.moveId}`,
-          moveId: used.moveId,
-        })),
+        ...(battle?.usedMoves ?? []).map((used) => {
+          const custom = this.battleData?.customMove(used.moveId);
+          return {
+            // One observation per battle and opponent keeps the latest sighting without flooding the history.
+            id: `move-${battle!.battle.id}-${used.identity}-${used.moveId}`,
+            encounterId: battle!.battle.id,
+            pokemonId: used.pokemonId,
+            kind: "move" as const,
+            value:
+              this.battleData?.moveName(used.moveId) ?? `Move #${used.moveId}`,
+            moveId: used.moveId,
+            ...(custom
+              ? {
+                  custom: true as const,
+                  move: {
+                    type: custom.type,
+                    power: custom.power,
+                    ...(custom.category ? { category: custom.category } : {}),
+                    ...(custom.accuracy !== undefined
+                      ? { accuracy: custom.accuracy }
+                      : {}),
+                  },
+                }
+              : {}),
+          };
+        }),
         ...(battle?.revealedAbilities ?? []).map((revealed) => ({
           id: `ability-${battle!.battle.id}-${revealed.identity}-${revealed.abilityId}`,
           encounterId: battle!.battle.id,
@@ -373,6 +402,9 @@ export class PlatinumReader {
             this.battleData?.abilityName(revealed.abilityId) ??
             `Ability #${revealed.abilityId}`,
           abilityId: revealed.abilityId,
+          ...(this.battleData?.customAbility(revealed.abilityId)
+            ? { custom: true as const }
+            : {}),
         })),
       ],
       stateLoaded,
@@ -560,10 +592,13 @@ export class PlatinumReader {
         : VALIDATED_BATTLE_TYPES.has(type)
           ? undefined
           : `Battle type 0x${type.toString(16)} has not been validated yet. Check in-battle HP and opponents against the game.`;
-    const effectiveness =
-      battlerCount === 2 && !stateLoaded
-        ? await this.readEffectiveness(context, mons)
-        : undefined;
+    const effectiveness = await this.readEffectiveness(
+      system,
+      context,
+      mons,
+      battlers.map((battler) => battler.identity),
+      stateLoaded,
+    );
     const revealed = opponents.length
       ? await this.memory.readMemory(
           context + CONTEXT_REVEALED_ABILITIES_OFFSET,
@@ -572,7 +607,8 @@ export class PlatinumReader {
       : undefined;
     const revealedAbilities = opponents.flatMap((opponent) => {
       const abilityId = revealed?.[opponent.position] ?? 0;
-      return abilityId >= 1 && abilityId <= MAX_ABILITY_ID
+      return abilityId >= 1 &&
+        abilityId <= (this.battleData?.maxAbilityId ?? MAX_ABILITY_ID)
         ? [
             {
               identity: opponent.identity,
@@ -652,7 +688,11 @@ export class PlatinumReader {
       )
         continue;
       entry.moves.forEach((moveId, slot) => {
-        if (moveId >= 1 && moveId <= 467 && entry.pp[slot] < previous.pp[slot])
+        if (
+          moveId >= 1 &&
+          moveId <= (this.battleData?.maxMoveId ?? MAX_MOVE_ID) &&
+          entry.pp[slot] < previous.pp[slot]
+        )
           used.push({
             identity: opponent.identity,
             pokemonId: opponent.pokemonId,
@@ -667,10 +707,42 @@ export class PlatinumReader {
   // Reports the type matchup of the move being executed once two polls agree on it, so a context
   // caught between two moves is never reported.
   private async readEffectiveness(
+    system: number,
     context: number,
     mons: Buffer,
+    identities: string[],
+    stateLoaded: boolean,
   ): Promise<BattleRead["effectiveness"]> {
     if (!this.battleData) return undefined;
+    if (stateLoaded || this.typeShiftedSystem !== system) {
+      this.typeShifted.clear();
+      this.pendingEffectiveness = undefined;
+    }
+    this.typeShiftedSystem = system;
+    if (stateLoaded) return undefined;
+    const monAt = (index: number) =>
+      readEffectivenessMon(
+        mons.subarray(index * BATTLE_MON_SIZE, (index + 1) * BATTLE_MON_SIZE),
+      );
+    identities.forEach((identity, index) => {
+      if (mayShiftTypes(monAt(index), this.battleData!))
+        this.typeShifted.add(identity);
+    });
+    const battlers = await this.memory.readMemory(
+      context + CONTEXT_BATTLERS_OFFSET,
+      0x0c,
+    );
+    const attacker = battlers.readUInt32LE(0);
+    const defender = battlers.readUInt32LE(8);
+    if (attacker >= identities.length || defender >= identities.length)
+      return undefined;
+    const moveCur = (
+      await this.memory.readMemory(context + CONTEXT_MOVE_CUR_OFFSET, 4)
+    ).readUInt32LE(0);
+    // The move may still be animating before the types change in memory.
+    if (TYPE_CHANGING_MOVES.has(moveCur))
+      this.typeShifted.add(identities[attacker]);
+    if (this.typeShifted.has(identities[defender])) return undefined;
     const damageBlock = await this.memory.readMemory(
       context + CONTEXT_DAMAGE_OFFSET,
       CONTEXT_DAMAGE_BLOCK_SIZE,
@@ -679,23 +751,10 @@ export class PlatinumReader {
       this.pendingEffectiveness = undefined;
       return undefined;
     }
-    const battlers = await this.memory.readMemory(
-      context + CONTEXT_BATTLERS_OFFSET,
-      0x0c,
-    );
-    const attacker = battlers.readUInt32LE(0);
-    const defender = battlers.readUInt32LE(8);
-    if (attacker > 1 || defender > 1) return undefined;
-    const monAt = (index: number) =>
-      readEffectivenessMon(
-        mons.subarray(index * BATTLE_MON_SIZE, (index + 1) * BATTLE_MON_SIZE),
-      );
     const sample: EffectivenessSample = {
       attacker,
       defender,
-      moveCur: (
-        await this.memory.readMemory(context + CONTEXT_MOVE_CUR_OFFSET, 4)
-      ).readUInt32LE(0),
+      moveCur,
       ...damageBlockFields(damageBlock),
       fieldConditions: await this.u32(
         context + CONTEXT_FIELD_CONDITIONS_OFFSET,
@@ -730,13 +789,19 @@ export class MelonDsConnector {
     maps: string[],
     onFrame: (frame: GameFrame, layout: PlatinumLayout) => void,
     onError: (error: unknown, disconnected: boolean) => void,
+    moveNames?: VanillaMoveNames,
   ): Promise<void> {
     this.rom = await NdsRom.open(path);
     try {
       if (this.stopped) throw new Error("MelonDS connection cancelled.");
       // Stopping the connector keeps this connection open so that reconnecting does not need a MelonDS reset.
       const memory = sharedGdbClient(port);
-      const reader = await PlatinumReader.create(memory, this.rom, maps);
+      const reader = await PlatinumReader.create(
+        memory,
+        this.rom,
+        maps,
+        moveNames,
+      );
       if (this.stopped) throw new Error("MelonDS connection cancelled.");
       await memory.connect(port, { signal: this.cancel.signal });
       if (this.stopped) throw new Error("MelonDS connection cancelled.");

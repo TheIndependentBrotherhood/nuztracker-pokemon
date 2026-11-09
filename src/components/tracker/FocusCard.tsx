@@ -440,7 +440,10 @@ export default function FocusCard({
   const seenAbilities = live
     ? []
     : (member.seenAbilities ?? []).map(
-        (id) => gameText?.abilityById(id, lang) ?? { name: `#${id}` },
+        (id) =>
+          (member.customSeen?.abilities[id] !== undefined
+            ? { name: member.customSeen.abilities[id] }
+            : gameText?.abilityById(id, lang)) ?? { name: `#${id}` },
       );
   const neutral =
     nature && (!nature.increased || nature.increased === nature.decreased);
@@ -516,7 +519,9 @@ export default function FocusCard({
   const seenOnly = !live && Boolean(member.seenMoves);
   const moveRows: LiveMove[] = live
     ? live.moves
-    : (member.seenMoves ?? []).map((id) => ({ id, pp: 0 }));
+    : (member.seenMoves ?? []).map(
+        (id) => member.customSeen?.moves[id] ?? { id, pp: 0 },
+      );
 
   const statValue = (stat: string) =>
     live

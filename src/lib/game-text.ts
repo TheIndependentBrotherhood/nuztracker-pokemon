@@ -107,6 +107,15 @@ export class GameText {
             ? "physical"
             : "special"
         : entry?.category);
+    // Moves a hack put over a vanilla id only have their ROM name, in the ROM language.
+    if (move.custom)
+      return {
+        name: move.name ?? `#${move.id}`,
+        category,
+        type,
+        power,
+        accuracy: move.accuracy,
+      };
     return {
       name: pick(entry?.name, lang) ?? move.name ?? `#${move.id}`,
       description: pick(entry?.description, lang),
@@ -118,6 +127,8 @@ export class GameText {
   }
 
   ability(pokemon: LivePokemon, lang: Lang): GameWord | undefined {
+    if (pokemon.customAbility && pokemon.ability)
+      return { name: pokemon.ability };
     const entry =
       (pokemon.abilityId !== undefined
         ? this.data.abilities[pokemon.abilityId]

@@ -37,6 +37,7 @@ import { RoomClient, savedClientSchema } from "./room-client";
 import { applyRoomCommand, type RoomCommand } from "./room-protocol";
 import { NdsRom } from "./nds-rom";
 import { MelonDsConnector } from "./platinum-reader";
+import type { VanillaMoveNames } from "./platinum-data";
 import { closeSharedGdbClients } from "./gdb-client";
 
 const melonRomSchema = z.object({
@@ -65,6 +66,7 @@ export class TrackerService {
     readonly database: TrackerDatabase,
     private readonly resolvePokemon: PokemonResolver,
     private readonly platinumMaps: string[] = [],
+    private readonly vanillaMoveNames: VanillaMoveNames = {},
   ) {
     const token =
       database.readSetting("bridge-token", z.string().min(32)) ??
@@ -385,7 +387,7 @@ export class TrackerService {
         if (this.melonDs !== connector) return;
         this.statusValue.melonDs = { ...this.statusValue.melonDs!, state: disconnected ? "disconnected" : "waiting" };
         this.reportBridgeError(error);
-      });
+      }, this.vanillaMoveNames);
       return this.status;
     } catch (error) {
       if (this.melonDs === connector) {

@@ -276,6 +276,7 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
     nature: text.optional(),
     ability: text.optional(),
     abilityId: z.number().int().min(1).max(10000).optional(),
+    customAbility: z.literal(true).optional(),
     types: typeNames.optional(),
     heldItem: text.optional(),
     heldItemId: z.number().int().min(1).max(65535).optional(),
@@ -306,6 +307,7 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
             category: z.enum(["physical", "special", "status"]).optional(),
             power: z.number().min(0).max(65535).optional(),
             accuracy: z.number().min(0).max(100).optional(),
+            custom: z.literal(true).optional(),
           })
           .strict(),
       )
@@ -325,6 +327,16 @@ const observationShape = {
   attackType: text.optional(),
   moveId: z.number().int().min(1).max(10000).optional(),
   abilityId: z.number().int().min(1).max(1000).optional(),
+  custom: z.literal(true).optional(),
+  move: z
+    .object({
+      type: text.optional(),
+      category: z.enum(["physical", "special", "status"]).optional(),
+      power: z.number().min(0).max(65535).optional(),
+      accuracy: z.number().min(0).max(100).optional(),
+    })
+    .strict()
+    .optional(),
 };
 
 export const gameFrameSchema: z.ZodType<GameFrame> = z

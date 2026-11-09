@@ -1,5 +1,9 @@
 import { Dex } from "@pkmn/dex";
-import type { LiveEvolution, LivePokemon } from "../src/lib/tracker/types";
+import type {
+  LiveEvolution,
+  LiveMove,
+  LivePokemon,
+} from "../src/lib/tracker/types";
 import type { DecodedPk4 } from "./pk4";
 import { NdsRom } from "./nds-rom";
 import { readGen4Message } from "./nds-text";
@@ -48,14 +52,84 @@ export interface PlatinumBattleData {
     | undefined;
   /** Types of a species' base form in the ROM personal data. */
   speciesTypes(species: number): string[] | undefined;
-  /** English name of an ability, for observations. */
+  /** English name of an ability, or its ROM name when the ROM replaced it. */
   abilityName(id: number): string | undefined;
-  /** English name of a move, for observations. */
+  /** True when the ROM defines an ability id that vanilla Platinum does not have. */
+  customAbility(id: number): boolean;
+  /** Highest ability id the ROM names. */
+  maxAbilityId: number;
+  /** English name of a move, or its ROM name when the ROM replaced it. */
   moveName(id: number): string | undefined;
+  /** ROM data of a move the ROM replaced (hacks); undefined for vanilla moves. */
+  customMove(id: number): CustomMove | undefined;
+  /** Highest move id the ROM defines. */
+  maxMoveId: number;
   /** Levels of a species' base-form level-up moves in the ROM (randomizer-aware). */
   learnLevels(species: number): number[] | undefined;
   /** Evolution methods of a species in the ROM (randomizer-aware). */
   evolutions(species: number): LiveEvolution[] | undefined;
+}
+
+/** Vanilla move names per language, keyed by move id (from the game-text reference data). */
+export type VanillaMoveNames = Record<string, Partial<Record<string, string>>>;
+
+export type CustomMove = Required<Pick<LiveMove, "name" | "type" | "power">> &
+  Pick<LiveMove, "category" | "accuracy">;
+
+const VANILLA_MOVES = 467;
+const VANILLA_ABILITIES = 123;
+const MOVE_NAMES_BANK = 647;
+const ABILITY_NAMES_BANK = 610;
+
+const comparable = (value: string | undefined) =>
+  (value ?? "")
+    .replace(/œ/g, "oe")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+// Gen 4 names are cut to 12 characters ("Puis. Cachée") and sometimes respelled ("Stalagtite").
+export function sameMoveName(romName: string, vanillaName: string): boolean {
+  const rom = comparable(romName);
+  const vanilla = comparable(vanillaName);
+  if (rom === vanilla) return true;
+  const parts = romName.split(".").map(comparable).filter(Boolean);
+  if (
+    parts.length > 1 &&
+    new RegExp(`^${parts.join("[a-z0-9]*")}$`).test(vanilla)
+  )
+    return true;
+  return editDistance(rom, vanilla) <= 2;
+}
+
+function editDistance(left: string, right: string): number {
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= left.length; row++) {
+    const current = [row];
+    for (let column = 1; column <= right.length; column++)
+      current[column] = Math.min(
+        previous[column] + 1,
+        current[column - 1] + 1,
+        previous[column - 1] + (left[row - 1] === right[column - 1] ? 0 : 1),
+      );
+    previous = current;
+  }
+  return previous[right.length];
+}
+
+function readNames(bank: Buffer | undefined): string[] {
+  const names: string[] = [];
+  if (!bank) return names;
+  for (let index = 0; ; index++) {
+    try {
+      const name = readGen4Message(bank, index);
+      if (name === undefined) return names;
+      names.push(name);
+    } catch {
+      return names;
+    }
+  }
 }
 
 const LEARNSET_END = 0xffff;
@@ -110,7 +184,10 @@ async function optionalArchive(
   }
 }
 
-export async function loadPlatinumData(rom: NdsRom) {
+export async function loadPlatinumData(
+  rom: NdsRom,
+  vanillaMoveNames: VanillaMoveNames = {},
+) {
   const personal = await rom.archive("poketool/personal/pl_personal.narc");
   const moveData = await rom.archive("poketool/waza/pl_waza_tbl.narc");
   const messages = await rom.archive("msgdata/pl_msg.narc");
@@ -128,18 +205,74 @@ export async function loadPlatinumData(rom: NdsRom) {
   const romTypes = [...types];
   if (ninthType === "fairy" || ninthType === "fee") romTypes[9] = "fairy";
   const dex = Dex.mod("gen4");
-  const moves = new Map(
+  const dexMoves = new Map(
     dex.moves
       .all()
       .filter((move) => move.gen <= 4)
-      .map((move) => [move.num, move.name]),
+      .map((move) => [move.num, move]),
   );
+  const moves = new Map([...dexMoves].map(([id, move]) => [id, move.name]));
   const abilities = new Map(
     dex.abilities
       .all()
       .filter((ability) => ability.gen <= 4)
       .map((ability) => [ability.num, ability.name]),
   );
+  const romMoveNames = readNames(messages[MOVE_NAMES_BANK]);
+  const romAbilityNames = readNames(messages[ABILITY_NAMES_BANK]);
+  // Translations and hacks keep the game code, so the text language is detected from move names.
+  const vanillaName = (id: number, language: string) =>
+    vanillaMoveNames[id]?.[language] ??
+    (language === "en" ? dexMoves.get(id)?.name : undefined);
+  const languages = [
+    ...new Set([
+      "en",
+      ...Object.values(vanillaMoveNames).flatMap((names) => Object.keys(names)),
+    ]),
+  ];
+  const matches = (language: string) =>
+    romMoveNames.filter(
+      (name, id) =>
+        id >= 1 &&
+        id <= VANILLA_MOVES &&
+        comparable(vanillaName(id, language)) === comparable(name),
+    ).length;
+  const language = languages
+    .map((candidate) => ({ candidate, count: matches(candidate) }))
+    .filter(({ count }) => count >= VANILLA_MOVES / 2)
+    .sort((left, right) => right.count - left.count)[0]?.candidate;
+  // Hacks reuse vanilla move ids for new moves (e.g. Moonblast over Lunar Dance): a move is
+  // custom when both its ROM name and its ROM data differ from vanilla. Renamed moves keep
+  // vanilla data and randomizers change data but never names.
+  const customMoves = new Map<number, CustomMove>();
+  for (let id = 1; id < moveData.length; id++) {
+    const data = moveData[id];
+    const name = romMoveNames[id]?.trim();
+    if (!name || !data || data.length < 16 || data[4] >= romTypes.length)
+      continue;
+    const rom = {
+      name,
+      type: romTypes[data[4]],
+      power: data[3],
+      category: moveCategories[data[2]],
+      accuracy: data[5],
+    };
+    const vanilla = id <= VANILLA_MOVES ? dexMoves.get(id) : undefined;
+    if (vanilla) {
+      const expected = language && vanillaName(id, language);
+      if (!expected || sameMoveName(name, expected)) continue;
+      if (
+        rom.type === vanilla.type.toLowerCase() &&
+        // Variable-power moves store 1 in the ROM and 0 in the reference data.
+        (rom.power <= 1 ? 0 : rom.power) === vanilla.basePower &&
+        rom.category === vanilla.category.toLowerCase()
+      )
+        continue;
+    }
+    customMoves.set(id, rom);
+  }
+  const customAbility = (id: number) =>
+    id > VANILLA_ABILITIES && Boolean(romAbilityNames[id]?.trim());
   const items = new Map(
     dex.items
       .all()
@@ -164,8 +297,13 @@ export async function loadPlatinumData(rom: NdsRom) {
       if (row[7] >= romTypes.length) return;
       return [...new Set([romTypes[row[6]], romTypes[row[7]]])];
     },
-    moveName: (id) => moves.get(id),
-    abilityName: (id) => abilities.get(id),
+    moveName: (id) => customMoves.get(id)?.name ?? moves.get(id),
+    customMove: (id) => customMoves.get(id),
+    maxMoveId: moveData.length - 1,
+    abilityName: (id) =>
+      customAbility(id) ? romAbilityNames[id].trim() : abilities.get(id),
+    customAbility,
+    maxAbilityId: Math.max(VANILLA_ABILITIES, romAbilityNames.length - 1),
     learnLevels: (species) => readLearnLevels(learnsets?.[species]),
     evolutions: (species) => readEvolutions(evolutionData?.[species]),
   };
@@ -193,9 +331,10 @@ export async function loadPlatinumData(rom: NdsRom) {
       pokemonId: alternate ? form.pokemon + decoded.form - 1 : species,
       types: [...new Set([romTypes[row[6]], romTypes[row[7]]])],
       ability:
-        abilities.get(decoded.abilityId) ??
+        battle.abilityName(decoded.abilityId) ??
         `Unknown ability #${decoded.abilityId}`,
       ...(decoded.abilityId ? { abilityId: decoded.abilityId } : {}),
+      ...(customAbility(decoded.abilityId) ? { customAbility: true } : {}),
       heldItem: decoded.heldItemId
         ? (items.get(decoded.heldItemId) ??
           `Unknown item #${decoded.heldItemId}`)
@@ -207,9 +346,11 @@ export async function loadPlatinumData(rom: NdsRom) {
           throw new Error(`Move #${move.id} uses an unsupported ROM layout.`);
         const category = moveCategories[data[2]];
         const ppUps = decoded.ppUps[index] ?? 0;
+        const custom = customMoves.has(move.id);
         return {
           ...move,
-          name: moves.get(move.id) ?? `Unknown move #${move.id}`,
+          name: battle.moveName(move.id) ?? `Unknown move #${move.id}`,
+          ...(custom ? { custom: true as const } : {}),
           type: romTypes[data[4]],
           power: data[3],
           accuracy: data[5],
