@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   desktopEventSchema,
   desktopStatusSchema,
+  desktopWindowStateSchema,
   recordSchema,
 } from "../src/lib/tracker/schema";
 import type { TrackerDesktopApi } from "../src/lib/tracker/types";
@@ -52,6 +53,9 @@ const api: TrackerDesktopApi = {
     request("getOverlayControl", overlayControlSchema, input),
   commandOverlay: (input) =>
     request("commandOverlay", overlayControlSchema, input),
+  getWindowState: () => request("getWindowState", desktopWindowStateSchema),
+  setAlwaysOnTop: (input) =>
+    request("setAlwaysOnTop", desktopWindowStateSchema, input),
   subscribe: (listener) => {
     const receive = (_event: Electron.IpcRendererEvent, payload: unknown) => {
       const parsed = desktopEventSchema.safeParse(payload);

@@ -26,6 +26,20 @@ export interface LiveMove {
   accuracy?: number;
 }
 
+/** Battle stats that in-game moves and abilities raise or lower by stages. */
+export const STAT_STAGE_NAMES = [
+  "attack",
+  "defense",
+  "speed",
+  "special-attack",
+  "special-defense",
+  "accuracy",
+  "evasion",
+] as const;
+export type StatStageName = (typeof STAT_STAGE_NAMES)[number];
+/** In-battle stat stages from -6 to +6; neutral stats are omitted. */
+export type StatStages = Partial<Record<StatStageName, number>>;
+
 export interface LivePokemon {
   identity: string;
   pokemonId: number;
@@ -44,7 +58,10 @@ export interface LivePokemon {
   heldItem?: string;
   heldItemId?: number;
   experience?: number;
+  friendship?: number;
   stats?: Record<string, number>;
+  // Only while the Pokémon is on the field in battle.
+  statStages?: StatStages;
   moves: LiveMove[];
   // Level of every level-up move of the species, read from the ROM (randomizer-aware).
   learnLevels?: number[];
@@ -64,6 +81,8 @@ export interface BattleOpponent {
   pokemonId: number;
   level: number;
   position?: number;
+  gender?: "male" | "female" | "unknown";
+  statStages?: StatStages;
   learnLevels?: number[];
   evolutions?: LiveEvolution[];
 }
@@ -273,6 +292,12 @@ export interface MapZoneInput {
   zoneId: string;
 }
 
+/** Desktop window chrome: custom title bar beside the system buttons and always-on-top pin. */
+export interface DesktopWindowState {
+  alwaysOnTop: boolean;
+  titleBar: boolean;
+}
+
 export interface TrackerDesktopApi {
   listRuns(): Promise<RunRecord[]>;
   createRun(record: RunRecord): Promise<RunRecord>;
@@ -312,6 +337,8 @@ export interface TrackerDesktopApi {
     runId: string;
     command: OverlayCommand;
   }): Promise<OverlayControl>;
+  getWindowState(): Promise<DesktopWindowState>;
+  setAlwaysOnTop(value: boolean): Promise<DesktopWindowState>;
   subscribe(listener: (event: DesktopEvent) => void): () => void;
 }
 

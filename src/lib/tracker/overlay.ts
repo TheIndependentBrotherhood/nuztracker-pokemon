@@ -4,6 +4,7 @@ import type {
   LiveEvolution,
   LivePokemon,
   RunRecord,
+  StatStages,
 } from "./types";
 import type {
   Capture,
@@ -53,6 +54,11 @@ export interface OverlayMember {
   baseStats?: PokemonStat[];
   annotations?: StatAnnotations;
   randomStats: boolean;
+  /** Random evolutions: evolution targets are not named. */
+  hideEvolutionTargets?: boolean;
+  /** Opponent only: gender and in-battle stat stages of the battler. */
+  gender?: LivePokemon["gender"];
+  statStages?: StatStages;
 }
 export interface OverlayTeam {
   playerId: string;
@@ -113,6 +119,7 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
           live: livePokemonSchema.optional(),
           bst: z.number(),
           randomStats: z.boolean(),
+          hideEvolutionTargets: z.boolean().optional(),
           baseStats: z
             .array(
               z.object({
@@ -129,6 +136,12 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
     }),
   ),
 });
+
+export function hidesEvolutionTargets(run: Run): boolean {
+  return Boolean(
+    run.isRandomMode && run.randomizerOptions?.randomizeEvolvedForms,
+  );
+}
 
 // The in-game map name is English; a matching run zone provides its localized names.
 function teamLocation(
@@ -239,6 +252,7 @@ export function overlayData(
         randomStats: Boolean(
           run.isRandomMode && run.randomizerOptions?.randomizeStats,
         ),
+        ...(hidesEvolutionTargets(run) ? { hideEvolutionTargets: true } : {}),
       })),
     })),
   };
@@ -288,6 +302,9 @@ export function opponentMember(
     ...(opponent.evolutions ? { evolutions: opponent.evolutions } : {}),
     seenMoves,
     ...(seenAbilities.length ? { seenAbilities } : {}),
+    ...(opponent.gender ? { gender: opponent.gender } : {}),
+    ...(opponent.statStages ? { statStages: opponent.statStages } : {}),
+    ...(hidesEvolutionTargets(run) ? { hideEvolutionTargets: true } : {}),
   };
 }
 

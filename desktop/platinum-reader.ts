@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
-import type { GameFrame, LivePokemon } from "../src/lib/tracker/types";
+import {
+  STAT_STAGE_NAMES,
+  type GameFrame,
+  type LivePokemon,
+  type StatStages,
+} from "../src/lib/tracker/types";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { sharedGdbClient, type ReadOnlyGdbClient } from "./gdb-client";
 import { NdsRom } from "./nds-rom";
@@ -37,6 +42,9 @@ const CONTEXT_REVEALED_ABILITIES_OFFSET = 0x390;
 const MAX_ABILITY_ID = 123;
 // BattleMon fields (pret/pokeplatinum include/battle/battle_mon.h).
 const BATTLE_MON_MOVES = 0x0c;
+// s8 statBoosts[8]: HP, Attack, Defense, Speed, Sp. Atk, Sp. Def, Accuracy, Evasion; 6 is neutral.
+const BATTLE_MON_STAT_BOOSTS = 0x18;
+const BATTLE_MON_GENDER = 0x7e;
 const BATTLE_MON_PP = 0x2c;
 const BATTLE_MON_VOLATILE = 0x70;
 const VOLATILE_CONDITION_TRANSFORM = 1 << 21;
@@ -75,10 +83,27 @@ const fingerprint = (party: DecodedPk4[]) =>
     ]),
   );
 
+/** Non-neutral stat stages of a battler; out-of-range bytes are ignored. */
+export function battleStatStages(
+  mon: Buffer,
+  offset = BATTLE_MON_STAT_BOOSTS,
+): StatStages | undefined {
+  const stages: StatStages = {};
+  STAT_STAGE_NAMES.forEach((name, index) => {
+    const raw = mon[offset + 1 + index];
+    if (raw !== 6 && raw <= 12) stages[name] = raw - 6;
+  });
+  return Object.keys(stages).length ? stages : undefined;
+}
+
+const genders = ["male", "female", "unknown"] as const;
+
 type FrameBattle = NonNullable<GameFrame["battle"]>;
 interface BattleRead {
   battle: FrameBattle;
   team: Map<string, DecodedPk4>;
+  /** Stat stages of the player's Pokémon currently on the field. */
+  playerStages: Map<string, StatStages>;
   side?: number;
   warning?: string;
   verify: { child: number; system: number };
@@ -304,7 +329,11 @@ export class PlatinumReader {
         language: this.rom.gameCode === "CPUF" ? "fr" : "en",
         trainerId: hex(trainerId),
       },
-      party: decoded.map(this.enrich),
+      party: decoded.map((pokemon) => {
+        const live = this.enrich(pokemon);
+        const statStages = battle?.playerStages.get(live.identity);
+        return statStages ? { ...live, statStages } : live;
+      }),
       location: {
         id: `platinum-${map}`,
         name: this.maps[map] ?? `Platinum map #${map}`,
@@ -424,6 +453,8 @@ export class PlatinumReader {
         // A fainted battler keeps its data until replaced; doubles may leave its slot empty.
         fainted: mon.readInt32LE(0x4c) <= 0,
         identity: `${hex(pid)}-${hex(mon.readUInt32LE(0x74))}`,
+        gender: genders[mon[BATTLE_MON_GENDER] & 0x0f],
+        stages: battleStatStages(mon),
       };
     });
     const previous =
@@ -508,6 +539,8 @@ export class PlatinumReader {
                 pokemonId: battler.species,
                 level: battler.level,
                 position: battler.index,
+                ...(battler.gender ? { gender: battler.gender } : {}),
+                ...(battler.stages ? { statStages: battler.stages } : {}),
                 ...(learnLevels ? { learnLevels } : {}),
                 ...(evolutions ? { evolutions } : {}),
               };
@@ -566,6 +599,13 @@ export class PlatinumReader {
         opponents,
       },
       team,
+      playerStages: new Map(
+        ours.flatMap((battler) =>
+          !battler.fainted && battler.stages
+            ? [[battler.identity, battler.stages] as const]
+            : [],
+        ),
+      ),
       side,
       verify: { child, system },
       ...(warning ? { warning } : {}),

@@ -1586,6 +1586,10 @@ const translations = {
   },
 
   // ── Compact Pokémon card (light tracker and OBS overlay) ────────────────────
+  windowPin: {
+    pin: { fr: "Épingler au premier plan", en: "Keep on top" },
+    unpin: { fr: "Ne plus épingler", en: "Stop keeping on top" },
+  },
   focusCard: {
     notes: { fr: "Notes", en: "Notes" },
     typesAction: { fr: "Types", en: "Types" },
@@ -1684,6 +1688,8 @@ const translations = {
       "special-defense": { fr: "D.Spé", en: "SpD" },
       speed: { fr: "Vit", en: "Spe" },
       special: { fr: "Spé", en: "Spc" },
+      accuracy: { fr: "Préc", en: "Acc" },
+      evasion: { fr: "Esq", en: "Eva" },
       total: { fr: "BST", en: "BST" },
     },
     statNames: {
@@ -1693,8 +1699,31 @@ const translations = {
       "special-attack": { fr: "Attaque Spéciale", en: "Special Attack" },
       "special-defense": { fr: "Défense Spéciale", en: "Special Defense" },
       speed: { fr: "Vitesse", en: "Speed" },
+      accuracy: { fr: "Précision", en: "Accuracy" },
+      evasion: { fr: "Esquive", en: "Evasion" },
     },
     level: { fr: "N.", en: "Lv." },
+    gender: {
+      male: { fr: "Mâle", en: "Male" },
+      female: { fr: "Femelle", en: "Female" },
+    },
+    friendship: { fr: "Amitié", en: "Friendship" },
+    friendshipDetail: {
+      fr: (value: number, threshold: number) =>
+        `${value}/255 · les évolutions par amitié demandent ${threshold}.`,
+      en: (value: number, threshold: number) =>
+        `${value}/255 · friendship evolutions need ${threshold}.`,
+    },
+    statStages: {
+      fr: "Modificateurs en combat",
+      en: "In-battle stat stages",
+    },
+    stageLine: {
+      fr: (stat: string, stage: string, multiplier: string) =>
+        `${stat} ${stage} (×${multiplier})`,
+      en: (stat: string, stage: string, multiplier: string) =>
+        `${stat} ${stage} (×${multiplier})`,
+    },
     nature: { fr: "Nature", en: "Nature" },
     ability: { fr: "Talent", en: "Ability" },
     item: { fr: "Objet", en: "Item" },

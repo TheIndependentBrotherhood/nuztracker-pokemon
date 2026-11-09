@@ -39,6 +39,17 @@ let localServer: LocalServer | undefined;
 let mainWindow: BrowserWindow | undefined;
 let shuttingDown = false;
 const compactWindows = new Map<string, BrowserWindow>();
+// Windows and Linux draw their caption buttons over the page, beside NuzTracker's own title bar.
+const customTitleBar = process.platform !== "darwin";
+const titleBarWindows = new WeakSet<BrowserWindow>();
+const COMPACT_ON_TOP_SETTING = "compact-always-on-top";
+
+function windowState(window: BrowserWindow | null) {
+  return {
+    alwaysOnTop: Boolean(window?.isAlwaysOnTop()),
+    titleBar: Boolean(window && titleBarWindows.has(window)),
+  };
+}
 
 function openWindow(path: string, compact = false): BrowserWindow {
   if (!localServer) throw new Error("The local server is not ready.");
@@ -51,6 +62,16 @@ function openWindow(path: string, compact = false): BrowserWindow {
     title: "NuzTracker",
     backgroundColor: "#fffef0",
     autoHideMenuBar: true,
+    ...(compact && customTitleBar
+      ? {
+          titleBarStyle: "hidden" as const,
+          titleBarOverlay: {
+            color: "#0b1218",
+            symbolColor: "#edf4fa",
+            height: 32,
+          },
+        }
+      : {}),
     show: process.env.NUZTRACKER_SMOKE_TEST !== "1",
     webPreferences: {
       preload: join(__dirname, "preload.cjs"),
@@ -59,6 +80,7 @@ function openWindow(path: string, compact = false): BrowserWindow {
       sandbox: true,
     },
   });
+  if (compact && customTitleBar) titleBarWindows.add(window);
   window.webContents.on("will-navigate", (event, url) => {
     if (new URL(url).origin !== origin) event.preventDefault();
   });
@@ -128,7 +150,7 @@ async function initialize(): Promise<void> {
   function handle<T>(
     method: string,
     schema: z.ZodType<T>,
-    action: (input: T) => unknown,
+    action: (input: T, window: BrowserWindow | null) => unknown,
   ) {
     ipcMain.handle(`nuztracker:${method}`, (event, input: unknown) => {
       if (
@@ -139,7 +161,10 @@ async function initialize(): Promise<void> {
           "Desktop commands are only available to the local NuzTracker interface.",
         );
       }
-      return action(schema.parse(input));
+      return action(
+        schema.parse(input),
+        BrowserWindow.fromWebContents(event.sender),
+      );
     });
   }
 
@@ -203,6 +228,18 @@ async function initialize(): Promise<void> {
     const window = openWindow(`/compact/?id=${encodeURIComponent(id)}`, true);
     compactWindows.set(id, window);
     window.on("closed", () => compactWindows.delete(id));
+    if (database?.readSetting(COMPACT_ON_TOP_SETTING, z.boolean()))
+      window.setAlwaysOnTop(true, "floating");
+  });
+  handle("getWindowState", z.undefined(), (_input, window) =>
+    windowState(window),
+  );
+  handle("setAlwaysOnTop", z.boolean(), (value, window) => {
+    if (!window) throw new Error("This window is no longer available.");
+    window.setAlwaysOnTop(value, "floating");
+    if ([...compactWindows.values()].includes(window))
+      database?.writeSetting(COMPACT_ON_TOP_SETTING, value);
+    return windowState(window);
   });
   handle("saveConnector", z.undefined(), async () => {
     if (!tracker.status.bridge.runId)

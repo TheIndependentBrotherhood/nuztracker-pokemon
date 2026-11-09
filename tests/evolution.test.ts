@@ -71,3 +71,11 @@ test("gendered levels merge and many branches become various", () => {
   ];
   assert.equal(evolutionSummary(eevee, 5, 4, "fr")?.label, "DIVERS");
 });
+
+test("random evolutions keep the condition but hide the target", () => {
+  const evolutions = [{ method: 4, param: 16, target: 2 }];
+  assert.deepEqual(
+    evolutionSummary(evolutions, 12, 4, "en", { species }, true)?.details,
+    ["Level 16"],
+  );
+});

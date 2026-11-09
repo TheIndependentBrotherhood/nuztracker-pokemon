@@ -213,6 +213,7 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
       gender: gender === 0 ? "male" : gender === 1 ? "female" : "unknown",
       nature: natures[personality % 25],
       experience: growth.readUInt32LE(8),
+      friendship: growth[12],
       stats: {
         attack: tail.readUInt16LE(10),
         defense: tail.readUInt16LE(12),

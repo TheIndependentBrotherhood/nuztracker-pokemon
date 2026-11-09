@@ -243,7 +243,7 @@ export default function LightTracker() {
           sx={{
             bgcolor: "#101820",
             color: "#edf4fa",
-            minHeight: "100vh",
+            minHeight: "var(--window-content-height, 100vh)",
             p: 1,
             maxWidth: 520,
             mx: "auto",

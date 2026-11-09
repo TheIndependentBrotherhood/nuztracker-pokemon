@@ -127,6 +127,27 @@ local function evolutions(species)
     return ok and result or nil
 end
 
+-- Species gender ratio from the ROM; 255 is genderless.
+local function genderOf(species, personality)
+    local genderRatio = read8(addresses.speciesInfo + species * 28 + 16)
+    if genderRatio == 255 then return "unknown" end
+    return personality % 256 < genderRatio and "female" or "male"
+end
+
+-- BattlePokemon.statStages at +24: HP, Attack, Defense, Speed, Sp. Atk, Sp. Def, Accuracy, Evasion; 6 is neutral.
+local stageNames = { "attack", "defense", "speed", "special-attack", "special-defense", "accuracy", "evasion" }
+local function statStages(address)
+    local stages, changed = {}, false
+    for index, name in ipairs(stageNames) do
+        local raw = read8(address + 24 + index)
+        if raw ~= 6 and raw <= 12 then
+            stages[name] = raw - 6
+            changed = true
+        end
+    end
+    return changed and stages or nil
+end
+
 local function readPokemon(address)
     local personality = read32(address)
     local trainer = read32(address + 4)
@@ -166,9 +187,7 @@ local function readPokemon(address)
     local info = addresses.speciesInfo + species * 28
     local abilitySlot = math.floor(ivFlags / 2147483648)
     local abilityId = read8(info + 22 + abilitySlot)
-    local genderRatio = read8(info + 16)
-    local gender = "unknown"
-    if genderRatio ~= 255 then gender = personality % 256 < genderRatio and "female" or "male" end
+    local gender = genderOf(species, personality)
     local shinyValue = bit.bxor(bit.bxor(personality % 65536, math.floor(personality / 65536)),
         bit.bxor(trainer % 65536, math.floor(trainer / 65536)))
     local status = read32(address + 80)
@@ -207,6 +226,7 @@ local function readPokemon(address)
         heldItem = itemId > 0 and itemId <= 374 and textAt(addresses.items + itemId * 44, 14) or nil,
         heldItemId = itemId > 0 and itemId <= 374 and itemId or nil,
         experience = value32(0, 4),
+        friendship = value8(0, 9),
         stats = {
             attack = read16(address + 90), defense = read16(address + 92), speed = read16(address + 94),
             ["special-attack"] = read16(address + 96), ["special-defense"] = read16(address + 98),
@@ -279,6 +299,8 @@ local function sample()
                 opponents[#opponents + 1] = {
                     identity = hex(read32(address + 72)) .. "-" .. tostring(slot),
                     pokemonId = nationalId(species), level = level,
+                    gender = genderOf(species, read32(address + 72)),
+                    statStages = statStages(address),
                     learnLevels = learnLevels(species),
                     evolutions = evolutions(species),
                 }
@@ -291,6 +313,13 @@ local function sample()
         local activeIdentity = hex(read32(addresses.battleMons + 72)) .. "-" .. hex(read32(addresses.battleMons + 84))
         for _, pokemon in ipairs(party) do
             if pokemon.identity == activeIdentity then battle.activePlayerIdentity = activeIdentity end
+        end
+        for slot = 0, math.min(battlers - 1, 3), 2 do
+            local address = addresses.battleMons + slot * 88
+            local identity = hex(read32(address + 72)) .. "-" .. hex(read32(address + 84))
+            for _, pokemon in ipairs(party) do
+                if pokemon.identity == identity then pokemon.statStages = statStages(address) end
+            end
         end
         -- The results field is written when an opponent announces an attack, not when its hidden moveset is loaded.
         if enemyMoveWritten and battlers == 2 and #opponents == 1 then

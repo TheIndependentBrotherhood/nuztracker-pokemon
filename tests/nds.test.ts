@@ -251,6 +251,7 @@ function platinumBattleRam(type = 0, battleData?: PlatinumBattleData) {
   ) => {
     const base = at(context + 0x2d80 + index * 0xc0);
     ram.writeUInt16LE(species, base);
+    ram.fill(6, base + 0x18, base + 0x20);
     ram[base + 0x34] = level;
     ram.writeInt32LE(hp, base + 0x4c);
     ram.writeUInt32LE(pid, base + 0x68);
@@ -313,7 +314,13 @@ test("Platinum battles use the player's battle party copy and only the opponents
     activePlayerIdentity: "8000000f-f123abcd",
     activePlayerIdentities: ["8000000f-f123abcd"],
     opponents: [
-      { identity: "12345678-1", pokemonId: 48, level: 3, position: 1 },
+      {
+        identity: "12345678-1",
+        pokemonId: 48,
+        level: 3,
+        position: 1,
+        gender: "male",
+      },
     ],
   });
   assert.deepEqual(frame.warnings, []);
@@ -448,7 +455,13 @@ test("Platinum battle types: trainer ids, link sides, tutorials and invalid stru
   assert.equal(linked.battle?.activePlayerIdentity, "8000000f-f123abcd");
   assert.match(linked.warnings?.[0] ?? "", /0x5 has not been validated/);
   assert.deepEqual(linked.battle?.opponents, [
-    { identity: "12345678-0", pokemonId: 48, level: 3, position: 0 },
+    {
+      identity: "12345678-0",
+      pokemonId: 48,
+      level: 3,
+      position: 0,
+      gender: "male",
+    },
   ]);
   assert.equal(linked.party[0].hp, 7);
   assert.ok(
@@ -1018,4 +1031,22 @@ test("GDB handshake supports a stub left in no-ack mode and a slow stub that sti
     patient.close();
     await slow.stop();
   }
+});
+
+test("Platinum battles expose stat stages and battler gender", async () => {
+  const battle = platinumBattleRam();
+  const battler = (index: number) =>
+    battle.at(0x02020000) + 0x2d80 + index * 0xc0;
+  battle.ram[battler(1) + 0x18 + 1] = 8;
+  battle.ram[battler(1) + 0x18 + 7] = 5;
+  battle.ram[battler(1) + 0x7e] = 1;
+  battle.ram[battler(0) + 0x18 + 3] = 4;
+  const { frame } = await battle.reader.read();
+  assert.deepEqual(frame.battle?.opponents[0].statStages, {
+    attack: 2,
+    evasion: -1,
+  });
+  assert.equal(frame.battle?.opponents[0].gender, "female");
+  assert.deepEqual(frame.party[0].statStages, { speed: -2 });
+  assert.equal(typeof frame.party[0].friendship, "number");
 });

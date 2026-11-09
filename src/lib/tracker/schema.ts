@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { POKEMON_STAT_NAMES } from "../types";
 import { GAME_VERSIONS } from "../game-catalog";
+import { STAT_STAGE_NAMES } from "./types";
 import type { Run, RunKnowledge, PokemonData } from "../types";
 import type {
   DesktopEvent,
@@ -241,6 +242,13 @@ export const gameIdentitySchema = z
   .strict();
 
 const learnLevelsSchema = z.array(z.number().int().min(0).max(100)).max(64);
+export const desktopWindowStateSchema = z
+  .object({ alwaysOnTop: z.boolean(), titleBar: z.boolean() })
+  .strict();
+export const statStagesSchema = z.partialRecord(
+  z.enum(STAT_STAGE_NAMES),
+  z.number().int().min(-6).max(6),
+);
 const evolutionsSchema = z
   .array(
     z
@@ -272,6 +280,8 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
     heldItem: text.optional(),
     heldItemId: z.number().int().min(1).max(65535).optional(),
     experience: z.number().int().nonnegative().optional(),
+    friendship: z.number().int().min(0).max(255).optional(),
+    statStages: statStagesSchema.optional(),
     stats: z
       .record(
         z.enum([
@@ -341,6 +351,8 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
                 pokemonId: z.number().int().min(1).max(100000),
                 level: z.number().int().min(1).max(100),
                 position: z.number().int().min(0).max(3).optional(),
+                gender: z.enum(["male", "female", "unknown"]).optional(),
+                statStages: statStagesSchema.optional(),
                 learnLevels: learnLevelsSchema.optional(),
                 evolutions: evolutionsSchema.optional(),
               })

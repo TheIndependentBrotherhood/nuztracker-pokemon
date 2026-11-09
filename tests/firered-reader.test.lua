@@ -54,7 +54,7 @@ local function preparePokemon(permutation, egg)
     write32(base + 4, trainer)
     write8(base + 8, 0xBB)
     write8(base + 9, 0xFF)
-    local growth = { 1, 125, 0 }
+    local growth = { 1, 125, 70 * 256 }
     local attacks = { 33, 0, 35 }
     local effort = { 0, 0, 0 }
     local misc = { 0, egg and 0x40000000 or 0, 0 }
@@ -105,6 +105,7 @@ for permutation = 0, 23 do
     assert(pokemon.hp == 17 and pokemon.maxHp == 20)
     assert(pokemon.moves[1].id == 33 and pokemon.moves[1].pp == 35)
     assert(pokemon.experience == 125)
+    assert(pokemon.friendship == 70, "Friendship was not read")
     assert(pokemon.types[1] == "grass" and pokemon.types[2] == "poison")
     assert(#pokemon.learnLevels == 3 and pokemon.learnLevels[3] == 13, "ROM learnset levels were not read")
     assert(#pokemon.evolutions == 1 and pokemon.evolutions[1].param == 16 and pokemon.evolutions[1].target == 2, "ROM evolutions were not read")
@@ -142,7 +143,9 @@ local originalRead8, originalRead16, originalRead32 = memory.read_u8, memory.rea
 local function checkEnemyRead(address)
     assert(not (address >= 0x0202402C and address < 0x02024284), "Hidden enemy party was read")
     -- Current HP (+40) is shown on screen as a bar and only tells whether the battler fainted.
-    assert(not (address > opponent and address < opponent + 42 and address ~= opponent + 40), "Hidden enemy statistics or moves were read")
+    -- Stat stages (+25 to +31) are announced by battle messages.
+    local stage = address >= opponent + 25 and address <= opponent + 31
+    assert(not (address > opponent and address < opponent + 42 and address ~= opponent + 40 and not stage), "Hidden enemy statistics or moves were read")
     assert(not (address > opponent + 42 and address < opponent + 72), "Hidden enemy details were read")
 end
 memory.read_u8 = function(address) checkEnemyRead(address); return originalRead8(address) end
@@ -154,6 +157,18 @@ frame = reader.sample()
 assert(frame.battle.activePlayerIdentity == frame.party[1].identity, "Live focus must identify the active owned Pokemon")
 assert(frame.observations[1].moveId == 33 and frame.observations[1].value == "TACKLE")
 assert(frame.battle.opponents[1].learnLevels[2] == 7, "Opponent learnset levels were not read")
+assert(frame.battle.opponents[1].gender == "female", "Opponent gender was not read")
+for index = 0, 7 do
+    write8(opponent + 24 + index, 6)
+    write8(0x02023BE4 + 24 + index, 6)
+end
+frame = reader.sample()
+assert(frame.battle.opponents[1].statStages == nil and frame.party[1].statStages == nil, "Neutral stages must be omitted")
+write8(opponent + 25, 8)
+write8(0x02023BE4 + 27, 4)
+frame = reader.sample()
+assert(frame.battle.opponents[1].statStages.attack == 2, "Opponent stat stages were not read")
+assert(frame.party[1].statStages.speed == -2, "Active Pokemon stat stages were not read")
 if arg and arg[1] == "--frame" then print("FRAME:" .. reader.json(frame)) end
 write16(opponent + 40, 0)
 assert(#reader.sample().battle.opponents == 0, "A fainted opponent without replacement must leave the field")

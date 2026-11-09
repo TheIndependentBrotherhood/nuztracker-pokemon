@@ -235,6 +235,8 @@ export function evolutionSummary(
   generation: number,
   lang: Lang,
   names: EvolutionNames = {},
+  // Random evolutions: the ROM knows the target, but naming it would spoil the run.
+  hideTargets = false,
 ): EvolutionSummary | undefined {
   if (!evolutions?.length) return undefined;
   return {
@@ -248,6 +250,7 @@ export function evolutionSummary(
         (entry) => LEVEL_METHODS.has(entry.method) && level >= entry.param,
       ),
     details: evolutions.map((entry) => {
+      if (hideTargets) return condition(entry, generation, lang, names);
       const target = names.species?.(entry.target) ?? `#${entry.target}`;
       return `${condition(entry, generation, lang, names)} → ${target}`;
     }),

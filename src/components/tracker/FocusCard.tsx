@@ -3,7 +3,12 @@
 import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import { Box, Tooltip, Typography } from "@mui/material";
 import { learnProgress, type OverlayMember } from "@/lib/tracker/overlay";
-import type { LiveMove, MoveCategory } from "@/lib/tracker/types";
+import {
+  STAT_STAGE_NAMES,
+  type LiveMove,
+  type MoveCategory,
+  type StatStageName,
+} from "@/lib/tracker/types";
 import { typeColors } from "@/lib/type-chart";
 import { POKEMON_STAT_NAMES, type PokemonData } from "@/lib/types";
 import { getGameVersion, type GameVersionId } from "@/lib/game-catalog";
@@ -19,6 +24,7 @@ import { evolutionSummary } from "@/lib/tracker/evolution";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t, type Lang } from "@/i18n/translations";
 import PixelIcon, {
+  HEART_ICON,
   PHYSICAL_ICON,
   SKULL_ICON,
   SPECIAL_ICON,
@@ -43,6 +49,33 @@ const muted = "#a5b6c8";
 const VISIBLE_MOVES = 4;
 const MOVE_ROW_PX = 18;
 const MOVE_HEADER_PX = 16;
+// Friendship needed by friendship evolutions from Gen 2 to Gen 7.
+const FRIENDSHIP_EVOLUTION = 220;
+
+/** Damage stats use (2 + n) / 2, accuracy and evasion (3 + n) / 3. */
+function stageMultiplier(stat: StatStageName, stage: number, lang: Lang) {
+  const base = stat === "accuracy" || stat === "evasion" ? 3 : 2;
+  const ratio = stage >= 0 ? (base + stage) / base : base / (base - stage);
+  return ratio.toLocaleString(lang === "fr" ? "fr-FR" : "en-US", {
+    maximumFractionDigits: 2,
+  });
+}
+
+function StageMark({ stage }: { stage?: number }) {
+  return (
+    <Box
+      component="span"
+      sx={{
+        textAlign: "right",
+        fontWeight: 800,
+        fontSize: "0.62rem",
+        color: stage ? (stage > 0 ? "#86efac" : "#fda4af") : undefined,
+      }}
+    >
+      {stage ? (stage > 0 ? `▲${stage}` : `▼${-stage}`) : ""}
+    </Box>
+  );
+}
 
 function CategoryIcon({
   category,
@@ -452,16 +485,29 @@ export default function FocusCard({
   );
 
   const level = live?.level ?? opponentLevel;
+  const gender = live?.gender ?? member.gender;
+  const friendship = live?.friendship;
+  const stages = live ? live.statStages : member.statStages;
+  const stageEntries = STAT_STAGE_NAMES.flatMap((stat) =>
+    stages?.[stat] ? [[stat, stages[stat]] as const] : [],
+  );
   const evolutions = live?.evolutions ?? member.evolutions;
   const species = useSpeciesNames(Boolean(evolutions?.length));
-  const evolution = evolutionSummary(evolutions, level, generation, lang, {
-    item: (id) => gameText?.itemName(id, lang, generation),
-    move: (id) => gameText?.move({ id, pp: 0 }, lang, generation).name,
-    species: (id) => {
-      const entry = species?.get(id);
-      return entry && getLocalizedPokemonName(entry, lang);
+  const evolution = evolutionSummary(
+    evolutions,
+    level,
+    generation,
+    lang,
+    {
+      item: (id) => gameText?.itemName(id, lang, generation),
+      move: (id) => gameText?.move({ id, pp: 0 }, lang, generation).name,
+      species: (id) => {
+        const entry = species?.get(id);
+        return entry && getLocalizedPokemonName(entry, lang);
+      },
     },
-  });
+    member.hideEvolutionTargets,
+  );
   const progress = learnProgress(
     live?.learnLevels ?? member.learnLevels,
     level,
@@ -519,6 +565,22 @@ export default function FocusCard({
             >
               {name}
             </Typography>
+            {(gender === "male" || gender === "female") && (
+              <Typography
+                data-testid="focus-gender"
+                role="img"
+                aria-label={t(text.gender[gender], lang)}
+                sx={{
+                  fontSize: "0.85rem",
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  flex: "none",
+                  color: gender === "male" ? "#60a5fa" : "#f472b6",
+                }}
+              >
+                {gender === "male" ? "♂" : "♀"}
+              </Typography>
+            )}
             {(live || opponentLevel !== undefined) && (
               <Typography
                 sx={{ fontSize: "0.72rem", color: muted, flex: "none" }}
@@ -573,6 +635,49 @@ export default function FocusCard({
                 {typeName(type)}
               </Box>
             ))}
+            {friendship !== undefined && (
+              <Hint
+                title={
+                  <TooltipBody
+                    title={t(text.friendship, lang)}
+                    lines={[
+                      text.friendshipDetail[lang](
+                        friendship,
+                        FRIENDSHIP_EVOLUTION,
+                      ),
+                    ]}
+                  />
+                }
+              >
+                <Box
+                  tabIndex={0}
+                  data-testid="focus-friendship"
+                  sx={{
+                    ml: "auto",
+                    flex: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.3,
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    lineHeight: 1.6,
+                    fontVariantNumeric: "tabular-nums",
+                    color:
+                      friendship >= FRIENDSHIP_EVOLUTION ? "#f9a8d4" : muted,
+                  }}
+                >
+                  <PixelIcon
+                    rows={HEART_ICON}
+                    size={10}
+                    color={
+                      friendship >= FRIENDSHIP_EVOLUTION ? "#f472b6" : "#64748b"
+                    }
+                    label={t(text.friendship, lang)}
+                  />
+                  {friendship}
+                </Box>
+              </Hint>
+            )}
           </Box>
           {live ? (
             <>
@@ -667,21 +772,41 @@ export default function FocusCard({
           )}
         </Box>
         <Hint
-          title={t(
-            live
-              ? text.inGameStats
-              : member.randomStats
-                ? text.estimates
-                : text.baseStats,
-            lang,
-          )}
+          title={
+            <TooltipBody
+              title={t(
+                live
+                  ? text.inGameStats
+                  : member.randomStats
+                    ? text.estimates
+                    : text.baseStats,
+                lang,
+              )}
+              lines={
+                stageEntries.length
+                  ? [
+                      `${t(text.statStages, lang)} :`,
+                      ...stageEntries.map(([stat, stage]) =>
+                        text.stageLine[lang](
+                          statName(stat),
+                          stage > 0 ? `+${stage}` : `−${-stage}`,
+                          stageMultiplier(stat, stage, lang),
+                        ),
+                      ),
+                    ]
+                  : []
+              }
+            />
+          }
         >
           <Box
             tabIndex={0}
             data-testid="focus-stats"
             sx={{
               display: "grid",
-              gridTemplateColumns: "auto auto",
+              gridTemplateColumns: stageEntries.length
+                ? "auto auto auto"
+                : "auto auto",
               columnGap: 0.75,
               fontSize: "0.68rem",
               lineHeight: 1.45,
@@ -727,14 +852,42 @@ export default function FocusCard({
                     </Box>
                   )}
                 </Box>,
+                ...(stageEntries.length
+                  ? [
+                      <StageMark
+                        key={`${stat}-stage`}
+                        stage={
+                          stat === "hp"
+                            ? undefined
+                            : stages?.[stat as StatStageName]
+                        }
+                      />,
+                    ]
+                  : []),
               ];
             })}
+            {(["accuracy", "evasion"] as const).map((stat) =>
+              stages?.[stat]
+                ? [
+                    <Box
+                      key={`${stat}-label`}
+                      component="span"
+                      sx={{ color: muted }}
+                    >
+                      {t(text.stats[stat], lang)}
+                    </Box>,
+                    <span key={`${stat}-value`} />,
+                    <StageMark key={`${stat}-stage`} stage={stages[stat]} />,
+                  ]
+                : null,
+            )}
             <Box component="span" sx={{ color: muted }}>
               {t(text.stats.total, lang)}
             </Box>
             <Box component="span" sx={{ textAlign: "right", fontWeight: 700 }}>
               {member.bst || "?"}
             </Box>
+            {stageEntries.length > 0 && <span />}
           </Box>
         </Hint>
       </Box>
