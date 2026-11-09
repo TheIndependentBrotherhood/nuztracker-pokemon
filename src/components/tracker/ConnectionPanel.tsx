@@ -38,6 +38,7 @@ import OverlayControls from "./OverlayControls";
 import SoulLinkRoomPanel from "./SoulLinkRoomPanel";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { boundedDialogProps, useTrackerBounds } from "./TrackerDialog";
 
 const tr = translations.connections;
 const hub = translations.hub;
@@ -61,6 +62,7 @@ export default function ConnectionPanel({
 }) {
   const { desktopStatus, playerByRun, setPlayer } = useRunStore();
   const { lang } = useLanguage();
+  const bounds = useTrackerBounds();
   const [view, setView] = useState<View | null>(null);
   const isDesktop = useSyncExternalStore(
     subscribeToNothing,
@@ -217,6 +219,7 @@ export default function ConnectionPanel({
         onClose={() => setView(null)}
         maxWidth="sm"
         fullWidth
+        {...boundedDialogProps(bounds)}
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Breadcrumbs aria-label={t(hub.title, lang)}>

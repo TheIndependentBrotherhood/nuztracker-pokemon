@@ -4,7 +4,22 @@ import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { sharedGdbClient, type ReadOnlyGdbClient } from "./gdb-client";
 import { NdsRom } from "./nds-rom";
 import { decodePk4, SnapshotError, type DecodedPk4 } from "./pk4";
-import { loadPlatinumData } from "./platinum-data";
+import { loadPlatinumData, type PlatinumBattleData } from "./platinum-data";
+import {
+  CONTEXT_BATTLERS_OFFSET,
+  CONTEXT_DAMAGE_BLOCK_SIZE,
+  CONTEXT_DAMAGE_OFFSET,
+  CONTEXT_FIELD_CONDITIONS_OFFSET,
+  CONTEXT_MOVE_CUR_OFFSET,
+  CONTEXT_TURN_FLAGS_OFFSET,
+  CONTEXT_TURN_FLAGS_SIZE,
+  classifyEffectiveness,
+  damageBlockFields,
+  hasMoveResult,
+  readEffectivenessMon,
+  type EffectivenessOutcome,
+  type EffectivenessSample,
+} from "./platinum-effectiveness";
 
 const isRam = (address: number, size = 4) =>
   address >= 0x02000000 && address + size <= 0x02400000 && address % 4 === 0;
@@ -58,6 +73,12 @@ interface BattleRead {
   side?: number;
   warning?: string;
   verify: { child: number; system: number };
+  effectiveness?: {
+    pokemonId: number;
+    attackType: string;
+    outcome: EffectivenessOutcome;
+    moveId: number;
+  };
 }
 
 export class PlatinumReader {
@@ -76,11 +97,13 @@ export class PlatinumReader {
     team: Map<string, DecodedPk4>;
     expiresAt: number;
   };
+  private pendingEffectiveness?: string;
   constructor(
     private readonly memory: Pick<ReadOnlyGdbClient, "readMemory">,
     private readonly rom: Pick<NdsRom, "gameCode" | "revision" | "romHash">,
     private readonly enrich: (pokemon: DecodedPk4) => LivePokemon,
     private readonly maps: string[],
+    private readonly battleData?: PlatinumBattleData,
   ) {}
 
   static async create(
@@ -88,7 +111,8 @@ export class PlatinumReader {
     rom: NdsRom,
     maps: string[],
   ): Promise<PlatinumReader> {
-    return new PlatinumReader(memory, rom, await loadPlatinumData(rom), maps);
+    const data = await loadPlatinumData(rom);
+    return new PlatinumReader(memory, rom, data.enrich, maps, data.battle);
   }
 
   private async u32(address: number): Promise<number> {
@@ -223,6 +247,7 @@ export class PlatinumReader {
       if (battle.warning) warnings.push(battle.warning);
     } else {
       this.battleState = undefined;
+      this.pendingEffectiveness = undefined;
       const after = this.afterBattle;
       if (
         after &&
@@ -260,7 +285,19 @@ export class PlatinumReader {
       },
       ...(battle ? { battle: battle.battle } : {}),
       ...(pokeBalls === undefined ? {} : { pokeBalls }),
-      observations: [],
+      observations: battle?.effectiveness
+        ? [
+            {
+              id: `eff-${battle.effectiveness.pokemonId}-${battle.effectiveness.attackType}-${battle.effectiveness.outcome}`,
+              encounterId: battle.battle.id,
+              pokemonId: battle.effectiveness.pokemonId,
+              kind: "effectiveness",
+              value: battle.effectiveness.outcome,
+              attackType: battle.effectiveness.attackType,
+              moveId: battle.effectiveness.moveId,
+            },
+          ]
+        : [],
       stateLoaded,
       warnings,
     });
@@ -363,6 +400,7 @@ export class PlatinumReader {
       (previous?.activeIdentity && savedIdentities.has(previous.activeIdentity)
         ? previous.activeIdentity
         : undefined);
+    const activeIdentities = ours.map((battler) => battler.identity);
     const team = new Map<string, DecodedPk4>();
     if (side !== undefined) {
       const battler = active?.index ?? side;
@@ -410,6 +448,7 @@ export class PlatinumReader {
               identity: `${hex(battler.pid)}-${battler.index}`,
               pokemonId: battler.species,
               level: battler.level,
+              position: battler.index,
             }));
     const kind = type & BATTLE_TRAINER ? "trainer" : "wild";
     // Wild encounters keep the same id when a save state replays the same Pokemon.
@@ -426,18 +465,78 @@ export class PlatinumReader {
         : VALIDATED_BATTLE_TYPES.has(type)
           ? undefined
           : `Battle type 0x${type.toString(16)} has not been validated yet. Check in-battle HP and opponents against the game.`;
+    const effectiveness =
+      battlerCount === 2 && !stateLoaded
+        ? await this.readEffectiveness(context, mons)
+        : undefined;
     return {
       battle: {
         id,
         kind,
         ...(activeIdentity ? { activePlayerIdentity: activeIdentity } : {}),
+        ...(activeIdentities.length
+          ? { activePlayerIdentities: activeIdentities }
+          : {}),
         opponents,
       },
       team,
       side,
       verify: { child, system },
       ...(warning ? { warning } : {}),
+      ...(effectiveness ? { effectiveness } : {}),
     };
+  }
+
+  // Reports the type matchup of the move being executed once two polls agree on it, so a context
+  // caught between two moves is never reported.
+  private async readEffectiveness(
+    context: number,
+    mons: Buffer,
+  ): Promise<BattleRead["effectiveness"]> {
+    if (!this.battleData) return undefined;
+    const damageBlock = await this.memory.readMemory(
+      context + CONTEXT_DAMAGE_OFFSET,
+      CONTEXT_DAMAGE_BLOCK_SIZE,
+    );
+    if (!hasMoveResult(damageBlock)) {
+      this.pendingEffectiveness = undefined;
+      return undefined;
+    }
+    const battlers = await this.memory.readMemory(
+      context + CONTEXT_BATTLERS_OFFSET,
+      0x0c,
+    );
+    const attacker = battlers.readUInt32LE(0);
+    const defender = battlers.readUInt32LE(8);
+    if (attacker > 1 || defender > 1) return undefined;
+    const monAt = (index: number) =>
+      readEffectivenessMon(
+        mons.subarray(index * BATTLE_MON_SIZE, (index + 1) * BATTLE_MON_SIZE),
+      );
+    const sample: EffectivenessSample = {
+      attacker,
+      defender,
+      moveCur: (
+        await this.memory.readMemory(context + CONTEXT_MOVE_CUR_OFFSET, 4)
+      ).readUInt32LE(0),
+      ...damageBlockFields(damageBlock),
+      fieldConditions: await this.u32(
+        context + CONTEXT_FIELD_CONDITIONS_OFFSET,
+      ),
+      defenderTurnFlags: await this.u32(
+        context +
+          CONTEXT_TURN_FLAGS_OFFSET +
+          defender * CONTEXT_TURN_FLAGS_SIZE,
+      ),
+      attackerMon: monAt(attacker),
+      defenderMon: monAt(defender),
+    };
+    const key = JSON.stringify(sample);
+    const stable = key === this.pendingEffectiveness;
+    this.pendingEffectiveness = key;
+    if (!stable) return undefined;
+    const result = classifyEffectiveness(sample, this.battleData);
+    return result && { ...result, moveId: sample.moveCur };
   }
 }
 

@@ -22,6 +22,7 @@ import { getZoneDisplayName } from "@/lib/zones";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { boundedDialogProps, useTrackerBounds } from "./TrackerDialog";
 
 const tr = translations.pendingCaptures;
 
@@ -35,6 +36,7 @@ export default function PendingCaptures({
   const { records, playerByRun, desktopStatus, receiveRecord, reportError } =
     useRunStore();
   const { lang } = useLanguage();
+  const bounds = useTrackerBounds();
   const playerId = playerByRun[run.id] ?? getPlayerId(run);
   const tracking = records.find((record) => record.run.id === run.id)?.tracking[
     playerId
@@ -174,6 +176,7 @@ export default function PendingCaptures({
         }}
         fullWidth
         maxWidth="sm"
+        {...boundedDialogProps(bounds)}
       >
         <DialogTitle>
           {pending && t(tr.dialogTitle, lang)(name(pending))}

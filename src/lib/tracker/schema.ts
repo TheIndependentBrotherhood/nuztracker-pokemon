@@ -315,6 +315,7 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
         id,
         kind: z.enum(["wild", "trainer"]),
         activePlayerIdentity: id.optional(),
+        activePlayerIdentities: z.array(id).max(2).optional(),
         opponents: z
           .array(
             z
@@ -322,6 +323,7 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
                 identity: id,
                 pokemonId: z.number().int().min(1).max(100000),
                 level: z.number().int().min(1).max(100),
+                position: z.number().int().min(0).max(3).optional(),
               })
               .strict(),
           )
@@ -345,6 +347,17 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
       context.addIssue({
         code: "custom",
         message: "The active player Pokemon must belong to the party.",
+      });
+    }
+    if (
+      frame.battle?.activePlayerIdentities?.some(
+        (identity) =>
+          !frame.party.some((pokemon) => pokemon.identity === identity),
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Active player Pokemon must belong to the party.",
       });
     }
     if (

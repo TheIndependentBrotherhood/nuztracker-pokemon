@@ -36,6 +36,22 @@ const forms: Record<
   479: { last: 5, personal: 503, pokemon: 10008 },
 };
 
+export interface PlatinumBattleData {
+  /** Type name of a ROM type index, as used by battle structures. */
+  typeName(index: number): string | undefined;
+  move(
+    id: number,
+  ):
+    | {
+        type: string;
+        category?: (typeof moveCategories)[number];
+        power: number;
+      }
+    | undefined;
+  /** Types of a species' base form in the ROM personal data. */
+  speciesTypes(species: number): string[] | undefined;
+}
+
 export async function loadPlatinumData(rom: NdsRom) {
   const personal = await rom.archive("poketool/personal/pl_personal.narc");
   const moveData = await rom.archive("poketool/waza/pl_waza_tbl.narc");
@@ -67,7 +83,26 @@ export async function loadPlatinumData(rom: NdsRom) {
       .filter((item) => item.gen <= 4)
       .map((item) => [item.num, item.name]),
   );
-  return (decoded: DecodedPk4): LivePokemon => {
+  const battle: PlatinumBattleData = {
+    typeName: (index) => romTypes[index],
+    move: (id) => {
+      const data = moveData[id];
+      if (!data || data.length < 16 || data[4] >= romTypes.length)
+        return undefined;
+      return {
+        type: romTypes[data[4]],
+        category: moveCategories[data[2]],
+        power: data[3],
+      };
+    },
+    speciesTypes: (species) => {
+      const row = personal[species];
+      if (!row || row.length < 44 || row[6] >= romTypes.length) return;
+      if (row[7] >= romTypes.length) return;
+      return [...new Set([romTypes[row[6]], romTypes[row[7]]])];
+    },
+  };
+  const enrich = (decoded: DecodedPk4): LivePokemon => {
     const species = decoded.pokemon.pokemonId;
     const form = forms[species];
     const alternate = Boolean(
@@ -120,4 +155,5 @@ export async function loadPlatinumData(rom: NdsRom) {
       }),
     };
   };
+  return { enrich, battle };
 }

@@ -24,6 +24,7 @@ import { livePokemonSchema } from "./schema";
 import { z } from "zod";
 import { POKEMON_STAT_NAMES } from "../types";
 import { GAME_VERSIONS, type GameVersionId } from "../game-catalog";
+import { zoneIdForMapName } from "../zones";
 
 export interface OverlayMember {
   id: string;
@@ -53,6 +54,7 @@ export interface OverlayTeam {
   suspended: boolean;
   sourceError: boolean;
   location?: string;
+  locationNames?: { fr?: string; en?: string };
   members: OverlayMember[];
 }
 export interface OverlayData {
@@ -81,6 +83,9 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
       suspended: z.boolean(),
       sourceError: z.boolean(),
       location: z.string().optional(),
+      locationNames: z
+        .object({ fr: z.string().optional(), en: z.string().optional() })
+        .optional(),
       members: z.array(
         z.object({
           id: z.string(),
@@ -114,6 +119,35 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
     }),
   ),
 });
+
+// The in-game map name is English; a matching run zone provides its localized names.
+function teamLocation(
+  record: RunRecord,
+  playerId: string,
+): Pick<OverlayTeam, "location" | "locationNames"> {
+  const tracking = record.tracking[playerId];
+  const location = tracking?.latest.location;
+  if (!location) return {};
+  const mappedId = tracking.zoneMappings[location.id];
+  const matchedId =
+    mappedId ??
+    (location.name
+      ? zoneIdForMapName(record.run.zones, location.name)
+      : undefined);
+  const zone = record.run.zones.find((entry) => entry.id === matchedId);
+  const names = zone?.zoneNames;
+  return {
+    location: location.name ?? zone?.zoneName ?? location.id,
+    ...(names?.fr || names?.en
+      ? {
+          locationNames: {
+            ...(names.fr ? { fr: names.fr } : {}),
+            ...(names.en ? { en: names.en } : {}),
+          },
+        }
+      : {}),
+  };
+}
 
 export function overlayData(
   record: RunRecord,
@@ -149,16 +183,7 @@ export function overlayData(
         bridge.playerId === player.id &&
         bridge.error,
       ),
-      location:
-        record.tracking[player.id]?.latest.location?.name ??
-        run.zones.find(
-          (zone) =>
-            zone.id ===
-            record.tracking[player.id]?.zoneMappings[
-              record.tracking[player.id]?.latest.location?.id ?? ""
-            ],
-        )?.zoneName ??
-        record.tracking[player.id]?.latest.location?.id,
+      ...teamLocation(record, player.id),
       members: partyMembers(record, player).map((capture) => ({
         id: capture.id,
         pokemonId: capture.pokemon.id,

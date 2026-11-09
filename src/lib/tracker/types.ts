@@ -52,6 +52,7 @@ export interface BattleOpponent {
   identity: string;
   pokemonId: number;
   level: number;
+  position?: number;
 }
 
 export interface GameObservation {
@@ -78,6 +79,7 @@ export interface GameFrame {
     kind: "wild" | "trainer";
     opponents: BattleOpponent[];
     activePlayerIdentity?: string;
+    activePlayerIdentities?: string[];
   };
   observations: GameObservation[];
   stateLoaded?: boolean;

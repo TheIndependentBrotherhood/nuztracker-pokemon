@@ -5,21 +5,21 @@ import {
   Alert,
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
 import type { Run } from "@/lib/types";
 import type { OverlayMember } from "@/lib/tracker/overlay";
 import { viewRunForPlayer, withSpeciesNotes } from "@/lib/tracker/knowledge";
+import { isRandomTypesMode } from "@/lib/capture-types";
 import {
   TYPES,
   getTypeDefensesForGeneration,
+  getTypeOffensesForGeneration,
   getEffectivenessLabel,
   getTypeTranslation,
   typeColors,
@@ -29,13 +29,10 @@ import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import type { CaptureSpriteOption } from "@/lib/pokemon-data";
 import FocusCard from "./FocusCard";
+import TypeInvestigation from "./TypeInvestigation";
+import TrackerDialog from "./TrackerDialog";
 
 const text = translations.focusCard;
-const paperSx = {
-  width: "min(460px, calc(100vw - 16px))",
-  m: 1,
-  maxHeight: "calc(100dvh - 16px)",
-};
 
 export default function InteractiveFocusCard({
   run,
@@ -66,17 +63,29 @@ export default function InteractiveFocusCard({
   const [typeTarget, setTypeTarget] = useState<{
     member: OverlayMember;
     defenses?: Record<string, number>;
+    offenses?: Record<string, number>;
     error?: boolean;
   }>();
-  const defenses = typeTarget?.defenses;
+  const [typeMode, setTypeMode] = useState<"defense" | "attack">("defense");
+  const matchups =
+    typeMode === "attack" ? typeTarget?.offenses : typeTarget?.defenses;
 
   function openTypes(target: OverlayMember) {
     try {
       setTypeTarget({
         member: target,
-        defenses: target.types.length
-          ? getTypeDefensesForGeneration(target.types, run.typeChartGeneration)
-          : undefined,
+        ...(target.types.length
+          ? {
+              defenses: getTypeDefensesForGeneration(
+                target.types,
+                run.typeChartGeneration,
+              ),
+              offenses: getTypeOffensesForGeneration(
+                target.types,
+                run.typeChartGeneration,
+              ),
+            }
+          : {}),
       });
     } catch (error: unknown) {
       setTypeTarget({ member: target, error: true });
@@ -132,153 +141,183 @@ export default function InteractiveFocusCard({
                   {t(text.notes, lang)}
                 </Button>
               </Tooltip>
-              <Tooltip title={t(text.typeMatchups, lang)}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  sx={{ py: 0, fontSize: "0.6rem" }}
-                  onClick={() => openTypes(member)}
-                >
-                  {t(text.typesAction, lang)}
-                </Button>
-              </Tooltip>
+              {isRandomTypesMode(run) && !member.types.length ? (
+                <TypeInvestigation
+                  run={run}
+                  playerId={playerId}
+                  member={member}
+                />
+              ) : (
+                <Tooltip title={t(text.typeMatchups, lang)}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ py: 0, fontSize: "0.6rem" }}
+                    onClick={() => openTypes(member)}
+                  >
+                    {t(text.typesAction, lang)}
+                  </Button>
+                </Tooltip>
+              )}
             </Stack>
           }
         />
       ) : (
         fallback
       )}
-      <Dialog
+      <TrackerDialog
         open={Boolean(editor)}
         onClose={() => {
           if (!busy) setEditor(undefined);
         }}
-        maxWidth={false}
-        slotProps={{ paper: { sx: paperSx } }}
+        title={`${t(text.notes, lang)} — ${editor?.name ?? ""}`}
+        help={t(text.notesHint, lang)}
+        actions={
+          <>
+            <Button
+              size="small"
+              disabled={busy}
+              onClick={() => setEditor(undefined)}
+            >
+              {t(text.cancelAction, lang)}
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              disabled={
+                busy || !editor || !canEditRun(editor.run.id, editor.playerId)
+              }
+              onClick={() => void saveNotes()}
+            >
+              {t(text.saveAction, lang)}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ px: 2, py: 1, fontSize: "0.95rem" }}>
-          {t(text.notes, lang)} — {editor?.name}
-        </DialogTitle>
-        <DialogContent sx={{ px: 2, py: 1 }}>
-          <Typography variant="caption" component="p" sx={{ mb: 1 }}>
-            {t(text.notesHint, lang)}
-          </Typography>
-          {saveError && (
-            <Alert severity="error" sx={{ mb: 1 }}>
-              {t(text.notesError, lang)}
-            </Alert>
+        {saveError && (
+          <Alert severity="error" sx={{ mb: 1, py: 0, fontSize: "0.7rem" }}>
+            {t(text.notesError, lang)}
+          </Alert>
+        )}
+        <TextField
+          autoFocus
+          fullWidth
+          multiline
+          size="small"
+          minRows={3}
+          maxRows={8}
+          placeholder={t(
+            translations.pokemonDetail.speciesNotesPlaceholder,
+            lang,
           )}
-          <TextField
-            autoFocus
-            fullWidth
-            multiline
-            minRows={3}
-            maxRows={8}
-            label={t(translations.pokemonDetail.speciesNotes, lang)}
-            placeholder={t(
-              translations.pokemonDetail.speciesNotesPlaceholder,
-              lang,
-            )}
-            value={editor?.draft ?? ""}
-            disabled={
-              busy ||
-              Boolean(editor && !canEditRun(editor.run.id, editor.playerId))
-            }
-            onChange={(event) => {
-              const draft = event.target.value;
-              setEditor((current) => current && { ...current, draft });
-            }}
-            slotProps={{ htmlInput: { maxLength: 20000 } }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 2 }}>
-          <Button disabled={busy} onClick={() => setEditor(undefined)}>
-            {t(text.cancelAction, lang)}
-          </Button>
-          <Button
-            variant="contained"
-            disabled={
-              busy || !editor || !canEditRun(editor.run.id, editor.playerId)
-            }
-            onClick={() => void saveNotes()}
-          >
-            {t(text.saveAction, lang)}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
+          value={editor?.draft ?? ""}
+          disabled={
+            busy ||
+            Boolean(editor && !canEditRun(editor.run.id, editor.playerId))
+          }
+          onChange={(event) => {
+            const draft = event.target.value;
+            setEditor((current) => current && { ...current, draft });
+          }}
+          slotProps={{
+            htmlInput: {
+              maxLength: 20000,
+              "aria-label": t(translations.pokemonDetail.speciesNotes, lang),
+            },
+          }}
+          sx={{ mt: 0.5 }}
+        />
+      </TrackerDialog>
+      <TrackerDialog
         open={Boolean(typeTarget)}
         onClose={() => setTypeTarget(undefined)}
-        maxWidth={false}
-        slotProps={{ paper: { sx: paperSx } }}
-      >
-        <DialogTitle sx={{ px: 2, py: 1, fontSize: "0.95rem" }}>
-          {t(text.typeMatchups, lang)} —{" "}
-          {typeTarget?.member.names?.[lang] ?? typeTarget?.member.name}
-        </DialogTitle>
-        <DialogContent sx={{ px: 2, py: 1 }}>
-          <Typography variant="caption" component="p" sx={{ mb: 1 }}>
-            {t(text.typeMatchupsHint, lang)}
-          </Typography>
-          {typeTarget?.error ? (
-            <Alert severity="error">{t(text.typeChartError, lang)}</Alert>
-          ) : !typeTarget?.member.types.length ? (
-            <Alert severity="info">{t(text.unknownTypes, lang)}</Alert>
-          ) : defenses ? (
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 0.5,
-              }}
-            >
-              {TYPES.filter((type) => type in defenses).map((type) => {
-                const multiplier = defenses[type];
-                const label = getEffectivenessLabel(multiplier, "defense");
-                return (
-                  <Box
-                    key={type}
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 0.5,
-                      p: 0.5,
-                      bgcolor: "#0f1922",
-                      borderRadius: 0.5,
-                    }}
-                  >
-                    <Typography
-                      sx={{ fontSize: "0.7rem", color: typeColors[type] }}
-                    >
-                      {getTypeTranslation(type, lang)}
-                    </Typography>
-                    <Tooltip
-                      title={t(translations.typeAnalysis[label.labelKey], lang)}
-                    >
-                      <Typography
-                        tabIndex={0}
-                        sx={{
-                          fontSize: "0.75rem",
-                          fontWeight: 700,
-                          color: label.color,
-                        }}
-                      >
-                        ×{multiplier}
-                      </Typography>
-                    </Tooltip>
-                  </Box>
-                );
-              })}
-            </Box>
-          ) : null}
-        </DialogContent>
-        <DialogActions sx={{ px: 2 }}>
-          <Button onClick={() => setTypeTarget(undefined)}>
+        title={`${t(text.typesAction, lang)} — ${
+          typeTarget?.member.names?.[lang] ?? typeTarget?.member.name ?? ""
+        }`}
+        help={t(
+          typeMode === "attack" ? text.attackerHint : text.typeMatchupsHint,
+          lang,
+        )}
+        actions={
+          <Button size="small" onClick={() => setTypeTarget(undefined)}>
             {t(text.closeAction, lang)}
           </Button>
-        </DialogActions>
-      </Dialog>
+        }
+      >
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          fullWidth
+          value={typeMode}
+          onChange={(_, value: "defense" | "attack" | null) => {
+            if (value) setTypeMode(value);
+          }}
+          sx={{ mb: 0.75 }}
+        >
+          <ToggleButton value="defense" sx={{ py: 0, fontSize: "0.7rem" }}>
+            {t(text.defenderMode, lang)}
+          </ToggleButton>
+          <ToggleButton value="attack" sx={{ py: 0, fontSize: "0.7rem" }}>
+            {t(text.attackerMode, lang)}
+          </ToggleButton>
+        </ToggleButtonGroup>
+        {typeTarget?.error ? (
+          <Alert severity="error" sx={{ py: 0, fontSize: "0.7rem" }}>
+            {t(text.typeChartError, lang)}
+          </Alert>
+        ) : !typeTarget?.member.types.length ? (
+          <Alert severity="info" sx={{ py: 0, fontSize: "0.7rem" }}>
+            {t(text.unknownTypes, lang)}
+          </Alert>
+        ) : matchups ? (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))",
+              gap: 0.25,
+            }}
+          >
+            {TYPES.filter((type) => type in matchups).map((type) => {
+              const multiplier = matchups[type];
+              const label = getEffectivenessLabel(multiplier, typeMode);
+              return (
+                <Box
+                  key={type}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 0.5,
+                    px: 0.5,
+                    py: 0.25,
+                    bgcolor: "#0f1922",
+                    borderRadius: 0.5,
+                  }}
+                >
+                  <Typography
+                    sx={{ fontSize: "0.65rem", color: typeColors[type] }}
+                  >
+                    {getTypeTranslation(type, lang)}
+                  </Typography>
+                  <Typography
+                    aria-label={t(
+                      translations.typeAnalysis[label.labelKey],
+                      lang,
+                    )}
+                    sx={{
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      color: label.color,
+                    }}
+                  >
+                    ×{multiplier}
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Box>
+        ) : null}
+      </TrackerDialog>
     </>
   );
 }

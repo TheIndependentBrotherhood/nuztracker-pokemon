@@ -11,9 +11,13 @@ import {
   saveKnowledgeView,
   viewRunForPlayer,
   withSpeciesNotes,
+  withSpeciesTypes,
   withoutPrivateNotes,
 } from "../src/lib/tracker/knowledge";
-import { getTypeDefensesForGeneration } from "../src/lib/type-chart";
+import {
+  getTypeDefensesForGeneration,
+  getTypeOffensesForGeneration,
+} from "../src/lib/type-chart";
 import { ingestFrame } from "../src/lib/tracker/live";
 import type { LivePokemon } from "../src/lib/tracker/types";
 import gameTextData from "../public/data/game-text.json";
@@ -123,6 +127,24 @@ test("a dead Pokémon still in the in-game party stays visible in party order", 
   );
 });
 
+test("The compact tracker receives the current zone in both languages", () => {
+  const current = record();
+  current.run.zones[0] = {
+    ...current.run.zones[0],
+    zoneNames: { fr: "Route 1 (FR)", en: "Route 1" },
+  };
+  current.tracking.solo = ingestFrame(
+    current,
+    "solo",
+    { ...frame(), location: { id: "map-1", name: "ROUTE 1" } },
+    pokemon,
+    10000,
+  ).tracking.solo;
+  current.tracking.solo.zoneMappings = { "map-1": "route-1" };
+  const team = overlayData(current).teams[0];
+  assert.deepEqual(team.locationNames, { fr: "Route 1 (FR)", en: "Route 1" });
+});
+
 test("Live focuses on the opponent in battle, while party selection pins the player's card", () => {
   const current = record();
   current.run.team = [capture("lead"), capture("second")];
@@ -219,6 +241,38 @@ test("compact notes share Pokédex knowledge without changing the other player's
   assert.equal(
     withoutPrivateNotes(persisted).playerKnowledge?.p1.pokedexNotesByPokemonId,
     undefined,
+  );
+});
+
+test("attacker matchups keep the best STAB multiplier for the run's generation", () => {
+  const offenses = getTypeOffensesForGeneration(
+    ["electric", "ground"],
+    "gen2-5",
+  );
+  assert.equal(offenses.flying, 2);
+  assert.equal(offenses.water, 2);
+  assert.equal(offenses.electric, 2);
+  assert.equal(offenses.grass, 0.5);
+  assert.equal(offenses.normal, 1);
+  assert.equal("fairy" in offenses, false);
+  assert.equal(getTypeOffensesForGeneration(["normal"], "gen2-5").ghost, 0);
+  assert.equal(getTypeOffensesForGeneration(["ghost"], "gen2-5").steel, 0.5);
+});
+
+test("confirmed types are saved for the species and the player's captures only", () => {
+  const current = record(true);
+  const own = { ...capture("own", 0), customTypes: undefined };
+  const other = capture("other", 1);
+  current.run.playerKnowledge = { p1: {}, p2: {} };
+  current.run.team = [own, other];
+  const view = viewRunForPlayer(current.run, "p1");
+  const next = withSpeciesTypes(view, "p1", 1, ["fire", "dragon"]);
+  assert.deepEqual(next.customTypesByPokemonId, { 1: ["fire", "dragon"] });
+  assert.deepEqual(next.team[0].customTypes, ["fire", "dragon"]);
+  assert.equal(next.team[1].customTypes, undefined);
+  assert.deepEqual(
+    saveKnowledgeView(next, "p1").playerKnowledge?.p1.customTypesByPokemonId,
+    { 1: ["fire", "dragon"] },
   );
 });
 

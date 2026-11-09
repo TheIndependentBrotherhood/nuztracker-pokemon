@@ -62,6 +62,45 @@ export function withSpeciesNotes(
   };
 }
 
+export function withSpeciesTypes(
+  run: Run,
+  playerId: string,
+  pokemonId: number,
+  types: string[],
+): Run {
+  const compact = types.filter(Boolean);
+  const next = { ...run.customTypesByPokemonId };
+  if (compact.length) next[pokemonId] = compact;
+  else delete next[pokemonId];
+  const owns = (capture: Capture) =>
+    capture.pokemon.id === pokemonId &&
+    (!run.playerKnowledge ||
+      getPlayerId(run, capture.playerIndex) === playerId);
+  const withTypes = (capture: Capture): Capture =>
+    owns(capture)
+      ? { ...capture, customTypes: compact.length ? compact : undefined }
+      : capture;
+  return {
+    ...run,
+    customTypesByPokemonId: Object.keys(next).length ? next : undefined,
+    team: run.team.map(withTypes),
+    ...(run.playerTeams
+      ? {
+          playerTeams: Object.fromEntries(
+            Object.entries(run.playerTeams).map(([index, captures]) => [
+              index,
+              captures.map(withTypes),
+            ]),
+          ),
+        }
+      : {}),
+    zones: run.zones.map((zone) => ({
+      ...zone,
+      captures: zone.captures.map(withTypes),
+    })),
+  };
+}
+
 export function saveKnowledgeView(run: Run, playerId: string): Run {
   if (!run.playerKnowledge) return run;
   return {

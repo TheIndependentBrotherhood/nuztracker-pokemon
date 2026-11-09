@@ -243,15 +243,36 @@ export function buildTypeDefensesFromJson(
   return defenses;
 }
 
+export function typesForGeneration(
+  generation: "gen1" | "gen2-5" | "gen6+",
+): string[] {
+  return TYPES.slice(
+    0,
+    generation === "gen1" ? 15 : generation === "gen2-5" ? 17 : 18,
+  );
+}
+
+/** Best multiplier dealt by moves of the given types against each type. */
+export function getTypeOffensesForGeneration(
+  types: string[],
+  generation: "gen1" | "gen2-5" | "gen6+",
+): Record<string, number> {
+  return Object.fromEntries(
+    typesForGeneration(generation).map((defending) => {
+      const taken = getTypeDefensesForGeneration([defending], generation);
+      return [
+        defending,
+        Math.max(...types.map((attacking) => taken[attacking] ?? 1)),
+      ];
+    }),
+  );
+}
+
 export function getTypeDefensesForGeneration(
   types: string[],
   generation: "gen1" | "gen2-5" | "gen6+",
 ): Record<string, number> {
-  const availableTypes = TYPES.slice(
-    0,
-    generation === "gen1" ? 15 : generation === "gen2-5" ? 17 : 18,
-  );
-  const available = new Set<string>(availableTypes);
+  const available = new Set<string>(typesForGeneration(generation));
   for (const type of types) {
     if (!available.has(type))
       throw new Error(`Type ${type} is unavailable in ${generation}.`);

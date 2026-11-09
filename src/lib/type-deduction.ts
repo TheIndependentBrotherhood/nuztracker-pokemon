@@ -172,6 +172,22 @@ export function countPossibleTypeCombos(
   return count;
 }
 
+/** Type combinations still compatible with the given observations. */
+export function possibleTypeCombos(
+  observations: TypeObservation[],
+  abilityPanel: string[],
+  typeData: TypeChartData,
+): string[][] {
+  return generateAllTypeCombos().filter((combo) =>
+    typeComboMatchesObservationsSync(
+      combo,
+      observations,
+      abilityPanel,
+      typeData,
+    ),
+  );
+}
+
 /**
  * Get ability impact on type effectiveness (from applyAbilityModifiers logic)
  * Returns the effectiveness multiplier for a specific type matchup

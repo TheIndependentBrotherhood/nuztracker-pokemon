@@ -691,6 +691,11 @@ const translations = {
     },
     fullRun: { fr: "Run complète", en: "Full run" },
     liveButton: { fr: "Direct", en: "Live" },
+    opponentsLabel: { fr: "Adversaires", en: "Opponents" },
+    opponentSlot: {
+      fr: (n: number) => `Adversaire ${n}`,
+      en: (n: number) => `Opponent ${n}`,
+    },
     statusLive: { fr: "En direct", en: "Live" },
     statusLead: { fr: "Direct · en tête", en: "Live · lead" },
     statusBattle: { fr: "Combat · auto", en: "Battle · auto" },
@@ -1569,6 +1574,62 @@ const translations = {
       en: "Saving failed. Your notes are still in this panel; please retry.",
     },
     saveAction: { fr: "Enregistrer", en: "Save" },
+    investigationAction: { fr: "Enquête", en: "Clues" },
+    investigationTitle: {
+      fr: "Enquête sur les types",
+      en: "Type investigation",
+    },
+    investigationProgress: {
+      fr: (remaining: number, total: number) =>
+        `${remaining} / ${total} combinaisons possibles`,
+      en: (remaining: number, total: number) =>
+        `${remaining} / ${total} combinations possible`,
+    },
+    investigationHint: {
+      fr: "Les attaques lancées en combat sont ajoutées automatiquement (Platine sur MelonDS, combats simples). Valide ici les types trouvés ou saisis-les à la main ; les indices se corrigent dans la fiche Pokédex.",
+      en: "Moves used in battle are added automatically (Platinum on MelonDS, single battles). Confirm the types found here or enter them manually; clues can be corrected from the Pokédex entry.",
+    },
+    investigationSolved: { fr: "Types déduits :", en: "Deduced types:" },
+    investigationCandidates: {
+      fr: "Combinaisons possibles",
+      en: "Possible combinations",
+    },
+    investigationTooMany: {
+      fr: "Trop de possibilités : attaque avec d'autres types.",
+      en: "Too many options: attack with other types.",
+    },
+    investigationNoClue: {
+      fr: "Aucun indice : attaque ce Pokémon.",
+      en: "No clue yet: attack this Pokémon.",
+    },
+    investigationContradiction: {
+      fr: "Indices contradictoires : vérifie-les dans le Pokédex.",
+      en: "Contradicting clues: check them in the Pokédex.",
+    },
+    investigationLoading: {
+      fr: "Chargement de la table des types…",
+      en: "Loading the type chart…",
+    },
+    helpAction: { fr: "Aide", en: "Help" },
+    investigationPick: {
+      fr: "Choisis jusqu'à 2 types :",
+      en: "Pick up to 2 types:",
+    },
+    investigationPickHint: {
+      fr: "Clique sur une combinaison possible ou sur les types pour la sélectionner, puis Valider. Une fois validés, le bouton Types remplace Enquête.",
+      en: "Click a possible combination or the types to select them, then Confirm. Once confirmed, the Types button replaces Clues.",
+    },
+    confirmTypesAction: { fr: "Valider", en: "Confirm" },
+    confirmTypesError: {
+      fr: "Impossible d'enregistrer les types.",
+      en: "Unable to save the types.",
+    },
+    defenderMode: { fr: "Défenseur", en: "Defender" },
+    attackerMode: { fr: "Assaillant", en: "Attacker" },
+    attackerHint: {
+      fr: "Meilleur multiplicateur des attaques de ses propres types (STAB) contre chaque type défenseur. Les talents et objets ne sont pas pris en compte.",
+      en: "Best multiplier of moves matching its own types (STAB) against each defending type. Abilities and items are not included.",
+    },
     closeAction: { fr: "Fermer", en: "Close" },
     cancelAction: { fr: "Annuler", en: "Cancel" },
     opponentInfo: {

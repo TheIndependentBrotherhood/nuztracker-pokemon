@@ -13,7 +13,10 @@ import {
 } from "../desktop/gdb-client";
 import { NdsRom } from "../desktop/nds-rom";
 import { PlatinumReader } from "../desktop/platinum-reader";
-import { loadPlatinumData } from "../desktop/platinum-data";
+import {
+  loadPlatinumData,
+  type PlatinumBattleData,
+} from "../desktop/platinum-data";
 import { pk4Fixture, messageBank, ndsRomFixture } from "./nds-fixtures";
 
 test("PK4 decoding covers all shuffle indices, encryption flags, unsigned identities and egg privacy", () => {
@@ -68,9 +71,12 @@ test("NDS text and ROM archives preserve local modified types without revealing 
         (await rom.archive("poketool/personal/pl_personal.narc")).length,
         509,
       );
-      const enrich = await loadPlatinumData(rom);
+      const { enrich, battle } = await loadPlatinumData(rom);
       const pokemon = enrich(decodePk4(pk4Fixture())!);
       assert.deepEqual(pokemon.types, ["fairy"]);
+      assert.deepEqual(battle.speciesTypes(pokemon.pokemonId), ["fairy"]);
+      assert.equal(battle.move(pokemon.moves[0].id)?.type, "fire");
+      assert.equal(battle.typeName(9), "fairy");
       assert.equal(pokemon.moves[0].type, "fire");
       assert.equal(pokemon.moves[0].power, 40);
       assert.equal("baseStats" in pokemon, false);
@@ -189,7 +195,7 @@ test("Platinum reads guarded standard and Project PM parties, real frame counter
   }
 });
 
-function platinumBattleRam(type = 0) {
+function platinumBattleRam(type = 0, battleData?: PlatinumBattleData) {
   const ram = Buffer.alloc(0x400000);
   const at = (address: number) => address - 0x02000000;
   const root = 0x02010000,
@@ -265,6 +271,7 @@ function platinumBattleRam(type = 0) {
     { gameCode: "CPUE", revision: 1, romHash: "synthetic" },
     (decoded) => decoded.pokemon,
     ["", "", "", "Jubilife City"],
+    battleData,
   );
   return {
     ram,
@@ -295,7 +302,10 @@ test("Platinum battles use the player's battle party copy and only the opponents
     id: "platinum-wild-12345678",
     kind: "wild",
     activePlayerIdentity: "8000000f-f123abcd",
-    opponents: [{ identity: "12345678-1", pokemonId: 48, level: 3 }],
+    activePlayerIdentities: ["8000000f-f123abcd"],
+    opponents: [
+      { identity: "12345678-1", pokemonId: 48, level: 3, position: 1 },
+    ],
   });
   assert.deepEqual(frame.warnings, []);
   assert.equal(frame.pokeBalls, 7);
@@ -399,9 +409,16 @@ test("Platinum battle types: trainer ids, link sides, tutorials and invalid stru
   assert.deepEqual(doubled.warnings, []);
   assert.equal(doubled.battle?.kind, "trainer");
   assert.equal(doubled.battle?.activePlayerIdentity, "8000000f-f123abcd");
+  assert.deepEqual(doubled.battle?.activePlayerIdentities, [
+    "8000000f-f123abcd",
+  ]);
   assert.deepEqual(
     doubled.battle?.opponents.map((opponent) => opponent.pokemonId),
     [48, 29],
+  );
+  assert.deepEqual(
+    doubled.battle?.opponents.map((opponent) => opponent.position),
+    [1, 3],
   );
   assert.equal(doubled.party[0].hp, 7);
 
@@ -414,7 +431,7 @@ test("Platinum battle types: trainer ids, link sides, tutorials and invalid stru
   assert.equal(linked.battle?.activePlayerIdentity, "8000000f-f123abcd");
   assert.match(linked.warnings?.[0] ?? "", /0x5 has not been validated/);
   assert.deepEqual(linked.battle?.opponents, [
-    { identity: "12345678-0", pokemonId: 48, level: 3 },
+    { identity: "12345678-0", pokemonId: 48, level: 3, position: 0 },
   ]);
   assert.equal(linked.party[0].hp, 7);
   assert.ok(
@@ -442,6 +459,123 @@ test("Platinum battle types: trainer ids, link sides, tutorials and invalid stru
   assert.ok(
     !unrelated.addresses.includes(unrelated.child + 0x0c),
     "A foreign FieldSystem is never followed.",
+  );
+});
+
+const syntheticRomTypes = [
+  "normal",
+  "fighting",
+  "flying",
+  "poison",
+  "ground",
+  "rock",
+  "bug",
+  "ghost",
+  "steel",
+  "???",
+  "fire",
+  "water",
+  "grass",
+  "electric",
+  "psychic",
+  "ice",
+  "dragon",
+  "dark",
+];
+const syntheticBattleData: PlatinumBattleData = {
+  typeName: (index) => syntheticRomTypes[index],
+  move: (id) =>
+    (
+      ({
+        5: { type: "normal", category: "physical", power: 80 },
+        45: { type: "normal", category: "status", power: 0 },
+        52: { type: "fire", category: "special", power: 40 },
+        89: { type: "ground", category: "physical", power: 100 },
+      }) as const
+    )[id as 5 | 45 | 52 | 89],
+  speciesTypes: (species) =>
+    species === 48 ? ["bug", "poison"] : species === 25 ? ["electric"] : [],
+};
+
+test("Platinum reports the type matchups computed by the game once a move result is stable", async () => {
+  const battle = platinumBattleRam(0, syntheticBattleData);
+  const context = battle.at(0x02020000);
+  const enemy = context + 0x2d80 + 0xc0;
+  battle.ram[enemy + 0x24] = 6;
+  battle.ram[enemy + 0x25] = 3;
+  battle.ram[context + 0x2d80 + 0x24] = 13;
+  battle.ram[context + 0x2d80 + 0x25] = 13;
+  const move = (moveCur: number, flags: number, damage: number) => {
+    battle.ram.writeUInt32LE(0, context + 0x64);
+    battle.ram.writeUInt32LE(1, context + 0x6c);
+    battle.ram.writeUInt32LE(moveCur, context + 0x3084);
+    battle.ram.writeUInt32LE(flags, context + 0x21ac);
+    battle.ram.writeInt32LE(damage, context + 0x2184);
+  };
+  const observed = async () => (await battle.reader.read()).frame.observations;
+
+  assert.deepEqual(await observed(), [], "No move is being executed.");
+  move(52, 1 << 1, -20);
+  assert.deepEqual(await observed(), [], "A single sample is never trusted.");
+  assert.deepEqual(await observed(), [
+    {
+      id: "eff-48-fire-weakness",
+      encounterId: "platinum-wild-12345678",
+      pokemonId: 48,
+      kind: "effectiveness",
+      value: "weakness",
+      attackType: "fire",
+      moveId: 52,
+    },
+  ]);
+
+  const outcome = async (moveCur: number, flags: number, damage: number) => {
+    move(moveCur, flags, damage);
+    await battle.reader.read();
+    return (await observed())[0]?.value;
+  };
+  assert.equal(await outcome(5, 0, -10), "neutral");
+  assert.equal(
+    await outcome(52, 0, -10),
+    "neutral",
+    "The game clears both flags when a weakness and a resistance cancel out.",
+  );
+  assert.equal(await outcome(52, 1 << 2, -5), "resistance");
+  assert.equal(await outcome(89, 1 << 3, 0), "immunity");
+  assert.equal(await outcome(89, 1 << 11, 0), undefined, "Levitate");
+  assert.equal(await outcome(52, (1 << 1) | 1, 0), undefined, "Missed");
+  assert.equal(await outcome(45, 1 << 3, 0), undefined, "Status move");
+  assert.equal(await outcome(52, 0, 0), undefined, "No damage dealt yet");
+
+  // Hidden Power-like override: the type comes from the battle context.
+  battle.ram.writeUInt32LE(11, context + 0x21a0);
+  assert.equal(await outcome(5, 1 << 1, -9), "weakness");
+  assert.equal((await observed())[0]?.attackType, "water");
+  battle.ram.writeUInt32LE(0, context + 0x21a0);
+
+  battle.ram[enemy + 0x24] = 13;
+  assert.equal(
+    await outcome(52, 1 << 1, -20),
+    undefined,
+    "Types changed in battle no longer describe the species.",
+  );
+  battle.ram[enemy + 0x24] = 6;
+
+  battle.ram.writeUInt32LE(1 << 29, enemy + 0x70);
+  assert.equal(await outcome(5, 0, -10), undefined, "Foresight");
+  assert.equal(await outcome(52, 0, -10), "neutral");
+  battle.ram.writeUInt32LE(0, enemy + 0x70);
+
+  battle.ram.writeUInt32LE(0x1000, context + 0x180);
+  assert.equal(await outcome(89, 0, -10), undefined, "Gravity");
+
+  move(52, 1 << 1, -20);
+  await battle.reader.read();
+  battle.ram.writeInt32LE(-21, context + 0x2184);
+  assert.deepEqual(
+    await observed(),
+    [],
+    "A sample that changed between polls is not reported.",
   );
 });
 
