@@ -47,6 +47,8 @@ export interface OverlayMember {
   evolutions?: LiveEvolution[];
   /** Opponent only: moves seen used by this species, most recent first. */
   seenMoves?: number[];
+  /** Opponent only: abilities the game revealed for this species, most recent first. */
+  seenAbilities?: number[];
   bst: number;
   baseStats?: PokemonStat[];
   annotations?: StatAnnotations;
@@ -259,6 +261,7 @@ export function opponentMember(
   opponent: BattleOpponent,
   reference: PokemonData,
   seenMoves: number[] = [],
+  seenAbilities: number[] = [],
 ): OverlayMember {
   const pokemon = pokemonForGame(reference, run.gameVersion);
   const knowledge = knowledgeForPlayer(run, playerId);
@@ -284,7 +287,34 @@ export function opponentMember(
     ...(opponent.learnLevels ? { learnLevels: opponent.learnLevels } : {}),
     ...(opponent.evolutions ? { evolutions: opponent.evolutions } : {}),
     seenMoves,
+    ...(seenAbilities.length ? { seenAbilities } : {}),
   };
+}
+
+function seenIds(
+  record: RunRecord,
+  playerId: string,
+  pokemonId: number,
+  kind: "move" | "ability",
+): number[] {
+  const game = record.tracking[playerId]?.game;
+  const source = game && gameKey(game);
+  const latest = new Map<number, number>();
+  for (const observation of record.observations) {
+    const id = kind === "move" ? observation.moveId : observation.abilityId;
+    if (
+      observation.kind !== kind ||
+      !id ||
+      observation.playerId !== playerId ||
+      observation.pokemonId !== pokemonId ||
+      (source && observation.gameKey !== source)
+    )
+      continue;
+    latest.set(id, Math.max(latest.get(id) ?? 0, observation.observedAt));
+  }
+  return [...latest]
+    .sort((left, right) => right[1] - left[1] || left[0] - right[0])
+    .map(([id]) => id);
 }
 
 /** Moves a species was seen using in this player's current game, most recent first. */
@@ -293,26 +323,16 @@ export function seenMoveIds(
   playerId: string,
   pokemonId: number,
 ): number[] {
-  const game = record.tracking[playerId]?.game;
-  const source = game && gameKey(game);
-  const latest = new Map<number, number>();
-  for (const observation of record.observations) {
-    if (
-      observation.kind !== "move" ||
-      !observation.moveId ||
-      observation.playerId !== playerId ||
-      observation.pokemonId !== pokemonId ||
-      (source && observation.gameKey !== source)
-    )
-      continue;
-    latest.set(
-      observation.moveId,
-      Math.max(latest.get(observation.moveId) ?? 0, observation.observedAt),
-    );
-  }
-  return [...latest]
-    .sort((left, right) => right[1] - left[1] || left[0] - right[0])
-    .map(([moveId]) => moveId);
+  return seenIds(record, playerId, pokemonId, "move");
+}
+
+/** Abilities the game revealed for a species in this player's current game, most recent first. */
+export function seenAbilityIds(
+  record: RunRecord,
+  playerId: string,
+  pokemonId: number,
+): number[] {
+  return seenIds(record, playerId, pokemonId, "ability");
 }
 
 /** Level-up moves already reachable at a level, their total and the next learning level. */

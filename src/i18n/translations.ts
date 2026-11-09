@@ -1856,6 +1856,14 @@ const translations = {
         },
       },
     },
+    revealedAbility: {
+      fr: "Talent révélé en combat",
+      en: "Ability revealed in battle",
+    },
+    abilityLine: {
+      fr: (name: string, description: string) => `${name} : ${description}`,
+      en: (name: string, description: string) => `${name}: ${description}`,
+    },
     noMovesSeen: {
       fr: "Aucune attaque vue pour l'instant",
       en: "No move seen yet",

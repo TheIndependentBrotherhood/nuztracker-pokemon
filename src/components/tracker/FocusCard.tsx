@@ -403,6 +403,12 @@ export default function FocusCard({
   const nature = live && gameText?.nature(live, lang);
   const ability = live && gameText?.ability(live, lang);
   const item = live && gameText?.item(live, lang, generation);
+  // Opponents only show abilities the game announced in battle.
+  const seenAbilities = live
+    ? []
+    : (member.seenAbilities ?? []).map(
+        (id) => gameText?.abilityById(id, lang) ?? { name: `#${id}` },
+      );
   const neutral =
     nature && (!nature.increased || nature.increased === nature.decreased);
   const statName = (stat?: string) =>
@@ -634,12 +640,30 @@ export default function FocusCard({
               )}
             </>
           ) : (
-            <Typography sx={{ fontSize: "0.68rem", color: "#b8c7d5" }}>
-              {t(
-                opponentLevel === undefined ? text.manual : text.opponentInfo,
-                lang,
-              )}
-            </Typography>
+            <>
+              {seenAbilities.length > 0 &&
+                detail(
+                  t(text.ability, lang),
+                  seenAbilities.map((ability) => ability.name).join(" / "),
+                  <TooltipBody
+                    title={t(text.revealedAbility, lang)}
+                    lines={seenAbilities.map((ability) =>
+                      ability.description
+                        ? text.abilityLine[lang](
+                            ability.name,
+                            ability.description,
+                          )
+                        : ability.name,
+                    )}
+                  />,
+                )}
+              <Typography sx={{ fontSize: "0.68rem", color: "#b8c7d5" }}>
+                {t(
+                  opponentLevel === undefined ? text.manual : text.opponentInfo,
+                  lang,
+                )}
+              </Typography>
+            </>
           )}
         </Box>
         <Hint

@@ -48,6 +48,8 @@ export interface PlatinumBattleData {
     | undefined;
   /** Types of a species' base form in the ROM personal data. */
   speciesTypes(species: number): string[] | undefined;
+  /** English name of an ability, for observations. */
+  abilityName(id: number): string | undefined;
   /** English name of a move, for observations. */
   moveName(id: number): string | undefined;
   /** Levels of a species' base-form level-up moves in the ROM (randomizer-aware). */
@@ -163,6 +165,7 @@ export async function loadPlatinumData(rom: NdsRom) {
       return [...new Set([romTypes[row[6]], romTypes[row[7]]])];
     },
     moveName: (id) => moves.get(id),
+    abilityName: (id) => abilities.get(id),
     learnLevels: (species) => readLearnLevels(learnsets?.[species]),
     evolutions: (species) => readEvolutions(evolutionData?.[species]),
   };

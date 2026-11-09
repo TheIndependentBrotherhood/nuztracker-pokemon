@@ -31,6 +31,10 @@ const BATTLE_OVERLAY_ID = 16;
 const APPLICATION_RUNNING = 2;
 const BATTLE_MON_OFFSET = 0x2d80;
 const BATTLE_MON_SIZE = 0xc0;
+// AIContext.battlerAbilities: the game stores an ability there whenever a battle message names it,
+// and clears it when the battler switches out. It therefore only holds abilities revealed on screen.
+const CONTEXT_REVEALED_ABILITIES_OFFSET = 0x390;
+const MAX_ABILITY_ID = 123;
 // BattleMon fields (pret/pokeplatinum include/battle/battle_mon.h).
 const BATTLE_MON_MOVES = 0x0c;
 const BATTLE_MON_PP = 0x2c;
@@ -85,6 +89,11 @@ interface BattleRead {
     moveId: number;
   };
   usedMoves: { identity: string; pokemonId: number; moveId: number }[];
+  revealedAbilities: {
+    identity: string;
+    pokemonId: number;
+    abilityId: number;
+  }[];
 }
 
 interface OpponentMoves {
@@ -326,6 +335,16 @@ export class PlatinumReader {
             this.battleData?.moveName(used.moveId) ?? `Move #${used.moveId}`,
           moveId: used.moveId,
         })),
+        ...(battle?.revealedAbilities ?? []).map((revealed) => ({
+          id: `ability-${battle!.battle.id}-${revealed.identity}-${revealed.abilityId}`,
+          encounterId: battle!.battle.id,
+          pokemonId: revealed.pokemonId,
+          kind: "ability" as const,
+          value:
+            this.battleData?.abilityName(revealed.abilityId) ??
+            `Ability #${revealed.abilityId}`,
+          abilityId: revealed.abilityId,
+        })),
       ],
       stateLoaded,
       warnings,
@@ -512,6 +531,24 @@ export class PlatinumReader {
       battlerCount === 2 && !stateLoaded
         ? await this.readEffectiveness(context, mons)
         : undefined;
+    const revealed = opponents.length
+      ? await this.memory.readMemory(
+          context + CONTEXT_REVEALED_ABILITIES_OFFSET,
+          4,
+        )
+      : undefined;
+    const revealedAbilities = opponents.flatMap((opponent) => {
+      const abilityId = revealed?.[opponent.position] ?? 0;
+      return abilityId >= 1 && abilityId <= MAX_ABILITY_ID
+        ? [
+            {
+              identity: opponent.identity,
+              pokemonId: opponent.pokemonId,
+              abilityId,
+            },
+          ]
+        : [];
+    });
     const usedMoves = this.usedOpponentMoves(
       system,
       stateLoaded,
@@ -534,6 +571,7 @@ export class PlatinumReader {
       ...(warning ? { warning } : {}),
       ...(effectiveness ? { effectiveness } : {}),
       usedMoves,
+      revealedAbilities,
     };
   }
 

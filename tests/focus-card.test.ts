@@ -7,6 +7,7 @@ import {
   lightFocusMember,
   opponentMember,
   overlayData,
+  seenAbilityIds,
   seenMoveIds,
 } from "../src/lib/tracker/overlay";
 import {
@@ -66,6 +67,25 @@ test("seen opponent moves are deduplicated and listed most recent first", () => 
   observe(4, 10, 150);
   assert.deepEqual(seenMoveIds(current, "p1", 48), [52, 33, 10]);
   assert.deepEqual(seenMoveIds(current, "p1", 4), []);
+});
+
+test("revealed opponent abilities are kept per species, separate from moves", () => {
+  let current = connectRun(record(true), "p1");
+  const next = frame(1);
+  next.observations = [
+    {
+      id: "ability-battle-1-22",
+      encounterId: "battle-1",
+      pokemonId: 48,
+      kind: "ability",
+      value: "Intimidate",
+      abilityId: 22,
+    },
+  ];
+  current = ingestFrame(current, "p1", next, pokemon, 100);
+  assert.deepEqual(seenAbilityIds(current, "p1", 48), [22]);
+  assert.deepEqual(seenMoveIds(current, "p1", 48), []);
+  assert.deepEqual(seenAbilityIds(current, "p1", 4), []);
 });
 
 test("HP bar colors follow the in-game thresholds", () => {

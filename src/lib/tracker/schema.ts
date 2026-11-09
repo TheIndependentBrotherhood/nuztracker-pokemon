@@ -314,6 +314,7 @@ const observationShape = {
   value: text.min(1),
   attackType: text.optional(),
   moveId: z.number().int().min(1).max(10000).optional(),
+  abilityId: z.number().int().min(1).max(1000).optional(),
 };
 
 export const gameFrameSchema: z.ZodType<GameFrame> = z

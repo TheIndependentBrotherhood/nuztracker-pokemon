@@ -513,10 +513,29 @@ const syntheticBattleData: PlatinumBattleData = {
   speciesTypes: (species) =>
     species === 48 ? ["bug", "poison"] : species === 25 ? ["electric"] : [],
   moveName: (id) => ({ 52: "Ember" })[id as 52],
+  abilityName: (id) => ({ 22: "Intimidate" })[id as 22],
   learnLevels: (species) => (species === 48 ? [1, 1, 5, 11] : undefined),
   evolutions: (species) =>
     species === 48 ? [{ method: 4, param: 31, target: 49 }] : undefined,
 };
+
+test("Platinum reports opponent abilities the game revealed in battle", async () => {
+  const battle = platinumBattleRam(0, syntheticBattleData);
+  const context = battle.at(0x02020000);
+  const hidden = (await battle.reader.read()).frame;
+  assert.equal(
+    hidden.observations.some((observation) => observation.kind === "ability"),
+    false,
+  );
+  battle.ram[context + 0x390 + 1] = 22;
+  const { observations } = (await battle.reader.read()).frame;
+  const ability = observations.find(
+    (observation) => observation.kind === "ability",
+  );
+  assert.equal(ability?.abilityId, 22);
+  assert.equal(ability?.value, "Intimidate");
+  assert.equal(ability?.pokemonId, 48);
+});
 
 test("Platinum reports opponent moves from PP drops and their ROM learnset levels", async () => {
   const battle = platinumBattleRam(0, syntheticBattleData);

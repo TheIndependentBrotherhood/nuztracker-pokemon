@@ -19,6 +19,7 @@ import {
   isOverlayTeamLive,
   lightFocusMember,
   opponentMember,
+  seenAbilityIds,
   seenMoveIds,
   overlayData,
 } from "@/lib/tracker/overlay";
@@ -194,6 +195,7 @@ export default function LightTracker() {
           opponent,
           opponentReferences[opponent.identity],
           seenMoveIds(record, playerId, opponent.pokemonId),
+          seenAbilityIds(record, playerId, opponent.pokemonId),
         )
       : undefined;
   const member = lightFocusMember(team, enemy, selectedId);

@@ -76,6 +76,7 @@ export interface GameObservation {
   value: string;
   attackType?: string;
   moveId?: number;
+  abilityId?: number;
 }
 
 export interface GameFrame {

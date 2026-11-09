@@ -147,6 +147,13 @@ export class GameText {
       : undefined;
   }
 
+  abilityById(id: number, lang: Lang): GameWord | undefined {
+    const name = pick(this.data.abilities[id]?.name, lang);
+    return name
+      ? { name, description: pick(this.data.abilities[id]?.description, lang) }
+      : undefined;
+  }
+
   itemName(id: number, lang: Lang, generation = 4): string | undefined {
     return pick(
       this.itemsByIndex.get(`${generation <= 3 ? 3 : 4}:${id}`)?.name,
