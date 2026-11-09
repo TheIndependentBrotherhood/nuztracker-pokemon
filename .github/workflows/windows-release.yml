@@ -1,0 +1,63 @@
+name: Windows release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Releases are published one after another so their build numbers stay in commit order.
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Test tracker foundation
+        run: yarn test
+
+      - name: Build desktop app
+        run: yarn desktop:build
+
+      - name: Resolve release version
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $build = "${{ github.run_number }}"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=v$version-build.$build" >> $env:GITHUB_OUTPUT
+          "file=NuzTracker-$version-build.$build-portable.exe" >> $env:GITHUB_OUTPUT
+
+      - name: Package Windows portable
+        shell: pwsh
+        run: yarn electron-builder --win portable --publish never "-c.artifactName=${{ steps.version.outputs.file }}"
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" `
+            "release/${{ steps.version.outputs.file }}" `
+            --target "${{ github.sha }}" `
+            --title "NuzTracker ${{ steps.version.outputs.version }} (build ${{ github.run_number }})" `
+            --generate-notes `
+            --latest
