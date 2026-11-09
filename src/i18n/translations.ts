@@ -1714,7 +1714,7 @@ const translations = {
       special: { fr: "Spé", en: "Spc" },
       accuracy: { fr: "Préc", en: "Acc" },
       evasion: { fr: "Esq", en: "Eva" },
-      total: { fr: "BST", en: "BST" },
+      total: { fr: "Total", en: "Total" },
     },
     statNames: {
       hp: { fr: "PV", en: "HP" },
