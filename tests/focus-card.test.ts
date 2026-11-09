@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { GameText } from "../src/lib/game-text";
 import { hpColor } from "../src/lib/tracker/hp";
 import { hiddenPowerFromIvs } from "../src/lib/tracker/hidden-power";
-import { nextEncounterPlayer } from "../src/lib/team-utils";
+import { encounterOrder, nextEncounterPlayer } from "../src/lib/team-utils";
 import {
   learnProgress,
   lightFocusMember,
@@ -424,6 +424,11 @@ test("the SoulLink turn order reminder rotates every encountered zone", () => {
   });
   assert.equal(nextEncounterPlayer(encountered(0))?.id, players[0].id);
   assert.equal(nextEncounterPlayer(encountered(1))?.id, players[1].id);
+  assert.deepEqual(
+    encounterOrder(encountered(1)).map((player) => player.id),
+    [...players.slice(1), players[0]].map((player) => player.id),
+  );
+  assert.deepEqual(encounterOrder(run), []);
   assert.equal(
     nextEncounterPlayer(encountered(players.length))?.id,
     players[0].id,

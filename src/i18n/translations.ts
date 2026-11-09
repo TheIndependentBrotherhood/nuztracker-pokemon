@@ -755,6 +755,7 @@ const translations = {
       fr: (name: string) => `🔄 Prochaine rencontre : ${name} en premier`,
       en: (name: string) => `🔄 Next encounter: ${name} goes first`,
     },
+    encounterOrder: { fr: "Ordre de rencontre", en: "Encounter order" },
     nextEncounterHint: {
       fr: "Rappel de l'ordre de tour : passe au joueur suivant à chaque nouvelle zone rencontrée.",
       en: "Turn order reminder: moves to the next player at every newly encountered zone.",

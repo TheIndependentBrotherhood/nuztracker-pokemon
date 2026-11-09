@@ -23,17 +23,23 @@ export function getAllTeamCaptures(run: Run): Capture[] {
 }
 
 /**
- * Soul Link turn order reminder: the player who encounters first in the next zone.
+ * Soul Link turn order reminder: the players in encounter order for the next zone.
  * Rotates through the players every zone that already has an encounter.
  */
-export function nextEncounterPlayer(run: Run): SoulLinkPlayer | undefined {
-  if (!run.isSoulLinkMode || !run.soulLinkTurnOrder) return undefined;
+export function encounterOrder(run: Run): SoulLinkPlayer[] {
+  if (!run.isSoulLinkMode || !run.soulLinkTurnOrder) return [];
   const players = [...(run.soulLinkPlayers ?? [])].sort(
     (left, right) => left.playerIndex - right.playerIndex,
   );
-  if (players.length < 2) return undefined;
+  if (players.length < 2) return [];
   const encountered = run.zones.filter(
     (zone) => zone.status !== "not-visited" || zone.captures.length > 0,
   ).length;
-  return players[encountered % players.length];
+  const first = encountered % players.length;
+  return [...players.slice(first), ...players.slice(0, first)];
+}
+
+/** Soul Link turn order reminder: the player who encounters first in the next zone. */
+export function nextEncounterPlayer(run: Run): SoulLinkPlayer | undefined {
+  return encounterOrder(run)[0];
 }

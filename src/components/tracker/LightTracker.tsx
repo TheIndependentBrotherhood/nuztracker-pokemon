@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getPlayerId, viewRunForPlayer } from "@/lib/tracker/knowledge";
-import { nextEncounterPlayer } from "@/lib/team-utils";
+import { encounterOrder } from "@/lib/team-utils";
 import {
   isOverlayTeamLive,
   lightFocusMember,
@@ -189,7 +189,7 @@ export default function LightTracker() {
     ) ?? teams[0];
   if (!team) return <Alert severity="error">{t(text.noPlayer, lang)}</Alert>;
   const playerId = team.playerId;
-  const nextPlayer = nextEncounterPlayer(record.run);
+  const turnOrder = encounterOrder(record.run);
   const enemy =
     opponent && opponentReferences[opponent.identity]
       ? opponentMember(
@@ -564,13 +564,24 @@ export default function LightTracker() {
               </Box>
             )}
           </Typography>
-          {nextPlayer && (
+          {turnOrder.length > 0 && (
             <Typography
               title={t(text.nextEncounterHint, lang)}
+              aria-label={`${t(text.encounterOrder, lang)} : ${turnOrder.map((player) => player.name).join(", ")}`}
               data-testid="next-encounter"
-              sx={{ fontSize: "0.65rem", color: "#b8c7d5" }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                fontSize: "0.65rem",
+                color: "#b8c7d5",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
             >
-              {t(text.nextEncounter, lang)(nextPlayer.name)}
+              <PokeBallIcon />
+              {turnOrder.map((player) => player.name).join(" - ")}
             </Typography>
           )}
           {run.isSoulLinkMode && (
@@ -642,5 +653,36 @@ export default function LightTracker() {
         </Box>
       </TrackerBoundsContext.Provider>
     </ThemeProvider>
+  );
+}
+
+function PokeBallIcon() {
+  return (
+    <Box
+      component="svg"
+      viewBox="0 0 16 16"
+      aria-hidden
+      sx={{ width: 10, height: 10, flex: "none" }}
+    >
+      <path d="M1 8a7 7 0 0 1 14 0z" fill="#ef4444" />
+      <path d="M1 8a7 7 0 0 0 14 0z" fill="#f8fafc" />
+      <circle
+        cx="8"
+        cy="8"
+        r="7"
+        fill="none"
+        stroke="#111827"
+        strokeWidth="1.5"
+      />
+      <path d="M1 8h14" stroke="#111827" strokeWidth="1.5" />
+      <circle
+        cx="8"
+        cy="8"
+        r="2.2"
+        fill="#f8fafc"
+        stroke="#111827"
+        strokeWidth="1.5"
+      />
+    </Box>
   );
 }
