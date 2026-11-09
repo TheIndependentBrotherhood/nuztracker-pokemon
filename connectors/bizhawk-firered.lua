@@ -34,6 +34,10 @@ local natures = {
     "naive", "modest", "mild", "quiet", "bashful", "rash", "calm",
     "gentle", "sassy", "careful", "quirky",
 }
+local hiddenPowerTypes = {
+    "fighting", "flying", "poison", "ground", "rock", "bug", "ghost", "steel",
+    "fire", "water", "grass", "electric", "psychic", "ice", "dragon", "dark",
+}
 local arrayTag = {}
 local function array(value) return setmetatable(value or {}, arrayTag) end
 local function read8(address) return memory.read_u8(address, domain) end
@@ -148,6 +152,20 @@ local function statStages(address)
     return changed and stages or nil
 end
 
+-- Gen 3 Hidden Power from the IV word (5 bits each: HP, Atk, Def, Spe, SpA, SpD).
+local function hiddenPower(ivs)
+    local typeBits, powerBits = 0, 0
+    for stat = 0, 5 do
+        local iv = math.floor(ivs / 2 ^ (stat * 5)) % 32
+        typeBits = typeBits + (iv % 2) * 2 ^ stat
+        powerBits = powerBits + (math.floor(iv / 2) % 2) * 2 ^ stat
+    end
+    return {
+        type = hiddenPowerTypes[math.floor(typeBits * 15 / 63) + 1],
+        power = math.floor(powerBits * 40 / 63) + 30,
+    }
+end
+
 local function readPokemon(address)
     local personality = read32(address)
     local trainer = read32(address + 4)
@@ -227,6 +245,7 @@ local function readPokemon(address)
         heldItemId = itemId > 0 and itemId <= 374 and itemId or nil,
         experience = value32(0, 4),
         friendship = value8(0, 9),
+        hiddenPower = hiddenPower(ivFlags % 1073741824),
         stats = {
             attack = read16(address + 90), defense = read16(address + 92), speed = read16(address + 94),
             ["special-attack"] = read16(address + 96), ["special-defense"] = read16(address + 98),

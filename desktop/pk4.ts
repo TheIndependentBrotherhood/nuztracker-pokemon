@@ -1,4 +1,5 @@
 import type { LivePokemon } from "../src/lib/tracker/types";
+import { hiddenPowerFromIvs } from "../src/lib/tracker/hidden-power";
 
 const orders = [
   "ABCD",
@@ -214,6 +215,7 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
       nature: natures[personality % 25],
       experience: growth.readUInt32LE(8),
       friendship: growth[12],
+      hiddenPower: hiddenPowerFromIvs(ivs & 0x3fffffff),
       stats: {
         attack: tail.readUInt16LE(10),
         defense: tail.readUInt16LE(12),

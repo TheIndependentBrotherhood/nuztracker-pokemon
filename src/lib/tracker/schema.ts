@@ -162,6 +162,7 @@ export const runSchema: z.ZodType<Run> = z
       .min(2)
       .max(4)
       .optional(),
+    soulLinkTurnOrder: z.boolean().optional(),
     playerTeams: z
       .record(z.string().regex(/^[0-3]$/), z.array(captureSchema).max(6))
       .optional(),
@@ -282,6 +283,12 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
     heldItemId: z.number().int().min(1).max(65535).optional(),
     experience: z.number().int().nonnegative().optional(),
     friendship: z.number().int().min(0).max(255).optional(),
+    hiddenPower: z
+      .object({
+        type: z.string().min(1).max(16),
+        power: z.number().int().min(30).max(70),
+      })
+      .optional(),
     statStages: statStagesSchema.optional(),
     stats: z
       .record(

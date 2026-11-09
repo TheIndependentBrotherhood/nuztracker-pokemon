@@ -50,6 +50,13 @@ jobs:
         shell: pwsh
         run: yarn electron-builder --win portable --publish never "-c.artifactName=${{ steps.version.outputs.file }}"
 
+      # Generated notes only list pull requests: commits pushed to main are listed here instead.
+      - name: Write release notes
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/release-notes.ps1 -Repository "${{ github.repository }}" -Sha "${{ github.sha }}" -Tag "${{ steps.version.outputs.tag }}" -Output release-notes.md
+
       - name: Publish GitHub release
         shell: pwsh
         env:
@@ -59,5 +66,5 @@ jobs:
             "release/${{ steps.version.outputs.file }}" `
             --target "${{ github.sha }}" `
             --title "NuzTracker ${{ steps.version.outputs.version }} (build ${{ github.run_number }})" `
-            --generate-notes `
+            --notes-file release-notes.md `
             --latest

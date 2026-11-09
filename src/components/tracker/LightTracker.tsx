@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { useRunStore } from "@/store/runStore";
 import { getPlayerId, viewRunForPlayer } from "@/lib/tracker/knowledge";
+import { nextEncounterPlayer } from "@/lib/team-utils";
 import {
   isOverlayTeamLive,
   lightFocusMember,
@@ -188,6 +189,7 @@ export default function LightTracker() {
     ) ?? teams[0];
   if (!team) return <Alert severity="error">{t(text.noPlayer, lang)}</Alert>;
   const playerId = team.playerId;
+  const nextPlayer = nextEncounterPlayer(record.run);
   const enemy =
     opponent && opponentReferences[opponent.identity]
       ? opponentMember(
@@ -522,6 +524,15 @@ export default function LightTracker() {
               team.location ??
               t(text.noMappedZone, lang)}
           </Typography>
+          {nextPlayer && (
+            <Typography
+              title={t(text.nextEncounterHint, lang)}
+              data-testid="next-encounter"
+              sx={{ fontSize: "0.65rem", color: "#b8c7d5" }}
+            >
+              {t(text.nextEncounter, lang)(nextPlayer.name)}
+            </Typography>
+          )}
           {run.isSoulLinkMode && (
             <TextField
               select

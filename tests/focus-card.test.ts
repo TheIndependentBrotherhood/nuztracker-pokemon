@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GameText } from "../src/lib/game-text";
 import { hpColor } from "../src/lib/tracker/hp";
+import { hiddenPowerFromIvs } from "../src/lib/tracker/hidden-power";
+import { nextEncounterPlayer } from "../src/lib/team-utils";
 import {
   learnProgress,
   lightFocusMember,
@@ -387,4 +389,43 @@ test("custom ROM moves and abilities seen in battle keep their ROM names and dat
   assert.equal(move.power, 95);
   assert.equal(gameText.move({ id: 461, pp: 10 }, "fr").name, "Danse Lune");
   assert.equal(customSeenWords(current, "p1", 4), undefined);
+});
+
+test("Hidden Power type and power come from the IV word", () => {
+  const ivWord = (ivs: number[]) =>
+    ivs.reduce((word, iv, stat) => word + iv * 2 ** (stat * 5), 0);
+  assert.deepEqual(hiddenPowerFromIvs(ivWord([31, 31, 31, 31, 31, 31])), {
+    type: "dark",
+    power: 70,
+  });
+  // HP / Atk / Def / Spe / SpA / SpD: the classic Hidden Power Ice spread.
+  assert.deepEqual(hiddenPowerFromIvs(ivWord([31, 30, 30, 31, 31, 31])), {
+    type: "ice",
+    power: 70,
+  });
+  assert.deepEqual(hiddenPowerFromIvs(0), { type: "fighting", power: 30 });
+});
+
+test("the SoulLink turn order reminder rotates every encountered zone", () => {
+  const run = record(true).run;
+  assert.equal(nextEncounterPlayer(run), undefined);
+  const ordered = { ...run, soulLinkTurnOrder: true };
+  const players = [...ordered.soulLinkPlayers!].sort(
+    (left, right) => left.playerIndex - right.playerIndex,
+  );
+  const encountered = (count: number) => ({
+    ...ordered,
+    zones: Array.from({ length: 3 }, (_, index) => ({
+      ...ordered.zones[0],
+      id: `zone-${index}`,
+      status: index < count ? ("captured" as const) : ("not-visited" as const),
+      captures: [],
+    })),
+  });
+  assert.equal(nextEncounterPlayer(encountered(0))?.id, players[0].id);
+  assert.equal(nextEncounterPlayer(encountered(1))?.id, players[1].id);
+  assert.equal(
+    nextEncounterPlayer(encountered(players.length))?.id,
+    players[0].id,
+  );
 });

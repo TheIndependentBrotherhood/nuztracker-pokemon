@@ -73,30 +73,61 @@ export default function RunSettingsModal({ run, open, onClose }: Props) {
           region={run.region}
           disabled={!canEditRun(run.id)}
           onChange={(gameVersion) => {
-            void updateRun({ ...run, gameVersion, typeChartGeneration: gameTypeChart(gameVersion) }, run);
+            void updateRun(
+              {
+                ...run,
+                gameVersion,
+                typeChartGeneration: gameTypeChart(gameVersion),
+              },
+              run,
+            );
           }}
         />
         <FormControlLabel
-          label="Randomized stats: unchanged BST, + / - estimates"
-          control={<Checkbox
-            checked={Boolean(run.isRandomMode && run.randomizerOptions?.randomizeStats)}
-            disabled={!canEditRun(run.id)}
-            onChange={(event) => {
-              void updateRun({
-                ...run,
-                isRandomMode: event.target.checked || run.isRandomMode,
-                randomizerOptions: {
-                  randomizeTypes: false,
-                  randomizeAbilities: false,
-                  randomizeEncounters: false,
-                  randomizeEvolvedForms: false,
-                  ...run.randomizerOptions,
-                  randomizeStats: event.target.checked,
-                },
-              }, run);
-            }}
-          />}
+          label={t(tr.runSettings.randomStats, lang)}
+          control={
+            <Checkbox
+              checked={Boolean(
+                run.isRandomMode && run.randomizerOptions?.randomizeStats,
+              )}
+              disabled={!canEditRun(run.id)}
+              onChange={(event) => {
+                void updateRun(
+                  {
+                    ...run,
+                    isRandomMode: event.target.checked || run.isRandomMode,
+                    randomizerOptions: {
+                      randomizeTypes: false,
+                      randomizeAbilities: false,
+                      randomizeEncounters: false,
+                      randomizeEvolvedForms: false,
+                      ...run.randomizerOptions,
+                      randomizeStats: event.target.checked,
+                    },
+                  },
+                  run,
+                );
+              }}
+            />
+          }
         />
+        {run.isSoulLinkMode && (
+          <FormControlLabel
+            label={t(tr.createRun.turnOrder, lang)}
+            control={
+              <Checkbox
+                checked={Boolean(run.soulLinkTurnOrder)}
+                disabled={!canEditRun(run.id)}
+                onChange={(event) => {
+                  void updateRun(
+                    { ...run, soulLinkTurnOrder: event.target.checked },
+                    run,
+                  );
+                }}
+              />
+            }
+          />
+        )}
         <Box sx={{ pt: 1 }}>
           <StyledSelect
             label={t(tr.createRun.typeChart, lang)}

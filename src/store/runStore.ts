@@ -38,6 +38,7 @@ interface CreateRunData {
   randomizerOptions?: RandomizerOptions;
   isSoulLinkMode?: boolean;
   soulLinkPlayers?: SoulLinkPlayer[];
+  soulLinkTurnOrder?: boolean;
 }
 
 interface RunStore {
@@ -182,8 +183,16 @@ export const useRunStore = create<RunStore>((set, get) => {
       refresh(get().records.filter((entry) => entry.run.id !== runId)),
 
     setDesktopStatus: (status) => {
+      const previous = get().desktopStatus?.room;
       set({ desktopStatus: status });
-      if (status.room.runId && status.room.playerId) {
+      // Status updates stream continuously: only follow the room's own player when joining it,
+      // so viewing another SoulLink player is not reverted.
+      if (
+        status.room.runId &&
+        status.room.playerId &&
+        (previous?.runId !== status.room.runId ||
+          previous?.playerId !== status.room.playerId)
+      ) {
         get().setPlayer(status.room.runId, status.room.playerId);
       }
     },

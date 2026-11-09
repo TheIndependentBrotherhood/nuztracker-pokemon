@@ -142,6 +142,10 @@ const translations = {
     createRun: { fr: "🚀 Créer le Run", en: "🚀 Create Run" },
     soulLinkMode: { fr: "🔗 Soul Link", en: "🔗 Soul Link" },
     soulLinkPlayers: { fr: "⚙️ Joueurs Soul Link", en: "⚙️ Soul Link Players" },
+    turnOrder: {
+      fr: "🔄 Ordre de tour : rappeler quel joueur fait sa rencontre en premier dans la prochaine zone",
+      en: "🔄 Turn order: remind which player encounters first in the next zone",
+    },
     player1Name: { fr: "Nom du J1", en: "P1 Name" },
     player2Name: { fr: "Nom du J2", en: "P2 Name" },
     player3Name: { fr: "Nom du J3", en: "P3 Name" },
@@ -376,6 +380,10 @@ const translations = {
     typeChartHint: {
       fr: "La table des types est appliquée immédiatement à l'analyse d'équipe, aux comparaisons et à la déduction des types dans le Pokédex.",
       en: "The type chart applies immediately to the team analysis, comparisons and Pokédex type deduction.",
+    },
+    randomStats: {
+      fr: "Stats randomisées : BST inchangé, estimations + / -",
+      en: "Randomized stats: unchanged BST, + / - estimates",
     },
   },
 
@@ -731,6 +739,14 @@ const translations = {
     },
     noMappedZone: { fr: "Aucune zone associée", en: "No mapped zone" },
     player: { fr: "Joueur", en: "Player" },
+    nextEncounter: {
+      fr: (name: string) => `🔄 Prochaine rencontre : ${name} en premier`,
+      en: (name: string) => `🔄 Next encounter: ${name} goes first`,
+    },
+    nextEncounterHint: {
+      fr: "Rappel de l'ordre de tour : passe au joueur suivant à chaque nouvelle zone rencontrée.",
+      en: "Turn order reminder: moves to the next player at every newly encountered zone.",
+    },
     pausedReconcile: {
       fr: "Chronologie en pause : l'état chargé contredit l'équipe suivie.",
       en: "Timeline paused: the loaded state contradicts the tracked team.",
@@ -1728,6 +1744,13 @@ const translations = {
     ability: { fr: "Talent", en: "Ability" },
     item: { fr: "Objet", en: "Item" },
     noItem: { fr: "Aucun", en: "None" },
+    hiddenPower: { fr: "Puis. Cachée", en: "Hidden Power" },
+    hiddenPowerDetail: {
+      fr: (type: string, power: number) =>
+        `Puissance Cachée de ce Pokémon : type ${type}, puissance ${power} (calculés depuis ses IV).`,
+      en: (type: string, power: number) =>
+        `This Pokémon's Hidden Power: ${type} type, ${power} power (computed from its IVs).`,
+    },
     unknown: { fr: "Inconnu", en: "Unknown" },
     neutralNature: {
       fr: "Nature neutre : aucune stat modifiée.",

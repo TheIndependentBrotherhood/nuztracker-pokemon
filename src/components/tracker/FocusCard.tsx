@@ -20,6 +20,7 @@ import {
 } from "@/lib/pokemon-data";
 import { useGameText } from "@/lib/game-text";
 import { hpColor } from "@/lib/tracker/hp";
+import { HIDDEN_POWER_MOVE_ID } from "@/lib/tracker/hidden-power";
 import { evolutionSummary } from "@/lib/tracker/evolution";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t, type Lang } from "@/i18n/translations";
@@ -517,8 +518,13 @@ export default function FocusCard({
   );
   // Opponents never reveal their moveset: only the moves seen in battle are listed.
   const seenOnly = !live && Boolean(member.seenMoves);
+  const hiddenPower = live?.hiddenPower;
   const moveRows: LiveMove[] = live
-    ? live.moves
+    ? live.moves.map((move) =>
+        move.id === HIDDEN_POWER_MOVE_ID && hiddenPower
+          ? { ...move, type: hiddenPower.type, power: hiddenPower.power }
+          : move,
+      )
     : (member.seenMoves ?? []).map(
         (id) => member.customSeen?.moves[id] ?? { id, pp: 0 },
       );
@@ -748,6 +754,20 @@ export default function FocusCard({
                   <TooltipBody title={item.name} lines={[item.description]} />
                 ),
               )}
+              {hiddenPower &&
+                detail(
+                  t(text.hiddenPower, lang),
+                  `${typeName(hiddenPower.type)} ${hiddenPower.power}`,
+                  <TooltipBody
+                    title={t(text.hiddenPower, lang)}
+                    lines={[
+                      text.hiddenPowerDetail[lang](
+                        typeName(hiddenPower.type),
+                        hiddenPower.power,
+                      ),
+                    ]}
+                  />,
+                )}
             </>
           ) : (
             <>

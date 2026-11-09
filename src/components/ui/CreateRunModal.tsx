@@ -49,6 +49,7 @@ export default function CreateRunModal({ onClose }: Props) {
   const [isShinyHuntMode, setIsShinyHuntMode] = useState(false);
   const [isRandomMode, setIsRandomMode] = useState(false);
   const [isSoulLinkMode, setIsSoulLinkMode] = useState(false);
+  const [soulLinkTurnOrder, setSoulLinkTurnOrder] = useState(false);
   const [player1Name, setPlayer1Name] = useState("");
   const [player2Name, setPlayer2Name] = useState("");
   const [player3Name, setPlayer3Name] = useState<string | null>(null);
@@ -136,7 +137,11 @@ export default function CreateRunModal({ onClose }: Props) {
       isRandomMode,
       randomizerOptions: isRandomMode ? randomizerOptions : undefined,
       ...(isSoulLinkMode
-        ? { isSoulLinkMode: true, soulLinkPlayers: buildSoulLinkPlayers() }
+        ? {
+            isSoulLinkMode: true,
+            soulLinkPlayers: buildSoulLinkPlayers(),
+            ...(soulLinkTurnOrder ? { soulLinkTurnOrder: true } : {}),
+          }
         : {}),
     });
     if (!run) return;
@@ -154,7 +159,10 @@ export default function CreateRunModal({ onClose }: Props) {
       key: "randomizeEvolvedForms",
       label: t(tr.createRun.randomizeEvolvedForms, lang),
     },
-    { key: "randomizeStats", label: "Randomized stats (BST unchanged, + / - notes)" },
+    {
+      key: "randomizeStats",
+      label: "Randomized stats (BST unchanged, + / - notes)",
+    },
   ];
 
   const playerColors = SOUL_LINK_PLAYER_COLORS;
@@ -501,6 +509,16 @@ export default function CreateRunModal({ onClose }: Props) {
                   </>
                 )}
               </Stack>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={soulLinkTurnOrder}
+                    onChange={(e) => setSoulLinkTurnOrder(e.target.checked)}
+                  />
+                }
+                label={t(tr.createRun.turnOrder, lang)}
+                sx={{ mt: 1.5, color: "#000", fontWeight: 600 }}
+              />
             </Box>
           )}
 

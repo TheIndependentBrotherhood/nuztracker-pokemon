@@ -63,6 +63,7 @@ export interface LivePokemon {
   heldItemId?: number;
   experience?: number;
   friendship?: number;
+  hiddenPower?: HiddenPower;
   stats?: Record<string, number>;
   // Only while the Pokémon is on the field in battle.
   statStages?: StatStages;
@@ -71,6 +72,11 @@ export interface LivePokemon {
   learnLevels?: number[];
   // Evolution methods of the species, read from the ROM (randomizer-aware).
   evolutions?: LiveEvolution[];
+}
+
+export interface HiddenPower {
+  type: string;
+  power: number;
 }
 
 /** Raw evolution entry: game method code, its parameter (level, item, move or species) and the target species. */

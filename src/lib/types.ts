@@ -127,6 +127,8 @@ export interface Run {
   isSoulLinkMode?: boolean;
   /** Soul Link players (P1–P4). Only present when isSoulLinkMode is true. */
   soulLinkPlayers?: SoulLinkPlayer[];
+  /** Soul Link: remind which player encounters first in the next zone, rotating every zone. */
+  soulLinkTurnOrder?: boolean;
   /** Per-player teams in Soul Link mode. Key = playerIndex (0-3). */
   playerTeams?: Record<number, Capture[]>;
   /** Isolated knowledge for each player once a run is connected. */

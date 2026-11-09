@@ -57,7 +57,8 @@ local function preparePokemon(permutation, egg)
     local growth = { 1, 125, 70 * 256 }
     local attacks = { 33, 0, 35 }
     local effort = { 0, 0, 0 }
-    local misc = { 0, egg and 0x40000000 or 0, 0 }
+    -- IVs: HP 31, Atk 30, the others 31 (Hidden Power Dragon 70).
+    local misc = { 0, egg and 0x40000000 or 0x3FFFFFDF, 0 }
     local blocks = { growth, attacks, effort, misc }
     local checksum = 0
     local key = bit.bxor(personality, trainer)
@@ -106,6 +107,7 @@ for permutation = 0, 23 do
     assert(pokemon.moves[1].id == 33 and pokemon.moves[1].pp == 35)
     assert(pokemon.experience == 125)
     assert(pokemon.friendship == 70, "Friendship was not read")
+    assert(pokemon.hiddenPower.type == "dragon" and pokemon.hiddenPower.power == 70, "Hidden Power was not computed")
     assert(pokemon.types[1] == "grass" and pokemon.types[2] == "poison")
     assert(#pokemon.learnLevels == 3 and pokemon.learnLevels[3] == 13, "ROM learnset levels were not read")
     assert(#pokemon.evolutions == 1 and pokemon.evolutions[1].param == 16 and pokemon.evolutions[1].target == 2, "ROM evolutions were not read")

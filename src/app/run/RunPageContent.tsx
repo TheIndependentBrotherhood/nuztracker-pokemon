@@ -17,7 +17,11 @@ import { PokemonData, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getPokemonById } from "@/lib/pokemon-data";
-import { getAllTeamCaptures, getRunTeams } from "@/lib/team-utils";
+import {
+  getAllTeamCaptures,
+  getRunTeams,
+  nextEncounterPlayer,
+} from "@/lib/team-utils";
 import ConnectionPanel from "@/components/tracker/ConnectionPanel";
 
 type Tab = "zones" | "team" | "pokedex";
@@ -211,6 +215,7 @@ export default function RunPageContent({ runId }: Props) {
     );
 
   // Soul Link player chips (shown to the right of the Home button)
+  const nextPlayer = nextEncounterPlayer(run);
   const soulLinkChips =
     run.isSoulLinkMode && run.soulLinkPlayers ? (
       <Box
@@ -224,6 +229,14 @@ export default function RunPageContent({ runId }: Props) {
         {run.soulLinkPlayers.map((player) => (
           <Box
             key={player.id}
+            title={
+              player.id === nextPlayer?.id
+                ? `${t(tr.liveView.nextEncounter, lang)(player.name)}. ${t(tr.liveView.nextEncounterHint, lang)}`
+                : undefined
+            }
+            data-testid={
+              player.id === nextPlayer?.id ? "next-encounter-player" : undefined
+            }
             sx={{
               display: "flex",
               alignItems: "center",
@@ -250,6 +263,7 @@ export default function RunPageContent({ runId }: Props) {
                 lineHeight: 1,
               }}
             >
+              {player.id === nextPlayer?.id && "🔄 "}
               {player.name}
             </Typography>
           </Box>
