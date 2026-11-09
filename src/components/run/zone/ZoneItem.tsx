@@ -19,7 +19,10 @@ import {
   useCaptureDisplayName,
 } from "@/lib/pokemon-display";
 import { getZoneDisplayName } from "@/lib/zones";
-import { isZoneLockedForPlayer } from "@/lib/zone-progress";
+import {
+  isZoneLockedForPlayer,
+  soulLinkCaptureSlot,
+} from "@/lib/zone-progress";
 import { getPlayerId } from "@/lib/tracker/knowledge";
 
 interface Props {
@@ -313,8 +316,8 @@ export default function ZoneItem({
 
   // Soul Link: a player can still capture here if they have no capture and no partner lost the zone
   const canPlayerCapture = (playerIndex: number) =>
-    !zone.captures.some((c) => (c.playerIndex ?? 0) === playerIndex) &&
-    !isZoneLockedForPlayer(zone, playerIndex);
+    soulLinkCaptureSlot(zone, playerIndex, true, isShinyHuntMode) !== undefined;
+  const shinyChances = zone.captures.filter((c) => c.shinyChance);
 
   // Determine if captures are full
   const capturesFull = isSoulLink
@@ -456,7 +459,8 @@ export default function ZoneItem({
           >
             {players.map((player) => {
               const playerCapture = zone.captures.find(
-                (c) => (c.playerIndex ?? 0) === player.playerIndex,
+                (c) =>
+                  (c.playerIndex ?? 0) === player.playerIndex && !c.shinyChance,
               );
               const color = SOUL_LINK_PLAYER_COLORS[player.playerIndex];
               const label = `P${player.playerIndex + 1}`;
@@ -503,6 +507,20 @@ export default function ZoneItem({
                       ? undefined
                       : () => openCapture(player.playerIndex)
                   }
+                />
+              );
+            })}
+            {shinyChances.map((capture) => {
+              const index = capture.playerIndex ?? 0;
+              return (
+                <CaptureThumbnail
+                  key={capture.id}
+                  capture={capture}
+                  lang={lang}
+                  runId={runId}
+                  zoneId={zone.id}
+                  playerColor={SOUL_LINK_PLAYER_COLORS[index]}
+                  playerLabel={`P${index + 1} ✨`}
                 />
               );
             })}

@@ -13,6 +13,10 @@ import {
   reviveCapture,
 } from "../src/lib/tracker/run-rules";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
+import {
+  getZoneOutcomeForPlayer,
+  soulLinkCaptureSlot,
+} from "../src/lib/zone-progress";
 import { frame, record, pokemon, capture } from "./fixtures";
 
 test("independent participant edits merge and duplicate commands are idempotent", () => {
@@ -358,6 +362,103 @@ test("SoulLink losses propagate by explicit group rather than matching route nam
   const updated = finalizeRun(initial.run, 10);
   assert.equal(updated.zones[1].captures[0].linkedDeath, true);
   assert.equal(updated.zones[1].captures[1].isDead, false);
+});
+
+test("SoulLink shiny hunt keeps one linked shiny second chance per player and zone", () => {
+  const initial = connectRun(record(true), "p1");
+  initial.run.isShinyHuntMode = true;
+  initial.run.zones[0].captures = [
+    capture("a", 0),
+    { ...capture("b", 1), isDead: true, failedCapture: true },
+  ];
+  const zone = initial.run.zones[0];
+  assert.equal(
+    soulLinkCaptureSlot({ ...zone, captures: [] }, 0, true, true),
+    "shiny",
+    "A first shiny takes the shiny second chance",
+  );
+  assert.equal(
+    soulLinkCaptureSlot(
+      {
+        ...zone,
+        captures: [{ ...capture("s", 0), isShiny: true, shinyChance: true }],
+      },
+      0,
+      true,
+      true,
+    ),
+    "regular",
+    "A second shiny falls back to the free regular encounter",
+  );
+  assert.equal(
+    soulLinkCaptureSlot({ ...zone, captures: [] }, 0, true, false),
+    "regular",
+  );
+  assert.equal(soulLinkCaptureSlot(zone, 0, false, true), undefined);
+  assert.equal(soulLinkCaptureSlot(zone, 0, true, false), undefined);
+  assert.equal(soulLinkCaptureSlot(zone, 1, true, true), "shiny");
+
+  const party = frame();
+  party.party = [
+    party.party[0],
+    { ...party.party[0], identity: "pokemon-identity-2", isShiny: true },
+  ];
+  let current = ingestFrame(initial, "p1", party, pokemon, 100);
+  const link = (identity: string) =>
+    linkPokemon(
+      current,
+      { runId: current.run.id, playerId: "p1", identity, zoneId: "route-1" },
+      pokemon,
+      101,
+    );
+  assert.throws(() => link("pokemon-identity-1"), /no eligible encounter/);
+  const emptyZone = structuredClone(current);
+  emptyZone.run.zones[0].captures = [];
+  const linkShiny = (start: typeof current) =>
+    linkPokemon(
+      start,
+      {
+        runId: start.run.id,
+        playerId: "p1",
+        identity: "pokemon-identity-2",
+        zoneId: "route-1",
+      },
+      pokemon,
+      101,
+    ).run.zones[0].captures;
+  const [firstShiny] = linkShiny(emptyZone);
+  assert.equal(firstShiny.shinyChance, true);
+  assert.equal(firstShiny.soulLinkGroupId, "route-1:shiny");
+  const secondChanceUsed = structuredClone(emptyZone);
+  secondChanceUsed.run.zones[0].captures = [
+    { ...capture("s", 0), isShiny: true, shinyChance: true },
+  ];
+  const secondShiny = linkShiny(secondChanceUsed).find(
+    (entry) => entry.gameIdentity === "pokemon-identity-2",
+  );
+  assert.equal(secondShiny?.shinyChance, undefined);
+  assert.equal(secondShiny?.soulLinkGroupId, "route-1");
+  current = link("pokemon-identity-2");
+  const shiny = current.run.zones[0].captures.find(
+    (entry) => entry.gameIdentity === "pokemon-identity-2",
+  );
+  assert.equal(shiny?.shinyChance, true);
+  assert.equal(shiny?.soulLinkGroupId, "route-1:shiny");
+  assert.equal(shiny?.isDead, false);
+  assert.equal(getZoneOutcomeForPlayer(current.run.zones[0], 0), "captured");
+
+  current.run.zones[0].captures.push({
+    ...capture("c", 1),
+    isShiny: true,
+    shinyChance: true,
+    isDead: true,
+  });
+  const updated = finalizeRun(current.run, 200);
+  const linked = updated.zones[0].captures.find(
+    (entry) => entry.id === shiny?.id,
+  );
+  assert.equal(linked?.linkedDeath, true);
+  assert.equal(linked?.killedByPlayerIndex, 1);
 });
 
 test("observations survive restart data, remain seed-scoped and never reveal hidden opponent fields", () => {

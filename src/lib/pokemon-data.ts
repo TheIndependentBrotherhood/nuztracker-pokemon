@@ -128,7 +128,6 @@ function getTechnicalNames(entry: {
 export async function searchPokemonByName(
   query: string,
   gameVersion?: GameVersionId,
-  lang: Lang = "en",
 ): Promise<PokemonData[]> {
   if (!query || query.length < 2) return [];
 
@@ -162,14 +161,7 @@ export async function searchPokemonByName(
             technicalNames.some((name) => name.includes(lower))
           );
         })
-        .sort((left, right) =>
-          getLocalizedPokemonName(left, lang).localeCompare(
-            getLocalizedPokemonName(right, lang),
-            lang,
-            { sensitivity: "base" },
-          ),
-        )
-        .slice(0, 50);
+        .slice(0, 10);
     }
   } catch {
     // Cache not available

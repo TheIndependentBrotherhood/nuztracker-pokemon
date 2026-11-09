@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import { Box, Tooltip, Typography } from "@mui/material";
 import { learnProgress, type OverlayMember } from "@/lib/tracker/overlay";
 import type { LiveMove, MoveCategory } from "@/lib/tracker/types";
 import { typeColors } from "@/lib/type-chart";
-import { POKEMON_STAT_NAMES } from "@/lib/types";
+import { POKEMON_STAT_NAMES, type PokemonData } from "@/lib/types";
 import { getGameVersion, type GameVersionId } from "@/lib/game-catalog";
 import {
   getAvailableCaptureSpriteOptions,
+  getLocalizedPokemonName,
+  getPokemonList,
   type CaptureSpriteOption,
 } from "@/lib/pokemon-data";
 import { useGameText } from "@/lib/game-text";
 import { hpColor } from "@/lib/tracker/hp";
+import { evolutionSummary } from "@/lib/tracker/evolution";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t, type Lang } from "@/i18n/translations";
 import PixelIcon, {
@@ -352,6 +355,22 @@ function SpriteBox({
   );
 }
 
+/** Species list, loaded only once a card needs evolution target names. */
+function useSpeciesNames(enabled: boolean) {
+  const [species, setSpecies] = useState<Map<number, PokemonData>>();
+  useEffect(() => {
+    if (!enabled || species) return;
+    let active = true;
+    void getPokemonList().then((list) => {
+      if (active) setSpecies(new Map(list.map((entry) => [entry.id, entry])));
+    });
+    return () => {
+      active = false;
+    };
+  }, [enabled, species]);
+  return species;
+}
+
 export default function FocusCard({
   member,
   gameVersion,
@@ -427,6 +446,16 @@ export default function FocusCard({
   );
 
   const level = live?.level ?? opponentLevel;
+  const evolutions = live?.evolutions ?? member.evolutions;
+  const species = useSpeciesNames(Boolean(evolutions?.length));
+  const evolution = evolutionSummary(evolutions, level, generation, lang, {
+    item: (id) => gameText?.itemName(id, lang, generation),
+    move: (id) => gameText?.move({ id, pp: 0 }, lang, generation).name,
+    species: (id) => {
+      const entry = species?.get(id);
+      return entry && getLocalizedPokemonName(entry, lang);
+    },
+  });
   const progress = learnProgress(
     live?.learnLevels ?? member.learnLevels,
     level,
@@ -488,8 +517,36 @@ export default function FocusCard({
               <Typography
                 sx={{ fontSize: "0.72rem", color: muted, flex: "none" }}
               >
-                {t(text.level, lang)} {live?.level ?? opponentLevel}
+                {t(text.level, lang)} {level}
               </Typography>
+            )}
+            {evolution && (
+              <Hint
+                title={
+                  <TooltipBody
+                    title={t(text.evolution.title, lang)}
+                    lines={[
+                      ...evolution.details,
+                      ...(evolution.ready
+                        ? [t(text.evolution.ready, lang)]
+                        : []),
+                    ]}
+                  />
+                }
+              >
+                <Typography
+                  tabIndex={0}
+                  data-testid="focus-evolution"
+                  sx={{
+                    ...ellipsis,
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    color: evolution.ready ? "#7bd88f" : muted,
+                  }}
+                >
+                  ({evolution.label})
+                </Typography>
+              </Hint>
             )}
           </Box>
           <Box sx={{ display: "flex", gap: 0.4, my: 0.35, flexWrap: "nowrap" }}>

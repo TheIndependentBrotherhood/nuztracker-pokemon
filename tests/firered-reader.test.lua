@@ -91,6 +91,11 @@ local function preparePokemon(permutation, egg)
     write16(0x08300002, 7 * 512 + 45)
     write16(0x08300004, 13 * 512 + 22)
     write16(0x08300006, 0xFFFF)
+    -- Bulbasaur (internal #1) evolves at level 16 into internal #2.
+    write16(0x08259754 + 40, 4)
+    write16(0x08259754 + 42, 16)
+    write16(0x08259754 + 44, 2)
+    write16(0x08251FEE + 2, 2)
 end
 
 for permutation = 0, 23 do
@@ -102,6 +107,7 @@ for permutation = 0, 23 do
     assert(pokemon.experience == 125)
     assert(pokemon.types[1] == "grass" and pokemon.types[2] == "poison")
     assert(#pokemon.learnLevels == 3 and pokemon.learnLevels[3] == 13, "ROM learnset levels were not read")
+    assert(#pokemon.evolutions == 1 and pokemon.evolutions[1].param == 16 and pokemon.evolutions[1].target == 2, "ROM evolutions were not read")
 end
 preparePokemon(0, true)
 assert(reader.readPokemon(base) == nil, "Egg contents must not be revealed")

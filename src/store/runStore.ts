@@ -13,7 +13,7 @@ import {
   importStoredRecords,
 } from "@/lib/storage";
 import { getZonesForRegion } from "@/lib/zones";
-import { isZoneLockedForPlayer } from "@/lib/zone-progress";
+import { shinyChanceGroup, soulLinkCaptureSlot } from "@/lib/zone-progress";
 import { createRecord, newId } from "@/lib/tracker/records";
 import { deriveZoneStatus } from "@/lib/tracker/run-rules";
 import {
@@ -200,15 +200,17 @@ export const useRunStore = create<RunStore>((set, get) => {
           ...data,
           difficulty: "normal",
           status: "in-progress",
-          zones: getZonesForRegion(data.region, data.gameVersion).map((zone) => ({
-            id: zone.id,
-            zoneName: zone.zoneNames?.en ?? zone.regionArea ?? "Unknown",
-            zoneNames: zone.zoneNames,
-            regionArea: zone.regionArea,
-            status: "not-visited",
-            captures: [],
-            updatedAt: now,
-          })),
+          zones: getZonesForRegion(data.region, data.gameVersion).map(
+            (zone) => ({
+              id: zone.id,
+              zoneName: zone.zoneNames?.en ?? zone.regionArea ?? "Unknown",
+              zoneNames: zone.zoneNames,
+              regionArea: zone.regionArea,
+              status: "not-visited",
+              captures: [],
+              updatedAt: now,
+            }),
+          ),
           team: [],
           ...(data.isSoulLinkMode ? { playerTeams: {} } : {}),
           createdAt: now,
@@ -281,14 +283,21 @@ export const useRunStore = create<RunStore>((set, get) => {
       if (!run || !zone)
         return fail("The run or encounter zone could not be found.");
       const index = data.playerIndex ?? 0;
+      let shinyChance: true | undefined;
       if (run.isSoulLinkMode) {
-        if (
-          zone.captures.some((capture) => (capture.playerIndex ?? 0) === index)
-        ) {
-          return fail("This player already has a capture in this zone.");
-        }
-        if (isZoneLockedForPlayer(zone, index))
-          return fail("A linked loss has closed this encounter.");
+        const slot = soulLinkCaptureSlot(
+          zone,
+          index,
+          data.isShiny,
+          run.isShinyHuntMode,
+        );
+        if (!slot)
+          return fail(
+            run.isShinyHuntMode
+              ? "This player has no remaining capture slot here; only a shiny can still be kept if its second chance is open."
+              : "This player already has a capture in this zone, or a linked loss has closed it.",
+          );
+        if (slot === "shiny") shinyChance = true;
       } else {
         if (zone.captures.length >= (run.isShinyHuntMode ? 2 : 1))
           return fail("This zone has no remaining capture slots.");
@@ -300,7 +309,14 @@ export const useRunStore = create<RunStore>((set, get) => {
           return fail("The extra capture must be shiny.");
         }
       }
-      const capture: Capture = { ...data, id: newId(), createdAt: Date.now() };
+      const capture: Capture = {
+        ...data,
+        id: newId(),
+        createdAt: Date.now(),
+        ...(shinyChance
+          ? { shinyChance, soulLinkGroupId: shinyChanceGroup(zone.id) }
+          : {}),
+      };
       const playerId = getPlayerId(run, index);
       const knowledge = knowledgeForPlayer(run, playerId);
       const nextKnowledge = {

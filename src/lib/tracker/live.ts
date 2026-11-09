@@ -19,6 +19,7 @@ import { addHistory, newId, sameValue } from "./records";
 import { finalizeRun } from "./run-rules";
 import { gameFrameSchema, recordSchema } from "./schema";
 import { STARTER_ZONE_ID, zoneIdForMapName } from "../zones";
+import { shinyChanceGroup, soulLinkCaptureSlot } from "../zone-progress";
 
 export type PokemonResolver = (pokemonId: number) => PokemonData | undefined;
 
@@ -578,12 +579,24 @@ export function linkPokemon(
   }
   if (existing?.gameIdentity && existing.gameIdentity !== live.identity)
     throw new Error("This capture is already linked to a different Pokémon.");
-  if (!existing) {
+  let shinyChance = existing?.shinyChance;
+  if (!existing && record.run.isSoulLinkMode) {
+    const slot = soulLinkCaptureSlot(
+      zone,
+      index,
+      live.isShiny,
+      record.run.isShinyHuntMode,
+    );
+    if (!slot)
+      throw new Error(
+        "This zone has no eligible encounter slot. Link an existing capture or use a separate exception zone.",
+      );
+    shinyChance = slot === "shiny" || undefined;
+  } else if (!existing) {
     const own = zone.captures.filter(
       (capture) => (capture.playerIndex ?? 0) === index,
     );
-    const limit =
-      record.run.isShinyHuntMode && !record.run.isSoulLinkMode ? 2 : 1;
+    const limit = record.run.isShinyHuntMode ? 2 : 1;
     if (
       own.length >= limit ||
       (own.length && !own[0].isShiny && !live.isShiny)
@@ -611,7 +624,10 @@ export function linkPokemon(
       ? {
           playerIndex: index,
           soulLinkGroupId:
-            input.soulLinkGroupId ?? existing?.soulLinkGroupId ?? zone.id,
+            input.soulLinkGroupId ??
+            existing?.soulLinkGroupId ??
+            (shinyChance ? shinyChanceGroup(zone.id) : zone.id),
+          ...(shinyChance ? { shinyChance } : {}),
         }
       : {}),
   };

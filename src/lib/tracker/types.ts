@@ -48,6 +48,15 @@ export interface LivePokemon {
   moves: LiveMove[];
   // Level of every level-up move of the species, read from the ROM (randomizer-aware).
   learnLevels?: number[];
+  // Evolution methods of the species, read from the ROM (randomizer-aware).
+  evolutions?: LiveEvolution[];
+}
+
+/** Raw evolution entry: game method code, its parameter (level, item, move or species) and the target species. */
+export interface LiveEvolution {
+  method: number;
+  param: number;
+  target: number;
 }
 
 export interface BattleOpponent {
@@ -56,6 +65,7 @@ export interface BattleOpponent {
   level: number;
   position?: number;
   learnLevels?: number[];
+  evolutions?: LiveEvolution[];
 }
 
 export interface GameObservation {

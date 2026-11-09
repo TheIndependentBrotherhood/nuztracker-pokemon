@@ -28,7 +28,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
 import { getZoneDisplayName } from "@/lib/zones";
-import { isZoneLockedForPlayer } from "@/lib/zone-progress";
+import { soulLinkCaptureSlot } from "@/lib/zone-progress";
 import CaptureRateBadge from "@/components/pokedex/CaptureRateBadge";
 import { getPlayerId, knowledgeForPlayer } from "@/lib/tracker/knowledge";
 import { pokemonForGame } from "@/lib/game-reference";
@@ -67,7 +67,7 @@ export default function AddCaptureModal({
   const [selected, setSelected] = useState<PokemonData | null>(null);
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState<Capture["gender"]>("unknown");
-  const [isShiny, setIsShiny] = useState(forceShiny);
+  const [shinyChoice, setShinyChoice] = useState(forceShiny);
   const [spriteOptions, setSpriteOptions] = useState<CaptureSpriteOption[]>([]);
   const [selectedSpriteUrl, setSelectedSpriteUrl] = useState<string | null>(
     null,
@@ -114,8 +114,12 @@ export default function AddCaptureModal({
       useRunStore.getState().canEditRun(run.id, getPlayerId(run, playerIndex)),
     ) &&
     (!zone ||
-      (!zone.captures.some((c) => (c.playerIndex ?? 0) === playerIndex) &&
-        !isZoneLockedForPlayer(zone, playerIndex)));
+      soulLinkCaptureSlot(
+        zone,
+        playerIndex,
+        true,
+        Boolean(run?.isShinyHuntMode),
+      ) !== undefined);
   const [selectedPlayerIndex, setSelectedPlayerIndex] = useState<number>(
     defaultPlayerIndex ??
       soulLinkPlayers.find((p) => canPlayerCaptureHere(p.playerIndex))
@@ -125,6 +129,17 @@ export default function AddCaptureModal({
   );
   const selectedPlayerCanCapture =
     !isSoulLink || canPlayerCaptureHere(selectedPlayerIndex);
+  // Soul Link shiny hunt: once the regular encounter is used or closed, only a shiny second chance remains.
+  const shinyRequired =
+    forceShiny ||
+    Boolean(
+      isSoulLink &&
+      zone &&
+      run?.isShinyHuntMode &&
+      selectedPlayerCanCapture &&
+      soulLinkCaptureSlot(zone, selectedPlayerIndex, false, true) === undefined,
+    );
+  const isShiny = shinyChoice || shinyRequired;
   const knowledge = run
     ? knowledgeForPlayer(run, getPlayerId(run, selectedPlayerIndex))
     : undefined;
@@ -212,7 +227,7 @@ export default function AddCaptureModal({
         setSearching(true);
       }
 
-      const r = await searchPokemonByName(query, run?.gameVersion, lang);
+      const r = await searchPokemonByName(query, run?.gameVersion);
 
       if (cancelled) return;
 
@@ -1437,8 +1452,10 @@ export default function AddCaptureModal({
               control={
                 <Switch
                   checked={isShiny}
-                  onChange={(e) => !forceShiny && setIsShiny(e.target.checked)}
-                  disabled={forceShiny}
+                  onChange={(e) =>
+                    !shinyRequired && setShinyChoice(e.target.checked)
+                  }
+                  disabled={shinyRequired}
                   sx={{
                     "& .MuiSwitch-switchBase": {
                       color: "#ccc",
@@ -1455,7 +1472,7 @@ export default function AddCaptureModal({
               label={
                 <Typography sx={{ fontSize: "0.875rem", color: "#000" }}>
                   {t(tr.addCapture.isShiny, lang)}
-                  {forceShiny && (
+                  {shinyRequired && (
                     <Typography
                       component="span"
                       sx={{ fontSize: "0.75rem", color: "#f59e0b", ml: 0.5 }}

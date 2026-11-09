@@ -124,6 +124,11 @@ export function ndsRomFixture(): Buffer {
   [(1 << 9) | 33, (1 << 9) | 84, (7 << 9) | 45, (26 << 9) | 85, 0xffff].forEach(
     (value, index) => learnsets[25].writeUInt16LE(value, index * 2),
   );
+  const evolutions = Array.from({ length: 509 }, () => Buffer.alloc(44));
+  // Pikachu: Thunder Stone (method 7, item #83) into Raichu.
+  [7, 83, 26].forEach((value, index) =>
+    evolutions[25].writeUInt16LE(value, index * 2),
+  );
   messages[624] = messageBank(
     Array.from({ length: 18 }, (_, index) =>
       index === 9 ? "F\u00e9e" : "Normal",
@@ -152,7 +157,13 @@ export function ndsRomFixture(): Buffer {
     header.writeUInt16LE(2, 14);
     return Buffer.concat([header, table, contents, ...entries]);
   };
-  const files = [narc(personal), narc(learnsets), narc(moves), narc(messages)];
+  const files = [
+    narc(personal),
+    narc(learnsets),
+    narc(evolutions),
+    narc(moves),
+    narc(messages),
+  ];
   const directory = (entries: ([string, number] | string)[]) =>
     Buffer.concat([
       ...entries.map((entry) => {
@@ -177,7 +188,7 @@ export function ndsRomFixture(): Buffer {
       ["personal", 2],
       ["waza", 3],
     ]),
-    directory(["pl_personal.narc", "wotbl.narc"]),
+    directory(["pl_personal.narc", "wotbl.narc", "evo.narc"]),
     directory(["pl_waza_tbl.narc"]),
     directory(["pl_msg.narc"]),
   ];
@@ -185,7 +196,7 @@ export function ndsRomFixture(): Buffer {
   let cursor = 40;
   directories.forEach((entry, index) => {
     names.writeUInt32LE(cursor, index * 8);
-    names.writeUInt16LE([0, 0, 0, 2, 3][index], index * 8 + 4);
+    names.writeUInt16LE([0, 0, 0, 3, 4][index], index * 8 + 4);
     cursor += entry.length;
   });
   const fnt = Buffer.concat([names, ...directories]);
@@ -195,8 +206,8 @@ export function ndsRomFixture(): Buffer {
   header.writeUInt32LE(0x200, 0x40);
   header.writeUInt32LE(fnt.length, 0x44);
   header.writeUInt32LE(0x200 + fnt.length, 0x48);
-  header.writeUInt32LE(32, 0x4c);
-  const fat = Buffer.alloc(32);
+  header.writeUInt32LE(40, 0x4c);
+  const fat = Buffer.alloc(40);
   cursor = 0x200 + fnt.length + fat.length;
   files.forEach((file, index) => {
     fat.writeUInt32LE(cursor, index * 8);

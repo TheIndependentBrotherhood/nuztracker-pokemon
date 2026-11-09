@@ -82,6 +82,10 @@ test("NDS text and ROM archives preserve local modified types without revealing 
       assert.deepEqual(pokemon.learnLevels, [1, 1, 7, 26]);
       assert.deepEqual(battle.learnLevels(25), [1, 1, 7, 26]);
       assert.deepEqual(battle.learnLevels(1), []);
+      assert.deepEqual(pokemon.evolutions, [
+        { method: 7, param: 83, target: 26 },
+      ]);
+      assert.deepEqual(battle.evolutions(1), []);
       assert.equal("baseStats" in pokemon, false);
       await assert.rejects(rom.archive("missing.narc"), /missing/);
     } finally {
@@ -500,6 +504,8 @@ const syntheticBattleData: PlatinumBattleData = {
     species === 48 ? ["bug", "poison"] : species === 25 ? ["electric"] : [],
   moveName: (id) => ({ 52: "Ember" })[id as 52],
   learnLevels: (species) => (species === 48 ? [1, 1, 5, 11] : undefined),
+  evolutions: (species) =>
+    species === 48 ? [{ method: 4, param: 31, target: 49 }] : undefined,
 };
 
 test("Platinum reports opponent moves from PP drops and their ROM learnset levels", async () => {
@@ -512,6 +518,9 @@ test("Platinum reports opponent moves from PP drops and their ROM learnset level
   const read = async () => (await battle.reader.read()).frame;
   const first = await read();
   assert.deepEqual(first.battle?.opponents[0].learnLevels, [1, 1, 5, 11]);
+  assert.deepEqual(first.battle?.opponents[0].evolutions, [
+    { method: 4, param: 31, target: 49 },
+  ]);
   assert.deepEqual(first.observations, [], "The hidden moveset stays hidden.");
   battle.ram[enemy + 0x2c] = 24;
   const used = await read();

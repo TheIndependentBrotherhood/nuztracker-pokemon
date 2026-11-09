@@ -1,5 +1,5 @@
 import { Dex } from "@pkmn/dex";
-import type { LivePokemon } from "../src/lib/tracker/types";
+import type { LiveEvolution, LivePokemon } from "../src/lib/tracker/types";
 import type { DecodedPk4 } from "./pk4";
 import { NdsRom } from "./nds-rom";
 import { readGen4Message } from "./nds-text";
@@ -52,6 +52,8 @@ export interface PlatinumBattleData {
   moveName(id: number): string | undefined;
   /** Levels of a species' base-form level-up moves in the ROM (randomizer-aware). */
   learnLevels(species: number): number[] | undefined;
+  /** Evolution methods of a species in the ROM (randomizer-aware). */
+  evolutions(species: number): LiveEvolution[] | undefined;
 }
 
 const LEARNSET_END = 0xffff;
@@ -72,6 +74,29 @@ export function readLearnLevels(
   return levels;
 }
 
+const EVOLUTION_SLOTS = 7;
+const EVOLUTION_ENTRY_BYTES = 6;
+const MAX_SPECIES = 493;
+
+// Gen 4 evolution files hold 7 entries of method, parameter and target species (u16 each).
+export function readEvolutions(
+  data: Buffer | undefined,
+): LiveEvolution[] | undefined {
+  if (!data || data.length < EVOLUTION_SLOTS * EVOLUTION_ENTRY_BYTES)
+    return undefined;
+  const evolutions: LiveEvolution[] = [];
+  for (let slot = 0; slot < EVOLUTION_SLOTS; slot++) {
+    const offset = slot * EVOLUTION_ENTRY_BYTES;
+    const method = data.readUInt16LE(offset);
+    const param = data.readUInt16LE(offset + 2);
+    const target = data.readUInt16LE(offset + 4);
+    if (!method) continue;
+    if (method > 26 || target < 1 || target > MAX_SPECIES) return undefined;
+    evolutions.push({ method, param, target });
+  }
+  return evolutions;
+}
+
 async function optionalArchive(
   rom: NdsRom,
   path: string,
@@ -88,6 +113,10 @@ export async function loadPlatinumData(rom: NdsRom) {
   const moveData = await rom.archive("poketool/waza/pl_waza_tbl.narc");
   const messages = await rom.archive("msgdata/pl_msg.narc");
   const learnsets = await optionalArchive(rom, "poketool/personal/wotbl.narc");
+  const evolutionData = await optionalArchive(
+    rom,
+    "poketool/personal/evo.narc",
+  );
   if (!messages[624])
     throw new Error("This ROM has no supported type-name table.");
   const ninthType = readGen4Message(messages[624], 9)
@@ -135,6 +164,7 @@ export async function loadPlatinumData(rom: NdsRom) {
     },
     moveName: (id) => moves.get(id),
     learnLevels: (species) => readLearnLevels(learnsets?.[species]),
+    evolutions: (species) => readEvolutions(evolutionData?.[species]),
   };
   const enrich = (decoded: DecodedPk4): LivePokemon => {
     const species = decoded.pokemon.pokemonId;
@@ -147,6 +177,7 @@ export async function loadPlatinumData(rom: NdsRom) {
     const learnLevels = readLearnLevels(
       learnsets?.[alternate ? form.personal + decoded.form - 1 : species],
     );
+    const evolutions = readEvolutions(evolutionData?.[species]);
     if (
       !row ||
       row.length < 44 ||
@@ -191,6 +222,7 @@ export async function loadPlatinumData(rom: NdsRom) {
         };
       }),
       ...(learnLevels ? { learnLevels } : {}),
+      ...(evolutions ? { evolutions } : {}),
     };
   };
   return { enrich, battle };

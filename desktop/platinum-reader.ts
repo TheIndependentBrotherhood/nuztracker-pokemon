@@ -475,12 +475,14 @@ export class PlatinumReader {
             )
             .map((battler) => {
               const learnLevels = this.battleData?.learnLevels(battler.species);
+              const evolutions = this.battleData?.evolutions(battler.species);
               return {
                 identity: `${hex(battler.pid)}-${battler.index}`,
                 pokemonId: battler.species,
                 level: battler.level,
                 position: battler.index,
                 ...(learnLevels ? { learnLevels } : {}),
+                ...(evolutions ? { evolutions } : {}),
               };
             });
     const kind = type & BATTLE_TRAINER ? "trainer" : "wild";

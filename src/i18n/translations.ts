@@ -1719,6 +1719,143 @@ const translations = {
       fr: "Attaques vues chez cette espèce, les plus récentes en premier.",
       en: "Moves seen from this species, most recent first.",
     },
+    evolution: {
+      title: { fr: "Évolution", en: "Evolution" },
+      ready: {
+        fr: "Niveau atteint : l'évolution est possible.",
+        en: "Level reached: it can evolve.",
+      },
+      labels: {
+        friendship: { fr: ["AMITIÉ", "AMI"], en: ["FRIEND", "FRD"] },
+        trade: { fr: ["ÉCHANGE", "ÉCH"], en: ["TRADE", "TRD"] },
+        beauty: { fr: ["BEAUTÉ", "BTÉ"], en: ["BEAUTY", "BTY"] },
+        move: { fr: ["CAPA", "CAP"], en: ["MOVE", "MOV"] },
+        team: { fr: ["ÉQUIPE", "ÉQP"], en: ["TEAM", "TM"] },
+        place: { fr: ["LIEU", "LIE"], en: ["PLACE", "PLC"] },
+        various: { fr: ["DIVERS", "DIV"], en: ["VARIOUS", "VAR"] },
+      },
+      items: {
+        sun: { fr: ["SOLEIL", "SOL"], en: ["SUN", "SUN"] },
+        moon: { fr: ["LUNE", "LUN"], en: ["MOON", "MON"] },
+        fire: { fr: ["FEU", "FEU"], en: ["FIRE", "FIR"] },
+        thunder: { fr: ["FOUDRE", "FDR"], en: ["THUNDR", "THN"] },
+        water: { fr: ["EAU", "EAU"], en: ["WATER", "WTR"] },
+        leaf: { fr: ["PLANTE", "PLT"], en: ["LEAF", "LF"] },
+        shiny: { fr: ["ÉCLAT", "ÉCL"], en: ["SHNY ST", "SHN"] },
+        dusk: { fr: ["NUIT", "NUI"], en: ["DUSK", "DSK"] },
+        dawn: { fr: ["AUBE", "AUB"], en: ["DAWN", "DWN"] },
+        oval: { fr: ["OVALE", "OVL"], en: ["OVAL", "OVL"] },
+        kingsRock: { fr: ["RCH RYL", "RCH"], en: ["KNG RCK", "RCK"] },
+        deepSeaTooth: { fr: ["DNT OCÉ", "DNT"], en: ["DS TOOTH", "DST"] },
+        deepSeaScale: { fr: ["ÉCA OCÉ", "ÉCA"], en: ["DS SCALE", "DSS"] },
+        metalCoat: { fr: ["PEAU MT", "PMT"], en: ["MTL CT", "MTL"] },
+        dragonScale: { fr: ["ÉCA DRA", "DRA"], en: ["DRG SCL", "DRG"] },
+        upgrade: { fr: ["AMÉLIO", "AMÉ"], en: ["UPGDE", "UPG"] },
+        protector: { fr: ["PROTEC", "PRO"], en: ["PROTCR", "PRO"] },
+        electirizer: { fr: ["ÉLECTR", "ÉLE"], en: ["ELERZR", "ELE"] },
+        magmarizer: { fr: ["MAGMAR", "MAG"], en: ["MAGMZR", "MAG"] },
+        dubiousDisc: { fr: ["CD DTX", "CD"], en: ["DUB DSC", "DUB"] },
+        reaperCloth: { fr: ["TIS FCH", "TIS"], en: ["REA CLH", "REA"] },
+        razorClaw: { fr: ["GRF RSR", "GRF"], en: ["RZ CLW", "CLW"] },
+        razorFang: { fr: ["CRC RSR", "CRC"], en: ["RZ FNG", "FNG"] },
+      },
+      conditions: {
+        friendship: { fr: "Amitié élevée", en: "High friendship" },
+        friendshipDay: {
+          fr: "Amitié élevée, de jour",
+          en: "High friendship, daytime",
+        },
+        friendshipNight: {
+          fr: "Amitié élevée, de nuit",
+          en: "High friendship, nighttime",
+        },
+        level: {
+          fr: (level: number) => `Niveau ${level}`,
+          en: (level: number) => `Level ${level}`,
+        },
+        levelMale: {
+          fr: (level: number) => `Niveau ${level}, mâle`,
+          en: (level: number) => `Level ${level}, male`,
+        },
+        levelFemale: {
+          fr: (level: number) => `Niveau ${level}, femelle`,
+          en: (level: number) => `Level ${level}, female`,
+        },
+        attackHigher: {
+          fr: (level: number) => `Niveau ${level}, Attaque > Défense`,
+          en: (level: number) => `Level ${level}, Attack > Defense`,
+        },
+        attackEqual: {
+          fr: (level: number) => `Niveau ${level}, Attaque = Défense`,
+          en: (level: number) => `Level ${level}, Attack = Defense`,
+        },
+        defenseHigher: {
+          fr: (level: number) => `Niveau ${level}, Attaque < Défense`,
+          en: (level: number) => `Level ${level}, Attack < Defense`,
+        },
+        personality: {
+          fr: (level: number) => `Niveau ${level}, selon la personnalité`,
+          en: (level: number) => `Level ${level}, by personality`,
+        },
+        extraSlot: {
+          fr: (level: number) => `Niveau ${level}, place libre dans l'équipe`,
+          en: (level: number) => `Level ${level}, free party slot`,
+        },
+        trade: { fr: "Échange", en: "Trade" },
+        tradeItem: {
+          fr: (item: string) => `Échange en tenant ${item}`,
+          en: (item: string) => `Trade holding ${item}`,
+        },
+        useItem: {
+          fr: (item: string) => `Utiliser ${item}`,
+          en: (item: string) => `Use ${item}`,
+        },
+        useItemMale: {
+          fr: (item: string) => `Utiliser ${item}, mâle`,
+          en: (item: string) => `Use ${item}, male`,
+        },
+        useItemFemale: {
+          fr: (item: string) => `Utiliser ${item}, femelle`,
+          en: (item: string) => `Use ${item}, female`,
+        },
+        holdItemDay: {
+          fr: (item: string) => `Monter de niveau en tenant ${item}, de jour`,
+          en: (item: string) => `Level up holding ${item}, daytime`,
+        },
+        holdItemNight: {
+          fr: (item: string) => `Monter de niveau en tenant ${item}, de nuit`,
+          en: (item: string) => `Level up holding ${item}, nighttime`,
+        },
+        beauty: { fr: "Beauté élevée", en: "High beauty" },
+        knowMove: {
+          fr: (move: string) => `Monter de niveau en connaissant ${move}`,
+          en: (move: string) => `Level up knowing ${move}`,
+        },
+        withSpecies: {
+          fr: (species: string) =>
+            `Monter de niveau avec ${species} dans l'équipe`,
+          en: (species: string) => `Level up with ${species} in the party`,
+        },
+        magneticField: {
+          fr: "Monter de niveau près d'un champ magnétique",
+          en: "Level up near a magnetic field",
+        },
+        mossRock: {
+          fr: "Monter de niveau près de la Roche Mousse",
+          en: "Level up near the Moss Rock",
+        },
+        iceRock: {
+          fr: "Monter de niveau près de la Roche Glace",
+          en: "Level up near the Ice Rock",
+        },
+        unknown: {
+          fr: (method: number, generation: number) =>
+            `Méthode ${method} inconnue (Gen ${generation})`,
+          en: (method: number, generation: number) =>
+            `Unknown method ${method} (Gen ${generation})`,
+        },
+      },
+    },
     noMovesSeen: {
       fr: "Aucune attaque vue pour l'instant",
       en: "No move seen yet",

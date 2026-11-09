@@ -1,4 +1,5 @@
 import type { Capture, Run, Zone } from "../types";
+import { defaultCaptureGroup } from "../zone-progress";
 
 export function deriveZoneStatus(
   captures: Capture[],
@@ -13,7 +14,7 @@ export function deriveZoneStatus(
 }
 
 export function captureGroup(zone: Zone, capture: Capture): string {
-  return capture.soulLinkGroupId ?? zone.id;
+  return capture.soulLinkGroupId ?? defaultCaptureGroup(zone, capture);
 }
 
 export function applySoulLinkDeaths(run: Run, now = Date.now()): Run {

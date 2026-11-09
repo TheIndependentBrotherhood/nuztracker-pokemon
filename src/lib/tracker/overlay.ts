@@ -1,6 +1,7 @@
 import type {
   BattleOpponent,
   BridgeStatus,
+  LiveEvolution,
   LivePokemon,
   RunRecord,
 } from "./types";
@@ -42,6 +43,8 @@ export interface OverlayMember {
   live?: LivePokemon;
   /** Opponent only: level of every level-up move, from the ROM. */
   learnLevels?: number[];
+  /** Opponent only: evolution methods, from the ROM. */
+  evolutions?: LiveEvolution[];
   /** Opponent only: moves seen used by this species, most recent first. */
   seenMoves?: number[];
   bst: number;
@@ -279,6 +282,7 @@ export function opponentMember(
     annotations: knowledge.statAnnotationsByPokemonId?.[pokemon.id],
     randomStats,
     ...(opponent.learnLevels ? { learnLevels: opponent.learnLevels } : {}),
+    ...(opponent.evolutions ? { evolutions: opponent.evolutions } : {}),
     seenMoves,
   };
 }

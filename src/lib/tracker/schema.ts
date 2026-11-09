@@ -92,6 +92,7 @@ export const captureSchema = z.object({
   linkedDeath: z.boolean().optional(),
   gameIdentity: id.optional(),
   soulLinkGroupId: id.optional(),
+  shinyChance: z.boolean().optional(),
 });
 
 const knowledgeShape = {
@@ -240,6 +241,17 @@ export const gameIdentitySchema = z
   .strict();
 
 const learnLevelsSchema = z.array(z.number().int().min(0).max(100)).max(64);
+const evolutionsSchema = z
+  .array(
+    z
+      .object({
+        method: z.number().int().min(1).max(255),
+        param: z.number().int().min(0).max(65535),
+        target: z.number().int().min(1).max(100000),
+      })
+      .strict(),
+  )
+  .max(8);
 
 export const livePokemonSchema: z.ZodType<LivePokemon> = z
   .object({
@@ -289,6 +301,7 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
       )
       .max(4),
     learnLevels: learnLevelsSchema.optional(),
+    evolutions: evolutionsSchema.optional(),
   })
   .strict()
   .refine((pokemon) => pokemon.hp <= pokemon.maxHp, "HP exceeds maximum HP.");
@@ -328,6 +341,7 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
                 level: z.number().int().min(1).max(100),
                 position: z.number().int().min(0).max(3).optional(),
                 learnLevels: learnLevelsSchema.optional(),
+                evolutions: evolutionsSchema.optional(),
               })
               .strict(),
           )

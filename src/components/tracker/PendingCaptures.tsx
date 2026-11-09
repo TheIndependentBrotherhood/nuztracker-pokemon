@@ -200,11 +200,22 @@ export default function PendingCaptures({
                 setCaptureId("");
               }}
             >
-              {run.zones.map((zone) => (
-                <MenuItem key={zone.id} value={zone.id}>
-                  {getZoneDisplayName(zone, lang) || zone.zoneName}
-                </MenuItem>
-              ))}
+              {[...run.zones]
+                .map((zone) => ({
+                  id: zone.id,
+                  label: getZoneDisplayName(zone, lang) || zone.zoneName,
+                }))
+                .sort((left, right) =>
+                  left.label.localeCompare(right.label, lang, {
+                    sensitivity: "base",
+                    numeric: true,
+                  }),
+                )
+                .map((zone) => (
+                  <MenuItem key={zone.id} value={zone.id}>
+                    {zone.label}
+                  </MenuItem>
+                ))}
             </TextField>
             <TextField
               select

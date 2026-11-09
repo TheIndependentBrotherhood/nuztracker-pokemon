@@ -30,4 +30,7 @@ test("the real Lua reader emits exactly the TypeScript bridge protocol", () => {
   assert.equal(frame.battle?.opponents[0].pokemonId, 1);
   assert.deepEqual(frame.party[0].learnLevels, [1, 7, 13]);
   assert.deepEqual(frame.battle?.opponents[0].learnLevels, [1, 7, 13]);
+  const evolution = [{ method: 4, param: 16, target: 2 }];
+  assert.deepEqual(frame.party[0].evolutions, evolution);
+  assert.deepEqual(frame.battle?.opponents[0].evolutions, evolution);
 });

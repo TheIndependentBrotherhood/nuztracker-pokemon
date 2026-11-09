@@ -20,6 +20,7 @@ local addresses = {
     nationalDex = 0x08251FEE,
     speciesInfo = 0x08254784,
     levelUpLearnsets = 0x0825D7B4,
+    evolutionTable = 0x08259754,
     items = 0x083DB028,
 }
 local typeNames = {
@@ -104,6 +105,26 @@ local function learnLevels(species)
     end
     learnsetCache[species] = result
     return result or nil
+end
+
+-- Each species has 5 evolution entries of method, parameter, target species and padding (u16 each).
+local evolutionCache = {}
+local function evolutions(species)
+    if evolutionCache[species] ~= nil then return evolutionCache[species] or nil end
+    local ok, result = pcall(function()
+        local entries = array()
+        for slot = 0, 4 do
+            local address = addresses.evolutionTable + species * 40 + slot * 8
+            local method = read16(address)
+            if method > 0 then
+                if method > 15 then error("Unsupported evolution method") end
+                entries[#entries + 1] = { method = method, param = read16(address + 2), target = nationalId(read16(address + 4)) }
+            end
+        end
+        return entries
+    end)
+    evolutionCache[species] = ok and result or false
+    return ok and result or nil
 end
 
 local function readPokemon(address)
@@ -192,6 +213,7 @@ local function readPokemon(address)
         },
         moves = moves,
         learnLevels = learnLevels(species),
+        evolutions = evolutions(species),
     }
 end
 
@@ -256,6 +278,7 @@ local function sample()
                     identity = hex(read32(address + 72)) .. "-" .. tostring(slot),
                     pokemonId = nationalId(species), level = level,
                     learnLevels = learnLevels(species),
+                    evolutions = evolutions(species),
                 }
             end
         end

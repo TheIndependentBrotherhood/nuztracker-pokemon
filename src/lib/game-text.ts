@@ -147,6 +147,13 @@ export class GameText {
       : undefined;
   }
 
+  itemName(id: number, lang: Lang, generation = 4): string | undefined {
+    return pick(
+      this.itemsByIndex.get(`${generation <= 3 ? 3 : 4}:${id}`)?.name,
+      lang,
+    );
+  }
+
   nature(pokemon: LivePokemon, lang: Lang): NatureWord | undefined {
     if (!pokemon.nature) return undefined;
     const entry = this.data.natures[normalize(pokemon.nature)];

@@ -49,6 +49,8 @@ export interface Capture {
   gameIdentity?: string;
   /** Explicit SoulLink group; legacy captures use their zone as the group. */
   soulLinkGroupId?: string;
+  /** Soul Link shiny hunt: extra shiny kept in addition to the zone's regular encounter. */
+  shinyChance?: boolean;
 }
 
 export interface RandomizerOptions {
