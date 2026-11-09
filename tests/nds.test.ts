@@ -247,10 +247,12 @@ function platinumBattleRam(type = 0, battleData?: PlatinumBattleData) {
     species: number,
     level: number,
     pid: number,
+    hp = 20,
   ) => {
     const base = at(context + 0x2d80 + index * 0xc0);
     ram.writeUInt16LE(species, base);
     ram[base + 0x34] = level;
+    ram.writeInt32LE(hp, base + 0x4c);
     ram.writeUInt32LE(pid, base + 0x68);
     ram.writeUInt32LE(0xf123abcd, base + 0x74);
   };
@@ -428,6 +430,14 @@ test("Platinum battle types: trainer ids, link sides, tutorials and invalid stru
     [1, 3],
   );
   assert.equal(doubled.party[0].hp, 7);
+  // A fainted opponent stays in battle memory when its trainer has no replacement.
+  double.battler(1, 48, 3, 0x12345678, 0);
+  assert.deepEqual(
+    (await double.reader.read()).frame.battle?.opponents.map(
+      (opponent) => opponent.position,
+    ),
+    [3],
+  );
 
   const link = platinumBattleRam(0x5);
   link.battler(1, 25, 12, 0x8000000f);

@@ -402,6 +402,8 @@ export class PlatinumReader {
         level,
         pid,
         visible: species >= 1 && species <= 493 && level >= 1 && level <= 100,
+        // A fainted battler keeps its data until replaced; doubles may leave its slot empty.
+        fainted: mon.readInt32LE(0x4c) <= 0,
         identity: `${hex(pid)}-${hex(mon.readUInt32LE(0x74))}`,
       };
     });
@@ -419,17 +421,20 @@ export class PlatinumReader {
           ? ours[0].index & 1
           : previous?.side
         : 0;
+    const onSide = ours.filter((battler) => (battler.index & 1) === side);
     const active =
       side === undefined
         ? undefined
-        : ours.find((battler) => (battler.index & 1) === side);
+        : (onSide.find((battler) => !battler.fainted) ?? onSide[0]);
     // Transform can replace the battler's personality value for the rest of the switch-in.
     const activeIdentity =
       active?.identity ??
       (previous?.activeIdentity && savedIdentities.has(previous.activeIdentity)
         ? previous.activeIdentity
         : undefined);
-    const activeIdentities = ours.map((battler) => battler.identity);
+    const activeIdentities = ours
+      .filter((battler) => !battler.fainted)
+      .map((battler) => battler.identity);
     const team = new Map<string, DecodedPk4>();
     if (side !== undefined) {
       const battler = active?.index ?? side;
@@ -471,7 +476,10 @@ export class PlatinumReader {
         ? []
         : battlers
             .filter(
-              (battler) => battler.visible && (battler.index & 1) !== side,
+              (battler) =>
+                battler.visible &&
+                !battler.fainted &&
+                (battler.index & 1) !== side,
             )
             .map((battler) => {
               const learnLevels = this.battleData?.learnLevels(battler.species);

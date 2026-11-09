@@ -273,7 +273,9 @@ local function sample()
             local address = addresses.battleMons + slot * 88
             local species = read16(address)
             local level = read8(address + 42)
-            if species > 0 and species <= 411 and level > 0 and level <= 100 then
+            -- A fainted battler keeps its data until replaced; doubles may leave its slot empty.
+            local hp = read16(address + 40)
+            if species > 0 and species <= 411 and level > 0 and level <= 100 and hp > 0 then
                 opponents[#opponents + 1] = {
                     identity = hex(read32(address + 72)) .. "-" .. tostring(slot),
                     pokemonId = nationalId(species), level = level,

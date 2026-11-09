@@ -136,11 +136,13 @@ write32(0x02023BE4 + 72, memory.read_u32_le(base))
 write32(0x02023BE4 + 84, memory.read_u32_le(base + 4))
 write16(opponent, 1)
 write8(opponent + 42, 5)
+write16(opponent + 40, 12)
 write16(0x03004F90 + 0x24, 33)
 local originalRead8, originalRead16, originalRead32 = memory.read_u8, memory.read_u16_le, memory.read_u32_le
 local function checkEnemyRead(address)
     assert(not (address >= 0x0202402C and address < 0x02024284), "Hidden enemy party was read")
-    assert(not (address > opponent and address < opponent + 42), "Hidden enemy statistics or moves were read")
+    -- Current HP (+40) is shown on screen as a bar and only tells whether the battler fainted.
+    assert(not (address > opponent and address < opponent + 42 and address ~= opponent + 40), "Hidden enemy statistics or moves were read")
     assert(not (address > opponent + 42 and address < opponent + 72), "Hidden enemy details were read")
 end
 memory.read_u8 = function(address) checkEnemyRead(address); return originalRead8(address) end
@@ -153,6 +155,9 @@ assert(frame.battle.activePlayerIdentity == frame.party[1].identity, "Live focus
 assert(frame.observations[1].moveId == 33 and frame.observations[1].value == "TACKLE")
 assert(frame.battle.opponents[1].learnLevels[2] == 7, "Opponent learnset levels were not read")
 if arg and arg[1] == "--frame" then print("FRAME:" .. reader.json(frame)) end
+write16(opponent + 40, 0)
+assert(#reader.sample().battle.opponents == 0, "A fainted opponent without replacement must leave the field")
+write16(opponent + 40, 12)
 write8(0x080000BC, 1)
 assert(not pcall(reader.sample), "An unsupported revision must fail")
 print("FireRed reader: all 24 permutations, unsigned identities, checksum, egg privacy, observed moves and ROM guards passed.")
