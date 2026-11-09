@@ -257,6 +257,7 @@ const evolutionsSchema = z
         method: z.number().int().min(1).max(255),
         param: z.number().int().min(0).max(65535),
         target: z.number().int().min(1).max(100000),
+        moveName: z.string().max(40).optional(),
       })
       .strict(),
   )

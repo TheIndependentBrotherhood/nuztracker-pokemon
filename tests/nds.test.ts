@@ -518,10 +518,10 @@ const syntheticBattleData: PlatinumBattleData = {
   move: (id) =>
     (
       ({
-        5: { type: "normal", category: "physical", power: 80 },
-        45: { type: "normal", category: "status", power: 0 },
-        52: { type: "fire", category: "special", power: 40 },
-        89: { type: "ground", category: "physical", power: 100 },
+        5: { type: "normal", category: "physical", power: 80, accuracy: 85 },
+        45: { type: "normal", category: "status", power: 0, accuracy: 100 },
+        52: { type: "fire", category: "special", power: 40, accuracy: 100 },
+        89: { type: "ground", category: "physical", power: 100, accuracy: 100 },
       }) as const
     )[id as 5 | 45 | 52 | 89],
   speciesTypes: (species) =>

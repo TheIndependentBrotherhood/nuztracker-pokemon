@@ -388,6 +388,30 @@ test("custom ROM moves and abilities seen in battle keep their ROM names and dat
   assert.equal(move.type, "fairy");
   assert.equal(move.power, 95);
   assert.equal(gameText.move({ id: 461, pp: 10 }, "fr").name, "Danse Lune");
+  // Vanilla moves seen in battle keep their localized name but use the ROM data.
+  const vanilla = frame(2);
+  vanilla.observations = [
+    {
+      id: "move-battle-2-17",
+      encounterId: "battle-2",
+      pokemonId: 48,
+      kind: "move",
+      value: "Cru-Ailes",
+      moveId: 17,
+      move: { type: "flying", category: "physical", power: 60, accuracy: 100 },
+    },
+  ];
+  current = ingestFrame(current, "p1", vanilla, pokemon, 200);
+  const wing = gameText.move(
+    customSeenWords(current, "p1", 48)!.moves[17],
+    "en",
+  );
+  assert.equal(wing.name, "Wing Attack");
+  assert.equal(wing.power, 60);
+  assert.equal(
+    gameText.move({ id: 12, pp: 5, type: "normal", power: 1 }, "en").power,
+    undefined,
+  );
   assert.equal(customSeenWords(current, "p1", 4), undefined);
 });
 

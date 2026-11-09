@@ -186,7 +186,9 @@ function condition(
     case 19:
       return conditions.holdItemNight[lang](item());
     case 20:
-      return conditions.knowMove[lang](names.move?.(param) ?? `#${param}`);
+      return conditions.knowMove[lang](
+        evolution.moveName ?? names.move?.(param) ?? `#${param}`,
+      );
     case 21:
       return conditions.withSpecies[lang](
         names.species?.(param) ?? `#${param}`,

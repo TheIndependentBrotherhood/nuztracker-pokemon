@@ -97,11 +97,13 @@ export class GameText {
   move(move: LiveMove, lang: Lang, generation = 4): MoveWord {
     const entry = this.data.moves[move.id];
     const type = move.type ?? entry?.type;
-    const power = move.power ?? entry?.power;
+    const romPower = move.power ?? entry?.power;
+    // ROMs store 1 for variable-power moves (OHKO, Low Kick...), shown without a fixed power.
+    const power = romPower === 1 ? undefined : romPower;
     const category =
       move.category ??
       (generation <= 3 && type
-        ? !power
+        ? !romPower
           ? "status"
           : PHYSICAL_TYPES_BEFORE_GEN4.has(type)
             ? "physical"

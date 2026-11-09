@@ -30,6 +30,7 @@ import { GAME_VERSIONS, type GameVersionId } from "../game-catalog";
 import { zoneIdForMapName } from "../zones";
 import { gameKey } from "./live";
 
+// What the game itself reported for seen moves (ROM data) and hack-added abilities (ROM names).
 export interface CustomSeen {
   moves: Record<number, LiveMove>;
   abilities: Record<number, string>;
@@ -385,7 +386,7 @@ export function customSeenWords(
   let found = false;
   for (const observation of record.observations) {
     if (
-      !observation.custom ||
+      !(observation.custom || observation.move) ||
       observation.playerId !== playerId ||
       observation.pokemonId !== pokemonId ||
       (source && observation.gameKey !== source)
@@ -396,11 +397,15 @@ export function customSeenWords(
         id: observation.moveId,
         name: observation.value,
         pp: 0,
-        custom: true,
+        ...(observation.custom ? { custom: true as const } : {}),
         ...observation.move,
       };
       found = true;
-    } else if (observation.kind === "ability" && observation.abilityId) {
+    } else if (
+      observation.kind === "ability" &&
+      observation.custom &&
+      observation.abilityId
+    ) {
       seen.abilities[observation.abilityId] = observation.value;
       found = true;
     }

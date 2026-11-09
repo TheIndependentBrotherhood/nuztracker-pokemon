@@ -368,7 +368,9 @@ export class PlatinumReader {
             ]
           : []),
         ...(battle?.usedMoves ?? []).map((used) => {
+          // Seen moves always carry the ROM data: hacks change vanilla moves too.
           const custom = this.battleData?.customMove(used.moveId);
+          const data = custom ?? this.battleData?.move(used.moveId);
           return {
             // One observation per battle and opponent keeps the latest sighting without flooding the history.
             id: `move-${battle!.battle.id}-${used.identity}-${used.moveId}`,
@@ -378,15 +380,15 @@ export class PlatinumReader {
             value:
               this.battleData?.moveName(used.moveId) ?? `Move #${used.moveId}`,
             moveId: used.moveId,
-            ...(custom
+            ...(custom ? { custom: true as const } : {}),
+            ...(data
               ? {
-                  custom: true as const,
                   move: {
-                    type: custom.type,
-                    power: custom.power,
-                    ...(custom.category ? { category: custom.category } : {}),
-                    ...(custom.accuracy !== undefined
-                      ? { accuracy: custom.accuracy }
+                    type: data.type,
+                    power: data.power,
+                    ...(data.category ? { category: data.category } : {}),
+                    ...(data.accuracy !== undefined
+                      ? { accuracy: data.accuracy }
                       : {}),
                   },
                 }

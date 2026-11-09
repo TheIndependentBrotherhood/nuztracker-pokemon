@@ -48,6 +48,7 @@ export interface PlatinumBattleData {
         type: string;
         category?: (typeof moveCategories)[number];
         power: number;
+        accuracy: number;
       }
     | undefined;
   /** Types of a species' base form in the ROM personal data. */
@@ -258,8 +259,9 @@ export async function loadPlatinumData(
       accuracy: data[5],
     };
     const vanilla = id <= VANILLA_MOVES ? dexMoves.get(id) : undefined;
-    if (vanilla) {
-      const expected = language && vanillaName(id, language);
+    // Without a recognized text language, ROM names are the only reliable ones.
+    if (vanilla && language) {
+      const expected = vanillaName(id, language);
       if (!expected || sameMoveName(name, expected)) continue;
       if (
         rom.type === vanilla.type.toLowerCase() &&
@@ -289,6 +291,7 @@ export async function loadPlatinumData(
         type: romTypes[data[4]],
         category: moveCategories[data[2]],
         power: data[3],
+        accuracy: data[5],
       };
     },
     speciesTypes: (species) => {
@@ -318,7 +321,15 @@ export async function loadPlatinumData(
     const learnLevels = readLearnLevels(
       learnsets?.[alternate ? form.personal + decoded.form - 1 : species],
     );
-    const evolutions = readEvolutions(evolutionData?.[species]);
+    const evolutions = readEvolutions(evolutionData?.[species])?.map(
+      (evolution) => {
+        const custom =
+          evolution.method === 20
+            ? customMoves.get(evolution.param)
+            : undefined;
+        return custom ? { ...evolution, moveName: custom.name } : evolution;
+      },
+    );
     if (
       !row ||
       row.length < 44 ||

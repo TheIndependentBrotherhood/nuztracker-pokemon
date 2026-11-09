@@ -84,6 +84,8 @@ export interface LiveEvolution {
   method: number;
   param: number;
   target: number;
+  // ROM name of the required move when a hack replaced or added it.
+  moveName?: string;
 }
 
 export interface BattleOpponent {
