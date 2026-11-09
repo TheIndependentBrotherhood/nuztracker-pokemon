@@ -1753,7 +1753,8 @@ const translations = {
     ability: { fr: "Talent", en: "Ability" },
     item: { fr: "Objet", en: "Item" },
     noItem: { fr: "Aucun", en: "None" },
-    hiddenPower: { fr: "Puis. Cachée", en: "Hidden Power" },
+    hiddenPower: { fr: "PC", en: "HPw" },
+    hiddenPowerFull: { fr: "Puissance Cachée", en: "Hidden Power" },
     hiddenPowerDetail: {
       fr: (type: string, power: number) =>
         `Puissance Cachée de ce Pokémon : type ${type}, puissance ${power} (calculés depuis ses IV).`,

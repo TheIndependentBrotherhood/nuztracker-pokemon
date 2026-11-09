@@ -730,13 +730,66 @@ export default function FocusCard({
                   }}
                 />
               </Box>
-              {detail(
-                t(text.nature, lang),
-                nature?.name ?? live.nature,
-                nature && (
-                  <TooltipBody title={nature.name} lines={[natureLine]} />
-                ),
-              )}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  {detail(
+                    t(text.nature, lang),
+                    nature?.name ?? live.nature,
+                    nature && (
+                      <TooltipBody title={nature.name} lines={[natureLine]} />
+                    ),
+                  )}
+                </Box>
+                {hiddenPower && (
+                  <Hint
+                    title={
+                      <TooltipBody
+                        title={t(text.hiddenPowerFull, lang)}
+                        lines={[
+                          text.hiddenPowerDetail[lang](
+                            typeName(hiddenPower.type),
+                            hiddenPower.power,
+                          ),
+                        ]}
+                      />
+                    }
+                  >
+                    <Box
+                      tabIndex={0}
+                      data-testid="focus-hidden-power"
+                      sx={{
+                        flex: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.4,
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        lineHeight: 1.6,
+                        fontVariantNumeric: "tabular-nums",
+                        color: muted,
+                      }}
+                    >
+                      {t(text.hiddenPower, lang)}
+                      <Box
+                        component="span"
+                        sx={{
+                          bgcolor: typeColors[hiddenPower.type] ?? "#526173",
+                          color: "#edf4fa",
+                          fontSize: "0.6rem",
+                          borderRadius: 0.5,
+                          px: 0.6,
+                          textShadow: "0 1px 1px #0008",
+                        }}
+                      >
+                        {typeName(hiddenPower.type)}
+                      </Box>
+                      <Box component="span" sx={{ color: "#edf4fa" }}>
+                        {hiddenPower.power}
+                      </Box>
+                    </Box>
+                  </Hint>
+                )}
+              </Box>
               {detail(
                 t(text.ability, lang),
                 ability?.name ?? live.ability,
@@ -754,20 +807,6 @@ export default function FocusCard({
                   <TooltipBody title={item.name} lines={[item.description]} />
                 ),
               )}
-              {hiddenPower &&
-                detail(
-                  t(text.hiddenPower, lang),
-                  `${typeName(hiddenPower.type)} ${hiddenPower.power}`,
-                  <TooltipBody
-                    title={t(text.hiddenPower, lang)}
-                    lines={[
-                      text.hiddenPowerDetail[lang](
-                        typeName(hiddenPower.type),
-                        hiddenPower.power,
-                      ),
-                    ]}
-                  />,
-                )}
             </>
           ) : (
             <>
