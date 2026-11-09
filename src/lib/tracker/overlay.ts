@@ -79,6 +79,8 @@ export interface OverlayTeam {
   sourceError: boolean;
   location?: string;
   locationNames?: { fr?: string; en?: string };
+  // Captures of this player in the current run zone; absent when the location matches no zone.
+  zoneCapture?: { captured: boolean; shiny: boolean };
   members: OverlayMember[];
 }
 export interface OverlayData {
@@ -109,6 +111,9 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
       location: z.string().optional(),
       locationNames: z
         .object({ fr: z.string().optional(), en: z.string().optional() })
+        .optional(),
+      zoneCapture: z
+        .object({ captured: z.boolean(), shiny: z.boolean() })
         .optional(),
       members: z.array(
         z.object({
@@ -155,7 +160,8 @@ export function hidesEvolutionTargets(run: Run): boolean {
 function teamLocation(
   record: RunRecord,
   playerId: string,
-): Pick<OverlayTeam, "location" | "locationNames"> {
+  playerIndex: number,
+): Pick<OverlayTeam, "location" | "locationNames" | "zoneCapture"> {
   const tracking = record.tracking[playerId];
   const location = tracking?.latest.location;
   if (!location) return {};
@@ -167,7 +173,21 @@ function teamLocation(
       : undefined);
   const zone = record.run.zones.find((entry) => entry.id === matchedId);
   const names = zone?.zoneNames;
+  const captures = (zone?.captures ?? []).filter(
+    (capture) =>
+      !capture.failedCapture &&
+      (!record.run.isSoulLinkMode ||
+        (capture.playerIndex ?? 0) === playerIndex),
+  );
   return {
+    ...(zone
+      ? {
+          zoneCapture: {
+            captured: captures.length > 0,
+            shiny: captures.some((capture) => capture.isShiny),
+          },
+        }
+      : {}),
     location: location.name ?? zone?.zoneName ?? location.id,
     ...(names?.fr || names?.en
       ? {
@@ -214,7 +234,7 @@ export function overlayData(
         bridge.playerId === player.id &&
         bridge.error,
       ),
-      ...teamLocation(record, player.id),
+      ...teamLocation(record, player.id, player.playerIndex),
       members: partyMembers(record, player).map((capture) => ({
         id: capture.id,
         pokemonId: capture.pokemon.id,

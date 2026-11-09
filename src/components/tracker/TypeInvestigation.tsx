@@ -33,7 +33,8 @@ import translations, { t } from "@/i18n/translations";
 import TrackerDialog, { TrackerDialogIconButton } from "./TrackerDialog";
 
 const text = translations.focusCard;
-const MAX_LISTED_COMBOS = 24;
+// The combination list keeps a fixed height (about two and a half rows) and scrolls.
+const COMBO_LIST_MAX_HEIGHT = 64;
 
 function TypeBadge({ type, lang }: { type: string; lang: "fr" | "en" }) {
   return (
@@ -348,45 +349,50 @@ export default function TypeInvestigation({
                   ? t(text.investigationSolved, lang)
                   : `${t(text.investigationCandidates, lang)} (${combos.length})`}
               </Typography>
-              {combos.length <= MAX_LISTED_COMBOS ? (
-                <Box
-                  sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.25 }}
-                >
-                  {combos.map((combo) => {
-                    const selected =
-                      confirming &&
-                      draft[0] === combo[0] &&
-                      draft[1] === (combo[1] ?? "");
-                    return (
-                      <ButtonBase
-                        key={combo.join("-")}
-                        disabled={busy || !canEdit}
-                        aria-pressed={selected}
-                        onClick={() => {
-                          setDraft([combo[0], combo[1] ?? ""]);
-                          setConfirming(true);
-                        }}
-                        sx={{
-                          display: "flex",
-                          gap: 0.25,
-                          p: 0.25,
-                          borderRadius: 0.5,
-                          outline: selected ? "2px solid" : "1px solid",
-                          outlineColor: selected ? "primary.main" : "divider",
-                        }}
-                      >
-                        {combo.map((type) => (
-                          <TypeBadge key={type} type={type} lang={lang} />
-                        ))}
-                      </ButtonBase>
-                    );
-                  })}
-                </Box>
-              ) : (
-                <Typography sx={{ fontSize: "0.7rem" }}>
-                  {t(text.investigationTooMany, lang)}
-                </Typography>
-              )}
+              <Box
+                data-testid="investigation-combos"
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignContent: "flex-start",
+                  gap: 0.5,
+                  mt: 0.25,
+                  p: "2px",
+                  maxHeight: COMBO_LIST_MAX_HEIGHT,
+                  overflowY: "auto",
+                  scrollbarWidth: "thin",
+                }}
+              >
+                {combos.map((combo) => {
+                  const selected =
+                    confirming &&
+                    draft[0] === combo[0] &&
+                    draft[1] === (combo[1] ?? "");
+                  return (
+                    <ButtonBase
+                      key={combo.join("-")}
+                      disabled={busy || !canEdit}
+                      aria-pressed={selected}
+                      onClick={() => {
+                        setDraft([combo[0], combo[1] ?? ""]);
+                        setConfirming(true);
+                      }}
+                      sx={{
+                        display: "flex",
+                        gap: 0.25,
+                        p: 0.25,
+                        borderRadius: 0.5,
+                        outline: selected ? "2px solid" : "1px solid",
+                        outlineColor: selected ? "primary.main" : "divider",
+                      }}
+                    >
+                      {combo.map((type) => (
+                        <TypeBadge key={type} type={type} lang={lang} />
+                      ))}
+                    </ButtonBase>
+                  );
+                })}
+              </Box>
             </Box>
           )}
         </Stack>

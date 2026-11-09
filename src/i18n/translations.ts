@@ -738,6 +738,18 @@ const translations = {
       en: "Add your team manually or connect the emulator to detect it automatically.",
     },
     noMappedZone: { fr: "Aucune zone associée", en: "No mapped zone" },
+    zoneCaptured: {
+      fr: "Pokémon déjà capturé dans cette zone",
+      en: "Pokémon already caught in this zone",
+    },
+    zoneNotCaptured: {
+      fr: "Aucune capture dans cette zone",
+      en: "No capture in this zone",
+    },
+    zoneShiny: {
+      fr: "Shiny capturé dans cette zone",
+      en: "Shiny caught in this zone",
+    },
     player: { fr: "Joueur", en: "Player" },
     nextEncounter: {
       fr: (name: string) => `🔄 Prochaine rencontre : ${name} en premier`,
@@ -1653,10 +1665,6 @@ const translations = {
     investigationCandidates: {
       fr: "Combinaisons possibles",
       en: "Possible combinations",
-    },
-    investigationTooMany: {
-      fr: "Trop de possibilités : attaque avec d'autres types.",
-      en: "Too many options: attack with other types.",
     },
     investigationNoClue: {
       fr: "Aucun indice : attaque ce Pokémon.",

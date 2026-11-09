@@ -429,3 +429,49 @@ test("the SoulLink turn order reminder rotates every encountered zone", () => {
     players[0].id,
   );
 });
+
+test("the current zone reports the player's own regular and shiny captures", () => {
+  const base = connectRun(record(true), "p1");
+  const located = frame(1);
+  located.location = { id: "route-1", name: "Route 1" };
+  let current = ingestFrame(base, "p1", located, pokemon, 100);
+  current = {
+    ...current,
+    tracking: {
+      ...current.tracking,
+      p1: {
+        ...current.tracking.p1!,
+        zoneMappings: {
+          ...current.tracking.p1!.zoneMappings,
+          "route-1": "route-1",
+        },
+      },
+    },
+  };
+  const zoneCapture = (captures: ReturnType<typeof capture>[]) =>
+    overlayData({
+      ...current,
+      run: {
+        ...current.run,
+        zones: current.run.zones.map((zone) => ({ ...zone, captures })),
+      },
+    }).teams.find((team) => team.playerId === "p1")?.zoneCapture;
+  assert.deepEqual(zoneCapture([]), { captured: false, shiny: false });
+  const own = capture("c1", 0);
+  assert.deepEqual(zoneCapture([own]), { captured: true, shiny: false });
+  assert.deepEqual(zoneCapture([{ ...own, playerIndex: 1 }]), {
+    captured: false,
+    shiny: false,
+  });
+  assert.deepEqual(zoneCapture([{ ...own, failedCapture: true }]), {
+    captured: false,
+    shiny: false,
+  });
+  assert.deepEqual(
+    zoneCapture([{ ...own, isShiny: true, shinyChance: true }]),
+    {
+      captured: true,
+      shiny: true,
+    },
+  );
+});

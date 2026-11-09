@@ -523,6 +523,46 @@ export default function LightTracker() {
               team.locationNames?.en ??
               team.location ??
               t(text.noMappedZone, lang)}
+            {team.zoneCapture && (
+              <Box
+                component="span"
+                data-testid="zone-capture"
+                sx={{ ml: 0.5, fontWeight: 800, whiteSpace: "nowrap" }}
+              >
+                <Box
+                  component="span"
+                  role="img"
+                  title={t(
+                    team.zoneCapture.captured
+                      ? text.zoneCaptured
+                      : text.zoneNotCaptured,
+                    lang,
+                  )}
+                  aria-label={t(
+                    team.zoneCapture.captured
+                      ? text.zoneCaptured
+                      : text.zoneNotCaptured,
+                    lang,
+                  )}
+                  sx={{
+                    color: team.zoneCapture.captured ? "#4ade80" : "#64748b",
+                  }}
+                >
+                  ✓
+                </Box>
+                {team.zoneCapture.shiny && (
+                  <Box
+                    component="span"
+                    role="img"
+                    title={t(text.zoneShiny, lang)}
+                    aria-label={t(text.zoneShiny, lang)}
+                    sx={{ ml: 0.25, color: "#facc15" }}
+                  >
+                    ✓
+                  </Box>
+                )}
+              </Box>
+            )}
           </Typography>
           {nextPlayer && (
             <Typography
