@@ -82,7 +82,9 @@ export default function AddCaptureModal({
 
   const UNOWN_ID = 201;
   const run = runs.find((candidate) => candidate.id === runId);
-  const pokemonData = selected ? pokemonForGame(selected, run?.gameVersion) : null;
+  const pokemonData = selected
+    ? pokemonForGame(selected, run?.gameVersion)
+    : null;
   const hasAbilities = (getGameVersion(run?.gameVersion)?.generation ?? 9) >= 3;
   const randomTypesMode = isRandomTypesMode(run);
   const randomAbilitiesMode = Boolean(
@@ -137,7 +139,6 @@ export default function AddCaptureModal({
       setAbilityPanelDraft(
         knownAbilityPanelKey ? knownAbilityPanelKey.split("|") : [],
       );
-
     });
   }, [selected, knownAbilityPanelKey, run?.gameVersion]);
 
@@ -211,7 +212,7 @@ export default function AddCaptureModal({
         setSearching(true);
       }
 
-      const r = await searchPokemonByName(query, run?.gameVersion);
+      const r = await searchPokemonByName(query, run?.gameVersion, lang);
 
       if (cancelled) return;
 
@@ -289,7 +290,9 @@ export default function AddCaptureModal({
         gender,
         isShiny,
         isDead: false,
-        ...(hasAbilities && customAbilityDraft ? { ability: customAbilityDraft } : {}),
+        ...(hasAbilities && customAbilityDraft
+          ? { ability: customAbilityDraft }
+          : {}),
         ...(randomTypesMode && customTypesDraft.length > 0
           ? { customTypes: customTypesDraft }
           : {}),
@@ -871,48 +874,210 @@ export default function AddCaptureModal({
             )}
 
             {/* Ability panel */}
-            {hasAbilities && <Box sx={{ mb: 2 }}>
-              <Typography
-                component="label"
-                sx={{
-                  display: "block",
-                  fontSize: "0.75rem",
-                  fontWeight: 500,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "#000",
-                  mb: 0.5,
-                }}
-              >
-                {t(tr.addCapture.abilityPanel, lang)}
-              </Typography>
-              {/* Display pokemon abilities in classic mode (clickable to select) */}
-              {!randomAbilitiesMode &&
-                pokemonData &&
-                pokemonData.abilities.length > 0 &&
-                abilityPanelDraft.length === 0 && (
-                  <Box sx={{ mb: 2 }}>
+            {hasAbilities && (
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  component="label"
+                  sx={{
+                    display: "block",
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#000",
+                    mb: 0.5,
+                  }}
+                >
+                  {t(tr.addCapture.abilityPanel, lang)}
+                </Typography>
+                {/* Display pokemon abilities in classic mode (clickable to select) */}
+                {!randomAbilitiesMode &&
+                  pokemonData &&
+                  pokemonData.abilities.length > 0 &&
+                  abilityPanelDraft.length === 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 0.5,
+                          mb: 1.5,
+                        }}
+                      >
+                        {pokemonData.abilities.map((abilityEntry) => {
+                          const abilityName = abilityEntry.ability.name;
+                          const cachedEntry = abilitiesCache.abilities.find(
+                            (a) => a.name === abilityName,
+                          );
+                          const displayName =
+                            lang === "fr"
+                              ? (cachedEntry?.names?.fr ?? abilityName)
+                              : (cachedEntry?.names?.en ?? abilityName);
+                          const effect =
+                            lang === "fr"
+                              ? (cachedEntry?.effects?.fr ?? "")
+                              : (cachedEntry?.effects?.en ?? "");
+                          const isSelected = customAbilityDraft === abilityName;
+                          return (
+                            <Tooltip
+                              key={abilityName}
+                              title={effect}
+                              placement="top"
+                            >
+                              <Box
+                                component="button"
+                                onClick={() =>
+                                  setCustomAbilityDraft(abilityName)
+                                }
+                                sx={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 0.5,
+                                  px: 1,
+                                  py: 0.25,
+                                  borderRadius: "999px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: 600,
+                                  textTransform: "capitalize",
+                                  background: isSelected
+                                    ? abilityEntry.is_hidden
+                                      ? "#d97706"
+                                      : "#0284c7"
+                                    : abilityEntry.is_hidden
+                                      ? "#fef3c7"
+                                      : "#e0f2fe",
+                                  border: `2px solid ${
+                                    isSelected
+                                      ? abilityEntry.is_hidden
+                                        ? "#92400e"
+                                        : "#0c4a6e"
+                                      : abilityEntry.is_hidden
+                                        ? "#d97706"
+                                        : "#0284c7"
+                                  }`,
+                                  color: isSelected
+                                    ? "#fff"
+                                    : abilityEntry.is_hidden
+                                      ? "#92400e"
+                                      : "#0c4a6e",
+                                  cursor: "pointer",
+                                  transition: "all 150ms",
+                                  "&:hover": {
+                                    background: isSelected
+                                      ? abilityEntry.is_hidden
+                                        ? "#b45309"
+                                        : "#1d4ed8"
+                                      : abilityEntry.is_hidden
+                                        ? "#fde68a"
+                                        : "#bfdbfe",
+                                    transform: "scale(1.05)",
+                                  },
+                                }}
+                              >
+                                {displayName}
+                                {abilityEntry.is_hidden && (
+                                  <span
+                                    title={
+                                      lang === "fr"
+                                        ? "Talent caché"
+                                        : "Hidden ability"
+                                    }
+                                    style={{ fontSize: "0.65rem" }}
+                                  >
+                                    ✦
+                                  </span>
+                                )}
+                              </Box>
+                            </Tooltip>
+                          );
+                        })}
+                      </Box>
+
+                      {!customAbilityDraft && (
+                        <Typography
+                          sx={{
+                            mt: 0.75,
+                            fontSize: "0.72rem",
+                            color: "#b91c1c",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {t(tr.addCapture.abilityRequired, lang)}
+                        </Typography>
+                      )}
+
+                      {/* Captured ability label and chip */}
+                      {customAbilityDraft && (
+                        <Box sx={{ mt: 1.5 }}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.7rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                              color: "#666",
+                              mb: 0.5,
+                            }}
+                          >
+                            {t(tr.addCapture.capturedAbility, lang)}
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: "999px",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              background: "#0284c7",
+                              border: "2px solid #0369a1",
+                              color: "#fff",
+                            }}
+                          >
+                            <span style={{ textTransform: "capitalize" }}>
+                              ✓{" "}
+                              {(() => {
+                                const entry = abilitiesCache.abilities.find(
+                                  (a) => a.name === customAbilityDraft,
+                                );
+                                return lang === "fr"
+                                  ? (entry?.names?.fr ?? customAbilityDraft)
+                                  : (entry?.names?.en ?? customAbilityDraft);
+                              })()}
+                            </span>
+                          </Box>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+
+                {/* Display pokemon abilities in randomizer mode (clickable with panel add button) */}
+                {/* Randomizer ability assignment */}
+                {randomAbilitiesMode && (
+                  <>
+                    {/* Panel chips — always shown */}
                     <Box
                       sx={{
                         display: "flex",
                         flexWrap: "wrap",
                         gap: 0.5,
-                        mb: 1.5,
+                        mb: 1,
                       }}
                     >
-                      {pokemonData.abilities.map((abilityEntry) => {
-                        const abilityName = abilityEntry.ability.name;
-                        const cachedEntry = abilitiesCache.abilities.find(
+                      {abilityPanelDraft.map((abilityName) => {
+                        const entry = abilitiesCache.abilities.find(
                           (a) => a.name === abilityName,
                         );
                         const displayName =
                           lang === "fr"
-                            ? (cachedEntry?.names?.fr ?? abilityName)
-                            : (cachedEntry?.names?.en ?? abilityName);
+                            ? (entry?.names?.fr ?? abilityName)
+                            : (entry?.names?.en ?? abilityName);
                         const effect =
                           lang === "fr"
-                            ? (cachedEntry?.effects?.fr ?? "")
-                            : (cachedEntry?.effects?.en ?? "");
+                            ? (entry?.effects?.fr ?? "")
+                            : (entry?.effects?.en ?? "");
                         const isSelected = customAbilityDraft === abilityName;
                         return (
                           <Tooltip
@@ -922,7 +1087,13 @@ export default function AddCaptureModal({
                           >
                             <Box
                               component="button"
-                              onClick={() => setCustomAbilityDraft(abilityName)}
+                              onClick={() => {
+                                setCustomAbilityDraft(
+                                  isSelected ? null : abilityName,
+                                );
+                                setAbilitySearch("");
+                              }}
+                              aria-pressed={isSelected}
                               sx={{
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -932,59 +1103,31 @@ export default function AddCaptureModal({
                                 borderRadius: "999px",
                                 fontSize: "0.75rem",
                                 fontWeight: 600,
-                                textTransform: "capitalize",
-                                background: isSelected
-                                  ? abilityEntry.is_hidden
-                                    ? "#d97706"
-                                    : "#0284c7"
-                                  : abilityEntry.is_hidden
-                                    ? "#fef3c7"
-                                    : "#e0f2fe",
-                                border: `2px solid ${
-                                  isSelected
-                                    ? abilityEntry.is_hidden
-                                      ? "#92400e"
-                                      : "#0c4a6e"
-                                    : abilityEntry.is_hidden
-                                      ? "#d97706"
-                                      : "#0284c7"
-                                }`,
-                                color: isSelected
-                                  ? "#fff"
-                                  : abilityEntry.is_hidden
-                                    ? "#92400e"
-                                    : "#0c4a6e",
                                 cursor: "pointer",
+                                background: isSelected ? "#0284c7" : "#e0f2fe",
+                                border: `2px solid ${isSelected ? "#0369a1" : "#0284c7"}`,
+                                color: isSelected ? "#fff" : "#0c4a6e",
                                 transition: "all 150ms",
-                                "&:hover": {
-                                  background: isSelected
-                                    ? abilityEntry.is_hidden
-                                      ? "#b45309"
-                                      : "#1d4ed8"
-                                    : abilityEntry.is_hidden
-                                      ? "#fde68a"
-                                      : "#bfdbfe",
-                                  transform: "scale(1.05)",
-                                },
                               }}
                             >
-                              {displayName}
-                              {abilityEntry.is_hidden && (
-                                <span
-                                  title={
-                                    lang === "fr"
-                                      ? "Talent caché"
-                                      : "Hidden ability"
-                                  }
-                                  style={{ fontSize: "0.65rem" }}
-                                >
-                                  ✦
-                                </span>
-                              )}
+                              <span style={{ textTransform: "capitalize" }}>
+                                {displayName}
+                              </span>
                             </Box>
                           </Tooltip>
                         );
                       })}
+                      {abilityPanelDraft.length === 0 && (
+                        <Typography
+                          sx={{
+                            fontSize: "0.75rem",
+                            color: "#999",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          —
+                        </Typography>
+                      )}
                     </Box>
 
                     {!customAbilityDraft && (
@@ -998,6 +1141,146 @@ export default function AddCaptureModal({
                       >
                         {t(tr.addCapture.abilityRequired, lang)}
                       </Typography>
+                    )}
+
+                    {/* Hint text */}
+                    <Typography
+                      sx={{ fontSize: "0.7rem", color: "#666", mb: 0.75 }}
+                    >
+                      {abilityPanelDraft.length >= 3
+                        ? t(tr.addCapture.abilityPanelFull, lang)
+                        : t(tr.addCapture.abilityPanelHint, lang)}
+                    </Typography>
+
+                    {/* Search to add to panel (hidden when panel is full) */}
+                    {abilityPanelDraft.length < 3 && (
+                      <Box sx={{ position: "relative" }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          placeholder={t(
+                            tr.addCapture.abilitiesSearchPlaceholder,
+                            lang,
+                          )}
+                          value={abilitySearch}
+                          onChange={(e) => setAbilitySearch(e.target.value)}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              background: "#fff",
+                              color: "#000",
+                              fontSize: "0.875rem",
+                              "& fieldset": { borderColor: "#000" },
+                            },
+                          }}
+                        />
+                        {abilitySearch.length >= 2 && (
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: "100%",
+                              left: 0,
+                              right: 0,
+                              background: "#fff",
+                              border: "2px solid #000",
+                              borderRadius: "0.75rem",
+                              mt: 0.5,
+                              maxHeight: "160px",
+                              overflowY: "auto",
+                              zIndex: 10,
+                              boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            {(() => {
+                              const searchLower = abilitySearch.toLowerCase();
+                              const filtered = abilitiesCache.abilities.filter(
+                                (a) =>
+                                  !abilityPanelDraft.includes(a.name) &&
+                                  (a.name.toLowerCase().includes(searchLower) ||
+                                    a.names?.fr
+                                      ?.toLowerCase()
+                                      .includes(searchLower) ||
+                                    a.names?.en
+                                      ?.toLowerCase()
+                                      .includes(searchLower)),
+                              );
+                              return (
+                                <>
+                                  {filtered.slice(0, 8).map((a) => {
+                                    const displayName =
+                                      lang === "fr"
+                                        ? (a.names?.fr ?? a.name)
+                                        : (a.names?.en ?? a.name);
+                                    const effect =
+                                      lang === "fr"
+                                        ? (a.effects?.fr ?? "")
+                                        : (a.effects?.en ?? "");
+                                    return (
+                                      <Tooltip
+                                        key={a.name}
+                                        title={effect}
+                                        placement="left"
+                                      >
+                                        <Box
+                                          component="button"
+                                          onClick={() => {
+                                            // Add to panel and select as captured ability
+                                            setAbilityPanelDraft((prev) =>
+                                              prev.length < 3 &&
+                                              !prev.includes(a.name)
+                                                ? [...prev, a.name]
+                                                : prev,
+                                            );
+                                            setCustomAbilityDraft(a.name);
+                                            setAbilitySearch("");
+                                          }}
+                                          sx={{
+                                            width: "100%",
+                                            textAlign: "left",
+                                            px: 1.5,
+                                            py: 0.75,
+                                            background: "transparent",
+                                            border: "none",
+                                            fontSize: "0.875rem",
+                                            textTransform: "capitalize",
+                                            color: "#000",
+                                            cursor: "pointer",
+                                            "&:hover": {
+                                              background: "#f0f0f0",
+                                            },
+                                            "&:first-of-type": {
+                                              borderTopLeftRadius: "0.75rem",
+                                              borderTopRightRadius: "0.75rem",
+                                            },
+                                            "&:last-of-type": {
+                                              borderBottomLeftRadius: "0.75rem",
+                                              borderBottomRightRadius:
+                                                "0.75rem",
+                                            },
+                                          }}
+                                        >
+                                          {displayName}
+                                        </Box>
+                                      </Tooltip>
+                                    );
+                                  })}
+                                  {filtered.length === 0 && (
+                                    <Box
+                                      sx={{
+                                        px: 1.5,
+                                        py: 1,
+                                        color: "#666",
+                                        fontSize: "0.875rem",
+                                      }}
+                                    >
+                                      {t(tr.addCapture.noAbilityResult, lang)}
+                                    </Box>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </Box>
+                        )}
+                      </Box>
                     )}
 
                     {/* Captured ability label and chip */}
@@ -1044,278 +1327,10 @@ export default function AddCaptureModal({
                         </Box>
                       </Box>
                     )}
-                  </Box>
+                  </>
                 )}
-
-              {/* Display pokemon abilities in randomizer mode (clickable with panel add button) */}
-              {/* Randomizer ability assignment */}
-              {randomAbilitiesMode && (
-                <>
-                  {/* Panel chips — always shown */}
-                  <Box
-                    sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}
-                  >
-                    {abilityPanelDraft.map((abilityName) => {
-                      const entry = abilitiesCache.abilities.find(
-                        (a) => a.name === abilityName,
-                      );
-                      const displayName =
-                        lang === "fr"
-                          ? (entry?.names?.fr ?? abilityName)
-                          : (entry?.names?.en ?? abilityName);
-                      const effect =
-                        lang === "fr"
-                          ? (entry?.effects?.fr ?? "")
-                          : (entry?.effects?.en ?? "");
-                      const isSelected = customAbilityDraft === abilityName;
-                      return (
-                        <Tooltip
-                          key={abilityName}
-                          title={effect}
-                          placement="top"
-                        >
-                          <Box
-                            component="button"
-                            onClick={() => {
-                              setCustomAbilityDraft(
-                                isSelected ? null : abilityName,
-                              );
-                              setAbilitySearch("");
-                            }}
-                            aria-pressed={isSelected}
-                            sx={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                              px: 1,
-                              py: 0.25,
-                              borderRadius: "999px",
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              background: isSelected ? "#0284c7" : "#e0f2fe",
-                              border: `2px solid ${isSelected ? "#0369a1" : "#0284c7"}`,
-                              color: isSelected ? "#fff" : "#0c4a6e",
-                              transition: "all 150ms",
-                            }}
-                          >
-                            <span style={{ textTransform: "capitalize" }}>
-                              {displayName}
-                            </span>
-                          </Box>
-                        </Tooltip>
-                      );
-                    })}
-                    {abilityPanelDraft.length === 0 && (
-                      <Typography
-                        sx={{
-                          fontSize: "0.75rem",
-                          color: "#999",
-                          fontStyle: "italic",
-                        }}
-                      >
-                        —
-                      </Typography>
-                    )}
-                  </Box>
-
-                  {!customAbilityDraft && (
-                    <Typography
-                      sx={{
-                        mt: 0.75,
-                        fontSize: "0.72rem",
-                        color: "#b91c1c",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {t(tr.addCapture.abilityRequired, lang)}
-                    </Typography>
-                  )}
-
-                  {/* Hint text */}
-                  <Typography
-                    sx={{ fontSize: "0.7rem", color: "#666", mb: 0.75 }}
-                  >
-                    {abilityPanelDraft.length >= 3
-                      ? t(tr.addCapture.abilityPanelFull, lang)
-                      : t(tr.addCapture.abilityPanelHint, lang)}
-                  </Typography>
-
-                  {/* Search to add to panel (hidden when panel is full) */}
-                  {abilityPanelDraft.length < 3 && (
-                    <Box sx={{ position: "relative" }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        placeholder={t(
-                          tr.addCapture.abilitiesSearchPlaceholder,
-                          lang,
-                        )}
-                        value={abilitySearch}
-                        onChange={(e) => setAbilitySearch(e.target.value)}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            background: "#fff",
-                            color: "#000",
-                            fontSize: "0.875rem",
-                            "& fieldset": { borderColor: "#000" },
-                          },
-                        }}
-                      />
-                      {abilitySearch.length >= 2 && (
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            top: "100%",
-                            left: 0,
-                            right: 0,
-                            background: "#fff",
-                            border: "2px solid #000",
-                            borderRadius: "0.75rem",
-                            mt: 0.5,
-                            maxHeight: "160px",
-                            overflowY: "auto",
-                            zIndex: 10,
-                            boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          {(() => {
-                            const searchLower = abilitySearch.toLowerCase();
-                            const filtered = abilitiesCache.abilities.filter(
-                              (a) =>
-                                !abilityPanelDraft.includes(a.name) &&
-                                (a.name.toLowerCase().includes(searchLower) ||
-                                  a.names?.fr
-                                    ?.toLowerCase()
-                                    .includes(searchLower) ||
-                                  a.names?.en
-                                    ?.toLowerCase()
-                                    .includes(searchLower)),
-                            );
-                            return (
-                              <>
-                                {filtered.slice(0, 8).map((a) => {
-                                  const displayName =
-                                    lang === "fr"
-                                      ? (a.names?.fr ?? a.name)
-                                      : (a.names?.en ?? a.name);
-                                  const effect =
-                                    lang === "fr"
-                                      ? (a.effects?.fr ?? "")
-                                      : (a.effects?.en ?? "");
-                                  return (
-                                    <Tooltip
-                                      key={a.name}
-                                      title={effect}
-                                      placement="left"
-                                    >
-                                      <Box
-                                        component="button"
-                                        onClick={() => {
-                                          // Add to panel and select as captured ability
-                                          setAbilityPanelDraft((prev) =>
-                                            prev.length < 3 &&
-                                            !prev.includes(a.name)
-                                              ? [...prev, a.name]
-                                              : prev,
-                                          );
-                                          setCustomAbilityDraft(a.name);
-                                          setAbilitySearch("");
-                                        }}
-                                        sx={{
-                                          width: "100%",
-                                          textAlign: "left",
-                                          px: 1.5,
-                                          py: 0.75,
-                                          background: "transparent",
-                                          border: "none",
-                                          fontSize: "0.875rem",
-                                          textTransform: "capitalize",
-                                          color: "#000",
-                                          cursor: "pointer",
-                                          "&:hover": { background: "#f0f0f0" },
-                                          "&:first-of-type": {
-                                            borderTopLeftRadius: "0.75rem",
-                                            borderTopRightRadius: "0.75rem",
-                                          },
-                                          "&:last-of-type": {
-                                            borderBottomLeftRadius: "0.75rem",
-                                            borderBottomRightRadius: "0.75rem",
-                                          },
-                                        }}
-                                      >
-                                        {displayName}
-                                      </Box>
-                                    </Tooltip>
-                                  );
-                                })}
-                                {filtered.length === 0 && (
-                                  <Box
-                                    sx={{
-                                      px: 1.5,
-                                      py: 1,
-                                      color: "#666",
-                                      fontSize: "0.875rem",
-                                    }}
-                                  >
-                                    {t(tr.addCapture.noAbilityResult, lang)}
-                                  </Box>
-                                )}
-                              </>
-                            );
-                          })()}
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-
-                  {/* Captured ability label and chip */}
-                  {customAbilityDraft && (
-                    <Box sx={{ mt: 1.5 }}>
-                      <Typography
-                        sx={{
-                          fontSize: "0.7rem",
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                          color: "#666",
-                          mb: 0.5,
-                        }}
-                      >
-                        {t(tr.addCapture.capturedAbility, lang)}
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                          px: 1,
-                          py: 0.25,
-                          borderRadius: "999px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          background: "#0284c7",
-                          border: "2px solid #0369a1",
-                          color: "#fff",
-                        }}
-                      >
-                        <span style={{ textTransform: "capitalize" }}>
-                          ✓{" "}
-                          {(() => {
-                            const entry = abilitiesCache.abilities.find(
-                              (a) => a.name === customAbilityDraft,
-                            );
-                            return lang === "fr"
-                              ? (entry?.names?.fr ?? customAbilityDraft)
-                              : (entry?.names?.en ?? customAbilityDraft);
-                          })()}
-                        </span>
-                      </Box>
-                    </Box>
-                  )}
-                </>
-              )}
-            </Box>}
+              </Box>
+            )}
 
             {/* Nickname */}
             <Box sx={{ mb: 1.5 }}>

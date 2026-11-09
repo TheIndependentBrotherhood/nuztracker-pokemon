@@ -25,6 +25,7 @@ import { z } from "zod";
 import { POKEMON_STAT_NAMES } from "../types";
 import { GAME_VERSIONS, type GameVersionId } from "../game-catalog";
 import { zoneIdForMapName } from "../zones";
+import { gameKey } from "./live";
 
 export interface OverlayMember {
   id: string;
@@ -39,6 +40,10 @@ export interface OverlayMember {
   fallbackSpriteUrl: string;
   types: string[];
   live?: LivePokemon;
+  /** Opponent only: level of every level-up move, from the ROM. */
+  learnLevels?: number[];
+  /** Opponent only: moves seen used by this species, most recent first. */
+  seenMoves?: number[];
   bst: number;
   baseStats?: PokemonStat[];
   annotations?: StatAnnotations;
@@ -250,6 +255,7 @@ export function opponentMember(
   playerId: string,
   opponent: BattleOpponent,
   reference: PokemonData,
+  seenMoves: number[] = [],
 ): OverlayMember {
   const pokemon = pokemonForGame(reference, run.gameVersion);
   const knowledge = knowledgeForPlayer(run, playerId);
@@ -272,6 +278,56 @@ export function opponentMember(
     baseStats: randomStats ? undefined : pokemon.stats,
     annotations: knowledge.statAnnotationsByPokemonId?.[pokemon.id],
     randomStats,
+    ...(opponent.learnLevels ? { learnLevels: opponent.learnLevels } : {}),
+    seenMoves,
+  };
+}
+
+/** Moves a species was seen using in this player's current game, most recent first. */
+export function seenMoveIds(
+  record: RunRecord,
+  playerId: string,
+  pokemonId: number,
+): number[] {
+  const game = record.tracking[playerId]?.game;
+  const source = game && gameKey(game);
+  const latest = new Map<number, number>();
+  for (const observation of record.observations) {
+    if (
+      observation.kind !== "move" ||
+      !observation.moveId ||
+      observation.playerId !== playerId ||
+      observation.pokemonId !== pokemonId ||
+      (source && observation.gameKey !== source)
+    )
+      continue;
+    latest.set(
+      observation.moveId,
+      Math.max(latest.get(observation.moveId) ?? 0, observation.observedAt),
+    );
+  }
+  return [...latest]
+    .sort((left, right) => right[1] - left[1] || left[0] - right[0])
+    .map(([moveId]) => moveId);
+}
+
+/** Level-up moves already reachable at a level, their total and the next learning level. */
+export function learnProgress(
+  learnLevels: number[] | undefined,
+  level: number | undefined,
+): { learned: number; total: number; next?: number } | undefined {
+  if (!learnLevels?.length || level === undefined) return undefined;
+  const next = learnLevels
+    .filter((entry) => entry > level)
+    .reduce<number | undefined>(
+      (lowest, entry) =>
+        lowest === undefined || entry < lowest ? entry : lowest,
+      undefined,
+    );
+  return {
+    learned: learnLevels.filter((entry) => entry <= level).length,
+    total: learnLevels.length,
+    ...(next === undefined ? {} : { next }),
   };
 }
 

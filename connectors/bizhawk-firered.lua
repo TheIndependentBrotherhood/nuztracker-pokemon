@@ -19,6 +19,7 @@ local addresses = {
     abilityNames = 0x0824FC40,
     nationalDex = 0x08251FEE,
     speciesInfo = 0x08254784,
+    levelUpLearnsets = 0x0825D7B4,
     items = 0x083DB028,
 }
 local typeNames = {
@@ -82,6 +83,27 @@ local function readMove(id, pp, ppUps)
         power = read8(address + 1), type = typeNames[read8(address + 2)],
         accuracy = read8(address + 3),
     }
+end
+
+-- Level-up entries pack the level in the top 7 bits and the move in the low 9 bits.
+-- They are read from the ROM, so randomized learnsets are reported as the game uses them.
+local learnsetCache = {}
+local function learnLevels(species)
+    if learnsetCache[species] ~= nil then return learnsetCache[species] or nil end
+    local result = false
+    local pointer = read32(addresses.levelUpLearnsets + species * 4)
+    if pointer >= 0x08000000 and pointer < 0x0A000000 then
+        local levels = array()
+        for offset = 0, 126, 2 do
+            local entry = read16(pointer + offset)
+            if entry == 0xFFFF then result = levels break end
+            local level = math.floor(entry / 512)
+            if entry % 512 == 0 or level > 100 then break end
+            levels[#levels + 1] = level
+        end
+    end
+    learnsetCache[species] = result
+    return result or nil
 end
 
 local function readPokemon(address)
@@ -169,6 +191,7 @@ local function readPokemon(address)
             ["special-attack"] = read16(address + 96), ["special-defense"] = read16(address + 98),
         },
         moves = moves,
+        learnLevels = learnLevels(species),
     }
 end
 
@@ -232,6 +255,7 @@ local function sample()
                 opponents[#opponents + 1] = {
                     identity = hex(read32(address + 72)) .. "-" .. tostring(slot),
                     pokemonId = nationalId(species), level = level,
+                    learnLevels = learnLevels(species),
                 }
             end
         end

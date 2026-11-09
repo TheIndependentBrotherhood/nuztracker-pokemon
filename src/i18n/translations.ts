@@ -1684,7 +1684,7 @@ const translations = {
       "special-defense": { fr: "D.Spé", en: "SpD" },
       speed: { fr: "Vit", en: "Spe" },
       special: { fr: "Spé", en: "Spc" },
-      total: { fr: "Total", en: "BST" },
+      total: { fr: "BST", en: "BST" },
     },
     statNames: {
       hp: { fr: "PV", en: "HP" },
@@ -1709,6 +1709,20 @@ const translations = {
       en: (up: string, down: string) => `+10% ${up} · −10% ${down}`,
     },
     moves: { fr: "Capacités", en: "Moves" },
+    learnProgress: {
+      fr: (learned: number, total: number, next?: number) =>
+        `${learned}/${total} capacités apprises par niveau${next === undefined ? " : toutes sont apprises." : `, prochaine au niveau ${next}.`}`,
+      en: (learned: number, total: number, next?: number) =>
+        `${learned}/${total} level-up moves learned${next === undefined ? ": all are learned." : `, next one at level ${next}.`}`,
+    },
+    seenMoves: {
+      fr: "Attaques vues chez cette espèce, les plus récentes en premier.",
+      en: "Moves seen from this species, most recent first.",
+    },
+    noMovesSeen: {
+      fr: "Aucune attaque vue pour l'instant",
+      en: "No move seen yet",
+    },
     pp: { fr: "PP", en: "PP" },
     power: { fr: "Puis.", en: "Pow" },
     accuracy: { fr: "Préc.", en: "Acc" },

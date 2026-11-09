@@ -79,6 +79,9 @@ test("NDS text and ROM archives preserve local modified types without revealing 
       assert.equal(battle.typeName(9), "fairy");
       assert.equal(pokemon.moves[0].type, "fire");
       assert.equal(pokemon.moves[0].power, 40);
+      assert.deepEqual(pokemon.learnLevels, [1, 1, 7, 26]);
+      assert.deepEqual(battle.learnLevels(25), [1, 1, 7, 26]);
+      assert.deepEqual(battle.learnLevels(1), []);
       assert.equal("baseStats" in pokemon, false);
       await assert.rejects(rom.archive("missing.narc"), /missing/);
     } finally {
@@ -495,7 +498,54 @@ const syntheticBattleData: PlatinumBattleData = {
     )[id as 5 | 45 | 52 | 89],
   speciesTypes: (species) =>
     species === 48 ? ["bug", "poison"] : species === 25 ? ["electric"] : [],
+  moveName: (id) => ({ 52: "Ember" })[id as 52],
+  learnLevels: (species) => (species === 48 ? [1, 1, 5, 11] : undefined),
 };
+
+test("Platinum reports opponent moves from PP drops and their ROM learnset levels", async () => {
+  const battle = platinumBattleRam(0, syntheticBattleData);
+  const enemy = battle.at(0x02020000) + 0x2d80 + 0xc0;
+  battle.ram.writeUInt16LE(52, enemy + 0x0c);
+  battle.ram.writeUInt16LE(45, enemy + 0x0e);
+  battle.ram[enemy + 0x2c] = 25;
+  battle.ram[enemy + 0x2d] = 40;
+  const read = async () => (await battle.reader.read()).frame;
+  const first = await read();
+  assert.deepEqual(first.battle?.opponents[0].learnLevels, [1, 1, 5, 11]);
+  assert.deepEqual(first.observations, [], "The hidden moveset stays hidden.");
+  battle.ram[enemy + 0x2c] = 24;
+  const used = await read();
+  assert.deepEqual(
+    used.observations.map(({ kind, pokemonId, moveId, value }) => ({
+      kind,
+      pokemonId,
+      moveId,
+      value,
+    })),
+    [{ kind: "move", pokemonId: 48, moveId: 52, value: "Ember" }],
+  );
+  assert.equal(used.observations[0].encounterId, used.battle?.id);
+  assert.deepEqual(
+    (await read()).observations,
+    [],
+    "Unchanged PP report nothing.",
+  );
+  battle.ram.writeUInt32LE(1 << 21, enemy + 0x70);
+  battle.ram[enemy + 0x2d] = 39;
+  assert.deepEqual(
+    (await read()).observations,
+    [],
+    "Moves copied by Transform are not the species' moves.",
+  );
+  battle.ram.writeUInt32LE(0, enemy + 0x70);
+  battle.ram[enemy + 0x2c] = 10;
+  battle.ram.writeUInt32LE(50, 0x3ffc3c);
+  assert.deepEqual(
+    (await read()).observations,
+    [],
+    "A loaded state never reports a PP difference as a used move.",
+  );
+});
 
 test("Platinum reports the type matchups computed by the game once a move result is stable", async () => {
   const battle = platinumBattleRam(0, syntheticBattleData);

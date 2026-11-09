@@ -46,6 +46,8 @@ export interface LivePokemon {
   experience?: number;
   stats?: Record<string, number>;
   moves: LiveMove[];
+  // Level of every level-up move of the species, read from the ROM (randomizer-aware).
+  learnLevels?: number[];
 }
 
 export interface BattleOpponent {
@@ -53,6 +55,7 @@ export interface BattleOpponent {
   pokemonId: number;
   level: number;
   position?: number;
+  learnLevels?: number[];
 }
 
 export interface GameObservation {

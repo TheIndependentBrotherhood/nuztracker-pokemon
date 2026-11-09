@@ -86,6 +86,11 @@ local function preparePokemon(permutation, egg)
     write8(0x08250C04 + 33 * 12 + 1, 35)
     write8(0x08250C04 + 33 * 12 + 2, 0)
     write8(0x08250C04 + 33 * 12 + 3, 95)
+    write32(0x0825D7B4 + 4, 0x08300000)
+    write16(0x08300000, 1 * 512 + 33)
+    write16(0x08300002, 7 * 512 + 45)
+    write16(0x08300004, 13 * 512 + 22)
+    write16(0x08300006, 0xFFFF)
 end
 
 for permutation = 0, 23 do
@@ -96,6 +101,7 @@ for permutation = 0, 23 do
     assert(pokemon.moves[1].id == 33 and pokemon.moves[1].pp == 35)
     assert(pokemon.experience == 125)
     assert(pokemon.types[1] == "grass" and pokemon.types[2] == "poison")
+    assert(#pokemon.learnLevels == 3 and pokemon.learnLevels[3] == 13, "ROM learnset levels were not read")
 end
 preparePokemon(0, true)
 assert(reader.readPokemon(base) == nil, "Egg contents must not be revealed")
@@ -139,6 +145,7 @@ reader.markEnemyMove()
 frame = reader.sample()
 assert(frame.battle.activePlayerIdentity == frame.party[1].identity, "Live focus must identify the active owned Pokemon")
 assert(frame.observations[1].moveId == 33 and frame.observations[1].value == "TACKLE")
+assert(frame.battle.opponents[1].learnLevels[2] == 7, "Opponent learnset levels were not read")
 if arg and arg[1] == "--frame" then print("FRAME:" .. reader.json(frame)) end
 write8(0x080000BC, 1)
 assert(not pcall(reader.sample), "An unsupported revision must fail")

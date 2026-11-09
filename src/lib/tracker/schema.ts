@@ -239,6 +239,8 @@ export const gameIdentitySchema = z
   })
   .strict();
 
+const learnLevelsSchema = z.array(z.number().int().min(0).max(100)).max(64);
+
 export const livePokemonSchema: z.ZodType<LivePokemon> = z
   .object({
     identity: id,
@@ -286,6 +288,7 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
           .strict(),
       )
       .max(4),
+    learnLevels: learnLevelsSchema.optional(),
   })
   .strict()
   .refine((pokemon) => pokemon.hp <= pokemon.maxHp, "HP exceeds maximum HP.");
@@ -324,6 +327,7 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
                 pokemonId: z.number().int().min(1).max(100000),
                 level: z.number().int().min(1).max(100),
                 position: z.number().int().min(0).max(3).optional(),
+                learnLevels: learnLevelsSchema.optional(),
               })
               .strict(),
           )

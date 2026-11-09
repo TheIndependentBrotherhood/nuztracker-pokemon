@@ -128,6 +128,7 @@ function getTechnicalNames(entry: {
 export async function searchPokemonByName(
   query: string,
   gameVersion?: GameVersionId,
+  lang: Lang = "en",
 ): Promise<PokemonData[]> {
   if (!query || query.length < 2) return [];
 
@@ -161,7 +162,14 @@ export async function searchPokemonByName(
             technicalNames.some((name) => name.includes(lower))
           );
         })
-        .slice(0, 10);
+        .sort((left, right) =>
+          getLocalizedPokemonName(left, lang).localeCompare(
+            getLocalizedPokemonName(right, lang),
+            lang,
+            { sensitivity: "base" },
+          ),
+        )
+        .slice(0, 50);
     }
   } catch {
     // Cache not available
@@ -318,14 +326,23 @@ export async function getAvailableEvolutions(
 
   // Remove current pokémon from the list
   const otherEvolutions = (await getPokemonList()).filter(
-    (e) => e.id !== pokemon.id && pokemonForGame(e, run?.gameVersion).stats.length > 0,
+    (e) =>
+      e.id !== pokemon.id &&
+      pokemonForGame(e, run?.gameVersion).stats.length > 0,
   );
 
   if (!run) return otherEvolutions;
 
   // Normal mode: only allow evolutions in the same family (chain)
-  if (!run.isRandomMode || run.randomizerOptions?.randomizeEvolvedForms === false) {
-    return chain.filter((e) => e.id !== pokemon.id && pokemonForGame(e, run.gameVersion).stats.length > 0);
+  if (
+    !run.isRandomMode ||
+    run.randomizerOptions?.randomizeEvolvedForms === false
+  ) {
+    return chain.filter(
+      (e) =>
+        e.id !== pokemon.id &&
+        pokemonForGame(e, run.gameVersion).stats.length > 0,
+    );
   } else {
     // Random mode: allow any evolution (full pokedex) except the current form
     return otherEvolutions;

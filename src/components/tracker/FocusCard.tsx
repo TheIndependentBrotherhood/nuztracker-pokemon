@@ -2,8 +2,8 @@
 
 import { useState, type ReactElement, type ReactNode } from "react";
 import { Box, Tooltip, Typography } from "@mui/material";
-import type { OverlayMember } from "@/lib/tracker/overlay";
-import type { MoveCategory } from "@/lib/tracker/types";
+import { learnProgress, type OverlayMember } from "@/lib/tracker/overlay";
+import type { LiveMove, MoveCategory } from "@/lib/tracker/types";
 import { typeColors } from "@/lib/type-chart";
 import { POKEMON_STAT_NAMES } from "@/lib/types";
 import { getGameVersion, type GameVersionId } from "@/lib/game-catalog";
@@ -37,6 +37,9 @@ const statusColors: Record<StatusKey, string> = {
 };
 
 const muted = "#a5b6c8";
+const VISIBLE_MOVES = 4;
+const MOVE_ROW_PX = 18;
+const MOVE_HEADER_PX = 16;
 
 function CategoryIcon({
   category,
@@ -423,6 +426,17 @@ export default function FocusCard({
     </Hint>
   );
 
+  const level = live?.level ?? opponentLevel;
+  const progress = learnProgress(
+    live?.learnLevels ?? member.learnLevels,
+    level,
+  );
+  // Opponents never reveal their moveset: only the moves seen in battle are listed.
+  const seenOnly = !live && Boolean(member.seenMoves);
+  const moveRows: LiveMove[] = live
+    ? live.moves
+    : (member.seenMoves ?? []).map((id) => ({ id, pp: 0 }));
+
   const statValue = (stat: string) =>
     live
       ? stat === "hp"
@@ -648,7 +662,7 @@ export default function FocusCard({
           {t(text.noReference, lang)}
         </Typography>
       )}
-      {live && live.moves.length > 0 && (
+      {moveRows.length > 0 || member.seenMoves ? (
         <Box
           data-testid="focus-moves"
           sx={{
@@ -658,28 +672,85 @@ export default function FocusCard({
             display: "grid",
             gridTemplateColumns: "minmax(0, 1fr) auto auto auto",
             columnGap: 1,
-            rowGap: 0.2,
             fontSize: "0.72rem",
+            lineHeight: `${MOVE_ROW_PX}px`,
             fontVariantNumeric: "tabular-nums",
             alignItems: "center",
+            ...(moveRows.length > VISIBLE_MOVES
+              ? {
+                  maxHeight: MOVE_HEADER_PX + VISIBLE_MOVES * MOVE_ROW_PX,
+                  overflowY: "auto",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#526173 transparent",
+                }
+              : {}),
           }}
         >
           {[text.moves, text.pp, text.power, text.accuracy].map(
-            (header, column) => (
-              <Box
-                key={header.en}
-                sx={{
-                  color: muted,
-                  fontSize: "0.6rem",
-                  textTransform: "uppercase",
-                  textAlign: column ? "right" : "left",
-                }}
-              >
-                {t(header, lang)}
-              </Box>
-            ),
+            (header, column) => {
+              const cell = (
+                <Box
+                  key={header.en}
+                  tabIndex={!column && (progress || seenOnly) ? 0 : undefined}
+                  sx={{
+                    ...ellipsis,
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 1,
+                    bgcolor: "#17212b",
+                    color: muted,
+                    fontSize: "0.6rem",
+                    lineHeight: `${MOVE_HEADER_PX}px`,
+                    textTransform: "uppercase",
+                    textAlign: column ? "right" : "left",
+                  }}
+                >
+                  {t(header, lang)}
+                  {!column && progress && (
+                    <Box
+                      component="span"
+                      data-testid="focus-learn-progress"
+                      sx={{ ml: 0.5, color: "#edf4fa", textTransform: "none" }}
+                    >
+                      {progress.learned}/{progress.total}
+                      {progress.next !== undefined && ` (${progress.next})`}
+                    </Box>
+                  )}
+                </Box>
+              );
+              return column || !(progress || seenOnly) ? (
+                cell
+              ) : (
+                <Hint
+                  key={header.en}
+                  title={
+                    <TooltipBody
+                      title={t(text.moves, lang)}
+                      lines={[
+                        progress &&
+                          text.learnProgress[lang](
+                            progress.learned,
+                            progress.total,
+                            progress.next,
+                          ),
+                        seenOnly ? t(text.seenMoves, lang) : undefined,
+                      ]}
+                    />
+                  }
+                >
+                  {cell}
+                </Hint>
+              );
+            },
           )}
-          {live.moves.map((move, slot) => {
+          {moveRows.length === 0 && (
+            <Box
+              sx={{ gridColumn: "1 / -1", color: muted, fontSize: "0.68rem" }}
+            >
+              {t(text.noMovesSeen, lang)}
+            </Box>
+          )}
+          {moveRows.map((move, slot) => {
             const word = gameText?.move(move, lang, generation) ?? {
               name: move.name ?? `#${move.id}`,
               category: move.category,
@@ -728,12 +799,17 @@ export default function FocusCard({
                 key={`${slot}-pp`}
                 sx={{
                   textAlign: "right",
-                  color:
-                    move.pp === 0 ? "#ef4444" : low ? "#facc15" : "#c6d4e1",
+                  color: seenOnly
+                    ? muted
+                    : move.pp === 0
+                      ? "#ef4444"
+                      : low
+                        ? "#facc15"
+                        : "#c6d4e1",
                 }}
               >
-                {move.pp}
-                {move.maxPp ? `/${move.maxPp}` : ""}
+                {seenOnly ? "—" : move.pp}
+                {!seenOnly && move.maxPp ? `/${move.maxPp}` : ""}
               </Box>,
               <Box key={`${slot}-power`} sx={{ textAlign: "right" }}>
                 {word.power || "—"}
@@ -744,7 +820,7 @@ export default function FocusCard({
             ];
           })}
         </Box>
-      )}
+      ) : null}
     </Box>
   );
 }

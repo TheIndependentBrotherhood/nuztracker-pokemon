@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import { GameText } from "../src/lib/game-text";
 import { hpColor } from "../src/lib/tracker/hp";
 import {
+  learnProgress,
   lightFocusMember,
   opponentMember,
   overlayData,
+  seenMoveIds,
 } from "../src/lib/tracker/overlay";
 import {
   saveKnowledgeView,
@@ -18,7 +20,7 @@ import {
   getTypeDefensesForGeneration,
   getTypeOffensesForGeneration,
 } from "../src/lib/type-chart";
-import { ingestFrame } from "../src/lib/tracker/live";
+import { connectRun, ingestFrame } from "../src/lib/tracker/live";
 import type { LivePokemon } from "../src/lib/tracker/types";
 import gameTextData from "../public/data/game-text.json";
 import { capture, frame, pokemon, record } from "./fixtures";
@@ -30,6 +32,41 @@ const gameText = new GameText(
 function livePokemon(overrides: Partial<LivePokemon> = {}): LivePokemon {
   return { ...frame().party[0], ...overrides };
 }
+
+test("learn progress counts reachable level-up moves and the next learning level", () => {
+  assert.deepEqual(learnProgress([1, 1, 7, 26, 26, 40], 10), {
+    learned: 3,
+    total: 6,
+    next: 26,
+  });
+  assert.deepEqual(learnProgress([1, 7], 50), { learned: 2, total: 2 });
+  assert.equal(learnProgress([], 10), undefined);
+  assert.equal(learnProgress([1, 7], undefined), undefined);
+});
+
+test("seen opponent moves are deduplicated and listed most recent first", () => {
+  let current = connectRun(record(true), "p1");
+  const observe = (sequence: number, moveId: number, at: number) => {
+    const next = frame(sequence);
+    next.observations = [
+      {
+        id: `move-${sequence}-${moveId}`,
+        encounterId: `battle-${sequence}`,
+        pokemonId: 48,
+        kind: "move",
+        value: `Move ${moveId}`,
+        moveId,
+      },
+    ];
+    current = ingestFrame(current, "p1", next, pokemon, at);
+  };
+  observe(1, 52, 100);
+  observe(2, 33, 200);
+  observe(3, 52, 300);
+  observe(4, 10, 150);
+  assert.deepEqual(seenMoveIds(current, "p1", 48), [52, 33, 10]);
+  assert.deepEqual(seenMoveIds(current, "p1", 4), []);
+});
 
 test("HP bar colors follow the in-game thresholds", () => {
   assert.equal(hpColor(45, 45), "#22c55e");

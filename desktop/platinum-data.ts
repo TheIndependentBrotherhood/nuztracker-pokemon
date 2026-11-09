@@ -39,9 +39,7 @@ const forms: Record<
 export interface PlatinumBattleData {
   /** Type name of a ROM type index, as used by battle structures. */
   typeName(index: number): string | undefined;
-  move(
-    id: number,
-  ):
+  move(id: number):
     | {
         type: string;
         category?: (typeof moveCategories)[number];
@@ -50,12 +48,46 @@ export interface PlatinumBattleData {
     | undefined;
   /** Types of a species' base form in the ROM personal data. */
   speciesTypes(species: number): string[] | undefined;
+  /** English name of a move, for observations. */
+  moveName(id: number): string | undefined;
+  /** Levels of a species' base-form level-up moves in the ROM (randomizer-aware). */
+  learnLevels(species: number): number[] | undefined;
+}
+
+const LEARNSET_END = 0xffff;
+
+// Gen 4 level-up entries pack the level in the top 7 bits and the move in the low 9 bits.
+export function readLearnLevels(
+  data: Buffer | undefined,
+): number[] | undefined {
+  if (!data) return undefined;
+  const levels: number[] = [];
+  for (let offset = 0; offset + 1 < data.length; offset += 2) {
+    const entry = data.readUInt16LE(offset);
+    if (entry === LEARNSET_END) return levels;
+    const level = entry >> 9;
+    if (!(entry & 0x1ff) || level > 100) return undefined;
+    levels.push(level);
+  }
+  return levels;
+}
+
+async function optionalArchive(
+  rom: NdsRom,
+  path: string,
+): Promise<Buffer[] | undefined> {
+  try {
+    return await rom.archive(path);
+  } catch {
+    return undefined;
+  }
 }
 
 export async function loadPlatinumData(rom: NdsRom) {
   const personal = await rom.archive("poketool/personal/pl_personal.narc");
   const moveData = await rom.archive("poketool/waza/pl_waza_tbl.narc");
   const messages = await rom.archive("msgdata/pl_msg.narc");
+  const learnsets = await optionalArchive(rom, "poketool/personal/wotbl.narc");
   if (!messages[624])
     throw new Error("This ROM has no supported type-name table.");
   const ninthType = readGen4Message(messages[624], 9)
@@ -101,6 +133,8 @@ export async function loadPlatinumData(rom: NdsRom) {
       if (row[7] >= romTypes.length) return;
       return [...new Set([romTypes[row[6]], romTypes[row[7]]])];
     },
+    moveName: (id) => moves.get(id),
+    learnLevels: (species) => readLearnLevels(learnsets?.[species]),
   };
   const enrich = (decoded: DecodedPk4): LivePokemon => {
     const species = decoded.pokemon.pokemonId;
@@ -110,6 +144,9 @@ export async function loadPlatinumData(rom: NdsRom) {
     );
     const row =
       personal[alternate ? form.personal + decoded.form - 1 : species];
+    const learnLevels = readLearnLevels(
+      learnsets?.[alternate ? form.personal + decoded.form - 1 : species],
+    );
     if (
       !row ||
       row.length < 44 ||
@@ -153,6 +190,7 @@ export async function loadPlatinumData(rom: NdsRom) {
             : {}),
         };
       }),
+      ...(learnLevels ? { learnLevels } : {}),
     };
   };
   return { enrich, battle };

@@ -31,6 +31,11 @@ const BATTLE_OVERLAY_ID = 16;
 const APPLICATION_RUNNING = 2;
 const BATTLE_MON_OFFSET = 0x2d80;
 const BATTLE_MON_SIZE = 0xc0;
+// BattleMon fields (pret/pokeplatinum include/battle/battle_mon.h).
+const BATTLE_MON_MOVES = 0x0c;
+const BATTLE_MON_PP = 0x2c;
+const BATTLE_MON_VOLATILE = 0x70;
+const VOLATILE_CONDITION_TRANSFORM = 1 << 21;
 const BATTLE_TRAINER = 1 << 0;
 const BATTLE_DOUBLES = 1 << 1;
 const BATTLE_LINK = 1 << 2;
@@ -79,6 +84,13 @@ interface BattleRead {
     outcome: EffectivenessOutcome;
     moveId: number;
   };
+  usedMoves: { identity: string; pokemonId: number; moveId: number }[];
+}
+
+interface OpponentMoves {
+  species: number;
+  moves: number[];
+  pp: number[];
 }
 
 export class PlatinumReader {
@@ -98,6 +110,9 @@ export class PlatinumReader {
     expiresAt: number;
   };
   private pendingEffectiveness?: string;
+  // Opponent moves and PP from the previous poll, keyed by battle system and battler identity.
+  private opponentMoves = new Map<string, OpponentMoves>();
+  private opponentMovesSystem?: number;
   constructor(
     private readonly memory: Pick<ReadOnlyGdbClient, "readMemory">,
     private readonly rom: Pick<NdsRom, "gameCode" | "revision" | "romHash">,
@@ -248,6 +263,8 @@ export class PlatinumReader {
     } else {
       this.battleState = undefined;
       this.pendingEffectiveness = undefined;
+      this.opponentMoves.clear();
+      this.opponentMovesSystem = undefined;
       const after = this.afterBattle;
       if (
         after &&
@@ -285,19 +302,31 @@ export class PlatinumReader {
       },
       ...(battle ? { battle: battle.battle } : {}),
       ...(pokeBalls === undefined ? {} : { pokeBalls }),
-      observations: battle?.effectiveness
-        ? [
-            {
-              id: `eff-${battle.effectiveness.pokemonId}-${battle.effectiveness.attackType}-${battle.effectiveness.outcome}`,
-              encounterId: battle.battle.id,
-              pokemonId: battle.effectiveness.pokemonId,
-              kind: "effectiveness",
-              value: battle.effectiveness.outcome,
-              attackType: battle.effectiveness.attackType,
-              moveId: battle.effectiveness.moveId,
-            },
-          ]
-        : [],
+      observations: [
+        ...(battle?.effectiveness
+          ? [
+              {
+                id: `eff-${battle.effectiveness.pokemonId}-${battle.effectiveness.attackType}-${battle.effectiveness.outcome}`,
+                encounterId: battle.battle.id,
+                pokemonId: battle.effectiveness.pokemonId,
+                kind: "effectiveness" as const,
+                value: battle.effectiveness.outcome,
+                attackType: battle.effectiveness.attackType,
+                moveId: battle.effectiveness.moveId,
+              },
+            ]
+          : []),
+        ...(battle?.usedMoves ?? []).map((used) => ({
+          // One observation per battle and opponent keeps the latest sighting without flooding the history.
+          id: `move-${battle!.battle.id}-${used.identity}-${used.moveId}`,
+          encounterId: battle!.battle.id,
+          pokemonId: used.pokemonId,
+          kind: "move" as const,
+          value:
+            this.battleData?.moveName(used.moveId) ?? `Move #${used.moveId}`,
+          moveId: used.moveId,
+        })),
+      ],
       stateLoaded,
       warnings,
     });
@@ -444,12 +473,16 @@ export class PlatinumReader {
             .filter(
               (battler) => battler.visible && (battler.index & 1) !== side,
             )
-            .map((battler) => ({
-              identity: `${hex(battler.pid)}-${battler.index}`,
-              pokemonId: battler.species,
-              level: battler.level,
-              position: battler.index,
-            }));
+            .map((battler) => {
+              const learnLevels = this.battleData?.learnLevels(battler.species);
+              return {
+                identity: `${hex(battler.pid)}-${battler.index}`,
+                pokemonId: battler.species,
+                level: battler.level,
+                position: battler.index,
+                ...(learnLevels ? { learnLevels } : {}),
+              };
+            });
     const kind = type & BATTLE_TRAINER ? "trainer" : "wild";
     // Wild encounters keep the same id when a save state replays the same Pokemon.
     const id =
@@ -469,6 +502,12 @@ export class PlatinumReader {
       battlerCount === 2 && !stateLoaded
         ? await this.readEffectiveness(context, mons)
         : undefined;
+    const usedMoves = this.usedOpponentMoves(
+      system,
+      stateLoaded,
+      mons,
+      opponents,
+    );
     return {
       battle: {
         id,
@@ -484,7 +523,57 @@ export class PlatinumReader {
       verify: { child, system },
       ...(warning ? { warning } : {}),
       ...(effectiveness ? { effectiveness } : {}),
+      usedMoves,
     };
+  }
+
+  // A drop in an opponent's PP means the game executed that move; its hidden moveset is never reported.
+  private usedOpponentMoves(
+    system: number,
+    stateLoaded: boolean,
+    mons: Buffer,
+    opponents: FrameBattle["opponents"],
+  ): BattleRead["usedMoves"] {
+    if (stateLoaded || this.opponentMovesSystem !== system)
+      this.opponentMoves.clear();
+    this.opponentMovesSystem = system;
+    const used: BattleRead["usedMoves"] = [];
+    const current = new Map<string, OpponentMoves>();
+    for (const opponent of opponents) {
+      const index = opponent.position ?? 1;
+      const mon = mons.subarray(
+        index * BATTLE_MON_SIZE,
+        (index + 1) * BATTLE_MON_SIZE,
+      );
+      // Transform copies the target's moves, which are not this species' moves.
+      if (mon.readUInt32LE(BATTLE_MON_VOLATILE) & VOLATILE_CONDITION_TRANSFORM)
+        continue;
+      const entry: OpponentMoves = {
+        species: opponent.pokemonId,
+        moves: [0, 1, 2, 3].map((slot) =>
+          mon.readUInt16LE(BATTLE_MON_MOVES + slot * 2),
+        ),
+        pp: [0, 1, 2, 3].map((slot) => mon[BATTLE_MON_PP + slot]),
+      };
+      current.set(opponent.identity, entry);
+      const previous = this.opponentMoves.get(opponent.identity);
+      if (
+        !previous ||
+        previous.species !== entry.species ||
+        previous.moves.some((move, slot) => move !== entry.moves[slot])
+      )
+        continue;
+      entry.moves.forEach((moveId, slot) => {
+        if (moveId >= 1 && moveId <= 467 && entry.pp[slot] < previous.pp[slot])
+          used.push({
+            identity: opponent.identity,
+            pokemonId: opponent.pokemonId,
+            moveId,
+          });
+      });
+    }
+    this.opponentMoves = current;
+    return used;
   }
 
   // Reports the type matchup of the move being executed once two polls agree on it, so a context
