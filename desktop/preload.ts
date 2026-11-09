@@ -6,7 +6,10 @@ import {
   recordSchema,
 } from "../src/lib/tracker/schema";
 import type { TrackerDesktopApi } from "../src/lib/tracker/types";
-import { overlayControlConfigSchema, overlayControlSchema } from "../src/lib/tracker/overlay-control";
+import {
+  overlayControlConfigSchema,
+  overlayControlSchema,
+} from "../src/lib/tracker/overlay-control";
 
 async function request<T>(
   method: string,
@@ -34,16 +37,21 @@ const api: TrackerDesktopApi = {
   bindBridge: (input) => request("bindBridge", desktopStatusSchema, input),
   saveConnector: () => request("saveConnector", z.boolean()),
   selectMelonDsRom: () => request("selectMelonDsRom", z.boolean()),
-  connectMelonDs: (input) => request("connectMelonDs", desktopStatusSchema, input),
+  connectMelonDs: (input) =>
+    request("connectMelonDs", desktopStatusSchema, input),
   disconnectMelonDs: () => request("disconnectMelonDs", desktopStatusSchema),
   linkPokemon: (input) => request("linkPokemon", recordSchema, input),
   mapZone: (input) => request("mapZone", recordSchema, input),
   resumeTracking: (input) => request("resumeTracking", recordSchema, input),
   openCompact: (input) => request("openCompact", z.void(), input),
   getOverlayUrl: (input) => request("getOverlayUrl", z.string(), input),
-  getOverlayControlConfig: (input) => request("getOverlayControlConfig", overlayControlConfigSchema, input),
-  getOverlayControl: (input) => request("getOverlayControl", overlayControlSchema, input),
-  commandOverlay: (input) => request("commandOverlay", overlayControlSchema, input),
+  copyText: (input) => request("copyText", z.void(), input),
+  getOverlayControlConfig: (input) =>
+    request("getOverlayControlConfig", overlayControlConfigSchema, input),
+  getOverlayControl: (input) =>
+    request("getOverlayControl", overlayControlSchema, input),
+  commandOverlay: (input) =>
+    request("commandOverlay", overlayControlSchema, input),
   subscribe: (listener) => {
     const receive = (_event: Electron.IpcRendererEvent, payload: unknown) => {
       const parsed = desktopEventSchema.safeParse(payload);

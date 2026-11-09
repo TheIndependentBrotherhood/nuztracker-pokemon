@@ -1,3 +1,4 @@
+import { TLSSocket } from "node:tls";
 import { WebSocket } from "ws";
 import { z } from "zod";
 import type {
@@ -16,8 +17,10 @@ import {
   roomCommandSchema,
   serverMessageSchema,
   sharedCommand,
+  splitInvitation,
   type RoomCommand,
 } from "./room-protocol";
+import { certificateFingerprint } from "./room-tls";
 
 export const savedClientSchema = z.object({
   address: z.string(),
@@ -111,19 +114,38 @@ export class RoomClient {
 
   private connect(): void {
     if (this.stopped) return;
+    const { token, fingerprint } = splitInvitation(this.options.invitation);
+    const secure = this.options.address.startsWith("wss:");
     const socket = new WebSocket(this.options.address, {
       maxPayload: MAX_ROOM_MESSAGE_BYTES,
       perMessageDeflate: false,
       handshakeTimeout: 8000,
+      // Self-signed host certificates are accepted only when they match the pinned fingerprint.
+      ...(secure && fingerprint ? { rejectUnauthorized: false } : {}),
     });
     this.socket = socket;
+    socket.on("upgrade", (response) => {
+      const tls = response.socket;
+      if (!secure || !(tls instanceof TLSSocket) || tls.authorized) return;
+      const raw = tls.getPeerCertificate().raw;
+      if (fingerprint && raw && certificateFingerprint(raw) === fingerprint)
+        return;
+      const error = new Error(
+        "The room's certificate does not match the invitation. Ask the host for a new invitation; the connection was refused for safety.",
+      );
+      if (this.ready) this.ready.reject(error);
+      else {
+        this.updateStatus({ mode: "conflict", error: error.message });
+        socket.terminate();
+      }
+    });
     socket.on("open", () =>
       socket.send(
         JSON.stringify({
           type: "join",
           protocolVersion: 1,
           playerId: this.options.playerId,
-          invitation: this.options.invitation,
+          invitation: token,
           ...(this.credentials
             ? { credential: this.credentials.credential }
             : {}),
@@ -190,7 +212,7 @@ export class RoomClient {
         this.ready.reject(
           new Error(`Could not connect to the room: ${error.message}`),
         );
-      else
+      else if (this.statusValue.mode !== "conflict")
         this.updateStatus({
           error: `Connection interrupted: ${error.message}`,
         });

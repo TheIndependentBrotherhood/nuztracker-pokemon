@@ -1,11 +1,33 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { TrackerDatabase } from "../desktop/database";
-import { RoomHost } from "../desktop/room-host";
+import { hostAddresses, RoomHost } from "../desktop/room-host";
 import { RoomClient } from "../desktop/room-client";
 import { normalizeRoomAddress } from "../desktop/room-protocol";
 import { createRecord, newId } from "../src/lib/tracker/records";
 import { capture, pokemon, run } from "./fixtures";
+
+test("host addresses prefer physical private IPv4 interfaces", () => {
+  const entry = (address: string, family: "IPv4" | "IPv6" = "IPv4") => ({
+    address,
+    family,
+    internal: address === "127.0.0.1",
+    netmask: "255.255.255.0",
+    mac: "00:00:00:00:00:00",
+    cidr: null,
+    ...(family === "IPv6" ? { scopeid: 0 } : {}),
+  });
+  assert.deepEqual(
+    hostAddresses({
+      "vEthernet (WSL)": [entry("172.20.0.1")],
+      "Loopback Pseudo-Interface 1": [entry("127.0.0.1")],
+      Tailscale: [entry("100.80.1.2")],
+      Ethernet: [entry("fe80::1", "IPv6"), entry("192.168.1.42")],
+      "Wi-Fi": [entry("169.254.3.4")],
+    } as Parameters<typeof hostAddresses>[0]),
+    ["192.168.1.42", "100.80.1.2", "172.20.0.1"],
+  );
+});
 
 async function waitFor(
   predicate: () => boolean,
@@ -17,6 +39,58 @@ async function waitFor(
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
 }
+
+test("encrypted rooms pin the host certificate from the invitation", async () => {
+  const hostDb = new TrackerDatabase(":memory:");
+  const adventure = run(true);
+  hostDb.add([createRecord(adventure)]);
+  const host = new RoomHost(
+    hostDb,
+    {
+      runId: adventure.id,
+      playerId: "p1",
+      port: 0,
+      allowLan: false,
+      secure: true,
+      publicHost: "127.0.0.1",
+    },
+    pokemon,
+    () => undefined,
+    () => undefined,
+  );
+  let forged: RoomClient | undefined;
+  let guest: RoomClient | undefined;
+  try {
+    await host.start();
+    const address = host.status.address!;
+    const invitation = host.status.invitation!;
+    assert.match(address, /^wss:\/\/127\.0\.0\.1:\d+\/room$/);
+    assert.equal(host.status.secure, true);
+    const [token, fingerprint] = invitation.split(".");
+    assert.equal(fingerprint.length, 43);
+    forged = new RoomClient(
+      new TrackerDatabase(":memory:"),
+      { address, invitation: `${token}.${"A".repeat(43)}`, playerId: "p2" },
+      pokemon,
+      () => undefined,
+      () => undefined,
+    );
+    await assert.rejects(forged.start(), /certificate does not match/);
+    guest = new RoomClient(
+      new TrackerDatabase(":memory:"),
+      { address, invitation, playerId: "p2" },
+      pokemon,
+      () => undefined,
+      () => undefined,
+    );
+    await guest.start();
+    assert.equal(guest.status.mode, "connected");
+  } finally {
+    forged?.stop();
+    guest?.stop();
+    await host.stop();
+  }
+});
 
 test("two real trackers synchronize, reserve player ownership and recover a durable offline queue", async () => {
   const hostDb = new TrackerDatabase(":memory:");

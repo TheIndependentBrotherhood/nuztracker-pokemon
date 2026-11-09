@@ -7,6 +7,7 @@ import type {
   MapZoneInput,
   PendingDetail,
   PlayerTracking,
+  RewindCheckpoint,
   RunRecord,
 } from "./types";
 import {
@@ -100,6 +101,57 @@ function saveObservations(
   return next;
 }
 
+function rewindCheckpoint(frame: GameFrame): RewindCheckpoint {
+  return {
+    frame: frame.frame,
+    party: frame.party
+      .filter((pokemon) => !pokemon.isEgg)
+      .map(({ identity, pokemonId, level }) => ({
+        identity,
+        pokemonId,
+        level,
+      })),
+  };
+}
+
+function deadIdentities(record: RunRecord, index: number): Set<string> {
+  return new Set(
+    record.run.zones.flatMap((zone) =>
+      zone.captures
+        .filter(
+          (capture) =>
+            (capture.playerIndex ?? 0) === index &&
+            capture.isDead &&
+            capture.gameIdentity,
+        )
+        .map((capture) => capture.gameIdentity!),
+    ),
+  );
+}
+
+/** A loaded state is safe when no tracked Pokémon lost levels, devolved or came back to life. */
+function matchesCheckpoint(
+  checkpoint: RewindCheckpoint,
+  frame: GameFrame,
+  dead: Set<string>,
+): boolean {
+  const live = frame.party.filter((pokemon) => !pokemon.isEgg);
+  if (live.some((pokemon) => dead.has(pokemon.identity) && pokemon.hp > 0))
+    return false;
+  const overlap = checkpoint.party.flatMap((saved) => {
+    const current = live.find((pokemon) => pokemon.identity === saved.identity);
+    return current ? [{ saved, current }] : [];
+  });
+  return (
+    overlap.length > 0 &&
+    overlap.every(
+      ({ saved, current }) =>
+        current.level >= saved.level &&
+        (current.pokemonId === saved.pokemonId || current.level > saved.level),
+    )
+  );
+}
+
 export function ingestFrame(
   input: RunRecord,
   playerId: string,
@@ -126,7 +178,18 @@ export function ingestFrame(
   const rewound = Boolean(
     previous && (frame.stateLoaded || frame.frame < previous.frame),
   );
-  const suspended = Boolean(previous?.suspended || rewound);
+  const checkpoint =
+    previous?.rewindCheckpoint ??
+    (rewound && previous && !previous.suspended
+      ? rewindCheckpoint(previous.latest)
+      : undefined);
+  const paused = Boolean(previous?.suspended || rewound);
+  const consistent = Boolean(
+    paused &&
+    checkpoint &&
+    matchesCheckpoint(checkpoint, frame, deadIdentities(record, index)),
+  );
+  const suspended = paused && !consistent;
   const nuzlockeStartedAt =
     previous?.nuzlockeStartedAt ??
     ((frame.pokeBalls ?? 0) > 0 ||
@@ -198,6 +261,7 @@ export function ingestFrame(
         lastSeenAt: now,
         latest: frame,
         suspended,
+        ...(suspended && checkpoint ? { rewindCheckpoint: checkpoint } : {}),
         ...(nuzlockeStartedAt === undefined ? {} : { nuzlockeStartedAt }),
         pendingPokemon: [...pending.values()],
         pendingDetails: Object.fromEntries(
@@ -220,7 +284,17 @@ export function ingestFrame(
       next,
       playerId,
       "rollback",
-      "A save state or backward jump was detected. Team updates are paused; observations are still saved.",
+      consistent
+        ? "A save state or backward jump was detected. It matches the tracked team, so tracking continues."
+        : "A save state or backward jump was detected. Team updates are paused; observations are still saved.",
+      now,
+    );
+  } else if (previous?.suspended && consistent) {
+    next = addHistory(
+      next,
+      playerId,
+      "connection",
+      "Tracking resumed automatically: the game matches the tracked team again.",
       now,
     );
   }
@@ -609,6 +683,8 @@ export function resumeTracking(
 ): RunRecord {
   const tracking = record.tracking[playerId];
   if (!tracking) throw new Error("There is no game state to reconcile.");
+  const rest = { ...tracking };
+  delete rest.rewindCheckpoint;
   return addHistory(
     {
       ...record,
@@ -616,7 +692,7 @@ export function resumeTracking(
       tracking: {
         ...record.tracking,
         [playerId]: {
-          ...tracking,
+          ...rest,
           suspended: false,
           pendingPokemon: tracking.pendingPokemon.filter((pokemon) =>
             tracking.latest.party.some(

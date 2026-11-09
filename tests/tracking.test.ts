@@ -414,10 +414,12 @@ test("save-state rollback pauses mutations and requires explicit reconciliation"
   const rewind = frame(11);
   rewind.frame = 1;
   rewind.stateLoaded = true;
+  rewind.party[0].level = 4;
   current = ingestFrame(current, "solo", rewind, pokemon, 101);
   assert.equal(current.tracking.solo.suspended, true);
   assert.equal(current.history.at(-1)?.kind, "rollback");
   const pausedFrame = frame(12);
+  pausedFrame.party[0].level = 4;
   pausedFrame.observations = [
     {
       id: "during-reconciliation",
@@ -438,8 +440,49 @@ test("save-state rollback pauses mutations and requires explicit reconciliation"
   );
   const resumed = resumeTracking(current, "solo", 102);
   assert.equal(resumed.tracking.solo.suspended, false);
+  assert.equal(resumed.tracking.solo.rewindCheckpoint, undefined);
   assert.equal(
     resumed.history.filter((entry) => entry.kind === "rollback").length,
     1,
   );
+});
+
+test("a loaded state that matches the tracked team keeps or resumes tracking", () => {
+  let current = ingestFrame(record(), "solo", frame(10), pokemon, 100);
+  const sameTeam = frame(11);
+  sameTeam.frame = 1;
+  sameTeam.stateLoaded = true;
+  current = ingestFrame(current, "solo", sameTeam, pokemon, 101);
+  assert.equal(current.tracking.solo.suspended, false);
+  assert.equal(current.history.at(-1)?.kind, "rollback");
+
+  const older = frame(12);
+  older.frame = 0;
+  older.stateLoaded = true;
+  older.party[0].level = 3;
+  current = ingestFrame(current, "solo", older, pokemon, 102);
+  assert.equal(current.tracking.solo.suspended, true);
+  assert.equal(current.tracking.solo.rewindCheckpoint?.party[0].level, 5);
+
+  const caughtUp = frame(13);
+  caughtUp.frame = 5;
+  current = ingestFrame(current, "solo", caughtUp, pokemon, 103);
+  assert.equal(current.tracking.solo.suspended, false);
+  assert.equal(current.tracking.solo.rewindCheckpoint, undefined);
+  assert.equal(current.history.at(-1)?.kind, "connection");
+});
+
+test("a loaded state that revives a dead Pokémon stays paused", () => {
+  const base = record();
+  base.run.zones[0].captures.push({
+    ...capture("dead"),
+    gameIdentity: "pokemon-identity-1",
+    isDead: true,
+  });
+  let current = ingestFrame(base, "solo", frame(10), pokemon, 100);
+  const revived = frame(11);
+  revived.frame = 1;
+  revived.stateLoaded = true;
+  current = ingestFrame(current, "solo", revived, pokemon, 101);
+  assert.equal(current.tracking.solo.suspended, true);
 });

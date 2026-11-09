@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   ButtonBase,
+  Collapse,
   LinearProgress,
   Stack,
   Tooltip,
@@ -29,10 +30,10 @@ import { possibleTypeCombos } from "@/lib/type-deduction";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
-import TrackerDialog from "./TrackerDialog";
+import TrackerDialog, { TrackerDialogIconButton } from "./TrackerDialog";
 
 const text = translations.focusCard;
-const MAX_LISTED_COMBOS = 12;
+const MAX_LISTED_COMBOS = 24;
 
 function TypeBadge({ type, lang }: { type: string; lang: "fr" | "en" }) {
   return (
@@ -66,6 +67,7 @@ export default function TypeInvestigation({
   const { lang } = useLanguage();
   const { updateRun, canEditRun } = useRunStore();
   const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [draft, setDraft] = useState<[string, string]>(["", ""]);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -103,12 +105,12 @@ export default function TypeInvestigation({
     : undefined;
   const remaining = combos?.length;
   const canEdit = canEditRun(run.id, playerId);
-  const label = remaining === undefined ? "…" : `${remaining}/${total}`;
 
   function openDialog() {
     const [first = "", second = ""] = combos?.length === 1 ? combos[0] : [];
     setDraft([first, second]);
     setSaveError(false);
+    setConfirming(false);
     setOpen(true);
   }
 
@@ -144,18 +146,50 @@ export default function TypeInvestigation({
   }
 
   const sectionLabel = { fontSize: "0.65rem", color: "text.secondary" };
+  const progress =
+    remaining === undefined
+      ? undefined
+      : remaining
+        ? ((total - remaining) / (total - 1)) * 100
+        : 0;
+  const confirmLabel = t(text.confirmTypesAction, lang);
+  const progressBar = (height: number) =>
+    progress === undefined ? (
+      <LinearProgress sx={{ height, borderRadius: 1 }} />
+    ) : (
+      <LinearProgress
+        variant="determinate"
+        color={remaining === 1 ? "success" : "primary"}
+        value={progress}
+        sx={{ height, borderRadius: 1 }}
+      />
+    );
 
   return (
     <>
-      <Tooltip title={t(text.investigationTitle, lang)}>
+      <Tooltip
+        title={
+          remaining === undefined
+            ? t(text.investigationTitle, lang)
+            : t(text.investigationProgress, lang)(remaining, total)
+        }
+      >
         <Button
           size="small"
           variant="outlined"
           color={remaining === 1 ? "success" : "primary"}
-          sx={{ py: 0, fontSize: "0.6rem" }}
+          aria-label={t(text.investigationTitle, lang)}
+          sx={{
+            py: 0.25,
+            fontSize: "0.6rem",
+            flexDirection: "column",
+            alignItems: "stretch",
+            gap: 0.25,
+          }}
           onClick={openDialog}
         >
-          {t(text.investigationAction, lang)} {label}
+          <span>{t(text.investigationAction, lang)}</span>
+          {progressBar(3)}
         </Button>
       </Tooltip>
       <TrackerDialog
@@ -171,23 +205,90 @@ export default function TypeInvestigation({
             {t(text.investigationPickHint, lang)}
           </>
         }
+        headerActions={
+          canEdit ? (
+            <TrackerDialogIconButton
+              label={confirmLabel}
+              active={confirming}
+              onClick={() => setConfirming((value) => !value)}
+            >
+              ✓
+            </TrackerDialogIconButton>
+          ) : null
+        }
         actions={
           <>
             <Button size="small" disabled={busy} onClick={() => setOpen(false)}>
               {t(text.closeAction, lang)}
             </Button>
-            <Button
-              size="small"
-              variant="contained"
-              disabled={busy || !canEdit || !draft[0]}
-              onClick={() => void confirmTypes()}
-            >
-              {t(text.confirmTypesAction, lang)}
-            </Button>
+            {confirming && (
+              <Button
+                size="small"
+                variant="contained"
+                disabled={busy || !canEdit || !draft[0]}
+                onClick={() => void confirmTypes()}
+              >
+                {confirmLabel}
+              </Button>
+            )}
           </>
         }
       >
         <Stack spacing={0.75}>
+          <Collapse in={confirming} unmountOnExit>
+            <Box
+              sx={{
+                p: 0.75,
+                borderRadius: 0.5,
+                bgcolor: "action.hover",
+              }}
+            >
+              <Typography sx={sectionLabel}>
+                {t(text.investigationPick, lang)}
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(64px, 1fr))",
+                  gap: 0.5,
+                  mt: 0.25,
+                }}
+              >
+                {available.map((type) => {
+                  const selected = draft.includes(type);
+                  return (
+                    <ButtonBase
+                      key={type}
+                      disabled={busy || !canEdit}
+                      aria-pressed={selected}
+                      onClick={() => toggleType(type)}
+                      sx={{
+                        py: 0.25,
+                        borderRadius: 0.5,
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        color: "#fff",
+                        bgcolor: typeColors[type] ?? "#555",
+                        opacity: selected || !draft[1] ? 1 : 0.45,
+                        outline: selected ? "2px solid #fff" : "none",
+                        outlineOffset: -2,
+                      }}
+                    >
+                      {getTypeTranslation(type, lang)}
+                    </ButtonBase>
+                  );
+                })}
+              </Box>
+              {saveError && (
+                <Alert
+                  severity="error"
+                  sx={{ mt: 0.5, py: 0, fontSize: "0.7rem" }}
+                >
+                  {t(text.confirmTypesError, lang)}
+                </Alert>
+              )}
+            </Box>
+          </Collapse>
           {remaining === undefined ? (
             <Typography sx={sectionLabel}>
               {t(text.investigationLoading, lang)}
@@ -197,14 +298,7 @@ export default function TypeInvestigation({
               <Typography sx={{ fontSize: "0.7rem", fontWeight: 700 }}>
                 {t(text.investigationProgress, lang)(remaining, total)}
               </Typography>
-              <LinearProgress
-                variant="determinate"
-                color={remaining === 1 ? "success" : "primary"}
-                value={
-                  remaining ? ((total - remaining) / (total - 1)) * 100 : 0
-                }
-                sx={{ mt: 0.25, height: 5, borderRadius: 1 }}
-              />
+              <Box sx={{ mt: 0.25 }}>{progressBar(5)}</Box>
             </Box>
           )}
           {remaining === 0 && (
@@ -212,58 +306,6 @@ export default function TypeInvestigation({
               {t(text.investigationContradiction, lang)}
             </Alert>
           )}
-          {combos && remaining === 1 && (
-            <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-              <Typography sx={sectionLabel}>
-                {t(text.investigationSolved, lang)}
-              </Typography>
-              {combos[0].map((type) => (
-                <TypeBadge key={type} type={type} lang={lang} />
-              ))}
-            </Stack>
-          )}
-          {combos &&
-            combos.length > 1 &&
-            observations.length > 0 &&
-            (combos.length <= MAX_LISTED_COMBOS ? (
-              <Box>
-                <Typography sx={sectionLabel}>
-                  {t(text.investigationCandidates, lang)}
-                </Typography>
-                <Box
-                  sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.25 }}
-                >
-                  {combos.map((combo) => {
-                    const selected =
-                      draft[0] === combo[0] && draft[1] === (combo[1] ?? "");
-                    return (
-                      <ButtonBase
-                        key={combo.join("-")}
-                        disabled={busy || !canEdit}
-                        aria-pressed={selected}
-                        onClick={() => setDraft([combo[0], combo[1] ?? ""])}
-                        sx={{
-                          display: "flex",
-                          gap: 0.25,
-                          p: 0.25,
-                          borderRadius: 0.5,
-                          outline: selected ? "2px solid" : "1px solid",
-                          outlineColor: selected ? "primary.main" : "divider",
-                        }}
-                      >
-                        {combo.map((type) => (
-                          <TypeBadge key={type} type={type} lang={lang} />
-                        ))}
-                      </ButtonBase>
-                    );
-                  })}
-                </Box>
-              </Box>
-            ) : (
-              <Typography sx={sectionLabel}>
-                {t(text.investigationTooMany, lang)}
-              </Typography>
-            ))}
           <Box>
             <Typography sx={sectionLabel}>
               {t(translations.pokemonDetail.observations, lang)} (
@@ -299,48 +341,53 @@ export default function TypeInvestigation({
               </Typography>
             )}
           </Box>
-          <Box>
-            <Typography sx={sectionLabel}>
-              {t(text.investigationPick, lang)}
-            </Typography>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(64px, 1fr))",
-                gap: 0.5,
-                mt: 0.25,
-              }}
-            >
-              {available.map((type) => {
-                const selected = draft.includes(type);
-                return (
-                  <ButtonBase
-                    key={type}
-                    disabled={busy || !canEdit}
-                    aria-pressed={selected}
-                    onClick={() => toggleType(type)}
-                    sx={{
-                      py: 0.25,
-                      borderRadius: 0.5,
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      color: "#fff",
-                      bgcolor: typeColors[type] ?? "#555",
-                      opacity: selected || !draft[1] ? 1 : 0.45,
-                      outline: selected ? "2px solid #fff" : "none",
-                      outlineOffset: -2,
-                    }}
-                  >
-                    {getTypeTranslation(type, lang)}
-                  </ButtonBase>
-                );
-              })}
+          {combos && combos.length > 0 && observations.length > 0 && (
+            <Box>
+              <Typography sx={sectionLabel}>
+                {remaining === 1
+                  ? t(text.investigationSolved, lang)
+                  : `${t(text.investigationCandidates, lang)} (${combos.length})`}
+              </Typography>
+              {combos.length <= MAX_LISTED_COMBOS ? (
+                <Box
+                  sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.25 }}
+                >
+                  {combos.map((combo) => {
+                    const selected =
+                      confirming &&
+                      draft[0] === combo[0] &&
+                      draft[1] === (combo[1] ?? "");
+                    return (
+                      <ButtonBase
+                        key={combo.join("-")}
+                        disabled={busy || !canEdit}
+                        aria-pressed={selected}
+                        onClick={() => {
+                          setDraft([combo[0], combo[1] ?? ""]);
+                          setConfirming(true);
+                        }}
+                        sx={{
+                          display: "flex",
+                          gap: 0.25,
+                          p: 0.25,
+                          borderRadius: 0.5,
+                          outline: selected ? "2px solid" : "1px solid",
+                          outlineColor: selected ? "primary.main" : "divider",
+                        }}
+                      >
+                        {combo.map((type) => (
+                          <TypeBadge key={type} type={type} lang={lang} />
+                        ))}
+                      </ButtonBase>
+                    );
+                  })}
+                </Box>
+              ) : (
+                <Typography sx={{ fontSize: "0.7rem" }}>
+                  {t(text.investigationTooMany, lang)}
+                </Typography>
+              )}
             </Box>
-          </Box>
-          {saveError && (
-            <Alert severity="error" sx={{ py: 0, fontSize: "0.7rem" }}>
-              {t(text.confirmTypesError, lang)}
-            </Alert>
           )}
         </Stack>
       </TrackerDialog>

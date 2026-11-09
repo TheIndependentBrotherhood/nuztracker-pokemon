@@ -56,11 +56,47 @@ const fallbackPaperSx = {
   maxHeight: "calc(100dvh - 16px)",
 };
 
+/** Small round title button shared by the help toggle and dialog-specific tools. */
+export function TrackerDialogIconButton({
+  label,
+  active,
+  onClick,
+  children,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip title={label}>
+      <IconButton
+        size="small"
+        aria-label={label}
+        aria-expanded={active}
+        onClick={onClick}
+        sx={{
+          width: 22,
+          height: 22,
+          fontSize: "0.75rem",
+          fontWeight: 700,
+          border: "1px solid",
+          borderColor: active ? "primary.main" : "divider",
+          color: active ? "primary.main" : "text.secondary",
+        }}
+      >
+        {children}
+      </IconButton>
+    </Tooltip>
+  );
+}
+
 export default function TrackerDialog({
   open,
   onClose,
   title,
   help,
+  headerActions,
   actions,
   children,
 }: {
@@ -68,6 +104,7 @@ export default function TrackerDialog({
   onClose: () => void;
   title: ReactNode;
   help?: ReactNode;
+  headerActions?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
 }) {
@@ -109,26 +146,15 @@ export default function TrackerDialog({
         >
           {title}
         </Box>
+        {headerActions}
         {help ? (
-          <Tooltip title={helpLabel}>
-            <IconButton
-              size="small"
-              aria-label={helpLabel}
-              aria-expanded={showHelp}
-              onClick={() => setShowHelp((value) => !value)}
-              sx={{
-                width: 22,
-                height: 22,
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                border: "1px solid",
-                borderColor: showHelp ? "primary.main" : "divider",
-                color: showHelp ? "primary.main" : "text.secondary",
-              }}
-            >
-              ?
-            </IconButton>
-          </Tooltip>
+          <TrackerDialogIconButton
+            label={helpLabel}
+            active={showHelp}
+            onClick={() => setShowHelp((value) => !value)}
+          >
+            ?
+          </TrackerDialogIconButton>
         ) : null}
       </DialogTitle>
       <DialogContent sx={{ px: 1.5, py: 0.5 }}>

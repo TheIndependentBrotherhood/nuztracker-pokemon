@@ -1,4 +1,12 @@
-import { app, BrowserWindow, dialog, ipcMain, session, shell } from "electron";
+import {
+  app,
+  BrowserWindow,
+  clipboard,
+  dialog,
+  ipcMain,
+  session,
+  shell,
+} from "electron";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
@@ -92,8 +100,18 @@ async function initialize(): Promise<void> {
   database = new TrackerDatabase(
     join(app.getPath("userData"), "tracker.sqlite"),
   );
-  const platinumMaps = z.array(z.string()).parse(JSON.parse(await readFile(join(root, "out", "data", "platinum-maps.json"), "utf8")));
-  const tracker = new TrackerService(database, (id) => pokemon.get(id), platinumMaps);
+  const platinumMaps = z
+    .array(z.string())
+    .parse(
+      JSON.parse(
+        await readFile(join(root, "out", "data", "platinum-maps.json"), "utf8"),
+      ),
+    );
+  const tracker = new TrackerService(
+    database,
+    (id) => pokemon.get(id),
+    platinumMaps,
+  );
   service = tracker;
   const server = new LocalServer(tracker, join(root, "out"));
   localServer = server;
@@ -153,7 +171,9 @@ async function initialize(): Promise<void> {
     await tracker.selectMelonDsRom(filePaths[0]);
     return true;
   });
-  handle("connectMelonDs", connectMelonDsSchema, (input) => tracker.connectMelonDs(input));
+  handle("connectMelonDs", connectMelonDsSchema, (input) =>
+    tracker.connectMelonDs(input),
+  );
   handle("disconnectMelonDs", z.undefined(), () => tracker.disconnectMelonDs());
   handle("linkPokemon", linkPokemonSchema, (input) =>
     tracker.linkPokemon(input),
@@ -163,10 +183,15 @@ async function initialize(): Promise<void> {
     tracker.resumeTracking(input),
   );
   handle("getOverlayUrl", runId, (id) => server.overlayUrl(id));
+  handle("copyText", z.string().max(10000), (text) =>
+    clipboard.writeText(text),
+  );
   handle("getOverlayControlConfig", runId, (id) => server.controlConfig(id));
   handle("getOverlayControl", runId, (id) => server.controlState(id));
-  handle("commandOverlay", z.object({ runId, command: overlayCommandSchema }).strict(), (input) =>
-    server.commandOverlay(input.runId, input.command),
+  handle(
+    "commandOverlay",
+    z.object({ runId, command: overlayCommandSchema }).strict(),
+    (input) => server.commandOverlay(input.runId, input.command),
   );
   handle("openCompact", runId, (id) => {
     tracker.database.require(id);

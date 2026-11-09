@@ -70,7 +70,7 @@ The configured Lua file contains a local access token. Do not share or commit it
 - Automatic synchronization of associated captures, party membership, evolutions and observed HP transitions to zero.
 - Opponent identities and levels from active battlers only. Enemy party contents, hidden moves, exact statistics and abilities are not read for display.
 - Enemy moves recorded through a battle-results memory-write callback in **single battles**, when supported by the selected BizHawk core. Missing callback support is reported visibly.
-- Map identifiers, observed-move history, ROM/trainer identity checks and explicit reconciliation after save-state loads/backward jumps.
+- Map identifiers, observed-move history, ROM/trainer identity checks and save-state/backward-jump protection: tracking continues automatically when the loaded state matches the tracked team (no level loss, devolution or revived dead Pokémon) and otherwise pauses until the game matches again or the player reconciles from the compact tracker.
 - Pokémon checksums and all 24 encrypted-block permutations are validated.
 
 New captures require confirmation because party changes alone do not establish the Nuzlocke encounter clause. Captures sent directly to boxes, gifts, eggs, encounter failures and special battle exceptions still need manual handling. Unhatched egg contents are not transmitted. A Pokémon already fainted at first observation is not silently treated as a newly detected death.
@@ -83,8 +83,8 @@ Keep the desktop application running while playing. Network errors are reported;
 
 1. Create a SoulLink run with two to four players.
 2. The host selects their player in **Connections**, chooses a port and starts the room.
-3. Enable **Allow connections from my trusted LAN / VPN** to let other computers connect. Otherwise the room listens on loopback only.
-4. Give partners the room address, invitation and their player IDs (normally `p2`, `p3`, `p4`).
+3. **Allow connections from my trusted LAN / VPN** is enabled by default so other computers can connect. Without it the room listens on loopback (`127.0.0.1`) only.
+4. Give partners the room address, invitation and their player IDs (normally `p2`, `p3`, `p4`). The address uses this PC's IPv4, physical private LAN interfaces first; other reachable addresses (VPN, virtual adapters) are listed below it. IPs and the invitation are masked by default for streaming; they can be revealed or copied (the Copy buttons use Electron's clipboard).
 5. Partners choose **Connections → Join room** on their own desktop installations. The shared run appears on their home screen.
 6. Each partner binds their own emulator to their assigned player.
 
@@ -101,7 +101,7 @@ Player knowledge is isolated when connecting a run. Existing shared manual knowl
 - If the host becomes unavailable, local tracking can continue, but the collective state is not authoritative until synchronization resumes.
 - Host takeover is manual: agree on an exported shared checkpoint and start a new room with new invitations. There is no automatic host election.
 
-Unencrypted `ws://` is limited to loopback/private LAN/VPN addresses. Use a trusted VPN, or configure a secure `wss://` reverse proxy, for Internet play. Invitations do not bypass NAT, CGNAT or firewalls. A room is a cooperative tracker, not an anti-cheat system.
+Unencrypted `ws://` is limited to loopback/private LAN/VPN addresses. For Internet play, tick **Reachable from the Internet**: the host serves `wss://` with a persistent self-signed certificate, and the invitation embeds its SHA-256 fingerprint (`token.fingerprint`) so guests pin it before sending any secret. Enter your public IP or domain as the public address and forward the TCP port on your router (or use a VPN such as Tailscale). A `wss://` reverse proxy with a CA-signed certificate also works. Invitations do not bypass NAT, CGNAT or firewalls. A room is a cooperative tracker, not an anti-cheat system.
 
 ## Streaming
 

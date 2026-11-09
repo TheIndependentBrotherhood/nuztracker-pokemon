@@ -419,6 +419,20 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
       lastSeenAt: timestamp,
       latest: gameFrameSchema,
       suspended: z.boolean(),
+      rewindCheckpoint: z
+        .object({
+          frame: timestamp,
+          party: z
+            .array(
+              z.object({
+                identity: id,
+                pokemonId: z.number().int().min(1).max(100000),
+                level: z.number().int().min(1).max(100),
+              }),
+            )
+            .max(6),
+        })
+        .optional(),
       nuzlockeStartedAt: timestamp.optional(),
       pendingPokemon: z.array(livePokemonSchema).max(1000),
       pendingDetails: z
@@ -479,6 +493,12 @@ export const hostRoomSchema = z.object({
   playerId: id,
   port: z.number().int().min(1024).max(65535),
   allowLan: z.boolean(),
+  secure: z.boolean().optional(),
+  publicHost: z
+    .string()
+    .max(253)
+    .regex(/^[a-zA-Z0-9.-]+$/, "Use a domain name or a public IPv4 address.")
+    .optional(),
   resetCredentials: z.boolean().optional(),
 });
 
@@ -518,7 +538,9 @@ export const desktopStatusSchema: z.ZodType<DesktopStatus> = z.object({
     runId: id.optional(),
     playerId: id.optional(),
     address: z.string().optional(),
+    addresses: z.array(z.string()).max(32).optional(),
     invitation: z.string().optional(),
+    secure: z.boolean().optional(),
     participants: z.array(
       z.object({ playerId: id, name: text, connected: z.boolean() }),
     ),

@@ -726,14 +726,14 @@ const translations = {
       en: "No matching team member. Update the team or return to Live.",
     },
     addTeamHint: {
-      fr: "Ajoute ton équipe à la main ou rattache les Pokémon détectés depuis Détails.",
-      en: "Add your team manually or link detected Pokémon from Details.",
+      fr: "Ajoute ton équipe à la main ou connecte l'émulateur pour la détecter automatiquement.",
+      en: "Add your team manually or connect the emulator to detect it automatically.",
     },
     noMappedZone: { fr: "Aucune zone associée", en: "No mapped zone" },
     player: { fr: "Joueur", en: "Player" },
     pausedReconcile: {
-      fr: "Chronologie en pause. Réconcilie-la depuis Détails.",
-      en: "Timeline paused. Reconcile it from Details.",
+      fr: "Chronologie en pause : l'état chargé contredit l'équipe suivie.",
+      en: "Timeline paused: the loaded state contradicts the tracked team.",
     },
     solo: { fr: "Solo", en: "Solo" },
     map: {
@@ -745,8 +745,8 @@ const translations = {
       en: "Connect a compatible emulator from Connections. All existing manual run features remain available.",
     },
     resumeConfirm: {
-      fr: "Reprendre à partir de l'état actuel du jeu ? Les morts et découvertes existantes sont conservées.",
-      en: "Resume from the current game state? Existing deaths and discoveries will be preserved.",
+      fr: "Reprendre à partir de l'état actuel du jeu ? Les morts et découvertes existantes sont conservées. (La reprise est automatique dès que le jeu redevient cohérent avec l'équipe.)",
+      en: "Resume from the current game state? Existing deaths and discoveries will be preserved. (Tracking resumes automatically once the game matches the team again.)",
     },
     reconcile: { fr: "Réconcilier", en: "Reconcile" },
     backwardJump: {
@@ -1014,6 +1014,46 @@ const translations = {
     connected: { fr: "connecté", en: "connected" },
     offline: { fr: "hors ligne", en: "offline" },
     roomAddress: { fr: "Adresse du salon", en: "Room address" },
+    roomAddressHint: {
+      fr: "IPv4 de ce PC sur ton réseau local / VPN, à envoyer à ton partenaire.",
+      en: "This PC's IPv4 on your LAN / VPN, to send to your partner.",
+    },
+    localOnlyAddress: {
+      fr: "Salon accessible depuis ce PC uniquement. Relance l'hébergement en autorisant le réseau local / VPN pour jouer à plusieurs PC.",
+      en: "Room reachable from this PC only. Host again with LAN / VPN allowed to play across PCs.",
+    },
+    otherAddresses: {
+      fr: "Autres adresses de ce PC (si la première ne fonctionne pas)",
+      en: "Other addresses of this PC (if the first one doesn't work)",
+    },
+    secureAddressHint: {
+      fr: "Salon chiffré (WSS). L'invitation contient l'empreinte du certificat : ton partenaire n'a rien d'autre à configurer.",
+      en: "Encrypted room (WSS). The invitation contains the certificate fingerprint: your partner has nothing else to configure.",
+    },
+    allowInternet: {
+      fr: "Accessible depuis Internet (chiffré en WSS)",
+      en: "Reachable from the Internet (encrypted with WSS)",
+    },
+    publicHost: {
+      fr: "Adresse publique (IP publique ou nom de domaine)",
+      en: "Public address (public IP or domain name)",
+    },
+    publicHostHint: {
+      fr: (port: string) =>
+        `Redirige le port TCP ${port} de ta box vers ce PC et autorise-le dans le pare-feu. Ton IP publique est indiquée dans l'interface de ta box.`,
+      en: (port: string) =>
+        `Forward TCP port ${port} on your router to this PC and allow it in the firewall. Your public IP is shown in your router's interface.`,
+    },
+    showSecrets: {
+      fr: "Afficher les IP et l'invitation",
+      en: "Show IPs and invitation",
+    },
+    hideSecrets: {
+      fr: "Masquer les IP et l'invitation",
+      en: "Hide IPs and invitation",
+    },
+    copy: { fr: "Copier", en: "Copy" },
+    copied: { fr: "Copié", en: "Copied" },
     invitationShare: {
       fr: "Invitation (à partager uniquement avec tes partenaires)",
       en: "Invitation (share only with your partners)",
@@ -1049,8 +1089,8 @@ const translations = {
     },
     join: { fr: "Rejoindre le salon", en: "Join room" },
     networkWarning: {
-      fr: "Utilise un réseau local ou un VPN de confiance. Les connexions par Internet public nécessitent WSS ; une invitation seule ne configure pas ton routeur.",
-      en: "Use a trusted LAN or VPN. Public Internet connections require WSS; an invitation alone does not configure your router.",
+      fr: "Sur un réseau local ou un VPN de confiance, aucune configuration n'est nécessaire. Par Internet, coche l'option WSS et redirige le port sur ta box : l'invitation seule ne configure pas ton routeur.",
+      en: "On a trusted LAN or VPN, nothing else is needed. Over the Internet, enable the WSS option and forward the port on your router: an invitation alone does not configure it.",
     },
   },
 
@@ -1616,8 +1656,8 @@ const translations = {
       en: "Pick up to 2 types:",
     },
     investigationPickHint: {
-      fr: "Clique sur une combinaison possible ou sur les types pour la sélectionner, puis Valider. Une fois validés, le bouton Types remplace Enquête.",
-      en: "Click a possible combination or the types to select them, then Confirm. Once confirmed, the Types button replaces Clues.",
+      fr: "Pour fixer les types, clique sur une combinaison possible ou sur le bouton ✓, choisis les types puis Valider. Une fois validés, le bouton Types remplace Enquête.",
+      en: "To set the types, click a possible combination or the ✓ button, pick the types, then Confirm. Once confirmed, the Types button replaces Clues.",
     },
     confirmTypesAction: { fr: "Valider", en: "Confirm" },
     confirmTypesError: {

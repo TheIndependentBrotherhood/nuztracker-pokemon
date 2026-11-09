@@ -1,4 +1,13 @@
-import { createServer, type Server } from "node:http";
+import {
+  createServer as createHttpServer,
+  type IncomingMessage,
+  type Server as HttpServer,
+  type ServerResponse,
+} from "node:http";
+import {
+  createServer as createHttpsServer,
+  type Server as HttpsServer,
+} from "node:https";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { networkInterfaces } from "node:os";
 import { WebSocket, WebSocketServer } from "ws";
@@ -18,8 +27,11 @@ import {
   applyRoomCommand,
   clientMessageSchema,
   MAX_ROOM_MESSAGE_BYTES,
+  joinInvitation,
+  splitInvitation,
   type ServerMessage,
 } from "./room-protocol";
+import { roomTls, type RoomTls } from "./room-tls";
 
 const credentialsSchema = z.object({
   roomId: z.string(),
@@ -35,8 +47,47 @@ function matches(value: string, expected: string): boolean {
   return encoded.length === other.length && timingSafeEqual(encoded, other);
 }
 
+const VIRTUAL_ADAPTER =
+  /vethernet|hyper-v|virtualbox|vbox|vmware|wsl|docker|loopback|bluetooth/i;
+
+function addressRank(address: string): number {
+  const [a, b] = address.split(".").map(Number);
+  if (a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31))
+    return 0;
+  // Carrier-grade NAT range used by Tailscale and similar VPNs.
+  if (a === 100 && b >= 64 && b <= 127) return 1;
+  return 2;
+}
+
+/** IPv4 addresses partners can reach, physical private LAN interfaces first. */
+export function hostAddresses(
+  interfaces: ReturnType<typeof networkInterfaces> = networkInterfaces(),
+): string[] {
+  const candidates = Object.entries(interfaces).flatMap(([name, entries]) =>
+    (entries ?? [])
+      .filter(
+        (entry) =>
+          (entry.family === "IPv4" || String(entry.family) === "4") &&
+          !entry.internal &&
+          !entry.address.startsWith("169.254."),
+      )
+      .map((entry) => ({
+        address: entry.address,
+        rank: (VIRTUAL_ADAPTER.test(name) ? 3 : 0) + addressRank(entry.address),
+      })),
+  );
+  return [
+    ...new Set(
+      candidates
+        .sort((left, right) => left.rank - right.rank)
+        .map((entry) => entry.address),
+    ),
+  ];
+}
+
 export class RoomHost {
-  private readonly server: Server;
+  private server?: HttpServer | HttpsServer;
+  private fingerprint?: string;
   private readonly sockets: WebSocketServer;
   private readonly clients = new Map<
     WebSocket,
@@ -46,6 +97,7 @@ export class RoomHost {
   private readonly credentials: z.infer<typeof credentialsSchema>;
   private heartbeat?: ReturnType<typeof setInterval>;
   private address = "";
+  private addresses: string[] = [];
   private stopping = false;
 
   constructor(
@@ -63,18 +115,25 @@ export class RoomHost {
       ? database.readSetting(`host-${options.runId}`, credentialsSchema)
       : undefined) ?? { roomId: token(), players: {} };
     database.writeSetting(`host-${options.runId}`, this.credentials);
-    this.server = createServer((_request, response) => {
-      response.writeHead(404, { "Content-Type": "text/plain" });
-      response.end(
-        "This server accepts authenticated tracker connections only.",
-      );
-    });
     this.sockets = new WebSocketServer({
       noServer: true,
       maxPayload: MAX_ROOM_MESSAGE_BYTES,
       perMessageDeflate: false,
     });
-    this.server.on("upgrade", (request, socket, head) => {
+    this.sockets.on("connection", (socket) => this.accept(socket));
+  }
+
+  private createServer(tls?: RoomTls): HttpServer | HttpsServer {
+    const reject = (_request: IncomingMessage, response: ServerResponse) => {
+      response.writeHead(404, { "Content-Type": "text/plain" });
+      response.end(
+        "This server accepts authenticated tracker connections only.",
+      );
+    };
+    const server = tls
+      ? createHttpsServer({ key: tls.key, cert: tls.cert }, reject)
+      : createHttpServer(reject);
+    server.on("upgrade", (request, socket, head) => {
       if (
         request.url !== "/room" ||
         request.headers.origin ||
@@ -88,7 +147,7 @@ export class RoomHost {
         this.sockets.emit("connection", client),
       );
     });
-    this.sockets.on("connection", (socket) => this.accept(socket));
+    return server;
   }
 
   get status(): RoomStatus {
@@ -97,35 +156,48 @@ export class RoomHost {
       runId: this.options.runId,
       playerId: this.options.playerId,
       address: this.address,
-      invitation: this.invitation,
+      ...(this.addresses.length > 1 ? { addresses: this.addresses } : {}),
+      invitation: joinInvitation(this.invitation, this.fingerprint),
+      ...(this.options.secure ? { secure: true } : {}),
       participants: this.participants(),
       pendingCount: 0,
     };
   }
 
   async start(): Promise<void> {
+    const tls = this.options.secure ? await roomTls(this.database) : undefined;
+    this.fingerprint = tls?.fingerprint;
+    const server = this.createServer(tls);
+    this.server = server;
+    const exposed = this.options.allowLan || Boolean(this.options.secure);
     await new Promise<void>((resolve, reject) => {
       const failed = (error: Error) => reject(error);
-      this.server.once("error", failed);
-      this.server.listen(
+      server.once("error", failed);
+      server.listen(
         this.options.port,
-        this.options.allowLan ? "0.0.0.0" : "127.0.0.1",
+        exposed ? "0.0.0.0" : "127.0.0.1",
         () => {
-          this.server.off("error", failed);
+          server.off("error", failed);
           resolve();
         },
       );
     });
-    this.server.on("error", (error) =>
+    server.on("error", (error) =>
       this.onStatus({ ...this.status, error: error.message }),
     );
-    const address = this.server.address();
+    const address = server.address();
     if (!address || typeof address === "string")
       throw new Error("Could not determine the room's listening port.");
-    const lanAddress = Object.values(networkInterfaces())
-      .flat()
-      .find((entry) => entry?.family === "IPv4" && !entry.internal)?.address;
-    this.address = `ws://${this.options.allowLan && lanAddress ? lanAddress : "127.0.0.1"}:${address.port}/room`;
+    const lan = exposed ? hostAddresses() : [];
+    const hosts = [
+      ...(this.options.publicHost ? [this.options.publicHost] : []),
+      ...lan.filter((host) => host !== this.options.publicHost),
+    ];
+    const scheme = tls ? "wss" : "ws";
+    this.addresses = (hosts.length ? hosts : ["127.0.0.1"]).map(
+      (host) => `${scheme}://${host}:${address.port}/room`,
+    );
+    this.address = this.addresses[0];
     const record = this.database.save(
       connectRun(
         this.database.require(this.options.runId),
@@ -219,7 +291,11 @@ export class RoomHost {
           );
           if (
             !reconnecting &&
-            (expected || !matches(message.invitation, hash(this.invitation)))
+            (expected ||
+              !matches(
+                splitInvitation(message.invitation).token,
+                hash(this.invitation),
+              ))
           ) {
             throw new Error(
               "Invalid invitation or reserved player slot. The host can reset player credentials if recovery is needed.",
@@ -299,9 +375,10 @@ export class RoomHost {
     if (this.heartbeat) clearInterval(this.heartbeat);
     for (const socket of this.clients.keys()) socket.terminate();
     await new Promise<void>((resolve) => this.sockets.close(() => resolve()));
-    if (this.server.listening) {
+    if (this.server?.listening) {
+      const server = this.server;
       await new Promise<void>((resolve, reject) =>
-        this.server.close((error) => (error ? reject(error) : resolve())),
+        server.close((error) => (error ? reject(error) : resolve())),
       );
     }
   }

@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import type { Run } from "@/lib/types";
 import { getPlayerId } from "@/lib/tracker/knowledge";
+import { copyText } from "@/lib/clipboard";
 import {
   overlayCommandSchema,
   type OverlayControlConfig,
@@ -51,9 +52,7 @@ function CopyField({
             <InputAdornment position="end">
               <Button
                 size="small"
-                onClick={() =>
-                  void navigator.clipboard.writeText(value).then(onCopied)
-                }
+                onClick={() => void copyText(value).then(onCopied)}
               >
                 {t(tr.copy, lang)}
               </Button>

@@ -77,8 +77,10 @@ export default function LightTracker() {
     updateRun,
     canEditRun,
     reportError,
+    receiveRecord,
   } = useRunStore();
   const { lang } = useLanguage();
+  const [resuming, setResuming] = useState(false);
   const run = runs.find((entry) => entry.id === runId);
   const record = records.find((entry) => entry.run.id === runId);
   const [hovered, setHovered] = useState(false);
@@ -535,7 +537,40 @@ export default function LightTracker() {
             </TextField>
           )}
           {tracking?.suspended && (
-            <Alert severity="warning" sx={{ mt: 1 }}>
+            <Alert
+              severity="warning"
+              sx={{ mt: 1 }}
+              action={
+                desktopStatus && canEditRun(run.id, playerId) ? (
+                  <Button
+                    color="inherit"
+                    size="small"
+                    disabled={resuming}
+                    onClick={() => {
+                      if (!window.confirm(t(text.resumeConfirm, lang))) return;
+                      setResuming(true);
+                      void (async () => {
+                        try {
+                          if (window.nuztracker)
+                            receiveRecord(
+                              await window.nuztracker.resumeTracking({
+                                runId: run.id,
+                                playerId,
+                              }),
+                            );
+                        } catch (error) {
+                          reportError(error);
+                        } finally {
+                          setResuming(false);
+                        }
+                      })();
+                    }}
+                  >
+                    {t(text.reconcile, lang)}
+                  </Button>
+                ) : undefined
+              }
+            >
               {t(text.pausedReconcile, lang)}
             </Alert>
           )}

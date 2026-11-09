@@ -46,6 +46,7 @@ test("the local HTTP bridge authenticates, persists real frames and exposes only
     assert.equal(database.require("run-1").revision, savedRevision);
     const rewind = frame(21);
     rewind.frame = 150;
+    rewind.party[0].level = 4;
     service.ingest(rewind);
     assert.equal(database.require("run-1").tracking.solo.suspended, true);
     const crossOrigin = await fetch(`${server.origin}/bridge`, {

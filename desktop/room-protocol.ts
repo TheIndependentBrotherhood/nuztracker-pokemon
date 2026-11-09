@@ -23,6 +23,19 @@ const id = z
   .max(200)
   .regex(/^[\w:.-]+$/);
 export const MAX_ROOM_MESSAGE_BYTES = 50 * 1024 * 1024;
+
+/** A shared invitation is "<token>.<certificate fingerprint>" for encrypted rooms. */
+export function splitInvitation(invitation: string): {
+  token: string;
+  fingerprint?: string;
+} {
+  const [token, fingerprint] = invitation.trim().split(".", 2);
+  return fingerprint ? { token, fingerprint } : { token };
+}
+
+export function joinInvitation(token: string, fingerprint?: string): string {
+  return fingerprint ? `${token}.${fingerprint}` : token;
+}
 export const roomCommandSchema = z.discriminatedUnion("kind", [
   z.object({ id, kind: z.literal("edit"), edit: runEditSchema }),
   z.object({ id, kind: z.literal("frame"), frame: gameFrameSchema }),
@@ -123,8 +136,12 @@ export function applyRoomCommand(
       if (command.input.playerId !== playerId)
         throw new Error("A player cannot map another player's game.");
       return addHistory(
-        mapZone(record, command.input), playerId, "connection",
-        "Game location mapped to an encounter zone.", Date.now(), command.id,
+        mapZone(record, command.input),
+        playerId,
+        "connection",
+        "Game location mapped to an encounter zone.",
+        Date.now(),
+        command.id,
       );
     case "resume":
       return addHistory(

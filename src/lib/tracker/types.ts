@@ -103,6 +103,11 @@ export interface PendingDetail {
   zoneId?: string;
 }
 
+export interface RewindCheckpoint {
+  frame: number;
+  party: { identity: string; pokemonId: number; level: number }[];
+}
+
 export interface PlayerTracking {
   game: GameIdentity;
   sessionId: string;
@@ -111,6 +116,8 @@ export interface PlayerTracking {
   lastSeenAt: number;
   latest: GameFrame;
   suspended: boolean;
+  // Team snapshot taken before a rewind; tracking resumes once the game matches it again.
+  rewindCheckpoint?: RewindCheckpoint;
   // Set once the player first holds a Poké Ball; deaths before it need the player's decision.
   nuzlockeStartedAt?: number;
   pendingPokemon: LivePokemon[];
@@ -178,7 +185,11 @@ export interface RoomStatus {
   runId?: string;
   playerId?: string;
   address?: string;
+  // Every reachable room address when the host has several network interfaces.
+  addresses?: string[];
   invitation?: string;
+  // True when the room is encrypted (WSS).
+  secure?: boolean;
   participants: RoomParticipant[];
   pendingCount: number;
   error?: string;
@@ -219,6 +230,10 @@ export interface HostRoomOptions {
   playerId: string;
   port: number;
   allowLan: boolean;
+  // Encrypt the room with WSS so partners can join over the Internet.
+  secure?: boolean;
+  // Public IP or domain partners use, e.g. after forwarding the port on the router.
+  publicHost?: string;
   resetCredentials?: boolean;
 }
 
@@ -276,6 +291,7 @@ export interface TrackerDesktopApi {
   }): Promise<RunRecord>;
   openCompact(runId: string): Promise<void>;
   getOverlayUrl(runId: string): Promise<string>;
+  copyText(text: string): Promise<void>;
   getOverlayControlConfig(runId: string): Promise<OverlayControlConfig>;
   getOverlayControl(runId: string): Promise<OverlayControl>;
   commandOverlay(input: {

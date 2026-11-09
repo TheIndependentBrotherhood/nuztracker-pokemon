@@ -225,6 +225,7 @@ test("zone discoveries are deduplicated, retain rewound observations, and mappin
     ...battle,
     sequence: 3,
     frame: 5,
+    party: battle.party.map((member) => ({ ...member, level: 4 })),
     battle: { ...battle.battle!, id: "encounter-2" },
   };
   current = ingestFrame(current, "solo", rewound, pokemon, 300);
