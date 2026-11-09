@@ -284,11 +284,14 @@ test("Platinum zone templates exclude remake-only areas and original encounter s
     "sinnoh-route-201",
     "jubilife-city",
     "distortion-world",
+    "lake-verity-before-galactic-intervention",
+    "sinnoh-route-204-south-towards-jubilife-city",
+    "solaceon-ruins-b1f-a",
     "grand-underground",
   ].map((id) => ({ id, regionArea: "" }));
   assert.deepEqual(
     zonesForGame(zones, "platinum").map((zone) => zone.id),
-    zones.slice(0, 4).map((zone) => zone.id),
+    zones.slice(0, 7).map((zone) => zone.id),
   );
   assert.equal(zonesForGame(zones), zones);
   const matches = encounterAreasForZone(encounterData.areas, "platinum", {

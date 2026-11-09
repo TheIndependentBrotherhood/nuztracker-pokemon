@@ -132,6 +132,16 @@ await writeFile(
   join(root, "public", "data", "platinum-maps.json"),
   JSON.stringify(maps) + "\n",
 );
+// Zone ids with Platinum encounters, kept even when no map label matches them.
+const platinumAreas = new Set(
+  references
+    .filter((area) => area.game === "platinum")
+    .flatMap((area) => [area.locationId, area.areaId]),
+);
+await writeFile(
+  join(root, "public", "data", "platinum-encounter-areas.json"),
+  JSON.stringify([...platinumAreas].sort()) + "\n",
+);
 console.log(
   `Generated ${references.length} original encounter areas and ${maps.length} Platinum map labels. No player ROM was used.`,
 );

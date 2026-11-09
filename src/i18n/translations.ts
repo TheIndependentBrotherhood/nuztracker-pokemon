@@ -1659,8 +1659,21 @@ const translations = {
         `${remaining} / ${total} combinations possible`,
     },
     investigationHint: {
-      fr: "Les attaques lancées en combat sont ajoutées automatiquement (Platine sur MelonDS, combats simples). Valide ici les types trouvés ou saisis-les à la main ; les indices se corrigent dans la fiche Pokédex.",
-      en: "Moves used in battle are added automatically (Platinum on MelonDS, single battles). Confirm the types found here or enter them manually; clues can be corrected from the Pokédex entry.",
+      fr: "Les attaques lancées en combat sont ajoutées automatiquement (Platine sur MelonDS, combats simples et doubles). Valide ici les types trouvés ou saisis-les à la main ; les indices se corrigent dans la fiche Pokédex.",
+      en: "Moves used in battle are added automatically (Platinum on MelonDS, single and double battles). Confirm the types found here or enter them manually; clues can be corrected from the Pokédex entry.",
+    },
+    addClueAction: { fr: "Ajouter un indice", en: "Add a clue" },
+    addClueHint: {
+      fr: "Si le tracker a manqué un résultat (immunité, efficacité…), clique sur + pour l'ajouter : choisis le résultat et le type de l'attaque, puis Ajouter. Les indices ajoutés à la main se retirent avec ×.",
+      en: "If the tracker missed a result (immunity, effectiveness…), click + to add it: pick the outcome and the attack type, then Add. Clues added by hand can be removed with ×.",
+    },
+    addClueOutcome: { fr: "Résultat :", en: "Outcome:" },
+    addClueType: { fr: "Type de l'attaque :", en: "Attack type:" },
+    addClueConfirm: { fr: "Ajouter", en: "Add" },
+    removeClueAction: { fr: "Retirer l'indice", en: "Remove the clue" },
+    clueSaveError: {
+      fr: "Impossible d'enregistrer l'indice.",
+      en: "Unable to save the clue.",
     },
     investigationSolved: { fr: "Types déduits :", en: "Deduced types:" },
     investigationCandidates: {

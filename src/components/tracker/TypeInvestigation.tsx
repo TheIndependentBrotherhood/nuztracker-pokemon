@@ -12,11 +12,14 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import type { Run } from "@/lib/types";
+import type { Run, TypeObservation } from "@/lib/types";
 import type { OverlayMember } from "@/lib/tracker/overlay";
 import {
   knowledgeForPlayer,
+  isManualObservation,
+  manualTypeObservation,
   viewRunForPlayer,
+  withSpeciesObservations,
   withSpeciesTypes,
 } from "@/lib/tracker/knowledge";
 import {
@@ -35,6 +38,18 @@ import TrackerDialog, { TrackerDialogIconButton } from "./TrackerDialog";
 const text = translations.focusCard;
 // The combination list keeps a fixed height (about two and a half rows) and scrolls.
 const COMBO_LIST_MAX_HEIGHT = 64;
+const CLUE_OUTCOMES: TypeObservation["type"][] = [
+  "immunity",
+  "resistance",
+  "neutral",
+  "weakness",
+];
+const clueColors: Record<TypeObservation["type"], string> = {
+  immunity: "#10b981",
+  weakness: "#ef4444",
+  resistance: "#3b82f6",
+  neutral: "#8b5cf6",
+};
 
 function TypeBadge({ type, lang }: { type: string; lang: "fr" | "en" }) {
   return (
@@ -69,6 +84,10 @@ export default function TypeInvestigation({
   const { updateRun, canEditRun } = useRunStore();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [addingClue, setAddingClue] = useState(false);
+  const [clueOutcome, setClueOutcome] =
+    useState<TypeObservation["type"]>("immunity");
+  const [clueType, setClueType] = useState("");
   const [draft, setDraft] = useState<[string, string]>(["", ""]);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -112,7 +131,35 @@ export default function TypeInvestigation({
     setDraft([first, second]);
     setSaveError(false);
     setConfirming(false);
+    setAddingClue(false);
+    setClueType("");
     setOpen(true);
+  }
+
+  async function saveObservations(next: TypeObservation[]) {
+    setBusy(true);
+    setSaveError(false);
+    try {
+      const view = viewRunForPlayer(run, playerId);
+      const saved = await updateRun(
+        withSpeciesObservations(view, member.pokemonId, next),
+        view,
+        playerId,
+      );
+      if (!saved) setSaveError(true);
+      return saved;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addClue() {
+    if (!clueType) return;
+    const saved = await saveObservations([
+      ...observations,
+      manualTypeObservation(clueOutcome, clueType),
+    ]);
+    if (saved) setClueType("");
   }
 
   async function confirmTypes() {
@@ -204,17 +251,36 @@ export default function TypeInvestigation({
             {t(text.investigationHint, lang)}
             <br />
             {t(text.investigationPickHint, lang)}
+            <br />
+            {t(text.addClueHint, lang)}
           </>
         }
         headerActions={
           canEdit ? (
-            <TrackerDialogIconButton
-              label={confirmLabel}
-              active={confirming}
-              onClick={() => setConfirming((value) => !value)}
-            >
-              ✓
-            </TrackerDialogIconButton>
+            <>
+              <TrackerDialogIconButton
+                label={t(text.addClueAction, lang)}
+                active={addingClue}
+                onClick={() => {
+                  setSaveError(false);
+                  setConfirming(false);
+                  setAddingClue((value) => !value);
+                }}
+              >
+                +
+              </TrackerDialogIconButton>
+              <TrackerDialogIconButton
+                label={confirmLabel}
+                active={confirming}
+                onClick={() => {
+                  setSaveError(false);
+                  setAddingClue(false);
+                  setConfirming((value) => !value);
+                }}
+              >
+                ✓
+              </TrackerDialogIconButton>
+            </>
           ) : null
         }
         actions={
@@ -222,6 +288,16 @@ export default function TypeInvestigation({
             <Button size="small" disabled={busy} onClick={() => setOpen(false)}>
               {t(text.closeAction, lang)}
             </Button>
+            {addingClue && (
+              <Button
+                size="small"
+                variant="contained"
+                disabled={busy || !canEdit || !clueType}
+                onClick={() => void addClue()}
+              >
+                {t(text.addClueConfirm, lang)}
+              </Button>
+            )}
             {confirming && (
               <Button
                 size="small"
@@ -236,6 +312,99 @@ export default function TypeInvestigation({
         }
       >
         <Stack spacing={0.75}>
+          <Collapse in={addingClue} unmountOnExit>
+            <Box
+              sx={{
+                p: 0.75,
+                borderRadius: 0.5,
+                bgcolor: "action.hover",
+              }}
+            >
+              <Typography sx={sectionLabel}>
+                {t(text.addClueOutcome, lang)}
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 0.5,
+                  mt: 0.25,
+                }}
+              >
+                {CLUE_OUTCOMES.map((outcome) => {
+                  const selected = clueOutcome === outcome;
+                  return (
+                    <ButtonBase
+                      key={outcome}
+                      disabled={busy}
+                      aria-pressed={selected}
+                      onClick={() => setClueOutcome(outcome)}
+                      sx={{
+                        py: 0.25,
+                        borderRadius: 0.5,
+                        fontSize: "0.6rem",
+                        fontWeight: 700,
+                        color: "#fff",
+                        bgcolor: clueColors[outcome],
+                        opacity: selected ? 1 : 0.45,
+                        outline: selected ? "2px solid #fff" : "none",
+                        outlineOffset: -2,
+                      }}
+                    >
+                      {t(
+                        translations.pokemonDetail.observationTypes[outcome],
+                        lang,
+                      )}
+                    </ButtonBase>
+                  );
+                })}
+              </Box>
+              <Typography sx={{ ...sectionLabel, mt: 0.5 }}>
+                {t(text.addClueType, lang)}
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(64px, 1fr))",
+                  gap: 0.5,
+                  mt: 0.25,
+                }}
+              >
+                {available.map((type) => {
+                  const selected = clueType === type;
+                  return (
+                    <ButtonBase
+                      key={type}
+                      disabled={busy}
+                      aria-pressed={selected}
+                      onClick={() => setClueType(selected ? "" : type)}
+                      sx={{
+                        py: 0.25,
+                        borderRadius: 0.5,
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        color: "#fff",
+                        bgcolor: typeColors[type] ?? "#555",
+                        opacity: selected || !clueType ? 1 : 0.45,
+                        outline: selected ? "2px solid #fff" : "none",
+                        outlineOffset: -2,
+                      }}
+                    >
+                      {getTypeTranslation(type, lang)}
+                    </ButtonBase>
+                  );
+                })}
+              </Box>
+              {saveError && (
+                <Alert
+                  severity="error"
+                  sx={{ mt: 0.5, py: 0, fontSize: "0.7rem" }}
+                >
+                  {t(text.clueSaveError, lang)}
+                </Alert>
+              )}
+            </Box>
+          </Collapse>
           <Collapse in={confirming} unmountOnExit>
             <Box
               sx={{
@@ -333,6 +502,30 @@ export default function TypeInvestigation({
                       lang,
                     )}
                     <TypeBadge type={observation.observationType} lang={lang} />
+                    {canEdit && isManualObservation(observation) && (
+                      <Tooltip title={t(text.removeClueAction, lang)}>
+                        <ButtonBase
+                          disabled={busy}
+                          aria-label={t(text.removeClueAction, lang)}
+                          onClick={() =>
+                            void saveObservations(
+                              observations.filter(
+                                (other) => other.id !== observation.id,
+                              ),
+                            )
+                          }
+                          sx={{
+                            px: 0.25,
+                            fontSize: "0.7rem",
+                            lineHeight: 1,
+                            color: "text.secondary",
+                            borderRadius: 0.5,
+                          }}
+                        >
+                          ×
+                        </ButtonBase>
+                      </Tooltip>
+                    )}
                   </Box>
                 ))}
               </Box>
@@ -375,6 +568,7 @@ export default function TypeInvestigation({
                       aria-pressed={selected}
                       onClick={() => {
                         setDraft([combo[0], combo[1] ?? ""]);
+                        setAddingClue(false);
                         setConfirming(true);
                       }}
                       sx={{

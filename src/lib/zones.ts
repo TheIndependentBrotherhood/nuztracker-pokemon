@@ -1,6 +1,7 @@
 import { publicPath } from "@/lib/base-path";
 import type { GameVersionId } from "./game-catalog";
 import platinumMaps from "../../public/data/platinum-maps.json";
+import platinumEncounterAreas from "../../public/data/platinum-encounter-areas.json";
 
 export interface ZoneTemplate {
   id: string;
@@ -207,6 +208,8 @@ export function getZonesForRegion(
   return zonesForGame(regionZones[region] ?? [], gameVersion);
 }
 
+const encounterAreas = new Set<string>(platinumEncounterAreas);
+
 const mapSlugs = platinumMaps.map((name) =>
   name.toLowerCase().replaceAll(" ", "-"),
 );
@@ -257,9 +260,16 @@ export function zonesForGame(
 ): ZoneTemplate[] {
   if (gameVersion !== "platinum") return zones;
   return zones.filter((zone) => {
-    if (zone.id === STARTER_ZONE_ID) return true;
+    if (zone.id === STARTER_ZONE_ID || encounterAreas.has(zone.id)) return true;
     const slug = zoneSlug(zone.id);
-    return mapSlugs.some((map) => map === slug || map.startsWith(`${slug}-`));
+    // Maps and zones may each be the finer one: "Route 204 South" and
+    // "route-204-south-towards-jubilife-city", or "Eterna Forest Outside" and "eterna-forest".
+    return mapSlugs.some(
+      (map) =>
+        map === slug ||
+        map.startsWith(`${slug}-`) ||
+        slug.startsWith(`${map}-`),
+    );
   });
 }
 

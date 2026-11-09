@@ -16,6 +16,9 @@ import {
 import {
   saveKnowledgeView,
   viewRunForPlayer,
+  withSpeciesObservations,
+  manualTypeObservation,
+  isManualObservation,
   withSpeciesNotes,
   withSpeciesTypes,
   withoutPrivateNotes,
@@ -333,6 +336,41 @@ test("confirmed types are saved for the species and the player's captures only",
   assert.deepEqual(
     saveKnowledgeView(next, "p1").playerKnowledge?.p1.customTypesByPokemonId,
     { 1: ["fire", "dragon"] },
+  );
+});
+
+test("manual clues are saved in the player's own knowledge only", () => {
+  const current = record(true);
+  current.run.playerKnowledge = {
+    p1: {},
+    p2: {
+      pokedexObservationsByPokemonId: {
+        1: [manualTypeObservation("weakness", "ice", 5)],
+      },
+    },
+  };
+  const clue = manualTypeObservation("immunity", "ground", 10);
+  assert.deepEqual(clue, {
+    id: "manual-10",
+    type: "immunity",
+    observationType: "ground",
+    createdAt: 10,
+  });
+  assert.ok(isManualObservation(clue));
+  assert.ok(!isManualObservation({ ...clue, id: "eff-1-ground-immunity" }));
+  const view = viewRunForPlayer(current.run, "p1");
+  const saved = saveKnowledgeView(
+    withSpeciesObservations(view, 1, [clue]),
+    "p1",
+  ).playerKnowledge!;
+  assert.deepEqual(saved.p1.pokedexObservationsByPokemonId, { 1: [clue] });
+  assert.equal(
+    saved.p2.pokedexObservationsByPokemonId?.[1][0].type,
+    "weakness",
+  );
+  assert.equal(
+    withSpeciesObservations(view, 1, []).pokedexObservationsByPokemonId,
+    undefined,
   );
 });
 

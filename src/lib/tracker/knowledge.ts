@@ -1,4 +1,4 @@
-import type { Capture, Run, RunKnowledge } from "../types";
+import type { Capture, Run, RunKnowledge, TypeObservation } from "../types";
 
 export function getPlayerId(run: Run, playerIndex = 0): string {
   return (
@@ -59,6 +59,41 @@ export function withSpeciesNotes(
   return {
     ...run,
     pokedexNotesByPokemonId: Object.keys(next).length ? next : undefined,
+  };
+}
+
+const MANUAL_CLUE_PREFIX = "manual-";
+
+/** Type clue entered by the player when the tracker missed a battle result. */
+export function manualTypeObservation(
+  type: TypeObservation["type"],
+  attackType: string,
+  now = Date.now(),
+): TypeObservation {
+  return {
+    id: `${MANUAL_CLUE_PREFIX}${now}`,
+    type,
+    observationType: attackType,
+    createdAt: now,
+  };
+}
+
+export function isManualObservation(observation: TypeObservation): boolean {
+  return observation.id.startsWith(MANUAL_CLUE_PREFIX);
+}
+
+/** Replaces the type clues of a species in a player view (see viewRunForPlayer). */
+export function withSpeciesObservations(
+  run: Run,
+  pokemonId: number,
+  observations: TypeObservation[],
+): Run {
+  const next = { ...run.pokedexObservationsByPokemonId };
+  if (observations.length) next[pokemonId] = observations;
+  else delete next[pokemonId];
+  return {
+    ...run,
+    pokedexObservationsByPokemonId: Object.keys(next).length ? next : undefined,
   };
 }
 
