@@ -31,12 +31,17 @@ import InteractiveFocusCard from "./InteractiveFocusCard";
 import FaintedPokemon, { faintedInParty } from "./FaintedPokemon";
 import PendingCaptures from "./PendingCaptures";
 import StatAnnotations from "./StatAnnotations";
+import ZoneEncountersButton from "./ZoneEncountersButton";
 import { TrackerBoundsContext } from "./TrackerDialog";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getPokemonById, type CaptureSpriteOption } from "@/lib/pokemon-data";
 import type { Capture, PokemonData } from "@/lib/types";
 import type { GameFrame } from "@/lib/tracker/types";
+import {
+  nextBattleFocus,
+  type BattleFocusSelection,
+} from "@/lib/tracker/battle-focus";
 
 const NO_OPPONENTS: NonNullable<GameFrame["battle"]>["opponents"] = [];
 
@@ -89,14 +94,7 @@ export default function LightTracker() {
   const record = records.find((entry) => entry.run.id === runId);
   const [hovered, setHovered] = useState(false);
   const [pinnedTeam, setPinnedTeam] = useState(false);
-  const [focusSelection, setFocusSelection] = useState<
-    | {
-        battleId?: string;
-        memberId?: string;
-        opponentIdentity?: string;
-      }
-    | undefined
-  >();
+  const [focusSelection, setFocusSelection] = useState<BattleFocusSelection>();
   const [now, setNow] = useState(0);
   const [bounds, setBounds] = useState<HTMLElement | null>(null);
   const [opponentReferences, setOpponentReferences] = useState<
@@ -108,21 +106,63 @@ export default function LightTracker() {
     : "solo";
   const battle = record?.tracking[currentPlayerId]?.latest.battle;
   const opponents = battle?.opponents ?? NO_OPPONENTS;
+  const participants = [...opponents, ...(battle?.allies ?? [])];
   const opponentSignature = JSON.stringify(
-    opponents.map(({ identity, pokemonId }) => [identity, pokemonId]),
+    participants.map(({ identity, pokemonId }) => [identity, pokemonId]),
   );
-  const opponentsRef = useRef(opponents);
+  const opponentsRef = useRef(participants);
   useEffect(() => {
-    opponentsRef.current = opponents;
-  }, [opponents]);
+    opponentsRef.current = participants;
+  });
   const focusForBattle =
     focusSelection?.battleId === battle?.id ? focusSelection : undefined;
   const selectedId = focusForBattle?.memberId;
   const selectedOpponentIdentity = focusForBattle?.opponentIdentity;
+  const selectedAllyIdentity = focusForBattle?.allyIdentity;
+  const ally = battle?.allies?.find(
+    ({ identity }) => identity === selectedAllyIdentity,
+  );
   const opponent =
+    ally ??
     opponents.find(({ identity }) => identity === selectedOpponentIdentity) ??
     opponents[0];
   const opponentId = opponent?.pokemonId;
+  useEffect(
+    () =>
+      useRunStore.subscribe((state, previousState) => {
+        const input = state.battleFocusInput;
+        if (
+          !input ||
+          input === previousState.battleFocusInput ||
+          input.runId !== runId
+        )
+          return;
+        const record = state.records.find((entry) => entry.run.id === runId);
+        if (!record) return;
+        const playerId = state.playerByRun[runId] ?? getPlayerId(record.run);
+        const tracking = record.tracking[playerId];
+        const battle = tracking?.latest.battle;
+        if (
+          !battle ||
+          tracking.suspended ||
+          input.playerId !== playerId ||
+          input.battleId !== battle.id
+        )
+          return;
+        const team = overlayData(
+          record,
+          state.desktopStatus?.bridge,
+        ).teams.find((entry) => entry.playerId === playerId);
+        if (team) {
+          setFocusSelection((previous) =>
+            nextBattleFocus(battle, team, previous),
+          );
+          setPinnedTeam(false);
+          setHovered(false);
+        }
+      }),
+    [runId],
+  );
   useEffect(() => {
     let cancelled = false;
     void Promise.all(
@@ -353,6 +393,7 @@ export default function LightTracker() {
                   `#${candidate.pokemonId}`;
                 const focused =
                   !selectedId &&
+                  !selectedAllyIdentity &&
                   (selectedOpponentIdentity
                     ? selectedOpponentIdentity === candidate.identity
                     : index === 0);
@@ -473,6 +514,16 @@ export default function LightTracker() {
               playerId={playerId}
               member={member}
               opponentLevel={showingOpponent ? opponent?.level : undefined}
+              powerTarget={
+                battle && team.powerTarget !== undefined
+                  ? showingOpponent
+                    ? record.tracking[playerId]?.latest.party.find(
+                        (pokemon) =>
+                          pokemon.identity === battle.activePlayerIdentity,
+                      )
+                    : team.powerTarget
+                  : undefined
+              }
               onSpriteChange={
                 member &&
                 canEditRun(run.id, playerId) &&
@@ -562,6 +613,9 @@ export default function LightTracker() {
                   </Box>
                 )}
               </Box>
+            )}
+            {team.zoneEncounters && (
+              <ZoneEncountersButton zone={team.zoneEncounters} />
             )}
           </Typography>
           {turnOrder.length > 0 && (

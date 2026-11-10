@@ -49,6 +49,7 @@ export interface PlatinumBattleData {
         category?: (typeof moveCategories)[number];
         power: number;
         accuracy: number;
+        basePp: number;
       }
     | undefined;
   /** Types of a species' base form in the ROM personal data. */
@@ -296,6 +297,7 @@ export async function loadPlatinumData(
         category: moveCategories[data[2]],
         power: data[3],
         accuracy: data[5],
+        basePp: data[6],
       };
     },
     speciesTypes: (species) => {

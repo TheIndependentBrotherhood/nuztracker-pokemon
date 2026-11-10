@@ -1,11 +1,14 @@
 import type {
   BattleOpponent,
   BridgeStatus,
+  GameFrame,
   LiveEvolution,
   LiveMove,
   LivePokemon,
   RunRecord,
   StatStages,
+  RevealedMovePp,
+  ZoneEncounter,
 } from "./types";
 import type {
   Capture,
@@ -23,7 +26,14 @@ import { pokemonForGame } from "../game-reference";
 import { getCaptureTypesForRun } from "../capture-types";
 import { defaultOverlayControl, type OverlayControl } from "./overlay-control";
 import { overlayControlSchema } from "./overlay-control";
-import { livePokemonSchema } from "./schema";
+import {
+  livePokemonSchema,
+  revealedMovePpSchema,
+  battleWeightSchema,
+  statStagesSchema,
+  zoneEncounterSchema,
+} from "./schema";
+import type { MovePowerTarget } from "./move-power";
 import { z } from "zod";
 import { POKEMON_STAT_NAMES } from "../types";
 import { GAME_VERSIONS, type GameVersionId } from "../game-catalog";
@@ -68,6 +78,15 @@ export interface OverlayMember {
   /** Opponent only: gender and in-battle stat stages of the battler. */
   gender?: LivePokemon["gender"];
   statStages?: StatStages;
+  movePp?: RevealedMovePp[];
+}
+export interface OverlayZoneEncounter extends Omit<ZoneEncounter, "pokemonId"> {
+  pokemonId?: number;
+}
+export interface OverlayZoneEncounters {
+  seen: number;
+  total: number;
+  entries: OverlayZoneEncounter[];
 }
 export interface OverlayTeam {
   playerId: string;
@@ -82,7 +101,10 @@ export interface OverlayTeam {
   locationNames?: { fr?: string; en?: string };
   // Captures of this player in the current run zone; absent when the location matches no zone.
   zoneCapture?: { captured: boolean; shiny: boolean };
+  // Wild table of the current map; undiscovered species carry no pokemonId so the overlay never spoils them.
+  zoneEncounters?: OverlayZoneEncounters;
   members: OverlayMember[];
+  powerTarget?: MovePowerTarget;
 }
 export interface OverlayData {
   gameName: string;
@@ -116,6 +138,17 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
       zoneCapture: z
         .object({ captured: z.boolean(), shiny: z.boolean() })
         .optional(),
+      zoneEncounters: z
+        .object({
+          seen: z.number(),
+          total: z.number(),
+          entries: z.array(
+            zoneEncounterSchema
+              .omit({ pokemonId: true })
+              .extend({ pokemonId: z.number().optional() }),
+          ),
+        })
+        .optional(),
       members: z.array(
         z.object({
           id: z.string(),
@@ -134,6 +167,7 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
           bst: z.number(),
           randomStats: z.boolean(),
           hideEvolutionTargets: z.boolean().optional(),
+          movePp: revealedMovePpSchema.optional(),
           baseStats: z
             .array(
               z.object({
@@ -147,6 +181,12 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
             .optional(),
         }),
       ),
+      powerTarget: z
+        .object({
+          weight: battleWeightSchema.optional(),
+          statStages: statStagesSchema.optional(),
+        })
+        .optional(),
     }),
   ),
 });
@@ -157,12 +197,48 @@ export function hidesEvolutionTargets(run: Run): boolean {
   );
 }
 
+/** Species of the current wild table this player met in battle or caught in the zone; the others stay anonymous. */
+function zoneEncounters(
+  tracking: RunRecord["tracking"][string],
+  location: NonNullable<GameFrame["location"]>,
+  captures: Capture[],
+): Pick<OverlayTeam, "zoneEncounters"> {
+  if (!location.encounters?.length) return {};
+  const source = gameKey(tracking.game);
+  const known = new Set(
+    captures.map(
+      (capture) => capture.originalCapturedPokemonId ?? capture.pokemon.id,
+    ),
+  );
+  for (const entry of tracking.seenEncounters ?? [])
+    if (
+      entry.gameKey === source &&
+      (entry.locationId === location.id ||
+        (location.encounterTableId !== undefined &&
+          entry.encounterTableId === location.encounterTableId))
+    )
+      known.add(entry.pokemonId);
+  const species = new Set(location.encounters.map((entry) => entry.pokemonId));
+  return {
+    zoneEncounters: {
+      seen: [...species].filter((id) => known.has(id)).length,
+      total: species.size,
+      entries: location.encounters.map(({ pokemonId, ...entry }) =>
+        known.has(pokemonId) ? { ...entry, pokemonId } : entry,
+      ),
+    },
+  };
+}
+
 // The in-game map name is English; a matching run zone provides its localized names.
 function teamLocation(
   record: RunRecord,
   playerId: string,
   playerIndex: number,
-): Pick<OverlayTeam, "location" | "locationNames" | "zoneCapture"> {
+): Pick<
+  OverlayTeam,
+  "location" | "locationNames" | "zoneCapture" | "zoneEncounters"
+> {
   const tracking = record.tracking[playerId];
   const location = tracking?.latest.location;
   if (!location) return {};
@@ -181,6 +257,7 @@ function teamLocation(
         (capture.playerIndex ?? 0) === playerIndex),
   );
   return {
+    ...zoneEncounters(tracking, location, captures),
     ...(zone
       ? {
           zoneCapture: {
@@ -236,6 +313,7 @@ export function overlayData(
         bridge.error,
       ),
       ...teamLocation(record, player.id, player.playerIndex),
+      ...singleBattleTarget(record.tracking[player.id]?.latest.battle),
       members: partyMembers(record, player).map((capture) => ({
         id: capture.id,
         pokemonId: capture.pokemon.id,
@@ -335,7 +413,28 @@ export function opponentMember(
     ...(customSeen ? { customSeen } : {}),
     ...(opponent.gender ? { gender: opponent.gender } : {}),
     ...(opponent.statStages ? { statStages: opponent.statStages } : {}),
+    ...(opponent.movePp ? { movePp: opponent.movePp } : {}),
     ...(hidesEvolutionTargets(run) ? { hideEvolutionTargets: true } : {}),
+  };
+}
+
+function singleBattleTarget(
+  battle: RunRecord["tracking"][string]["latest"]["battle"],
+): { powerTarget?: MovePowerTarget } {
+  if (
+    !battle ||
+    battle.isDouble ||
+    (battle.activePlayerIdentities?.length ?? 0) > 1 ||
+    battle.allies?.length ||
+    battle.opponents.length !== 1
+  )
+    return {};
+  const opponent = battle.opponents[0];
+  return {
+    powerTarget: {
+      ...(opponent.weight ? { weight: opponent.weight } : {}),
+      ...(opponent.statStages ? { statStages: opponent.statStages } : {}),
+    },
   };
 }
 

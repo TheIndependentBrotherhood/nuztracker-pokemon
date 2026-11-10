@@ -29,6 +29,30 @@ const speciesId = z.number().int().min(-1).max(100000);
 const speciesMap = <T extends z.ZodType>(value: T) =>
   z.record(z.string().regex(/^-?\d+$/), value);
 const typeNames = z.array(z.string().max(40)).max(2);
+const encounterTableId = z.number().int().min(0).max(0xfffe);
+export const zoneEncounterSchema = z
+  .object({
+    method: z.enum(["grass", "surf", "old-rod", "good-rod", "super-rod"]),
+    condition: z
+      .enum([
+        "morning",
+        "day",
+        "night",
+        "swarm",
+        "radar",
+        "ruby",
+        "sapphire",
+        "emerald",
+        "firered",
+        "leafgreen",
+      ])
+      .optional(),
+    pokemonId: z.number().int().min(1).max(100000),
+    rate: z.number().int().min(1).max(100),
+    minLevel: z.number().int().min(1).max(100),
+    maxLevel: z.number().int().min(1).max(100),
+  })
+  .strict();
 const spriteSet = z.object({
   default: z.string().max(4000),
   alternatives: z.array(z.string().max(4000)).max(1000),
@@ -250,6 +274,23 @@ export const statStagesSchema = z.partialRecord(
   z.enum(STAT_STAGE_NAMES),
   z.number().int().min(-6).max(6),
 );
+export const battleWeightSchema = z.number().int().min(1).max(1000000);
+export const revealedMovePpSchema = z
+  .array(
+    z
+      .object({
+        id: z.number().int().min(1).max(10000),
+        pp: z.number().int().min(0).max(255),
+        maxPp: z.number().int().min(1).max(255),
+      })
+      .strict()
+      .refine((move) => move.pp <= move.maxPp, "PP exceeds maximum PP."),
+  )
+  .max(4)
+  .refine(
+    (moves) => new Set(moves.map((move) => move.id)).size === moves.length,
+    "Revealed moves must be unique.",
+  );
 const evolutionsSchema = z
   .array(
     z
@@ -291,6 +332,7 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
       })
       .optional(),
     statStages: statStagesSchema.optional(),
+    weight: battleWeightSchema.optional(),
     stats: z
       .record(
         z.enum([
@@ -347,6 +389,21 @@ const observationShape = {
     .optional(),
 };
 
+const battleParticipantSchema = z
+  .object({
+    identity: id,
+    pokemonId: z.number().int().min(1).max(100000),
+    level: z.number().int().min(1).max(100),
+    position: z.number().int().min(0).max(3).optional(),
+    gender: z.enum(["male", "female", "unknown"]).optional(),
+    statStages: statStagesSchema.optional(),
+    learnLevels: learnLevelsSchema.optional(),
+    evolutions: evolutionsSchema.optional(),
+    weight: battleWeightSchema.optional(),
+    movePp: revealedMovePpSchema.optional(),
+  })
+  .strict();
+
 export const gameFrameSchema: z.ZodType<GameFrame> = z
   .object({
     protocolVersion: z.literal(1),
@@ -356,29 +413,24 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
     frame: timestamp,
     game: gameIdentitySchema,
     party: z.array(livePokemonSchema).max(6),
-    location: z.object({ id, name: text.optional() }).strict().optional(),
+    location: z
+      .object({
+        id,
+        name: text.optional(),
+        encounterTableId: encounterTableId.optional(),
+        encounters: z.array(zoneEncounterSchema).max(96).optional(),
+      })
+      .strict()
+      .optional(),
     battle: z
       .object({
         id,
         kind: z.enum(["wild", "trainer"]),
         activePlayerIdentity: id.optional(),
         activePlayerIdentities: z.array(id).max(2).optional(),
-        opponents: z
-          .array(
-            z
-              .object({
-                identity: id,
-                pokemonId: z.number().int().min(1).max(100000),
-                level: z.number().int().min(1).max(100),
-                position: z.number().int().min(0).max(3).optional(),
-                gender: z.enum(["male", "female", "unknown"]).optional(),
-                statStages: statStagesSchema.optional(),
-                learnLevels: learnLevelsSchema.optional(),
-                evolutions: evolutionsSchema.optional(),
-              })
-              .strict(),
-          )
-          .max(2),
+        isDouble: z.boolean().optional(),
+        allies: z.array(battleParticipantSchema).max(1).optional(),
+        opponents: z.array(battleParticipantSchema).max(2),
       })
       .strict()
       .optional(),
@@ -510,6 +562,7 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
             gameKey: id,
             locationId: id,
             locationName: text.optional(),
+            encounterTableId: encounterTableId.optional(),
             pokemonId: z.number().int().min(1).max(100000),
             level: z.number().int().min(1).max(100),
             observedAt: timestamp,
@@ -626,6 +679,12 @@ export const desktopEventSchema: z.ZodType<DesktopEvent> = z.discriminatedUnion(
     z.object({ type: z.literal("record"), record: recordSchema }),
     z.object({ type: z.literal("deleted"), runId: id }),
     z.object({ type: z.literal("status"), status: desktopStatusSchema }),
+    z.object({
+      type: z.literal("battle-focus"),
+      runId: id,
+      playerId: id,
+      battleId: id,
+    }),
     z.object({ type: z.literal("error"), message: z.string() }),
   ],
 );

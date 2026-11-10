@@ -241,6 +241,9 @@ export function ingestFrame(
           gameKey: gameKey(frame.game),
           locationId: frame.location.id,
           ...(frame.location.name ? { locationName: frame.location.name } : {}),
+          ...(frame.location.encounterTableId === undefined
+            ? {}
+            : { encounterTableId: frame.location.encounterTableId }),
           pokemonId: opponent.pokemonId,
           level: opponent.level,
           observedAt: now,
@@ -363,11 +366,26 @@ export function ingestFrame(
       updated.isShiny = live.isShiny;
       updated.gender = live.gender;
       if (
-        live.types &&
+        live.types?.length &&
         next.run.isRandomMode &&
         next.run.randomizerOptions?.randomizeTypes
-      )
+      ) {
         updated.customTypes = live.types;
+        // Party types are visible in-game, so the species is known for opponents and the Pokédex too.
+        const knowledge = playerKnowledge[playerId] ?? {};
+        const known = knowledge.customTypesByPokemonId?.[live.pokemonId];
+        if (
+          known?.length !== live.types.length ||
+          known.some((type, slot) => type !== live.types![slot])
+        )
+          playerKnowledge[playerId] = {
+            ...knowledge,
+            customTypesByPokemonId: {
+              ...knowledge.customTypesByPokemonId,
+              [live.pokemonId]: live.types,
+            },
+          };
+      }
       const oldLive = previous?.latest.party.find(
         (pokemon) => pokemon.identity === live.identity,
       );

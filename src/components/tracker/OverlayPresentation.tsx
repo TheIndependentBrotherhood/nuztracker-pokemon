@@ -102,7 +102,11 @@ export default function OverlayPresentation({
         {(view?.mode === "live" || view?.mode === "pokemon") && (
           <Box sx={{ width: 400, maxWidth: "100vw" }}>
             {member ? (
-              <FocusCard member={member} gameVersion={data?.gameVersion} />
+              <FocusCard
+                member={member}
+                gameVersion={data?.gameVersion}
+                powerTarget={team?.powerTarget}
+              />
             ) : (
               <Alert severity="info">{t(text.noMatchingMember, lang)}</Alert>
             )}

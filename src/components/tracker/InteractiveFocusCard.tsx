@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import type { Run } from "@/lib/types";
 import type { OverlayMember } from "@/lib/tracker/overlay";
+import type { MovePowerTarget } from "@/lib/tracker/move-power";
 import { viewRunForPlayer, withSpeciesNotes } from "@/lib/tracker/knowledge";
 import { isRandomTypesMode } from "@/lib/capture-types";
 import {
@@ -41,6 +42,7 @@ export default function InteractiveFocusCard({
   opponentLevel,
   onSpriteChange,
   fallback,
+  powerTarget,
 }: {
   run: Run;
   playerId: string;
@@ -48,6 +50,7 @@ export default function InteractiveFocusCard({
   opponentLevel?: number;
   onSpriteChange?: (sprite: CaptureSpriteOption) => void;
   fallback?: ReactNode;
+  powerTarget?: MovePowerTarget;
 }) {
   const { lang } = useLanguage();
   const { updateRun, canEditRun, reportError } = useRunStore();
@@ -117,6 +120,7 @@ export default function InteractiveFocusCard({
           member={member}
           gameVersion={run.gameVersion}
           opponentLevel={opponentLevel}
+          powerTarget={powerTarget}
           onSpriteChange={onSpriteChange}
           actions={
             <Stack spacing={0.25} sx={{ mt: 0.5 }}>

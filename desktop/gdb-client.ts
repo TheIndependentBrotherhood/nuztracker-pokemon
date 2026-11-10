@@ -289,14 +289,19 @@ export class ReadOnlyGdbClient {
     if (
       !Number.isSafeInteger(address) ||
       !Number.isSafeInteger(length) ||
-      address < 0x02000000 ||
       length < 1 ||
       length > 16384 ||
-      address + length > 0x03000000
+      !(
+        (address >= 0x02000000 && address + length <= 0x03000000) ||
+        (address === 0x04000130 && length === 2)
+      )
     ) {
-      throw new Error("Only bounded NDS main-memory reads are allowed.");
+      throw new Error(
+        "Only bounded NDS main-memory reads and the two-byte keypad register are allowed.",
+      );
     }
-    if (!this.isReady) throw new Error("The MelonDS GDB connection is not ready.");
+    if (!this.isReady)
+      throw new Error("The MelonDS GDB connection is not ready.");
     const result: Buffer[] = [];
     for (let offset = 0; offset < length; offset += this.readChunkSize) {
       const size = Math.min(this.readChunkSize, length - offset);

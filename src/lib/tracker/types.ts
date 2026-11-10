@@ -67,6 +67,8 @@ export interface LivePokemon {
   stats?: Record<string, number>;
   // Only while the Pokémon is on the field in battle.
   statStages?: StatStages;
+  /** In-battle weight in hectograms, as used by weight-based moves. */
+  weight?: number;
   moves: LiveMove[];
   // Level of every level-up move of the species, read from the ROM (randomizer-aware).
   learnLevels?: number[];
@@ -97,6 +99,15 @@ export interface BattleOpponent {
   statStages?: StatStages;
   learnLevels?: number[];
   evolutions?: LiveEvolution[];
+  weight?: number;
+  /** Only moves actually revealed during this battle, never the hidden moveset. */
+  movePp?: RevealedMovePp[];
+}
+
+export interface RevealedMovePp {
+  id: number;
+  pp: number;
+  maxPp: number;
 }
 
 export interface GameObservation {
@@ -113,6 +124,30 @@ export interface GameObservation {
   move?: Pick<LiveMove, "type" | "category" | "power" | "accuracy">;
 }
 
+export type EncounterMethod =
+  "grass" | "surf" | "old-rod" | "good-rod" | "super-rod";
+/** Grass slots that only apply at a time of day, during a swarm, with the Poké Radar or a GBA cartridge. */
+export type EncounterCondition =
+  | "morning"
+  | "day"
+  | "night"
+  | "swarm"
+  | "radar"
+  | "ruby"
+  | "sapphire"
+  | "emerald"
+  | "firered"
+  | "leafgreen";
+/** One species of a map's wild table; `rate` is the sum of its slot chances, in percent. */
+export interface ZoneEncounter {
+  method: EncounterMethod;
+  condition?: EncounterCondition;
+  pokemonId: number;
+  rate: number;
+  minLevel: number;
+  maxLevel: number;
+}
+
 export interface GameFrame {
   protocolVersion: 1;
   connector: string;
@@ -121,13 +156,21 @@ export interface GameFrame {
   frame: number;
   game: GameIdentity;
   party: LivePokemon[];
-  location?: { id: string; name?: string };
+  location?: {
+    id: string;
+    name?: string;
+    // Maps sharing a wild table share this id; absent when the connector cannot read the ROM tables.
+    encounterTableId?: number;
+    encounters?: ZoneEncounter[];
+  };
   battle?: {
     id: string;
     kind: "wild" | "trainer";
     opponents: BattleOpponent[];
     activePlayerIdentity?: string;
     activePlayerIdentities?: string[];
+    allies?: BattleOpponent[];
+    isDouble?: boolean;
   };
   observations: GameObservation[];
   stateLoaded?: boolean;
@@ -178,6 +221,7 @@ export interface PlayerTracking {
     gameKey: string;
     locationId: string;
     locationName?: string;
+    encounterTableId?: number;
     pokemonId: number;
     level: number;
     observedAt: number;
@@ -271,6 +315,7 @@ export type DesktopEvent =
   | { type: "record"; record: RunRecord }
   | { type: "deleted"; runId: string }
   | { type: "status"; status: DesktopStatus }
+  | { type: "battle-focus"; runId: string; playerId: string; battleId: string }
   | { type: "error"; message: string };
 
 export interface HostRoomOptions {

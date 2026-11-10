@@ -13,6 +13,7 @@ import {
   reviveCapture,
 } from "../src/lib/tracker/run-rules";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
+import { opponentMember } from "../src/lib/tracker/overlay";
 import {
   getZoneOutcomeForPlayer,
   soulLinkCaptureSlot,
@@ -95,6 +96,53 @@ test("conflicting edits and attempts to modify another player are rejected", () 
         after: changed,
       }),
     /Conflicting changes/,
+  );
+});
+
+test("random types read from the party are shared with opponents of the same species, including after an evolution", () => {
+  const initial = record();
+  initial.run.isRandomMode = true;
+  initial.run.randomizerOptions = {
+    randomizeTypes: true,
+    randomizeAbilities: false,
+    randomizeEncounters: false,
+    randomizeEvolvedForms: true,
+    randomizeStats: false,
+  };
+  const first = frame();
+  first.party[0].types = ["ice"];
+  let current = ingestFrame(initial, "solo", first, pokemon, 100);
+  current = linkPokemon(
+    current,
+    {
+      runId: current.run.id,
+      playerId: "solo",
+      identity: first.party[0].identity,
+      zoneId: "route-1",
+    },
+    pokemon,
+    101,
+  );
+  assert.deepEqual(
+    current.run.playerKnowledge?.solo.customTypesByPokemonId?.[1],
+    ["ice"],
+  );
+  const evolved = frame(2);
+  evolved.party[0].pokemonId = 387;
+  evolved.party[0].types = ["ice", "rock"];
+  current = ingestFrame(current, "solo", evolved, pokemon, 102);
+  assert.deepEqual(current.run.zones[0].captures[0].customTypes, [
+    "ice",
+    "rock",
+  ]);
+  assert.deepEqual(
+    opponentMember(
+      current.run,
+      "solo",
+      { identity: "wild", pokemonId: 387, level: 5 },
+      pokemon(387),
+    ).types,
+    ["ice", "rock"],
   );
 });
 

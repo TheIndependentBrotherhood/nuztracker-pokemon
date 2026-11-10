@@ -19,6 +19,7 @@ export default function WorkspaceProvider({
     receiveRecord,
     receiveDeleted,
     setDesktopStatus,
+    receiveBattleFocus,
   } = useRunStore();
 
   useEffect(() => {
@@ -33,6 +34,9 @@ export default function WorkspaceProvider({
         case "status":
           setDesktopStatus(event.status);
           break;
+        case "battle-focus":
+          receiveBattleFocus(event);
+          break;
         case "error":
           reportError(new Error(event.message));
           break;
@@ -40,7 +44,14 @@ export default function WorkspaceProvider({
     });
     void loadRuns();
     return unsubscribe;
-  }, [loadRuns, receiveRecord, receiveDeleted, setDesktopStatus, reportError]);
+  }, [
+    loadRuns,
+    receiveRecord,
+    receiveDeleted,
+    setDesktopStatus,
+    receiveBattleFocus,
+    reportError,
+  ]);
 
   return (
     <>

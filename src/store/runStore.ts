@@ -24,7 +24,11 @@ import {
 } from "@/lib/tracker/knowledge";
 import { importAsCopies } from "@/lib/tracker/archive";
 import { validationMessage } from "@/lib/tracker/schema";
-import type { DesktopStatus, RunRecord } from "@/lib/tracker/types";
+import type {
+  DesktopEvent,
+  DesktopStatus,
+  RunRecord,
+} from "@/lib/tracker/types";
 
 export { deriveZoneStatus, applySoulLinkDeaths } from "@/lib/tracker/run-rules";
 
@@ -51,6 +55,10 @@ interface RunStore {
   pending: number;
   error: string | null;
   desktopStatus: DesktopStatus | null;
+  battleFocusInput?: Extract<DesktopEvent, { type: "battle-focus" }>;
+  receiveBattleFocus: (
+    input: Extract<DesktopEvent, { type: "battle-focus" }>,
+  ) => void;
   loadRuns: () => Promise<void>;
   setCurrentRun: (run: Run | null) => void;
   setPlayer: (runId: string, playerId: string) => void;
@@ -133,6 +141,7 @@ export const useRunStore = create<RunStore>((set, get) => {
     pending: 0,
     error: null,
     desktopStatus: null,
+    receiveBattleFocus: (input) => set({ battleFocusInput: { ...input } }),
 
     reportError: (error) => {
       console.error("Tracker operation failed:", error);

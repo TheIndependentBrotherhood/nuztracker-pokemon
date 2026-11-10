@@ -4,10 +4,16 @@ import {
   type GameFrame,
   type LivePokemon,
   type StatStages,
+  type ZoneEncounter,
 } from "../src/lib/tracker/types";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { sharedGdbClient, type ReadOnlyGdbClient } from "./gdb-client";
 import { NdsRom } from "./nds-rom";
+import { MelonDsInput, SAMPLE_INTERVAL_MS } from "./melonds-input";
+import {
+  loadPlatinumEncounters,
+  type PlatinumEncounterTable,
+} from "./platinum-encounters";
 import { decodePk4, SnapshotError, type DecodedPk4 } from "./pk4";
 import {
   loadPlatinumData,
@@ -73,6 +79,7 @@ const BATTLE_COPY_BACK_FRAMES = 600;
 // The overworld re-encrypts party records across frame boundaries, so a record can need a few tries.
 const RECORD_ATTEMPTS = 4;
 const UNSTABLE_REPORT_MS = 5000;
+const FRAME_INTERVAL_MS = 250;
 const TRANSIENT_ERROR_REPORT_MS = 2500;
 const POKE_BALL_POCKET_OFFSET = 0xd00;
 const POKE_BALL_POCKET_SLOTS = 15;
@@ -111,6 +118,8 @@ interface BattleRead {
   team: Map<string, DecodedPk4>;
   /** Stat stages of the player's Pokémon currently on the field. */
   playerStages: Map<string, StatStages>;
+  playerWeights: Map<string, number>;
+  ownedPositions: { position: number; identity: string }[];
   side?: number;
   warning?: string;
   verify: { child: number; system: number };
@@ -121,6 +130,7 @@ interface BattleRead {
     moveId: number;
   };
   usedMoves: { identity: string; pokemonId: number; moveId: number }[];
+  battleMons: Buffer;
   revealedAbilities: {
     identity: string;
     pokemonId: number;
@@ -132,6 +142,7 @@ interface OpponentMoves {
   species: number;
   moves: number[];
   pp: number[];
+  revealed: Set<number>;
 }
 
 export class PlatinumReader {
@@ -144,6 +155,7 @@ export class PlatinumReader {
     id: string;
     side?: number;
     activeIdentity?: string;
+    ownedPositions: { position: number; identity: string }[];
   };
   private afterBattle?: {
     savedParty: string;
@@ -163,16 +175,34 @@ export class PlatinumReader {
     private readonly enrich: (pokemon: DecodedPk4) => LivePokemon,
     private readonly maps: string[],
     private readonly battleData?: PlatinumBattleData,
+    private readonly encounters?: (
+      map: number,
+    ) => PlatinumEncounterTable | undefined,
   ) {}
 
   static async create(
-    memory: ReadOnlyGdbClient,
+    memory: Pick<ReadOnlyGdbClient, "readMemory">,
     rom: NdsRom,
     maps: string[],
     moveNames?: VanillaMoveNames,
   ): Promise<PlatinumReader> {
     const data = await loadPlatinumData(rom, moveNames);
-    return new PlatinumReader(memory, rom, data.enrich, maps, data.battle);
+    let encounters:
+      ((map: number) => PlatinumEncounterTable | undefined) | undefined;
+    try {
+      encounters = await loadPlatinumEncounters(rom);
+    } catch (error) {
+      // Zone encounter counts are optional; the tracker keeps working without them.
+      console.warn("Wild encounter tables are unavailable:", error);
+    }
+    return new PlatinumReader(
+      memory,
+      rom,
+      data.enrich,
+      maps,
+      data.battle,
+      encounters,
+    );
   }
 
   private async u32(address: number): Promise<number> {
@@ -298,6 +328,12 @@ export class PlatinumReader {
     const warnings: string[] = [];
     let team: Map<string, DecodedPk4> | undefined;
     if (battle) {
+      battle.usedMoves = this.usedOpponentMoves(
+        battle.verify.system,
+        stateLoaded,
+        battle.battleMons,
+        [...battle.battle.opponents, ...(battle.battle.allies ?? [])],
+      );
       team = battle.team;
       this.afterBattle = {
         savedParty,
@@ -345,11 +381,17 @@ export class PlatinumReader {
       party: decoded.map((pokemon) => {
         const live = this.enrich(pokemon);
         const statStages = battle?.playerStages.get(live.identity);
-        return statStages ? { ...live, statStages } : live;
+        const weight = battle?.playerWeights.get(live.identity);
+        return {
+          ...live,
+          ...(statStages ? { statStages } : {}),
+          ...(weight ? { weight } : {}),
+        };
       }),
       location: {
         id: `platinum-${map}`,
         name: this.maps[map] ?? `Platinum map #${map}`,
+        ...this.zoneEncounters(map),
       },
       ...(battle ? { battle: battle.battle } : {}),
       ...(pokeBalls === undefined ? {} : { pokeBalls }),
@@ -419,6 +461,7 @@ export class PlatinumReader {
         id: battle.battle.id,
         side: battle.side,
         activeIdentity: battle.battle.activePlayerIdentity,
+        ownedPositions: battle.ownedPositions,
       };
     }
     return { frame, layout };
@@ -489,15 +532,27 @@ export class PlatinumReader {
         identity: `${hex(pid)}-${hex(mon.readUInt32LE(0x74))}`,
         gender: genders[mon[BATTLE_MON_GENDER] & 0x0f],
         stages: battleStatStages(mon),
+        weight: mon.readInt32LE(0x20),
+        transformed: Boolean(
+          mon.readUInt32LE(BATTLE_MON_VOLATILE) & VOLATILE_CONDITION_TRANSFORM,
+        ),
       };
     });
     const previous =
       !stateLoaded && this.battleState?.system === system
         ? this.battleState
         : undefined;
-    const ours = battlers.filter(
-      (battler) => battler.visible && savedIdentities.has(battler.identity),
-    );
+    const ours = battlers.flatMap((battler) => {
+      if (!battler.visible) return [];
+      const identity = savedIdentities.has(battler.identity)
+        ? battler.identity
+        : battler.transformed
+          ? previous?.ownedPositions.find(
+              (entry) => entry.position === battler.index,
+            )?.identity
+          : undefined;
+      return identity ? [{ ...battler, identity }] : [];
+    });
     // Battlers 0/2 and 1/3 share a side; in link battles the local player may be on either.
     const side =
       type & BATTLE_LINK
@@ -555,7 +610,24 @@ export class PlatinumReader {
         }
       }
     }
-    const opponents =
+    const visibleParticipant = (battler: (typeof battlers)[number]) => {
+      const learnLevels = this.battleData?.learnLevels(battler.species);
+      const evolutions = this.battleData?.evolutions(battler.species);
+      return {
+        identity: `${hex(battler.pid)}-${battler.index}`,
+        pokemonId: battler.species,
+        level: battler.level,
+        position: battler.index,
+        ...(battler.gender ? { gender: battler.gender } : {}),
+        ...(battler.stages ? { statStages: battler.stages } : {}),
+        ...(battler.weight > 0 && battler.weight <= 1000000
+          ? { weight: battler.weight }
+          : {}),
+        ...(learnLevels ? { learnLevels } : {}),
+        ...(evolutions ? { evolutions } : {}),
+      };
+    };
+    const opponents: FrameBattle["opponents"] =
       side === undefined
         ? []
         : battlers
@@ -565,20 +637,20 @@ export class PlatinumReader {
                 !battler.fainted &&
                 (battler.index & 1) !== side,
             )
-            .map((battler) => {
-              const learnLevels = this.battleData?.learnLevels(battler.species);
-              const evolutions = this.battleData?.evolutions(battler.species);
-              return {
-                identity: `${hex(battler.pid)}-${battler.index}`,
-                pokemonId: battler.species,
-                level: battler.level,
-                position: battler.index,
-                ...(battler.gender ? { gender: battler.gender } : {}),
-                ...(battler.stages ? { statStages: battler.stages } : {}),
-                ...(learnLevels ? { learnLevels } : {}),
-                ...(evolutions ? { evolutions } : {}),
-              };
-            });
+            .map(visibleParticipant);
+    const allies: FrameBattle["opponents"] =
+      side === undefined
+        ? []
+        : battlers
+            .filter(
+              (battler) =>
+                battler.visible &&
+                !battler.fainted &&
+                (battler.index & 1) === side &&
+                !ours.some((owned) => owned.index === battler.index) &&
+                !(activeIdentity && !active && battler.index === side),
+            )
+            .map(visibleParticipant);
     const kind = type & BATTLE_TRAINER ? "trainer" : "wild";
     // Wild encounters keep the same id when a save state replays the same Pokemon.
     const id =
@@ -608,7 +680,10 @@ export class PlatinumReader {
         )
       : undefined;
     const revealedAbilities = opponents.flatMap((opponent) => {
-      const abilityId = revealed?.[opponent.position] ?? 0;
+      const abilityId =
+        opponent.position === undefined
+          ? 0
+          : (revealed?.[opponent.position] ?? 0);
       return abilityId >= 1 &&
         abilityId <= (this.battleData?.maxAbilityId ?? MAX_ABILITY_ID)
         ? [
@@ -620,16 +695,12 @@ export class PlatinumReader {
           ]
         : [];
     });
-    const usedMoves = this.usedOpponentMoves(
-      system,
-      stateLoaded,
-      mons,
-      opponents,
-    );
     return {
       battle: {
         id,
         kind,
+        ...(battlerCount === 4 ? { isDouble: true } : {}),
+        ...(allies.length ? { allies } : {}),
         ...(activeIdentity ? { activePlayerIdentity: activeIdentity } : {}),
         ...(activeIdentities.length
           ? { activePlayerIdentities: activeIdentities }
@@ -644,13 +715,42 @@ export class PlatinumReader {
             : [],
         ),
       ),
+      playerWeights: new Map(
+        ours
+          .filter(
+            (battler) =>
+              !battler.fainted &&
+              battler.weight > 0 &&
+              battler.weight <= 1000000,
+          )
+          .map((battler) => [battler.identity, battler.weight]),
+      ),
+      ownedPositions: ours.map((battler) => ({
+        position: battler.index,
+        identity: battler.identity,
+      })),
       side,
       verify: { child, system },
       ...(warning ? { warning } : {}),
       ...(effectiveness ? { effectiveness } : {}),
-      usedMoves,
+      usedMoves: [],
+      battleMons: mons,
       revealedAbilities,
     };
+  }
+
+  private zoneEncounters(map: number): {
+    encounterTableId?: number;
+    encounters?: ZoneEncounter[];
+  } {
+    try {
+      const table = this.encounters?.(map);
+      return table && table.encounters.length
+        ? { encounterTableId: table.id, encounters: table.encounters }
+        : {};
+    } catch {
+      return {};
+    }
   }
 
   // A drop in an opponent's PP means the game executed that move; its hidden moveset is never reported.
@@ -664,7 +764,6 @@ export class PlatinumReader {
       this.opponentMoves.clear();
     this.opponentMovesSystem = system;
     const used: BattleRead["usedMoves"] = [];
-    const current = new Map<string, OpponentMoves>();
     for (const opponent of opponents) {
       const index = opponent.position ?? 1;
       const mon = mons.subarray(
@@ -672,37 +771,57 @@ export class PlatinumReader {
         (index + 1) * BATTLE_MON_SIZE,
       );
       // Transform copies the target's moves, which are not this species' moves.
-      if (mon.readUInt32LE(BATTLE_MON_VOLATILE) & VOLATILE_CONDITION_TRANSFORM)
+      if (
+        mon.readUInt32LE(BATTLE_MON_VOLATILE) & VOLATILE_CONDITION_TRANSFORM
+      ) {
+        this.opponentMoves.delete(opponent.identity);
         continue;
+      }
+      const previous = this.opponentMoves.get(opponent.identity);
       const entry: OpponentMoves = {
         species: opponent.pokemonId,
         moves: [0, 1, 2, 3].map((slot) =>
           mon.readUInt16LE(BATTLE_MON_MOVES + slot * 2),
         ),
         pp: [0, 1, 2, 3].map((slot) => mon[BATTLE_MON_PP + slot]),
+        revealed:
+          previous?.species === opponent.pokemonId
+            ? new Set(previous.revealed)
+            : new Set(),
       };
-      current.set(opponent.identity, entry);
-      const previous = this.opponentMoves.get(opponent.identity);
-      if (
-        !previous ||
-        previous.species !== entry.species ||
-        previous.moves.some((move, slot) => move !== entry.moves[slot])
-      )
-        continue;
+      this.opponentMoves.set(opponent.identity, entry);
+      const comparable =
+        previous &&
+        previous.species === entry.species &&
+        previous.moves.every((move, slot) => move === entry.moves[slot]);
       entry.moves.forEach((moveId, slot) => {
         if (
+          comparable &&
           moveId >= 1 &&
           moveId <= (this.battleData?.maxMoveId ?? MAX_MOVE_ID) &&
           entry.pp[slot] < previous.pp[slot]
-        )
+        ) {
+          entry.revealed.add(moveId);
           used.push({
             identity: opponent.identity,
             pokemonId: opponent.pokemonId,
             moveId,
           });
+        }
       });
+      const movePp = entry.moves.flatMap((moveId, slot) => {
+        const basePp = this.battleData?.move(moveId)?.basePp;
+        const uniqueSlot =
+          entry.moves.indexOf(moveId) === entry.moves.lastIndexOf(moveId);
+        return uniqueSlot &&
+          entry.revealed.has(moveId) &&
+          basePp &&
+          entry.pp[slot] <= basePp
+          ? [{ id: moveId, pp: entry.pp[slot], maxPp: basePp }]
+          : [];
+      });
+      if (movePp.length) opponent.movePp = movePp;
     }
-    this.opponentMoves = current;
     return used;
   }
 
@@ -792,14 +911,18 @@ export class MelonDsConnector {
     onFrame: (frame: GameFrame, layout: PlatinumLayout) => void,
     onError: (error: unknown, disconnected: boolean) => void,
     moveNames?: VanillaMoveNames,
+    onStart?: (battleId: string) => void,
   ): Promise<void> {
     this.rom = await NdsRom.open(path);
     try {
       if (this.stopped) throw new Error("MelonDS connection cancelled.");
       // Stopping the connector keeps this connection open so that reconnecting does not need a MelonDS reset.
       const memory = sharedGdbClient(port);
+      const input = new MelonDsInput(memory, (battleId) => {
+        if (!this.stopped) onStart?.(battleId);
+      });
       const reader = await PlatinumReader.create(
-        memory,
+        input,
         this.rom,
         maps,
         moveNames,
@@ -808,13 +931,28 @@ export class MelonDsConnector {
       await memory.connect(port, { signal: this.cancel.signal });
       if (this.stopped) throw new Error("MelonDS connection cancelled.");
       let unstableSince: number | undefined;
+      let sampling = false;
+      let lastFrameAt = -Infinity;
       const poll = async () => {
-        let delay = 250;
+        let delay = FRAME_INTERVAL_MS;
         try {
+          // Between battle frames only the keypad register is read, so short Start presses are not missed.
+          if (sampling && Date.now() - lastFrameAt < FRAME_INTERVAL_MS) {
+            await input.sample();
+            delay = SAMPLE_INTERVAL_MS;
+            return;
+          }
           const { frame, layout } = await reader.read();
+          lastFrameAt = Date.now();
+          const battleId = frame.stateLoaded ? undefined : frame.battle?.id;
+          input.setBattle(battleId);
+          sampling = Boolean(battleId);
+          if (sampling) delay = SAMPLE_INTERVAL_MS;
           unstableSince = undefined;
           if (!this.stopped) onFrame(frame, layout);
         } catch (error) {
+          input.setBattle(undefined);
+          sampling = false;
           if (error instanceof SnapshotError) {
             // Records being rewritten are expected for a moment; only a lasting inconsistency is reported.
             unstableSince ??= Date.now();

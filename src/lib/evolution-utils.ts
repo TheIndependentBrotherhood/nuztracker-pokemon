@@ -93,9 +93,7 @@ export function createEvolvedCapture(
     // Keep track of the original captured species for genealogy tracking
     originalCapturedPokemonId:
       originalCapture.originalCapturedPokemonId || originalCapture.pokemon.id,
-    // Inherit custom types from the species defaults if they exist
-    customTypes:
-      customTypesByPokemonId?.[newPokemon.id] ||
-      customTypesByPokemonId?.[originalCapture.pokemon.id],
+    // Random types belong to each species: an evolution never inherits its pre-evolution's types.
+    customTypes: customTypesByPokemonId?.[newPokemon.id],
   };
 }

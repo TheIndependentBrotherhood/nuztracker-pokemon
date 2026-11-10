@@ -376,18 +376,50 @@ export class TrackerService {
     };
     this.emit({ type: "status", status: this.status });
     try {
-      await connector.start(rom.path, input.port, this.platinumMaps, (frame, layout) => {
-        if (this.melonDs !== connector) return;
-        if (this.statusValue.bridge.runId !== input.runId || this.statusValue.bridge.playerId !== input.playerId)
-          throw new Error("The tracker binding changed. Disconnect and reconnect MelonDS.");
-        this.ingest(frame, "melonds");
-        this.statusValue.melonDs = { ...this.statusValue.melonDs!, state: "tracking", layout };
-        this.emit({ type: "status", status: this.status });
-      }, (error, disconnected) => {
-        if (this.melonDs !== connector) return;
-        this.statusValue.melonDs = { ...this.statusValue.melonDs!, state: disconnected ? "disconnected" : "waiting" };
-        this.reportBridgeError(error);
-      }, this.vanillaMoveNames);
+      await connector.start(
+        rom.path,
+        input.port,
+        this.platinumMaps,
+        (frame, layout) => {
+          if (this.melonDs !== connector) return;
+          if (
+            this.statusValue.bridge.runId !== input.runId ||
+            this.statusValue.bridge.playerId !== input.playerId
+          )
+            throw new Error(
+              "The tracker binding changed. Disconnect and reconnect MelonDS.",
+            );
+          this.ingest(frame, "melonds");
+          this.statusValue.melonDs = {
+            ...this.statusValue.melonDs!,
+            state: "tracking",
+            layout,
+          };
+          this.emit({ type: "status", status: this.status });
+        },
+        (error, disconnected) => {
+          if (this.melonDs !== connector) return;
+          this.statusValue.melonDs = {
+            ...this.statusValue.melonDs!,
+            state: disconnected ? "disconnected" : "waiting",
+          };
+          this.reportBridgeError(error);
+        },
+        this.vanillaMoveNames,
+        (battleId) => {
+          if (this.melonDs !== connector) return;
+          const tracking = this.database.require(input.runId).tracking[
+            input.playerId
+          ];
+          if (!tracking?.suspended && tracking?.latest.battle?.id === battleId)
+            this.emit({
+              type: "battle-focus",
+              runId: input.runId,
+              playerId: input.playerId,
+              battleId,
+            });
+        },
+      );
       return this.status;
     } catch (error) {
       if (this.melonDs === connector) {

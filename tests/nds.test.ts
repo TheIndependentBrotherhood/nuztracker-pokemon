@@ -545,10 +545,34 @@ const syntheticBattleData: PlatinumBattleData = {
   move: (id) =>
     (
       ({
-        5: { type: "normal", category: "physical", power: 80, accuracy: 85 },
-        45: { type: "normal", category: "status", power: 0, accuracy: 100 },
-        52: { type: "fire", category: "special", power: 40, accuracy: 100 },
-        89: { type: "ground", category: "physical", power: 100, accuracy: 100 },
+        5: {
+          type: "normal",
+          category: "physical",
+          power: 80,
+          accuracy: 85,
+          basePp: 20,
+        },
+        45: {
+          type: "normal",
+          category: "status",
+          power: 0,
+          accuracy: 100,
+          basePp: 40,
+        },
+        52: {
+          type: "fire",
+          category: "special",
+          power: 40,
+          accuracy: 100,
+          basePp: 25,
+        },
+        89: {
+          type: "ground",
+          category: "physical",
+          power: 100,
+          accuracy: 100,
+          basePp: 10,
+        },
       }) as const
     )[id as 5 | 45 | 52 | 89],
   speciesTypes: (species) =>
@@ -617,6 +641,33 @@ test("Platinum reports opponent moves from PP drops and their ROM learnset level
     [{ kind: "move", pokemonId: 48, moveId: 52, value: "Ember" }],
   );
   assert.equal(used.observations[0].encounterId, used.battle?.id);
+  assert.deepEqual(used.battle?.opponents[0].movePp, [
+    { id: 52, pp: 24, maxPp: 25 },
+  ]);
+  battle.ram[enemy + 0x2c] = 22;
+  assert.deepEqual(
+    (await read()).battle?.opponents[0].movePp,
+    [{ id: 52, pp: 22, maxPp: 25 }],
+    "Pressure and missed polls do not lose PP deductions.",
+  );
+  battle.ram[enemy + 0x2c] = 25;
+  assert.deepEqual(
+    (await read()).battle?.opponents[0].movePp,
+    [{ id: 52, pp: 25, maxPp: 25 }],
+    "PP recovery updates only an already revealed move.",
+  );
+  battle.ram.writeUInt32LE(0x87654321, enemy + 0x68);
+  assert.equal(
+    (await read()).battle?.opponents[0].movePp,
+    undefined,
+    "Another individual of the same species has not revealed its moves.",
+  );
+  battle.ram.writeUInt32LE(0x12345678, enemy + 0x68);
+  assert.deepEqual(
+    (await read()).battle?.opponents[0].movePp,
+    [{ id: 52, pp: 25, maxPp: 25 }],
+    "A returning individual retains only its own revelations.",
+  );
   assert.deepEqual(
     (await read()).observations,
     [],
@@ -636,6 +687,62 @@ test("Platinum reports opponent moves from PP drops and their ROM learnset level
     (await read()).observations,
     [],
     "A loaded state never reports a PP difference as a used move.",
+  );
+  assert.equal((await read()).battle?.opponents[0].movePp, undefined);
+  battle.ram[enemy + 0x2c] = 9;
+  assert.ok((await read()).battle?.opponents[0].movePp);
+  battle.ram.writeUInt32LE(0, 0x3104);
+  assert.equal((await read()).battle, undefined);
+  battle.ram.writeUInt32LE(battle.child, 0x3104);
+  assert.equal(
+    (await read()).battle?.opponents[0].movePp,
+    undefined,
+    "Ending a battle clears current-battle revelations.",
+  );
+  battle.ram.writeUInt16LE(52, enemy + 0x0e);
+  battle.ram[enemy + 0x2d] = 25;
+  await read();
+  battle.ram[enemy + 0x2d] = 24;
+  assert.equal(
+    (await read()).battle?.opponents[0].movePp,
+    undefined,
+    "Copied duplicate move slots never publish ambiguous PP or duplicate move IDs.",
+  );
+});
+
+test("Platinum exposes battle weight and visible NPC allies without hidden HP or stats", async () => {
+  const battle = platinumBattleRam(0x4b, syntheticBattleData);
+  const context = battle.at(0x02020000);
+  const mons = context + 0x2d80;
+  battle.ram.writeUInt32LE(4, battle.at(battle.system + 0x44));
+  battle.battler(2, 4, 12, 0x11111111);
+  battle.battler(3, 7, 12, 0x22222222);
+  battle.ram.writeInt32LE(600, mons + 0x20);
+  battle.ram.writeInt32LE(300, mons + 0xc0 + 0x20);
+  const first = (await battle.reader.read()).frame;
+  assert.equal(first.party[0].weight, 600);
+  assert.equal(first.battle?.opponents[0].weight, 300);
+  assert.equal(first.battle?.isDouble, true);
+  assert.equal(first.battle?.allies?.[0].pokemonId, 4);
+  assert.equal(first.battle?.allies?.[0].position, 2);
+  for (const participant of [
+    ...first.battle!.opponents,
+    ...first.battle!.allies!,
+  ]) {
+    assert.equal("hp" in participant, false);
+    assert.equal("stats" in participant, false);
+    assert.equal("moves" in participant, false);
+  }
+  battle.battler(0, 132, 12, 0x55555555);
+  battle.ram.writeUInt32LE(1 << 21, mons + 0x70);
+  const transformed = (await battle.reader.read()).frame;
+  assert.deepEqual(transformed.battle?.activePlayerIdentities, [
+    "8000000f-f123abcd",
+  ]);
+  assert.equal(
+    transformed.battle?.allies?.length,
+    1,
+    "A transformed owned Pokemon never becomes a second NPC ally.",
   );
 });
 
@@ -956,10 +1063,16 @@ test("real TCP GDB parsing handles fragmented packets, no-ack negotiation and re
     );
     await assert.rejects(client.readMemory(0x08000000, 4), /bounded/);
     await assert.rejects(client.readMemory(0x02000000, 16385), /bounded/);
+    assert.deepEqual(
+      await client.readMemory(0x04000130, 2),
+      memoryBytes(0x04000130, 2),
+    );
+    await assert.rejects(client.readMemory(0x04000130, 4), /bounded/);
+    await assert.rejects(client.readMemory(0x04000132, 2), /bounded/);
     assert.ok(server.commands.includes("QStartNoAckMode"));
     assert.equal(
       server.commands.filter((command) => command.startsWith("m")).length,
-      2,
+      3,
     );
     assert.ok(
       server.commands.every(

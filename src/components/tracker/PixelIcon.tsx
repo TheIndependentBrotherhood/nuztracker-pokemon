@@ -51,6 +51,43 @@ export const SKULL_ICON = [
   "0111110",
   "0101010",
 ];
+// Map marker with a hole, like a Google Maps pin.
+export const MAP_PIN_ICON = [
+  "0111110",
+  "1110111",
+  "1101011",
+  "1110111",
+  "0111110",
+  "0011100",
+  "0001000",
+];
+export const GRASS_ICON = [
+  "0001000",
+  "1001001",
+  "0101010",
+  "0101010",
+  "1011101",
+  "0111110",
+  "1111111",
+];
+export const SURF_ICON = [
+  "0011000",
+  "0100100",
+  "1000110",
+  "0000000",
+  "0110011",
+  "1001100",
+  "0000000",
+];
+export const ROD_ICON = [
+  "0000011",
+  "0000101",
+  "0001001",
+  "0010001",
+  "0100001",
+  "1000010",
+  "0000010",
+];
 
 export default function PixelIcon({
   rows,

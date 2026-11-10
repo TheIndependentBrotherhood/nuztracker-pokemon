@@ -22,6 +22,7 @@ import { useGameText } from "@/lib/game-text";
 import { hpColor } from "@/lib/tracker/hp";
 import { HIDDEN_POWER_MOVE_ID } from "@/lib/tracker/hidden-power";
 import { evolutionSummary } from "@/lib/tracker/evolution";
+import { movePower, type MovePowerTarget } from "@/lib/tracker/move-power";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t, type Lang } from "@/i18n/translations";
 import PixelIcon, {
@@ -411,12 +412,14 @@ export default function FocusCard({
   onSpriteChange,
   actions,
   opponentLevel,
+  powerTarget,
 }: {
   member: OverlayMember;
   gameVersion?: GameVersionId;
   onSpriteChange?: (sprite: CaptureSpriteOption) => void;
   actions?: ReactNode;
   opponentLevel?: number;
+  powerTarget?: MovePowerTarget;
 }) {
   const { lang } = useLanguage();
   const gameText = useGameText();
@@ -525,9 +528,10 @@ export default function FocusCard({
           ? { ...move, type: hiddenPower.type, power: hiddenPower.power }
           : move,
       )
-    : (member.seenMoves ?? []).map(
-        (id) => member.customSeen?.moves[id] ?? { id, pp: 0 },
-      );
+    : (member.seenMoves ?? []).map((id) => ({
+        ...(member.customSeen?.moves[id] ?? { id, pp: 0 }),
+        ...member.movePp?.find((move) => move.id === id),
+      }));
 
   const statValue = (stat: string) =>
     live
@@ -1057,6 +1061,20 @@ export default function FocusCard({
               accuracy: move.accuracy,
             };
             const typeColor = word.type ? typeColors[word.type] : undefined;
+            const power = movePower(
+              { ...move, ...word },
+              {
+                types: member.types,
+                generation,
+                hp: live?.hp,
+                maxHp: live?.maxHp,
+                friendship,
+                abilityId: live?.customAbility ? undefined : live?.abilityId,
+                hiddenPowerKnown: Boolean(hiddenPower),
+                target: powerTarget,
+              },
+            );
+            const powerValue = power.power ?? (power.variable ? "?" : "—");
             const tooltip = (
               <TooltipBody
                 title={word.name}
@@ -1067,12 +1085,21 @@ export default function FocusCard({
                   ]
                     .filter(Boolean)
                     .join(" · "),
-                  `${t(text.powerFull, lang)} ${word.power || "—"} · ${t(text.accuracyFull, lang)} ${word.accuracy || "—"}`,
+                  `${t(text.powerFull, lang)} ${powerValue} · ${t(text.accuracyFull, lang)} ${word.accuracy || "—"}`,
+                  power.stab
+                    ? `${power.basePower} × ${live?.abilityId === 88 && !live.customAbility ? 2 : 1.5} STAB = ${power.power}`
+                    : undefined,
+                  power.variable
+                    ? "Contextual base power for the next use. Unknown inputs stay hidden."
+                    : undefined,
                   word.description,
                 ]}
               />
             );
             const low = move.maxPp && move.pp * 4 <= move.maxPp;
+            const knownPp =
+              !seenOnly ||
+              Boolean(member.movePp?.some((entry) => entry.id === move.id));
             return [
               <Hint key={`${slot}-name`} title={tooltip}>
                 <Box
@@ -1097,7 +1124,7 @@ export default function FocusCard({
                 key={`${slot}-pp`}
                 sx={{
                   textAlign: "right",
-                  color: seenOnly
+                  color: !knownPp
                     ? muted
                     : move.pp === 0
                       ? "#ef4444"
@@ -1106,11 +1133,19 @@ export default function FocusCard({
                         : "#c6d4e1",
                 }}
               >
-                {seenOnly ? "—" : move.pp}
-                {!seenOnly && move.maxPp ? `/${move.maxPp}` : ""}
+                {knownPp ? move.pp : "—"}
+                {knownPp && move.maxPp ? `/${move.maxPp}` : ""}
               </Box>,
-              <Box key={`${slot}-power`} sx={{ textAlign: "right" }}>
-                {word.power || "—"}
+              <Box
+                key={`${slot}-power`}
+                data-testid="focus-move-power"
+                data-stab={power.stab}
+                sx={{
+                  textAlign: "right",
+                  color: power.stab ? "#7bd88f" : undefined,
+                }}
+              >
+                {powerValue}
               </Box>,
               <Box key={`${slot}-accuracy`} sx={{ textAlign: "right" }}>
                 {word.accuracy || "—"}
