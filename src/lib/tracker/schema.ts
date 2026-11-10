@@ -399,6 +399,7 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
     frame: timestamp,
     game: gameIdentitySchema,
     party: z.array(livePokemonSchema).max(6),
+    storage: z.array(livePokemonSchema).max(30).optional(),
     location: z
       .object({
         id,

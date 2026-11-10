@@ -146,6 +146,8 @@ export interface GameFrame {
   frame: number;
   game: GameIdentity;
   party: LivePokemon[];
+  /** Wild Pokémon met in a battle and found in a PC box: caught while the party was full. */
+  storage?: LivePokemon[];
   location?: {
     id: string;
     name?: string;

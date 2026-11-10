@@ -344,6 +344,30 @@ test("a caught wild Pokémon is linked to the zone of its wild battle", () => {
   assert.equal(current.run.team.length, 2);
 });
 
+test("a wild Pokémon sent to the PC is linked to the zone of its wild battle", () => {
+  let current = wildRun();
+  const battle = frame(2);
+  battle.location = { id: "map-Route-201", name: "Route 201" };
+  battle.battle = {
+    id: "battle-2",
+    kind: "wild",
+    opponents: [{ identity: "0000abcd-1", pokemonId: 2, level: 3 }],
+  };
+  current = ingestFrame(current, "solo", battle, pokemon, 102);
+  const stored = frame(3);
+  stored.storage = [
+    { ...stored.party[0], identity: "0000abcd-00000123", pokemonId: 2 },
+    { ...stored.party[0], identity: "0000beef-00000123", pokemonId: 2 },
+  ];
+  current = ingestFrame(current, "solo", stored, pokemon, 103);
+  const route = current.run.zones.find(
+    (zone) => zone.id === "sinnoh-route-201-area",
+  )!;
+  assert.equal(route.captures[0]?.gameIdentity, "0000abcd-00000123");
+  assert.equal(route.captures[0]?.isDead, false);
+  assert.deepEqual(current.tracking.solo.pendingPokemon, []);
+});
+
 test("doubtful captures stay pending with a reason and a suggestion", () => {
   let current = withWildCapture(wildRun(), "Route 201", "0000abcd", 2);
   current = withWildCapture(current, "Route 201", "0000beef", 4);

@@ -4,7 +4,17 @@ import { createServer, type Socket } from "node:net";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decodePk4, readShinyThreshold, SnapshotError } from "../desktop/pk4";
+import {
+  decodeBoxPk4,
+  decodePk4,
+  isEmptyBoxRecord,
+  levelFromExperience,
+  maxHpFor,
+  readShinyThreshold,
+  SnapshotError,
+  type BoxRecordInput,
+  type BoxStatsResolver,
+} from "../desktop/pk4";
 import { readGen4Message } from "../desktop/nds-text";
 import {
   closeSharedGdbClients,
@@ -53,6 +63,56 @@ test("PK4 decoding covers all shuffle indices, encryption flags, unsigned identi
   assert.throws(() => decodePk4(pk4Fixture(0, { hp: 31 })), /HP/);
   assert.throws(() => decodePk4(pk4Fixture(0, { species: 500 })), /species/);
   assert.equal(decodePk4(pk4Fixture(0, { hp: 0 }))?.pokemon.status, "fainted");
+});
+
+test("PC box records rebuild level and full HP from the ROM without revealing stats", () => {
+  const inputs: BoxRecordInput[] = [];
+  const resolve: BoxStatsResolver = (input) => {
+    inputs.push(input);
+    return { level: 12, maxHp: 30 };
+  };
+  for (let shuffle = 0; shuffle < 32; shuffle++) {
+    const full = pk4Fixture(shuffle, { hp: 0 });
+    const decoded = decodeBoxPk4(full.subarray(0, 136), resolve)!;
+    assert.equal(decoded.pokemon.pokemonId, 25);
+    assert.equal(
+      decoded.pokemon.identity,
+      decodePk4(pk4Fixture(shuffle))!.pokemon.identity,
+    );
+    assert.deepEqual(
+      [decoded.pokemon.level, decoded.pokemon.hp, decoded.pokemon.maxHp],
+      [12, 30, 30],
+    );
+    assert.equal(decoded.pokemon.status, "healthy");
+    assert.equal(decoded.pokemon.stats, undefined);
+    assert.equal(
+      decodeBoxPk4(
+        pk4Fixture(shuffle, { egg: true }).subarray(0, 136),
+        resolve,
+      ),
+      null,
+    );
+  }
+  assert.equal(inputs[0].species, 25);
+  assert.throws(() => decodeBoxPk4(pk4Fixture(), resolve), /136/);
+  assert.throws(
+    () => decodeBoxPk4(pk4Fixture().subarray(0, 136), () => undefined),
+    /personal-data/,
+  );
+  assert.equal(isEmptyBoxRecord(Buffer.alloc(136)), true);
+  assert.equal(isEmptyBoxRecord(pk4Fixture().subarray(0, 136)), false);
+
+  assert.equal(levelFromExperience(0, 999), 9);
+  assert.equal(levelFromExperience(0, 1000), 10);
+  assert.equal(levelFromExperience(0, 1_000_000), 100);
+  assert.equal(levelFromExperience(3, 0), 1);
+  assert.equal(levelFromExperience(3, 135), 5);
+  assert.equal(levelFromExperience(1, 600_000), 100);
+  assert.equal(levelFromExperience(2, 1_640_000), 100);
+  assert.equal(levelFromExperience(5, 1_250_000), 100);
+  assert.equal(levelFromExperience(9, 1000), undefined);
+  assert.equal(maxHpFor(25, 35, 31, 252, 50), 142);
+  assert.equal(maxHpFor(292, 1, 31, 252, 50), 1);
 });
 
 test("Shiny threshold follows the ROM shiny check rewritten by randomizers", () => {
@@ -230,7 +290,11 @@ test("Platinum reads guarded standard and Project PM parties, real frame counter
   }
 });
 
-function platinumBattleRam(type = 0, battleData?: PlatinumBattleData) {
+function platinumBattleRam(
+  type = 0,
+  battleData?: PlatinumBattleData,
+  boxStats?: BoxStatsResolver,
+) {
   const ram = Buffer.alloc(0x400000);
   const at = (address: number) => address - 0x02000000;
   const root = 0x02010000,
@@ -310,6 +374,8 @@ function platinumBattleRam(type = 0, battleData?: PlatinumBattleData) {
     (decoded) => decoded.pokemon,
     ["", "", "", "Jubilife City"],
     battleData,
+    undefined,
+    boxStats,
   );
   return {
     ram,
@@ -327,6 +393,46 @@ function platinumBattleRam(type = 0, battleData?: PlatinumBattleData) {
     },
   };
 }
+
+test("Platinum finds a wild Pokémon caught with a full party in the PC boxes, current box first", async () => {
+  const battle = platinumBattleRam(0, undefined, () => ({
+    level: 3,
+    maxHp: 14,
+  }));
+  const { ram, at, root, reader, battler, addresses } = battle;
+  battler(1, 48, 3, 0x8000200f);
+  ram.writeUInt32LE(2, at(root + 0xcf40));
+  const box = (index: number, slot: number) =>
+    at(root + 0xcf44 + index * 30 * 136 + slot * 136);
+  pk4Fixture(2, { species: 48 }).subarray(0, 136).copy(ram, box(2, 0));
+  pk4Fixture(1, { species: 48 }).subarray(0, 136).copy(ram, box(2, 5));
+  assert.equal((await reader.read()).frame.storage, undefined);
+  ram.writeUInt32LE(0x02099998, at(0x02003000 + 0x0c));
+  addresses.length = 0;
+  const { frame } = await reader.read();
+  assert.equal(frame.battle, undefined);
+  assert.deepEqual(
+    frame.storage?.map((pokemon) => [
+      pokemon.identity,
+      pokemon.pokemonId,
+      pokemon.level,
+      pokemon.hp,
+      pokemon.maxHp,
+    ]),
+    [["8000200f-f123abcd", 48, 3, 14, 14]],
+  );
+  assert.equal(frame.storage?.[0].stats, undefined);
+  assert.ok(addresses.includes(root + 0xcf44 + 2 * 30 * 136));
+  addresses.length = 0;
+  await reader.read();
+  assert.ok(
+    addresses.every(
+      (address) =>
+        address < root + 0xcf44 || address >= root + 0xcf44 + 18 * 30 * 136,
+    ),
+    "A finished search reads no more boxes.",
+  );
+});
 
 test("Platinum battles use the player's battle party copy and only the opponents shown on screen", async () => {
   const battle = platinumBattleRam();

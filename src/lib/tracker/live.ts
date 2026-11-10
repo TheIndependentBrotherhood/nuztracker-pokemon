@@ -248,6 +248,21 @@ export function ingestFrame(
       }
     }
   }
+  // A wild Pokémon sent straight to the PC never joins the party: it is linked like a party newcomer.
+  const wildPids = new Set(
+    seenEncounters
+      .filter((entry) => entry.gameKey === gameKey(frame.game))
+      .map((entry) => opponentPid(entry.id)),
+  );
+  for (const pokemon of frame.storage ?? []) {
+    if (
+      !pokemon.isEgg &&
+      !capturedIds.has(pokemon.identity) &&
+      !ignored.has(pokemon.identity) &&
+      wildPids.has(pokemon.identity.split("-")[0])
+    )
+      pending.set(pokemon.identity, pokemon);
+  }
 
   let next: RunRecord = {
     ...record,

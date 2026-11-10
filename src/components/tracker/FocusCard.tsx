@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactElement, type ReactNode } from "react";
+import {
+  Fragment,
+  useEffect,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { Box, Tooltip, Typography } from "@mui/material";
 import { learnProgress, type OverlayMember } from "@/lib/tracker/overlay";
 import {
@@ -498,6 +504,37 @@ export default function FocusCard({
   const stageEntries = STAT_STAGE_NAMES.flatMap((stat) =>
     stages?.[stat] ? [[stat, stages[stat]] as const] : [],
   );
+  // Accuracy and evasion sit at the end of the ability and item rows so the stats column never grows.
+  const stageColumn = stageEntries.some(
+    ([stat]) => stat !== "accuracy" && stat !== "evasion",
+  );
+  const accuracyEvasionMark = (stat: "accuracy" | "evasion") =>
+    stages?.[stat] ? (
+      <Box
+        data-testid={`focus-${stat}`}
+        sx={{
+          flex: "none",
+          display: "flex",
+          alignItems: "center",
+          gap: 0.4,
+          fontSize: "0.65rem",
+          fontWeight: 700,
+          lineHeight: 1.6,
+          color: muted,
+        }}
+      >
+        {t(text.stats[stat], lang)}
+        <StageMark stage={stages[stat]} />
+      </Box>
+    ) : null;
+  const withMarks = (row: ReactNode, ...stats: ("accuracy" | "evasion")[]) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      <Box sx={{ flex: 1, minWidth: 0 }}>{row}</Box>
+      {stats.map((stat) => (
+        <Fragment key={stat}>{accuracyEvasionMark(stat)}</Fragment>
+      ))}
+    </Box>
+  );
   const evolutions = live?.evolutions ?? member.evolutions;
   const species = useSpeciesNames(Boolean(evolutions?.length));
   const evolution = evolutionSummary(
@@ -794,48 +831,65 @@ export default function FocusCard({
                   </Hint>
                 )}
               </Box>
-              {detail(
-                t(text.ability, lang),
-                ability?.name ?? live.ability,
-                ability && (
-                  <TooltipBody
-                    title={ability.name}
-                    lines={[ability.description]}
-                  />
+              {withMarks(
+                detail(
+                  t(text.ability, lang),
+                  ability?.name ?? live.ability,
+                  ability && (
+                    <TooltipBody
+                      title={ability.name}
+                      lines={[ability.description]}
+                    />
+                  ),
                 ),
+                "accuracy",
               )}
-              {detail(
-                t(text.item, lang),
-                item?.name ?? live.heldItem ?? t(text.noItem, lang),
-                item && (
-                  <TooltipBody title={item.name} lines={[item.description]} />
+              {withMarks(
+                detail(
+                  t(text.item, lang),
+                  item?.name ?? live.heldItem ?? t(text.noItem, lang),
+                  item && (
+                    <TooltipBody title={item.name} lines={[item.description]} />
+                  ),
                 ),
+                "evasion",
               )}
             </>
           ) : (
             <>
               {seenAbilities.length > 0 &&
-                detail(
-                  t(text.ability, lang),
-                  seenAbilities.map((ability) => ability.name).join(" / "),
-                  <TooltipBody
-                    title={t(text.revealedAbility, lang)}
-                    lines={seenAbilities.map((ability) =>
-                      ability.description
-                        ? text.abilityLine[lang](
-                            ability.name,
-                            ability.description,
-                          )
-                        : ability.name,
-                    )}
-                  />,
+                withMarks(
+                  detail(
+                    t(text.ability, lang),
+                    seenAbilities.map((ability) => ability.name).join(" / "),
+                    <TooltipBody
+                      title={t(text.revealedAbility, lang)}
+                      lines={seenAbilities.map((ability) =>
+                        ability.description
+                          ? text.abilityLine[lang](
+                              ability.name,
+                              ability.description,
+                            )
+                          : ability.name,
+                      )}
+                    />,
+                  ),
+                  "accuracy",
                 )}
-              <Typography sx={{ fontSize: "0.68rem", color: "#b8c7d5" }}>
-                {t(
-                  opponentLevel === undefined ? text.manual : text.opponentInfo,
-                  lang,
-                )}
-              </Typography>
+              {/* Opponents have no item row: evasion (and accuracy without an ability row) follow the info line. */}
+              {withMarks(
+                <Typography sx={{ fontSize: "0.68rem", color: "#b8c7d5" }}>
+                  {t(
+                    opponentLevel === undefined
+                      ? text.manual
+                      : text.opponentInfo,
+                    lang,
+                  )}
+                </Typography>,
+                ...(seenAbilities.length > 0
+                  ? (["evasion"] as const)
+                  : (["accuracy", "evasion"] as const)),
+              )}
             </>
           )}
         </Box>
@@ -872,9 +926,7 @@ export default function FocusCard({
             data-testid="focus-stats"
             sx={{
               display: "grid",
-              gridTemplateColumns: stageEntries.length
-                ? "auto auto auto"
-                : "auto auto",
+              gridTemplateColumns: stageColumn ? "auto auto auto" : "auto auto",
               columnGap: 0.75,
               fontSize: "0.68rem",
               lineHeight: 1.45,
@@ -920,7 +972,7 @@ export default function FocusCard({
                     </Box>
                   )}
                 </Box>,
-                ...(stageEntries.length
+                ...(stageColumn
                   ? [
                       <StageMark
                         key={`${stat}-stage`}
@@ -934,28 +986,13 @@ export default function FocusCard({
                   : []),
               ];
             })}
-            {(["accuracy", "evasion"] as const).map((stat) =>
-              stages?.[stat]
-                ? [
-                    <Box
-                      key={`${stat}-label`}
-                      component="span"
-                      sx={{ color: muted }}
-                    >
-                      {t(text.stats[stat], lang)}
-                    </Box>,
-                    <span key={`${stat}-value`} />,
-                    <StageMark key={`${stat}-stage`} stage={stages[stat]} />,
-                  ]
-                : null,
-            )}
             <Box component="span" sx={{ color: muted }}>
               {t(text.stats.total, lang)}
             </Box>
             <Box component="span" sx={{ textAlign: "right", fontWeight: 700 }}>
               {member.bst || "?"}
             </Box>
-            {stageEntries.length > 0 && <span />}
+            {stageColumn && <span />}
           </Box>
         </Hint>
       </Box>

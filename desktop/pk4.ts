@@ -149,9 +149,45 @@ export function decodeGen4Text(data: Buffer): string | undefined {
   return result.join("").trim() || undefined;
 }
 
-export function decodePk4(data: Buffer): DecodedPk4 | null {
-  if (data.length !== 236)
-    throw new Error("A Platinum party record must contain 236 bytes.");
+/** Stat order of Gen 4 IVs, EVs and personal base stats. */
+export const PK4_STATS = [
+  "hp",
+  "attack",
+  "defense",
+  "speed",
+  "special-attack",
+  "special-defense",
+] as const;
+
+/** Values a box record lacks, rebuilt from the ROM's personal data. */
+export interface BoxRecordInput {
+  species: number;
+  form: number;
+  experience: number;
+  nature: number;
+  ivs: number[];
+  evs: number[];
+}
+export interface BoxRecordStats {
+  level: number;
+  maxHp: number;
+}
+export type BoxStatsResolver = (
+  input: BoxRecordInput,
+) => BoxRecordStats | undefined;
+
+interface Pk4Tail {
+  level: number;
+  hp: number;
+  maxHp: number;
+  status: number;
+  stats?: LivePokemon["stats"];
+}
+
+function decodeRecord(
+  data: Buffer,
+  tailOf: (core: BoxRecordInput, personality: number) => Pk4Tail,
+): DecodedPk4 | null {
   const personality = data.readUInt32LE(0);
   const flags = data.readUInt16LE(4);
   if (flags & ~3)
@@ -178,11 +214,18 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
   const species = growth.readUInt16LE(0);
   if (species < 1 || species > 493)
     throw new Error("This ROM's party species layout is not supported.");
-  const tail =
-    flags & 1 ? data.subarray(136) : cryptPk4(data.subarray(136), personality);
-  const level = tail[4];
-  const hp = tail.readUInt16LE(6);
-  const maxHp = tail.readUInt16LE(8);
+  const experience = growth.readUInt32LE(8);
+  const { level, hp, maxHp, status, stats } = tailOf(
+    {
+      species,
+      form: attacks[24] >>> 3,
+      experience,
+      nature: personality % 25,
+      ivs: PK4_STATS.map((_, index) => (ivs >>> (index * 5)) & 31),
+      evs: PK4_STATS.map((_, index) => growth[16 + index]),
+    },
+    personality,
+  );
   if (!level || level > 100 || !maxHp || maxHp > 9999 || hp > maxHp)
     throw new SnapshotError(
       "Pokemon level or HP changed during the read. No partial team was sent.",
@@ -192,7 +235,6 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
   const name = hasNickname
     ? decodeGen4Text(block("C").subarray(0, 22))
     : undefined;
-  const status = tail.readUInt32LE(0);
   const gender = (attacks[24] >>> 1) & 3;
   const shinyValue =
     (personality & 0xffff) ^
@@ -242,9 +284,28 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
       isShiny: shinyValue < VANILLA_SHINY_THRESHOLD,
       gender: gender === 0 ? "male" : gender === 1 ? "female" : "unknown",
       nature: natures[personality % 25],
-      experience: growth.readUInt32LE(8),
+      experience,
       friendship: growth[12],
       hiddenPower: hiddenPowerFromIvs(ivs & 0x3fffffff),
+      ...(stats ? { stats } : {}),
+      moves,
+    },
+  };
+}
+
+export function decodePk4(data: Buffer): DecodedPk4 | null {
+  if (data.length !== 236)
+    throw new Error("A Platinum party record must contain 236 bytes.");
+  return decodeRecord(data, (_, personality) => {
+    const tail =
+      data.readUInt16LE(4) & 1
+        ? data.subarray(136)
+        : cryptPk4(data.subarray(136), personality);
+    return {
+      level: tail[4],
+      hp: tail.readUInt16LE(6),
+      maxHp: tail.readUInt16LE(8),
+      status: tail.readUInt32LE(0),
       stats: {
         attack: tail.readUInt16LE(10),
         defense: tail.readUInt16LE(12),
@@ -252,7 +313,84 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
         "special-attack": tail.readUInt16LE(16),
         "special-defense": tail.readUInt16LE(18),
       },
-      moves,
-    },
-  };
+    };
+  });
+}
+
+/** True for an empty PC slot, which the game leaves zeroed. */
+export function isEmptyBoxRecord(data: Buffer): boolean {
+  return (
+    data.readUInt32LE(0) === 0 &&
+    data.readUInt16LE(4) === 0 &&
+    data.readUInt16LE(6) === 0
+  );
+}
+
+/**
+ * PC boxes keep 136-byte records without the battle part: level and HP are rebuilt from the ROM.
+ * Stored Pokémon are always healed, so their HP is full.
+ */
+export function decodeBoxPk4(
+  data: Buffer,
+  resolve: BoxStatsResolver,
+): DecodedPk4 | null {
+  if (data.length !== 136)
+    throw new Error("A Platinum box record must contain 136 bytes.");
+  return decodeRecord(data, (core) => {
+    const computed = resolve(core);
+    if (!computed)
+      throw new Error("This ROM's personal-data table is unsupported.");
+    return { ...computed, hp: computed.maxHp, status: 0 };
+  });
+}
+
+const cube = (level: number) => level ** 3;
+// Gen 4 growth rates, by the personal-data index.
+const growthCurves: ((level: number) => number)[] = [
+  cube,
+  (n) =>
+    n <= 50
+      ? (cube(n) * (100 - n)) / 50
+      : n <= 68
+        ? (cube(n) * (150 - n)) / 100
+        : n <= 98
+          ? (cube(n) * Math.floor((1911 - 10 * n) / 3)) / 500
+          : (cube(n) * (160 - n)) / 100,
+  (n) =>
+    n <= 15
+      ? (cube(n) * (Math.floor((n + 1) / 3) + 24)) / 50
+      : n <= 36
+        ? (cube(n) * (n + 14)) / 50
+        : (cube(n) * (Math.floor(n / 2) + 32)) / 50,
+  (n) => (6 * cube(n)) / 5 - 15 * n * n + 100 * n - 140,
+  (n) => (4 * cube(n)) / 5,
+  (n) => (5 * cube(n)) / 4,
+];
+
+/** Level reached with this experience on a growth rate; undefined for an unknown rate. */
+export function levelFromExperience(
+  growthRate: number,
+  experience: number,
+): number | undefined {
+  const curve = growthCurves[growthRate];
+  if (!curve) return undefined;
+  let level = 1;
+  while (level < 100 && Math.floor(curve(level + 1)) <= experience) level++;
+  return level;
+}
+
+/** Gen 3+ HP formula; Shedinja (species 292) always has 1 HP. */
+export function maxHpFor(
+  species: number,
+  baseHp: number,
+  iv: number,
+  ev: number,
+  level: number,
+): number {
+  if (species === 292) return 1;
+  return (
+    Math.floor(((2 * baseHp + iv + Math.floor(ev / 4)) * level) / 100) +
+    level +
+    10
+  );
 }

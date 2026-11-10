@@ -14,7 +14,14 @@ import {
   loadPlatinumEncounters,
   type PlatinumEncounterTable,
 } from "./platinum-encounters";
-import { decodePk4, SnapshotError, type DecodedPk4 } from "./pk4";
+import {
+  decodeBoxPk4,
+  decodePk4,
+  isEmptyBoxRecord,
+  SnapshotError,
+  type BoxStatsResolver,
+  type DecodedPk4,
+} from "./pk4";
 import {
   loadPlatinumData,
   type PlatinumBattleData,
@@ -84,6 +91,19 @@ const TRANSIENT_ERROR_REPORT_MS = 2500;
 const POKE_BALL_POCKET_OFFSET = 0xd00;
 const POKE_BALL_POCKET_SLOTS = 15;
 const MAX_ITEM_ID = 0x3ff;
+// PC storage follows the general save block (save offset 0xCF2C, mapped 0x14 after the party root):
+// the current box index, then 18 boxes of 30 records of 136 bytes.
+const CURRENT_BOX_OFFSET = 0xcf40;
+const BOXES_OFFSET = 0xcf44;
+const BOX_COUNT = 18;
+const BOX_SLOTS = 30;
+const BOX_RECORD_SIZE = 136;
+const BOX_SIZE = BOX_SLOTS * BOX_RECORD_SIZE;
+// A wild Pokémon caught with a full party goes to the current box, or the next one with room.
+// Every box is read twice, one per poll, so a capture saved late is still found.
+const STORAGE_SEARCH_PASSES = 2;
+// A Pokémon found in a box is reported for about a minute; the tracker keeps it pending afterwards.
+const STORED_REPORT_FRAMES = 3600;
 const partyChanged = () =>
   new SnapshotError(
     "The party changed while reading. Waiting for a consistent snapshot.",
@@ -169,6 +189,11 @@ export class PlatinumReader {
   // Opponent moves and PP from the previous poll, keyed by battle system and battler identity.
   private opponentMoves = new Map<string, OpponentMoves>();
   private opponentMovesSystem?: number;
+  // Personality values of wild opponents met in the current battle.
+  private wildPids = new Set<number>();
+  // After a wild battle, boxes still to read for opponents that may have been sent to the PC.
+  private storageSearch?: { pids: Set<number>; boxes?: number[] };
+  private stored = new Map<string, { pokemon: LivePokemon; until: number }>();
   constructor(
     private readonly memory: Pick<ReadOnlyGdbClient, "readMemory">,
     private readonly rom: Pick<NdsRom, "gameCode" | "revision" | "romHash">,
@@ -178,6 +203,7 @@ export class PlatinumReader {
     private readonly encounters?: (
       map: number,
     ) => PlatinumEncounterTable | undefined,
+    private readonly boxStats?: BoxStatsResolver,
   ) {}
 
   static async create(
@@ -202,6 +228,7 @@ export class PlatinumReader {
       maps,
       data.battle,
       encounters,
+      data.boxStats,
     );
   }
 
@@ -225,6 +252,63 @@ export class PlatinumReader {
       total += count;
     }
     return total;
+  }
+
+  /**
+   * Reads one PC box per poll after a wild battle, looking for its opponents: a Pokémon caught with
+   * a full party never joins the party, so the box is the only place it shows up.
+   */
+  private async searchStorage(
+    root: number,
+    counter: number,
+    party: DecodedPk4[],
+  ): Promise<void> {
+    const search = this.storageSearch;
+    if (!search || !this.boxStats) return;
+    for (const pokemon of party) search.pids.delete(pokemon.personality);
+    if (!search.pids.size) {
+      this.storageSearch = undefined;
+      return;
+    }
+    if (!search.boxes) {
+      const current = await this.u32(root + CURRENT_BOX_OFFSET);
+      const first = current < BOX_COUNT ? current : 0;
+      search.boxes = Array.from(
+        { length: BOX_COUNT * STORAGE_SEARCH_PASSES },
+        (_, index) => (first + index) % BOX_COUNT,
+      );
+    }
+    const box = search.boxes.shift();
+    if (box === undefined) {
+      this.storageSearch = undefined;
+      return;
+    }
+    const data = await this.memory.readMemory(
+      root + BOXES_OFFSET + box * BOX_SIZE,
+      BOX_SIZE,
+    );
+    for (let slot = 0; slot < BOX_SLOTS; slot++) {
+      const raw = data.subarray(
+        slot * BOX_RECORD_SIZE,
+        (slot + 1) * BOX_RECORD_SIZE,
+      );
+      if (isEmptyBoxRecord(raw) || !search.pids.has(raw.readUInt32LE(0)))
+        continue;
+      try {
+        const decoded = decodeBoxPk4(raw, this.boxStats);
+        if (!decoded) continue;
+        search.pids.delete(decoded.personality);
+        this.stored.set(decoded.pokemon.identity, {
+          pokemon: this.enrich(decoded),
+          until: counter + STORED_REPORT_FRAMES,
+        });
+      } catch (error) {
+        // The game was writing the box: read it again on a later poll.
+        if (error instanceof SnapshotError) search.boxes.push(box);
+        else throw error;
+      }
+    }
+    if (!search.pids.size) this.storageSearch = undefined;
   }
 
   // Every record is fetched with one GDB request, which MelonDS answers from a single emulated
@@ -314,6 +398,13 @@ export class PlatinumReader {
     const pokeBalls = await this.readPokeBalls(root);
     const stateLoaded =
       this.previousFrame !== undefined && counter < this.previousFrame;
+    if (stateLoaded) {
+      this.wildPids.clear();
+      this.storageSearch = undefined;
+      this.stored.clear();
+    }
+    for (const [identity, entry] of this.stored)
+      if (counter > entry.until) this.stored.delete(identity);
     let battle = await this.readBattle(
       globalFields.readUInt32LE(0),
       root,
@@ -335,6 +426,9 @@ export class PlatinumReader {
         [...battle.battle.opponents, ...(battle.battle.allies ?? [])],
       );
       team = battle.team;
+      if (battle.battle.kind === "wild")
+        for (const opponent of battle.battle.opponents)
+          this.wildPids.add(parseInt(opponent.identity.slice(0, 8), 16));
       this.afterBattle = {
         savedParty,
         team,
@@ -348,6 +442,16 @@ export class PlatinumReader {
       this.typeShiftedSystem = undefined;
       this.opponentMoves.clear();
       this.opponentMovesSystem = undefined;
+      if (this.wildPids.size) {
+        this.storageSearch = {
+          pids: new Set([
+            ...(this.storageSearch?.pids ?? []),
+            ...this.wildPids,
+          ]),
+        };
+        this.wildPids.clear();
+      }
+      await this.searchStorage(root, counter, saved);
       const after = this.afterBattle;
       if (
         after &&
@@ -394,6 +498,13 @@ export class PlatinumReader {
         ...this.zoneEncounters(map),
       },
       ...(battle ? { battle: battle.battle } : {}),
+      ...(this.stored.size
+        ? {
+            storage: [...this.stored.values()]
+              .slice(-30)
+              .map(({ pokemon }) => pokemon),
+          }
+        : {}),
       ...(pokeBalls === undefined ? {} : { pokeBalls }),
       observations: [
         ...(battle?.effectiveness

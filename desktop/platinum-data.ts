@@ -4,7 +4,13 @@ import type {
   LiveMove,
   LivePokemon,
 } from "../src/lib/tracker/types";
-import { readShinyThreshold, type DecodedPk4 } from "./pk4";
+import {
+  levelFromExperience,
+  maxHpFor,
+  readShinyThreshold,
+  type BoxStatsResolver,
+  type DecodedPk4,
+} from "./pk4";
 import { NdsRom } from "./nds-rom";
 import { readGen4Message } from "./nds-text";
 
@@ -387,5 +393,20 @@ export async function loadPlatinumData(
       ...(evolutions ? { evolutions } : {}),
     };
   };
-  return { enrich, battle };
+  const boxStats: BoxStatsResolver = (input) => {
+    const form = forms[input.species];
+    const alternate = Boolean(
+      form && input.form > 0 && input.form <= form.last,
+    );
+    const row =
+      personal[alternate ? form.personal + input.form - 1 : input.species];
+    if (!row || row.length < 44) return undefined;
+    const level = levelFromExperience(row[19], input.experience);
+    if (!level) return undefined;
+    return {
+      level,
+      maxHp: maxHpFor(input.species, row[0], input.ivs[0], input.evs[0], level),
+    };
+  };
+  return { enrich, battle, boxStats };
 }
