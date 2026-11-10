@@ -541,6 +541,7 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
       ignoredIdentities: z.array(id).max(10000),
       zoneMappings: z.record(id, id),
       retiredSessions: z.array(id).max(10000).default([]),
+      pendingGame: gameIdentitySchema.optional(),
       seenEncounters: z
         .array(
           z.object({

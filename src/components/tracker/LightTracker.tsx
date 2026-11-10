@@ -684,7 +684,17 @@ export default function LightTracker() {
                     size="small"
                     disabled={resuming}
                     onClick={() => {
-                      if (!window.confirm(t(text.resumeConfirm, lang))) return;
+                      if (
+                        !window.confirm(
+                          t(
+                            tracking.pendingGame
+                              ? text.romUpdateConfirm
+                              : text.resumeConfirm,
+                            lang,
+                          ),
+                        )
+                      )
+                        return;
                       setResuming(true);
                       void (async () => {
                         try {
@@ -703,12 +713,20 @@ export default function LightTracker() {
                       })();
                     }}
                   >
-                    {t(text.reconcile, lang)}
+                    {t(
+                      tracking.pendingGame ? text.adoptRom : text.reconcile,
+                      lang,
+                    )}
                   </Button>
                 ) : undefined
               }
             >
-              {t(text.pausedReconcile, lang)}
+              {t(
+                tracking.pendingGame
+                  ? text.pausedRomUpdate
+                  : text.pausedReconcile,
+                lang,
+              )}
             </Alert>
           )}
           <FaintedPokemon run={run} compact />

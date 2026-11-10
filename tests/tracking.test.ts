@@ -558,8 +558,10 @@ test("observations survive restart data, remain seed-scoped and never reveal hid
     current.observations.filter((entry) => entry.playerId === "p2").length,
     0,
   );
+  const otherTrainer = frame();
+  otherTrainer.game.trainerId = "999";
   assert.throws(
-    () => ingestFrame(current, "p1", other, pokemon),
+    () => ingestFrame(current, "p1", otherTrainer, pokemon),
     /does not match/,
   );
   assert.equal(
@@ -580,6 +582,51 @@ test("observations survive restart data, remain seed-scoped and never reveal hid
     }).success,
     false,
   );
+});
+
+test("a patched ROM for the same trainer pauses tracking until it is adopted with its knowledge", () => {
+  const first = frame(1);
+  first.observations = [
+    {
+      id: "move-1",
+      encounterId: "encounter-1",
+      pokemonId: 4,
+      kind: "move",
+      value: "Ember",
+      moveId: 52,
+    },
+  ];
+  let current = ingestFrame(record(), "solo", first, pokemon, 100);
+  const patched = frame(2);
+  patched.game.romHash = "rom-1-patched";
+  current = ingestFrame(current, "solo", patched, pokemon, 101);
+  assert.equal(current.tracking.solo.suspended, true);
+  assert.equal(current.tracking.solo.pendingGame?.romHash, "rom-1-patched");
+  assert.equal(current.tracking.solo.game.romHash, "rom-1");
+  const historyLength = current.history.length;
+  assert.equal(
+    ingestFrame(current, "solo", frame(3), pokemon, 102).history.length,
+    historyLength,
+  );
+  const repeated = frame(3);
+  repeated.game.romHash = "rom-1-patched";
+  assert.equal(
+    ingestFrame(current, "solo", repeated, pokemon, 102).history.length,
+    historyLength,
+  );
+
+  current = resumeTracking(current, "solo", 103);
+  assert.equal(current.tracking.solo.suspended, false);
+  assert.equal(current.tracking.solo.pendingGame, undefined);
+  assert.equal(current.tracking.solo.game.romHash, "rom-1-patched");
+  assert.ok(
+    current.observations.every((entry) => entry.gameKey.includes("patched")),
+  );
+  const next = frame(4);
+  next.game.romHash = "rom-1-patched";
+  next.party[0].level = 6;
+  current = ingestFrame(current, "solo", next, pokemon, 104);
+  assert.equal(current.tracking.solo.latest.party[0].level, 6);
 });
 
 test("save-state rollback pauses mutations and requires explicit reconciliation", () => {

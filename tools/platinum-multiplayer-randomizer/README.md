@@ -60,7 +60,7 @@ To fix a ROM randomized before this rule without re-randomizing it, run from `li
 py -3.11 fix_field_tms.py "<randomized.nds>" "<fixed.nds>" --save "<player1.sav>" --save "<player2.sav>"
 ```
 
-It replaces duplicate field TMs, field TMs given by NPCs and TMs already owned in the given saves (read only), and reports only counts. Give it every player's save so nobody keeps a field TM they already own, then share the fixed `.nds`: existing saves keep working.
+It replaces duplicate field TMs, field TMs given by NPCs and TMs already owned in the given saves (read only), and reports only counts. Give it every player's save so nobody keeps a field TM they already own, then share the fixed `.nds`: existing saves keep working. NuzTracker pauses on the first connection with the fixed ROM (its hash changed); each player clicks **Use the new ROM** in the compact tracker to continue the run.
 
 ## Tests
 

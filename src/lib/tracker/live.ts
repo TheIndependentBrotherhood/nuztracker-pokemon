@@ -27,6 +27,16 @@ export function gameKey(game: GameIdentity): string {
   return `${game.gameCode}.${game.revision}.${game.language}.${game.romHash}.${game.trainerId}`;
 }
 
+function sameGameOnAnotherRom(a: GameIdentity, b: GameIdentity): boolean {
+  return (
+    a.gameCode === b.gameCode &&
+    a.revision === b.revision &&
+    a.language === b.language &&
+    a.trainerId === b.trainerId &&
+    a.romHash !== b.romHash
+  );
+}
+
 export function connectRun(record: RunRecord, playerId: string): RunRecord {
   getPlayerIndex(record.run, playerId);
   const run = isolateKnowledge(record.run, playerId);
@@ -166,6 +176,33 @@ export function ingestFrame(
   const record = connectRun(input, playerId);
   const previous = record.tracking[playerId];
   if (previous && gameKey(previous.game) !== gameKey(frame.game)) {
+    if (sameGameOnAnotherRom(previous.game, frame.game)) {
+      if (
+        previous.pendingGame &&
+        gameKey(previous.pendingGame) === gameKey(frame.game)
+      )
+        return record;
+      return recordSchema.parse(
+        addHistory(
+          {
+            ...record,
+            revision: record.revision + 1,
+            tracking: {
+              ...record.tracking,
+              [playerId]: {
+                ...previous,
+                suspended: true,
+                pendingGame: frame.game,
+              },
+            },
+          },
+          playerId,
+          "connection",
+          "The ROM changed for the same game and trainer. Tracking is paused until the player confirms the updated ROM.",
+          now,
+        ),
+      );
+    }
     throw new Error(
       "The ROM or trainer does not match this run. Create or select another run; existing knowledge was not changed.",
     );
@@ -731,14 +768,35 @@ export function resumeTracking(
   if (!tracking) throw new Error("There is no game state to reconcile.");
   const rest = { ...tracking };
   delete rest.rewindCheckpoint;
+  delete rest.pendingGame;
+  const adopted = tracking.pendingGame;
+  // The patched ROM keeps the run: this player's knowledge moves to the new ROM identity.
+  const oldKey = gameKey(tracking.game);
+  const newKey = adopted && gameKey(adopted);
+  const rekey = <T extends { gameKey: string }>(entry: T): T =>
+    newKey && entry.gameKey === oldKey ? { ...entry, gameKey: newKey } : entry;
   return addHistory(
     {
       ...record,
       revision: record.revision + 1,
+      observations: newKey
+        ? record.observations.map((observation) =>
+            observation.playerId === playerId
+              ? rekey(observation)
+              : observation,
+          )
+        : record.observations,
       tracking: {
         ...record.tracking,
         [playerId]: {
           ...rest,
+          ...(adopted
+            ? {
+                game: adopted,
+                latest: { ...tracking.latest, game: adopted },
+                seenEncounters: tracking.seenEncounters?.map(rekey),
+              }
+            : {}),
           suspended: false,
           pendingPokemon: tracking.pendingPokemon.filter((pokemon) =>
             tracking.latest.party.some(
@@ -750,7 +808,9 @@ export function resumeTracking(
     },
     playerId,
     "connection",
-    "Tracking resumed explicitly. Existing deaths and knowledge were preserved.",
+    adopted
+      ? "Updated ROM adopted explicitly. Existing deaths and knowledge were preserved."
+      : "Tracking resumed explicitly. Existing deaths and knowledge were preserved.",
     now,
   );
 }

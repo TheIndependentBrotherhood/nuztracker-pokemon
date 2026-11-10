@@ -787,6 +787,15 @@ const translations = {
       fr: "Chronologie en pause : l'état chargé contredit l'équipe suivie.",
       en: "Timeline paused: the loaded state contradicts the tracked team.",
     },
+    pausedRomUpdate: {
+      fr: "Suivi en pause : la ROM a changé pour le même jeu et le même dresseur (ROM corrigée ?).",
+      en: "Tracking paused: the ROM changed for the same game and trainer (patched ROM?).",
+    },
+    romUpdateConfirm: {
+      fr: "Continuer cette run avec la nouvelle ROM ? Les morts et découvertes existantes sont conservées. Ne confirme que s'il s'agit de la même run corrigée, pas d'une nouvelle randomisation.",
+      en: "Continue this run with the new ROM? Existing deaths and discoveries will be preserved. Only confirm for a patched copy of the same run, not a new randomization.",
+    },
+    adoptRom: { fr: "Utiliser la nouvelle ROM", en: "Use the new ROM" },
     solo: { fr: "Solo", en: "Solo" },
     map: {
       fr: (name: string) => `Carte : ${name}`,

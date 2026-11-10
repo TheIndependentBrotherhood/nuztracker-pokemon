@@ -207,6 +207,8 @@ export interface PlayerTracking {
   ignoredIdentities: string[];
   zoneMappings: Record<string, string>;
   retiredSessions: string[];
+  // Same game and trainer on a ROM with another hash (e.g. a patched ROM); adopted only once the player resumes.
+  pendingGame?: GameIdentity;
   seenEncounters?: {
     id: string;
     gameKey: string;

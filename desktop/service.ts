@@ -26,6 +26,7 @@ import {
 } from "../src/lib/tracker/schema";
 import {
   connectRun,
+  gameKey,
   materiallyChanged,
   type PokemonResolver,
 } from "../src/lib/tracker/live";
@@ -82,10 +83,17 @@ export class TrackerService {
         ...(binding && database.get(binding.runId) ? binding : {}),
       },
       storagePath: database.path,
-      ...(melonRom ? { melonDs: {
-        romName: melonRom.romName, gameCode: melonRom.gameCode,
-        revision: melonRom.revision, state: "disconnected", attached: false,
-      } as const } : {}),
+      ...(melonRom
+        ? {
+            melonDs: {
+              romName: melonRom.romName,
+              gameCode: melonRom.gameCode,
+              revision: melonRom.revision,
+              state: "disconnected",
+              attached: false,
+            } as const,
+          }
+        : {}),
     };
   }
 
@@ -322,7 +330,9 @@ export class TrackerService {
 
   bindBridge(raw: { runId: string; playerId: string }): DesktopStatus {
     if (this.melonDs)
-      throw new Error("Disconnect the MelonDS reader before binding another connector.");
+      throw new Error(
+        "Disconnect the MelonDS reader before binding another connector.",
+      );
     const binding = bindBridgeSchema.parse(raw);
     const room = this.statusValue.room;
     if (room.runId === binding.runId && room.playerId !== binding.playerId) {
@@ -347,32 +357,54 @@ export class TrackerService {
 
   async selectMelonDsRom(path: string): Promise<void> {
     if (this.stopping) throw new Error("The tracker is shutting down.");
-    if (this.melonDs) throw new Error("Disconnect MelonDS before selecting another ROM.");
+    if (this.melonDs)
+      throw new Error("Disconnect MelonDS before selecting another ROM.");
     const rom = await NdsRom.open(path);
     try {
       if (this.stopping) throw new Error("The tracker is shutting down.");
-      if (this.melonDs) throw new Error("Disconnect MelonDS before selecting another ROM.");
-      const metadata = { romName: basename(path), gameCode: rom.gameCode, revision: rom.revision };
+      if (this.melonDs)
+        throw new Error("Disconnect MelonDS before selecting another ROM.");
+      const metadata = {
+        romName: basename(path),
+        gameCode: rom.gameCode,
+        revision: rom.revision,
+      };
       this.database.writeSetting("melonds-rom", { path, ...metadata });
-      this.statusValue.melonDs = { ...metadata, state: "disconnected", attached: false };
+      this.statusValue.melonDs = {
+        ...metadata,
+        state: "disconnected",
+        attached: false,
+      };
       this.emit({ type: "status", status: this.status });
-    } finally { await rom.close(); }
+    } finally {
+      await rom.close();
+    }
   }
 
-  async connectMelonDs(raw: z.infer<typeof connectMelonDsSchema>): Promise<DesktopStatus> {
+  async connectMelonDs(
+    raw: z.infer<typeof connectMelonDsSchema>,
+  ): Promise<DesktopStatus> {
     if (this.stopping) throw new Error("The tracker is shutting down.");
     const input = connectMelonDsSchema.parse(raw);
-    if (this.melonDs) throw new Error("Disconnect the current MelonDS reader first.");
+    if (this.melonDs)
+      throw new Error("Disconnect the current MelonDS reader first.");
     if (this.database.require(input.runId).run.gameVersion !== "platinum")
-      throw new Error("Select Platinum as this run's game version before connecting.");
+      throw new Error(
+        "Select Platinum as this run's game version before connecting.",
+      );
     const rom = this.database.readSetting("melonds-rom", melonRomSchema);
-    if (!rom) throw new Error("Select the ROM currently loaded in MelonDS first.");
+    if (!rom)
+      throw new Error("Select the ROM currently loaded in MelonDS first.");
     this.bindBridge(input);
     const connector = new MelonDsConnector();
     this.melonDs = connector;
     this.statusValue.melonDs = {
-      romName: rom.romName, gameCode: rom.gameCode, revision: rom.revision,
-      port: input.port, state: "waiting", attached: true,
+      romName: rom.romName,
+      gameCode: rom.gameCode,
+      revision: rom.revision,
+      port: input.port,
+      state: "waiting",
+      attached: true,
     };
     this.emit({ type: "status", status: this.status });
     try {
@@ -447,7 +479,9 @@ export class TrackerService {
 
   ingest(frame: GameFrame, source: "http" | "melonds" = "http"): RunRecord {
     if (this.melonDs && source !== "melonds")
-      throw new Error("Stop the MelonDS reader before using an external connector.");
+      throw new Error(
+        "Stop the MelonDS reader before using an external connector.",
+      );
     const { runId, playerId } = this.statusValue.bridge;
     if (!runId || !playerId)
       throw new Error(
@@ -459,7 +493,9 @@ export class TrackerService {
     if (
       tracking?.retiredSessions.includes(frame.sessionId) ||
       (previous?.sessionId === frame.sessionId &&
-        frame.sequence <= previous.sequence)
+        frame.sequence <= previous.sequence) ||
+      (tracking?.pendingGame &&
+        gameKey(tracking.pendingGame) === gameKey(frame.game))
     )
       return current;
     const observed =
@@ -492,7 +528,11 @@ export class TrackerService {
 
   mapZone(raw: MapZoneInput): RunRecord {
     const input = mapZoneSchema.parse(raw);
-    return this.execute(input.runId, input.playerId, { id: newId(), kind: "map-zone", input });
+    return this.execute(input.runId, input.playerId, {
+      id: newId(),
+      kind: "map-zone",
+      input,
+    });
   }
 
   resumeTracking(raw: { runId: string; playerId: string }): RunRecord {
