@@ -48,6 +48,7 @@
     "hiddenItems": true,
     "fieldTms": "random",
     "specialtyClerks": true,
+    "specialtyClerkStockSize": 10,
     "clerksSellHeldItems": true,
     "gymTypes": "random",
     "eliteFourTypes": "random"

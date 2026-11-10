@@ -1,9 +1,6 @@
-"""NuzTracker extras applied on top of a Project PM randomized Platinum Multiplayer ROM.
+"""NuzTracker extras applied on top of a Project PM randomized Platinum Multiplayer ROM."""
 
-Every table is located from the ROM content instead of fixed offsets, and every patch keeps
-file sizes unchanged, so the NDS file system never has to be rebuilt.
-"""
-
+import hashlib
 import random
 import re
 import struct
@@ -45,6 +42,37 @@ FIELD_POOL = [
     490,
 ]
 REPLACEABLE_ITEMS = set(FIELD_POOL) | {MASTER_BALL, *range(63, 76), *range(93, 107)}
+
+CITY_MARTS = (
+    (9, "Jubilife"),
+    (10, "Oreburgh"),
+    (11, "Floaroma"),
+    (12, "Eterna"),
+    (14, "Hearthome"),
+    (15, "Solaceon"),
+    (16, "Pastoria"),
+    (23, "Celestic"),
+    (24, "Snowpoint"),
+    (25, "Canalave"),
+    (26, "Sunyshore"),
+    (27, "Pokemon League"),
+)
+MART_COUNT = 29
+MART_ANCHORS = {
+    13: (36, 34, 35, 37),
+    17: (17, 26, 25, 24, 28, 18, 22, 19, 20, 21, 27),
+    19: tuple(range(470, 488)),
+    28: (159, 160, 161, 162, 163),
+}
+SHOP_OVERLAY_ID = 7
+SHOP_OVERLAY_RAM = 0x0226AA80
+SHOP_OVERLAY_SIZE = 0x5F40
+SHOP_OVERLAY_BSS = 0x20
+SHOP_OVERLAY_SHA256 = "5dee9a6506d12f161778682f4bb8cca5c70b43347961c665fe326332f1b5b078"
+SHOP_STOCK_MAGIC = b"NZMART01"
+SHOP_STOCK_HEADER = struct.Struct("<8sIIHH")
+MIN_SHOP_STOCK = 8
+MAX_SHOP_STOCK = 32
 
 MAP_HEADER_SIZE = 24
 GYMS = [
@@ -255,66 +283,297 @@ def randomize_hidden_items(rom, rng, items, tm_mode="keep"):
     return f"Hidden items: {changed}/{count} randomized ({tm_note(tm_mode)})."
 
 
-def read_item_list(rom, offset, limit=40):
+def read_item_list(rom, offset, limit=40, end=None):
     result = []
-    while len(result) <= limit:
+    end = len(rom.data) if end is None else min(end, len(rom.data))
+    while len(result) <= limit and 0 <= offset and offset + len(result) * 2 + 2 <= end:
         item = u16(rom.data, offset + len(result) * 2)
         if item == 0xFFFF:
             return result
-        if not 0 < item < 600:
+        if len(result) == limit or not 0 < item < 600:
             return None
         result.append(item)
     return None
 
 
+class ShopOverlay:
+    def __init__(self, rom):
+        data = rom.data
+        self.rom = rom
+        self.fat, fat_size = u32(data, 0x48), u32(data, 0x4C)
+        self.table, self.table_size = u32(data, 0x50), u32(data, 0x54)
+        if (
+            fat_size % 8
+            or self.table_size % 32
+            or self.fat + fat_size > len(data)
+            or self.table + self.table_size > len(data)
+        ):
+            raise RuntimeError("Invalid NDS file or overlay table.")
+        entries = [
+            entry
+            for entry in range(self.table, self.table + self.table_size, 32)
+            if u32(data, entry) == SHOP_OVERLAY_ID
+        ]
+        if len(entries) != 1:
+            raise RuntimeError(f"Expected one shop overlay, found {len(entries)}.")
+        self.entry = entries[0]
+        self.ram = u32(data, self.entry + 4)
+        self.size = u32(data, self.entry + 8)
+        self.bss = u32(data, self.entry + 12)
+        file_id = u32(data, self.entry + 24)
+        if file_id >= fat_size // 8 or data[self.entry + 31] & 1:
+            raise RuntimeError("The shop overlay is compressed or has an invalid file ID.")
+        self.file_entry = self.fat + file_id * 8
+        self.start, self.end = u32(data, self.file_entry), u32(data, self.file_entry + 4)
+        if self.start > self.end or self.end > len(data) or self.end - self.start != self.size:
+            raise RuntimeError("The shop overlay has an unexpected file size.")
+        if self.ram != SHOP_OVERLAY_RAM or self.bss != SHOP_OVERLAY_BSS:
+            raise RuntimeError("The shop overlay has an unsupported memory layout.")
+        self.metadata = self._read_metadata()
+        original_size = self.metadata[0] if self.metadata else self.size
+        if original_size != SHOP_OVERLAY_SIZE:
+            raise RuntimeError("The shop overlay has an unsupported original size.")
+        original = bytes(data[self.start : self.start + original_size])
+        if hashlib.sha256(original).hexdigest() != SHOP_OVERLAY_SHA256:
+            raise RuntimeError("The shop overlay does not match the supported Platinum Multiplayer version.")
+
+    def _read_metadata(self):
+        image = bytes(self.rom.data[self.start : self.end])
+        marker = image.find(SHOP_STOCK_MAGIC)
+        if marker < 0:
+            return None
+        if image.find(SHOP_STOCK_MAGIC, marker + 1) >= 0 or marker + SHOP_STOCK_HEADER.size > len(image):
+            raise RuntimeError("Invalid expanded shop stock metadata.")
+        _, original_size, original_bss, count, stock_size = SHOP_STOCK_HEADER.unpack_from(image, marker)
+        expected_size = marker + SHOP_STOCK_HEADER.size + count * (stock_size + 1) * 2
+        if (
+            marker != original_size + original_bss
+            or original_bss != self.bss
+            or count != len(CITY_MARTS)
+            or not MIN_SHOP_STOCK <= stock_size <= MAX_SHOP_STOCK
+            or expected_size != len(image)
+            or any(image[original_size:marker])
+        ):
+            raise RuntimeError("Invalid expanded shop stock layout.")
+        return original_size, marker, stock_size
+
+    def stock_offset(self, pointer, city_index):
+        if not self.metadata or city_index is None:
+            return None
+        _, marker, stock_size = self.metadata
+        relative = marker + SHOP_STOCK_HEADER.size + city_index * (stock_size + 1) * 2
+        if pointer != self.ram + relative:
+            return None
+        return self.start + relative
+
+
 def find_mart_table(arm9, rom):
     code = arm9.bytes()
-    for start in range(0, len(code) - 4 * 20, 4):
-        lists = []
-        while start + len(lists) * 4 + 4 <= len(code):
-            pointer = u32(code, start + len(lists) * 4)
-            if not arm9.contains_pointer(pointer) or pointer & 1:
-                break
-            stock = read_item_list(rom, arm9.to_rom(pointer))
-            if not stock:
-                break
-            lists.append((arm9.offset + start + len(lists) * 4, arm9.to_rom(pointer), stock))
-        if len(lists) >= 20 and sum(1 for _, _, stock in lists if stock[0] in MAIL) >= 8:
-            return lists
-    raise RuntimeError("The Poke Mart stock table was not found.")
+    overlay = ShopOverlay(rom)
+    city_indices = {index: position for position, (index, _) in enumerate(CITY_MARTS)}
+    anchor_index = 13
+    anchor = struct.pack("<" + "H" * (len(MART_ANCHORS[anchor_index]) + 1), *MART_ANCHORS[anchor_index], 0xFFFF)
+    candidates = []
+    stock_position = code.find(anchor)
+    while stock_position >= 0:
+        pointer = struct.pack("<I", arm9.ram + stock_position)
+        reference = code.find(pointer)
+        while reference >= 0:
+            start = reference - anchor_index * 4
+            if start >= 0 and start % 4 == 0 and start + MART_COUNT * 4 <= len(code):
+                lists = []
+                for index in range(MART_COUNT):
+                    address = u32(code, start + index * 4)
+                    if arm9.contains_pointer(address) and not address & 1:
+                        offset, end, expanded = arm9.to_rom(address), arm9.offset + arm9.size, False
+                    else:
+                        offset = overlay.stock_offset(address, city_indices.get(index))
+                        end = overlay.end
+                        expanded = True
+                    if offset is None:
+                        break
+                    stock = read_item_list(rom, offset, end=end)
+                    if (
+                        not stock
+                        or (expanded and len(stock) != overlay.metadata[2])
+                        or (index in MART_ANCHORS and tuple(stock) != MART_ANCHORS[index])
+                    ):
+                        break
+                    lists.append((arm9.offset + start + index * 4, offset, stock))
+                if len(lists) == MART_COUNT:
+                    candidates.append(lists)
+            reference = code.find(pointer, reference + 1)
+        stock_position = code.find(anchor, stock_position + 1)
+    if len(candidates) != 1:
+        raise RuntimeError(f"Expected one supported Poke Mart stock table, found {len(candidates)}.")
+    return candidates[0]
 
 
-def randomize_marts(rom, rng, items, include_held_items):
-    lists = find_mart_table(Arm9(rom), rom)
+def validate_shop_stock_size(stock_size):
+    if type(stock_size) is not int or not MIN_SHOP_STOCK <= stock_size <= MAX_SHOP_STOCK:
+        raise ValueError(f"extras.specialtyClerkStockSize must be an integer from {MIN_SHOP_STOCK} to {MAX_SHOP_STOCK}.")
+
+
+def shop_item_pool(items, include_held_items):
+    unavailable_stones = [item for item in STONES if not items.sellable(item)]
+    if unavailable_stones:
+        raise RuntimeError(f"Evolution stones are missing or cannot be sold: {unavailable_stones}.")
     pool = [item for item in SHOP_POOL if items.sellable(item)]
     if include_held_items:
         pool += [item for item in HELD_ITEMS if items.sellable(item)]
-    city_marts = [
-        (offset, stock)
-        for _, offset, stock in lists
-        if stock[0] in MAIL or (len(stock) >= 6 and all(2 <= item <= 16 for item in stock))
-    ]
-    mail_slots = sum(1 for _, stock in city_marts for item in stock if item in MAIL)
-    if mail_slots < len(STONES):
-        raise RuntimeError("Not enough specialty clerk mail slots to place every evolution stone.")
-    stones = rng.sample(STONES, len(STONES))
+    return list(dict.fromkeys(pool + STONES))
+
+
+def extend_shop_stocks(stocks, stock_size, pool, rng):
+    validate_shop_stock_size(stock_size)
+    result = []
+    for stock in stocks:
+        if len(stock) > stock_size:
+            raise ValueError("The requested shop stock size would remove existing items.")
+        next_stock = list(stock)
+        if not any(item in STONES for item in next_stock):
+            if len(next_stock) == stock_size:
+                raise ValueError("Cannot guarantee an evolution stone without removing an existing item.")
+            stones = [item for item in STONES if item in pool]
+            if not stones:
+                raise RuntimeError("No sellable evolution stones are available.")
+            next_stock.append(rng.choice(stones))
+        candidates = [item for item in pool if item not in next_stock]
+        additional = stock_size - len(next_stock)
+        if len(candidates) < additional:
+            raise RuntimeError("Not enough distinct sellable items to expand the specialty shops.")
+        result.append(next_stock + rng.sample(candidates, additional))
+    return result
+
+
+def write_expanded_shop_stocks(rom, lists, stocks, stock_size):
+    validate_shop_stock_size(stock_size)
+    if len(stocks) != len(CITY_MARTS) or any(len(stock) != stock_size for stock in stocks):
+        raise ValueError("Each specialty shop must have the requested number of items.")
+    overlay = ShopOverlay(rom)
+    original_size = overlay.metadata[0] if overlay.metadata else overlay.size
+    original = bytes(rom.data[overlay.start : overlay.start + original_size])
+    header = SHOP_STOCK_HEADER.pack(SHOP_STOCK_MAGIC, original_size, overlay.bss, len(stocks), stock_size)
+    payload = b"".join(struct.pack("<" + "H" * (stock_size + 1), *stock, 0xFFFF) for stock in stocks)
+    # The loader clears BSS after the image; zero-fill the original BSS at its linked addresses.
+    image = original + bytes(overlay.bss) + header + payload
+    old_end = overlay.ram + original_size + overlay.bss
+    new_end = overlay.ram + len(image) + overlay.bss
+    if new_end > 0x02400000:
+        raise RuntimeError("Expanded shop overlay exceeds Nintendo DS main memory.")
+    for entry in range(overlay.table, overlay.table + overlay.table_size, 32):
+        if entry == overlay.entry:
+            continue
+        start = u32(rom.data, entry + 4)
+        end = start + u32(rom.data, entry + 8) + u32(rom.data, entry + 12)
+        if start < new_end and end > overlay.ram and not (start < old_end and end > overlay.ram):
+            raise RuntimeError("Expanded shop overlay would overlap another overlay.")
+
+    if overlay.metadata and len(image) <= overlay.end - overlay.start:
+        start = overlay.start
+    else:
+        fat_size = u32(rom.data, 0x4C)
+        last_file = max(u32(rom.data, offset + 4) for offset in range(overlay.fat, overlay.fat + fat_size, 8))
+        used = u32(rom.data, 0x80)
+        if used < last_file or used > len(rom.data):
+            raise RuntimeError("Unexpected NDS used-ROM size.")
+        start = (used + 0x1FF) & ~0x1FF
+        end = start + len(image)
+        if end > len(rom.data) or any(byte != 0xFF for byte in rom.data[start:end]):
+            raise RuntimeError("Not enough unused ROM padding for the expanded shop overlay.")
+
+    rom.write(start, start + len(image), image)
+    rom.write(overlay.file_entry, overlay.file_entry + 8, struct.pack("<II", start, start + len(image)))
+    rom.write(overlay.entry + 8, overlay.entry + 12, struct.pack("<I", len(image)))
+    used = max(u32(rom.data, 0x80), start + len(image))
+    rom.write(0x80, 0x84, struct.pack("<I", used))
+    first_stock = overlay.ram + original_size + overlay.bss + SHOP_STOCK_HEADER.size
+    for position, (index, _) in enumerate(CITY_MARTS):
+        pointer_offset = lists[index][0]
+        pointer = first_stock + position * (stock_size + 1) * 2
+        rom.write(pointer_offset, pointer_offset + 4, struct.pack("<I", pointer))
+
+
+def format_shop_report(items, before, after):
     lines = []
-    for offset, stock in city_marts:
-        used, after = set(), []
-        for slot, item in enumerate(stock):
-            if item in MAIL:
-                replacement = stones.pop() if stones else rng.choice(STONES)
+    for (_, name), old_stock, new_stock in zip(CITY_MARTS, before, after):
+        lines.append(
+            f"  {name}: {', '.join(items.name(item) for item in old_stock)}"
+            f"\n    -> {', '.join(items.name(item) for item in new_stock)}"
+        )
+    return "\n".join(lines)
+
+
+def randomize_marts(rom, rng, items, include_held_items, stock_size=None):
+    lists = find_mart_table(Arm9(rom), rom)
+    pool = shop_item_pool(items, include_held_items)
+    before = [lists[index][2] for index, _ in CITY_MARTS]
+    if len(before) < len(STONES):
+        raise RuntimeError("Not enough specialty clerks to place every evolution stone.")
+    stones = rng.sample(STONES, len(STONES))
+    after = []
+    for stock in before:
+        guaranteed_stone = stones.pop() if stones else rng.choice(STONES)
+        guaranteed_slot = next((index for index, item in enumerate(stock) if item in MAIL), 0)
+        used, replacement_stock = set(), []
+        for index in range(len(stock)):
+            if index == guaranteed_slot:
+                replacement = guaranteed_stone
             else:
-                candidates = [candidate for candidate in pool if candidate not in used]
+                candidates = [candidate for candidate in pool if candidate not in used and candidate != guaranteed_stone]
+                if not candidates:
+                    raise RuntimeError("Not enough distinct sellable items to randomize the specialty shops.")
                 replacement = rng.choice(candidates)
             used.add(replacement)
-            after.append(replacement)
-            rom.write(offset + slot * 2, offset + slot * 2 + 2, struct.pack("<H", replacement))
-        lines.append(
-            f"  {', '.join(items.name(item) for item in stock)}\n    -> {', '.join(items.name(item) for item in after)}"
-        )
-    return f"Specialty clerks: {len(city_marts)} Poke Marts, every evolution stone sold at least once.\n" + "\n".join(
-        lines
+            replacement_stock.append(replacement)
+        after.append(replacement_stock)
+    if stock_size is not None:
+        after = extend_shop_stocks(after, stock_size, pool, rng)
+        write_expanded_shop_stocks(rom, lists, after, stock_size)
+    else:
+        for (index, _), stock in zip(CITY_MARTS, after):
+            offset = lists[index][1]
+            rom.write(offset, offset + len(stock) * 2, struct.pack("<" + "H" * len(stock), *stock))
+    return (
+        f"Specialty clerks: {len(CITY_MARTS)} Poke Marts, at least one evolution stone each; "
+        "every evolution stone sold at least once.\n"
+        + format_shop_report(items, before, after)
+    )
+
+
+def expand_existing_marts(rom, rng, items, include_held_items, stock_size):
+    validate_shop_stock_size(stock_size)
+    lists = find_mart_table(Arm9(rom), rom)
+    before = [lists[index][2] for index, _ in CITY_MARTS]
+    if not set(STONES).issubset(item for stock in before for item in stock):
+        raise RuntimeError("Existing specialty stocks do not contain every evolution stone.")
+    pool = shop_item_pool(items, include_held_items)
+    after = extend_shop_stocks(before, stock_size, pool, rng)
+    write_expanded_shop_stocks(rom, lists, after, stock_size)
+    return (
+        f"Specialty clerks: {len(CITY_MARTS)} Poke Marts expanded to {stock_size} items; "
+        "existing stock preserved and at least one evolution stone in each shop.\n"
+        + format_shop_report(items, before, after)
+    )
+
+
+def rerandomize_existing_marts(rom, rng, items, include_held_items, stock_size):
+    validate_shop_stock_size(stock_size)
+    lists = find_mart_table(Arm9(rom), rom)
+    before = [lists[index][2] for index, _ in CITY_MARTS]
+    pool = shop_item_pool(items, include_held_items)
+    guaranteed = []
+    for stock in before:
+        stone = next((item for item in stock if item in STONES), None)
+        guaranteed.append([stone if stone is not None else rng.choice(STONES)])
+    if not set(STONES).issubset(stock[0] for stock in guaranteed):
+        raise RuntimeError("Existing guaranteed stones do not cover every evolution stone.")
+    after = extend_shop_stocks(guaranteed, stock_size, pool, rng)
+    write_expanded_shop_stocks(rom, lists, after, stock_size)
+    return (
+        f"Specialty clerks: {len(CITY_MARTS)} Poke Marts with {stock_size} items each; "
+        "one evolution stone guaranteed and remaining items randomized.\n"
+        + format_shop_report(items, before, after)
     )
 
 

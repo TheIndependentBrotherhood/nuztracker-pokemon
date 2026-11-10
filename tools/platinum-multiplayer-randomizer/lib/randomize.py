@@ -90,6 +90,9 @@ def run(config_path):
     tm_mode = extras.get("fieldTms", "keep")
     if tm_mode not in rom_extras.TM_MODES:
         raise ValueError(f"extras.fieldTms must be one of {sorted(rom_extras.TM_MODES)}.")
+    stock_size = extras.get("specialtyClerkStockSize")
+    if "specialtyClerkStockSize" in extras:
+        rom_extras.validate_shop_stock_size(stock_size)
     setup = Path(paths["projectPmSetup"])
     source = Path(paths["inputRom"])
     output = Path(paths["outputRom"])
@@ -140,7 +143,7 @@ def run(config_path):
     if extras["specialtyClerks"]:
         report.append(
             rom_extras.randomize_marts(
-                rom, rom_extras.seeded("marts", settings["seed"]), items, extras["clerksSellHeldItems"]
+                rom, rom_extras.seeded("marts", settings["seed"]), items, extras["clerksSellHeldItems"], stock_size
             )
         )
     rom_extras.fix_header_crc(rom)
