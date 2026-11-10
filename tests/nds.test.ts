@@ -15,6 +15,7 @@ import { NdsRom } from "../desktop/nds-rom";
 import { PlatinumReader } from "../desktop/platinum-reader";
 import {
   loadPlatinumData,
+  readEvolutions,
   sameMoveName,
   type PlatinumBattleData,
 } from "../desktop/platinum-data";
@@ -65,6 +66,19 @@ test("Shiny threshold follows the ROM shiny check rewritten by randomizers", () 
   assert.equal(readShinyThreshold(Buffer.alloc(0)), 8);
   const decoded = decodePk4(pk4Fixture())!;
   assert.equal(decoded.pokemon.isShiny, decoded.shinyValue < 8);
+});
+
+test("Platinum Multiplayer evolution methods do not hide other ROM evolution entries", () => {
+  const data = Buffer.alloc(44);
+  [27, 223, 123, 4, 30, 456].forEach((value, index) =>
+    data.writeUInt16LE(value, index * 2),
+  );
+  assert.deepEqual(readEvolutions(data), [
+    { method: 27, param: 223, target: 123 },
+    { method: 4, param: 30, target: 456 },
+  ]);
+  data.writeUInt16LE(28, 0);
+  assert.equal(readEvolutions(data), undefined);
 });
 
 test("NDS text and ROM archives preserve local modified types without revealing random base stats", async () => {

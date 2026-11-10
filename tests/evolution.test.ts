@@ -78,4 +78,15 @@ test("random evolutions keep the condition but hide the target", () => {
     evolutionSummary(evolutions, 12, 4, "en", { species }, true)?.details,
     ["Level 16"],
   );
+  assert.deepEqual(
+    evolutionSummary(
+      [{ method: 27, param: 223, target: 2 }],
+      12,
+      4,
+      "en",
+      { species },
+      true,
+    )?.details,
+    ["Unknown method 27 (Gen 4)"],
+  );
 });

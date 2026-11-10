@@ -40,6 +40,27 @@ export default function RunSettingsModal({ run, open, onClose }: Props) {
     void updateRun({ ...run, typeChartGeneration: next }, run);
   };
 
+  const handleRandomizerOptionChange = (
+    option: "randomizeStats" | "randomizeEvolvedForms",
+    checked: boolean,
+  ) => {
+    void updateRun(
+      {
+        ...run,
+        isRandomMode: checked || run.isRandomMode,
+        randomizerOptions: {
+          randomizeTypes: false,
+          randomizeAbilities: false,
+          randomizeEncounters: false,
+          randomizeEvolvedForms: false,
+          ...run.randomizerOptions,
+          [option]: checked,
+        },
+      },
+      run,
+    );
+  };
+
   return (
     <Dialog
       open={open}
@@ -91,23 +112,30 @@ export default function RunSettingsModal({ run, open, onClose }: Props) {
                 run.isRandomMode && run.randomizerOptions?.randomizeStats,
               )}
               disabled={!canEditRun(run.id)}
-              onChange={(event) => {
-                void updateRun(
-                  {
-                    ...run,
-                    isRandomMode: event.target.checked || run.isRandomMode,
-                    randomizerOptions: {
-                      randomizeTypes: false,
-                      randomizeAbilities: false,
-                      randomizeEncounters: false,
-                      randomizeEvolvedForms: false,
-                      ...run.randomizerOptions,
-                      randomizeStats: event.target.checked,
-                    },
-                  },
-                  run,
-                );
-              }}
+              onChange={(event) =>
+                handleRandomizerOptionChange(
+                  "randomizeStats",
+                  event.target.checked,
+                )
+              }
+            />
+          }
+        />
+        <FormControlLabel
+          label={tr.createRun.randomizeEvolvedForms.en}
+          control={
+            <Checkbox
+              checked={Boolean(
+                run.isRandomMode &&
+                run.randomizerOptions?.randomizeEvolvedForms,
+              )}
+              disabled={!canEditRun(run.id)}
+              onChange={(event) =>
+                handleRandomizerOptionChange(
+                  "randomizeEvolvedForms",
+                  event.target.checked,
+                )
+              }
             />
           }
         />

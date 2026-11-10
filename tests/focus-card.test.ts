@@ -239,6 +239,42 @@ test("Live focuses on the opponent in battle, while party selection pins the pla
   assert.equal(lightFocusMember(team, enemy)?.id, "lead");
 });
 
+test("random evolution targets are hidden for both SoulLink teams and opponents", () => {
+  const current = record(true);
+  current.run.playerTeams = {
+    0: [capture("first", 0)],
+    1: [capture("second", 1)],
+  };
+  const enemy = { identity: "enemy", pokemonId: 48, level: 8 };
+  for (const [randomMode, randomEvolutions, hidden] of [
+    [false, false, false],
+    [false, true, false],
+    [true, false, false],
+    [true, true, true],
+  ]) {
+    current.run.isRandomMode = randomMode;
+    current.run.randomizerOptions = {
+      randomizeTypes: false,
+      randomizeAbilities: false,
+      randomizeEncounters: false,
+      randomizeEvolvedForms: randomEvolutions,
+    };
+    const teams = overlayData(current).teams;
+    assert.equal(teams.length, 2);
+    for (const team of teams) {
+      assert.equal(team.members.length, 1);
+      assert.equal(Boolean(team.members[0].hideEvolutionTargets), hidden);
+      assert.equal(
+        Boolean(
+          opponentMember(current.run, team.playerId, enemy, pokemon(48))
+            .hideEvolutionTargets,
+        ),
+        hidden,
+      );
+    }
+  }
+});
+
 test("opponent cards use game references and only the selected player's randomized knowledge", () => {
   const current = record(true);
   current.run.gameVersion = "platinum";

@@ -8,6 +8,7 @@ Double-click `Randomize Platinum Multiplayer.bat` to:
 2. Apply the NuzTracker extras:
    - randomize item balls and hidden items;
    - turn the second (specialty) clerk of every city mart into an evolution stone and held item shop;
+   - randomize evolution targets while keeping their original conditions;
    - give each gym and the Elite Four a common type;
    - raise shiny odds beyond Project PM's maximum.
 
@@ -41,22 +42,25 @@ To use another settings file, run `py -3.11 lib\randomize.py path\to\settings.js
 | `extras`               | `specialtyClerks`                                                                                                                                                                                               | Replace the second clerk's stock; each mart has at least one evolution stone, and all 10 are available across the marts         |
 | `extras`               | `specialtyClerkStockSize`                                                                                                                                                                                       | Number of items per specialty clerk, from `8` to `32`; omit to keep the original stock sizes                                    |
 | `extras`               | `clerksSellHeldItems`                                                                                                                                                                                           | Also add held items to the specialty clerks                                                                                     |
+| `extras`               | `randomEvolutions`                                                                                                                                                                                              | `true` / `false`: randomize evolution targets without changing their conditions; omitted defaults to `false`                    |
 | `extras`               | `gymTypes`, `eliteFourTypes`                                                                                                                                                                                    | `vanilla` (original leader type), `random` (one random type per leader), `off`                                                  |
 
 Themed teams keep the randomized team size and each Pokémon's approximate BST. They use the **randomized** species types, so a Rock gym really contains Rock-type Pokémon in this ROM. Legendaries are excluded when `coop.noLegendaries` is enabled. The Champion keeps a mixed team.
+
+Random evolutions keep every existing method, parameter and branch; species without evolutions remain unchanged. Targets are drawn from the supported species without type or strength restrictions, including legendary Pokémon, and cannot create cycles or repeat the original target. Different branches remain distinct, while alternative methods for the same original target remain equivalent. Chains may become shorter or longer. The special extra evolution also uses its new target without changing its original requirements. The report does not list evolution targets.
 
 Expanded specialty stocks apply to the 12 city and Pokémon League specialty clerks, not the regular clerk or department stores. Each specialty clerk has at least one evolution stone; the remaining random slots can also contain additional evolution stones. The original randomized items are kept and the remaining slots are filled with distinct sellable items. The expansion requires the supported Platinum Multiplayer shop overlay and enough unused ROM padding; unsupported layouts fail instead of overwriting other data.
 
 ## Tests
 
-From this directory, run `py -3.11 -m unittest discover -s tests -p "test_*.py"` to check specialty stock generation and ROM safety checks.
+From this directory, run `py -3.11 -m unittest discover -s tests -p "test_*.py"` to check specialty stocks, randomized evolutions and ROM safety checks.
 
 ## SoulLink
 
 Every player must use the **same** `settings.json` options and the same seeds or codes. Share the World and Co-Op codes and seeds from the report, then compare the final SHA-1: identical values mean identical ROMs.
 
-Gym themes are derived from the Co-Op seed; items and marts are derived from the World seed.
+Gym themes and evolution targets are derived from the Co-Op seed; items and marts are derived from the World seed. Project PM codes do not include NuzTracker extras, so every player must also enable the same extras in their settings.
 
 ## NuzTracker
 
-The desktop tracker reads the shiny check from the loaded ROM, so shiny Pokémon are detected with the odds of the generated ROM.
+The desktop tracker reads the shiny check and evolution conditions from the loaded ROM. Enable **Random evolutions** when creating the run or in its settings to hide randomized targets in the tracker; enabling it in the settings also enables Randomizer mode. Platinum Multiplayer's custom evolution method 27 is preserved; its condition is displayed as unknown rather than guessed.

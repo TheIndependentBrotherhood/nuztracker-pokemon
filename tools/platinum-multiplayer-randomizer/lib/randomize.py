@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 import rom_extras
+import rom_evolutions
 from pm_loader import load_pm_setup
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -23,6 +24,13 @@ THEME_MODES = {"vanilla", "random", "off"}
 
 def log(message=""):
     print(message, flush=True)
+
+
+def random_evolutions_enabled(extras):
+    enabled = extras.get("randomEvolutions", False)
+    if type(enabled) is not bool:
+        raise ValueError("extras.randomEvolutions must be true or false.")
+    return enabled
 
 
 def build_pm_settings(pm, config):
@@ -84,6 +92,7 @@ def run(config_path):
     config = json.loads(config_path.read_text(encoding="utf-8"))
     paths = config["paths"]
     extras = config["extras"]
+    random_evolutions = random_evolutions_enabled(extras)
     for key in ("gymTypes", "eliteFourTypes"):
         if extras[key] not in THEME_MODES:
             raise ValueError(f"extras.{key} must be one of {sorted(THEME_MODES)}.")
@@ -122,6 +131,12 @@ def run(config_path):
         report.append(f"Shiny odds: 1 in {shiny} (Project PM).")
     if config["romTweaks"].get("guaranteedCatch", False):
         report.append(rom_extras.patch_guaranteed_catch(rom))
+    if random_evolutions:
+        report.append(
+            rom_evolutions.randomize_evolutions(
+                pm, rom, rom_extras.seeded("evolutions", settings["coop_seed"]), log
+            )
+        )
     gym_rng = rom_extras.seeded("gyms", settings["coop_seed"])
     if extras["gymTypes"] != "off" or extras["eliteFourTypes"] != "off":
         report.append(

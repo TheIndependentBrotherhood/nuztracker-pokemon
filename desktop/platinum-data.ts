@@ -154,6 +154,8 @@ export function readLearnLevels(
 const EVOLUTION_SLOTS = 7;
 const EVOLUTION_ENTRY_BYTES = 6;
 const MAX_SPECIES = 493;
+// Project PM adds method 27; its condition is not yet identified.
+const MAX_EVOLUTION_METHOD = 27;
 
 // Gen 4 evolution files hold 7 entries of method, parameter and target species (u16 each).
 export function readEvolutions(
@@ -168,7 +170,8 @@ export function readEvolutions(
     const param = data.readUInt16LE(offset + 2);
     const target = data.readUInt16LE(offset + 4);
     if (!method) continue;
-    if (method > 26 || target < 1 || target > MAX_SPECIES) return undefined;
+    if (method > MAX_EVOLUTION_METHOD || target < 1 || target > MAX_SPECIES)
+      return undefined;
     evolutions.push({ method, param, target });
   }
   return evolutions;

@@ -33,7 +33,7 @@
   },
   "romTweaks": {
     "shinyOdds": 128,
-    "guaranteedCatch": false
+    "guaranteedCatch": true
   },
   "coop": {
     "trainerTeams": true,
@@ -50,6 +50,7 @@
     "specialtyClerks": true,
     "specialtyClerkStockSize": 10,
     "clerksSellHeldItems": true,
+    "randomEvolutions": true,
     "gymTypes": "random",
     "eliteFourTypes": "random"
   }
