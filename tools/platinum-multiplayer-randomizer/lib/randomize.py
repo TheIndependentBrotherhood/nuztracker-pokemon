@@ -167,15 +167,19 @@ def run(config_path):
             )
         )
     items = rom_extras.ItemCatalog(pm, rom, log)
+    if extras["itemBalls"] or extras["hiddenItems"]:
+        field_tms = rom_extras.FieldTms(items, rom_extras.gift_tms(pm, rom, log))
     if extras["itemBalls"]:
         report.append(
             rom_extras.randomize_field_items(
-                pm, rom, rom_extras.seeded("item-balls", settings["seed"]), items, log, tm_mode
+                pm, rom, rom_extras.seeded("item-balls", settings["seed"]), items, log, tm_mode, field_tms
             )
         )
     if extras["hiddenItems"]:
         report.append(
-            rom_extras.randomize_hidden_items(rom, rom_extras.seeded("hidden-items", settings["seed"]), items, tm_mode)
+            rom_extras.randomize_hidden_items(
+                rom, rom_extras.seeded("hidden-items", settings["seed"]), items, tm_mode, field_tms
+            )
         )
     if extras["specialtyClerks"]:
         report.append(

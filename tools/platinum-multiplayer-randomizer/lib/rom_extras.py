@@ -199,6 +199,12 @@ class ItemCatalog:
 
 
 TM_MODES = {"keep", "random"}
+TM_SET = frozenset(TMS)
+GIFT_ITEM_SETVAR = re.compile(rb"\x28\x00\x04\x80")
+SAVE_BLOCK_SIZE = 0xCF2C
+SAVE_BACKUP_OFFSET = 0x40000
+SAVE_TM_POCKET = 0x98C
+SAVE_TM_SLOTS = 100
 
 
 def field_pool(items, tm_mode):
@@ -206,35 +212,101 @@ def field_pool(items, tm_mode):
     return [item for item in pool if items.is_real(item)]
 
 
-def replacement_for(item, rng, pool, tm_mode):
-    if item in TMS:
-        return rng.choice(pool if tm_mode == "random" else TMS)
-    if item in REPLACEABLE_ITEMS:
-        return rng.choice(pool)
+class FieldTms:
+    """TMs still free for field items.
+
+    Platinum Multiplayer stores an obtained TM as 99 copies (reusable TMs), so the bag refuses a TM the
+    player already owns: each TM may be placed once, never on top of a TM an NPC gives.
+    """
+
+    def __init__(self, items, unavailable=()):
+        blocked = set(unavailable)
+        self.free = {tm for tm in TMS if items.is_real(tm) and tm not in blocked}
+
+    def take(self, rng):
+        if not self.free:
+            return None
+        tm = rng.choice(sorted(self.free))
+        self.free.discard(tm)
+        return tm
+
+    def claim(self, tm):
+        self.free.discard(tm)
+
+
+def replacement_for(item, rng, pool, tm_mode, tms):
+    if item in TM_SET and tm_mode != "random":
+        # Keep mode pools hold no TM: once every TM is placed, the slot gets another item.
+        return tms.take(rng) or rng.choice(pool)
+    if item in TM_SET or item in REPLACEABLE_ITEMS:
+        replacement = rng.choice([choice for choice in pool if choice not in TM_SET or choice in tms.free])
+        tms.claim(replacement)
+        return replacement
     return item
 
 
 def tm_note(tm_mode):
-    return "TMs mixed with other items" if tm_mode == "random" else "TMs stay TMs"
+    note = "TMs mixed with other items" if tm_mode == "random" else "TMs stay TMs"
+    return f"{note}, each TM placed once"
 
 
-def randomize_field_items(pm, rom, rng, items, log, tm_mode="keep"):
-    path = "fielddata/script/scr_seq.narc"
-    span, narc = pm._open_narc(rom, path, log)
-    data = bytearray(narc.get(ITEM_SCRIPT_FILE))
-    pool = field_pool(items, tm_mode)
-    cursor, index, found, changed = 0, 0, 0, 0
+def gift_tms(pm, rom, log):
+    """TMs NPC scripts hand out: they load the item into 0x8004 before the shared give-item script."""
+    _, narc = pm._open_narc(rom, "fielddata/script/scr_seq.narc", log)
+    found = set()
+    for index in range(narc.num_files):
+        if index == ITEM_SCRIPT_FILE:
+            continue
+        data = narc.get(index)
+        for match in GIFT_ITEM_SETVAR.finditer(data):
+            if match.start() + 6 <= len(data) and u16(data, match.start() + 4) in TM_SET:
+                found.add(u16(data, match.start() + 4))
+    return found
+
+
+def owned_tms_from_save(save):
+    """TMs in the TM pocket of the most recent block of a Platinum save file."""
+    blocks = []
+    for base in (0, SAVE_BACKUP_OFFSET):
+        footer = base + SAVE_BLOCK_SIZE - 0x14
+        if footer + 12 > len(save) or u32(save, footer + 8) != SAVE_BLOCK_SIZE:
+            continue
+        blocks.append((u32(save, footer), base))
+    if not blocks:
+        raise ValueError("This file is not a Platinum save.")
+    _, base = max(blocks)
+    owned = set()
+    for slot in range(SAVE_TM_SLOTS):
+        item, quantity = struct.unpack_from("<HH", save, base + SAVE_TM_POCKET + slot * 4)
+        if item in TM_SET and quantity:
+            owned.add(item)
+    return owned
+
+
+def item_ball_scripts(data):
+    """Offsets of the item ball scripts, at the 'setvar 0x8008, item' command."""
+    cursor, index = 0, 0
     while u16(data, cursor) != SCRIPT_LIST_TERMINATOR:
         script = u32(data, cursor) + cursor + 4
         cursor += 4
         index += 1
         if index - 1 in ITEM_SCRIPT_SKIP:
             continue
-        if u16(data, script) != SCRIPT_SET_VAR or u16(data, script + 2) != ITEM_VARIABLE:
-            continue
+        if u16(data, script) == SCRIPT_SET_VAR and u16(data, script + 2) == ITEM_VARIABLE:
+            yield script
+
+
+def randomize_field_items(pm, rom, rng, items, log, tm_mode="keep", tms=None):
+    tms = tms or FieldTms(items)
+    path = "fielddata/script/scr_seq.narc"
+    span, narc = pm._open_narc(rom, path, log)
+    data = bytearray(narc.get(ITEM_SCRIPT_FILE))
+    pool = field_pool(items, tm_mode)
+    found, changed = 0, 0
+    for script in item_ball_scripts(data):
         found += 1
         item = u16(data, script + 4)
-        replacement = replacement_for(item, rng, pool, tm_mode)
+        replacement = replacement_for(item, rng, pool, tm_mode, tms)
         if replacement != item:
             struct.pack_into("<H", data, script + 4, replacement)
             changed += 1
@@ -269,18 +341,64 @@ def find_hidden_items(arm9):
     raise RuntimeError("The hidden item table was not found.")
 
 
-def randomize_hidden_items(rom, rng, items, tm_mode="keep"):
+def randomize_hidden_items(rom, rng, items, tm_mode="keep", tms=None):
+    tms = tms or FieldTms(items)
     start, count = find_hidden_items(Arm9(rom))
     pool = field_pool(items, tm_mode)
     changed = 0
     for index in range(count):
         entry = start + index * 8
         item = u16(rom.data, entry)
-        replacement = replacement_for(item, rng, pool, tm_mode)
+        replacement = replacement_for(item, rng, pool, tm_mode, tms)
         if replacement != item:
             rom.write(entry, entry + 2, struct.pack("<H", replacement))
             changed += 1
     return f"Hidden items: {changed}/{count} randomized ({tm_note(tm_mode)})."
+
+
+def plan_tm_dedupe(placed, reserved, items, rng):
+    """New items for field TMs that would not fit in the bag.
+
+    `placed` lists the field items in order; a TM is replaced when it is reserved (NPC gift or already
+    owned by a player) or when an earlier slot holds it. Replacements are unused TMs, then other field items.
+    """
+    tms = FieldTms(items, set(reserved) | set(placed))
+    others = field_pool(items, "keep")
+    kept, plan = set(), {}
+    for slot, item in enumerate(placed):
+        if item not in TM_SET:
+            continue
+        if item in reserved or item in kept:
+            plan[slot] = tms.take(rng) or rng.choice(others)
+        else:
+            kept.add(item)
+    return plan
+
+
+def dedupe_field_tms(pm, rom, rng, items, log, owned=()):
+    """Fix an already randomized ROM: every field TM becomes unique and distinct from NPC and owned TMs."""
+    path = "fielddata/script/scr_seq.narc"
+    span, narc = pm._open_narc(rom, path, log)
+    data = bytearray(narc.get(ITEM_SCRIPT_FILE))
+    balls = list(item_ball_scripts(data))
+    start, count = find_hidden_items(Arm9(rom))
+    hidden = [start + index * 8 for index in range(count)]
+    placed = [u16(data, script + 4) for script in balls] + [u16(rom.data, entry) for entry in hidden]
+    gifts = gift_tms(pm, rom, log)
+    plan = plan_tm_dedupe(placed, gifts | set(owned), items, rng)
+    for slot, replacement in plan.items():
+        if slot < len(balls):
+            struct.pack_into("<H", data, balls[slot] + 4, replacement)
+        else:
+            entry = hidden[slot - len(balls)]
+            rom.write(entry, entry + 2, struct.pack("<H", replacement))
+    narc.put(ITEM_SCRIPT_FILE, bytes(data))
+    if not pm._save_narc(rom, span, narc, path, log):
+        raise RuntimeError("Could not save the item ball scripts.")
+    return (
+        f"Field TMs: {len(plan)} duplicate(s) replaced out of {sum(item in TM_SET for item in placed)} "
+        f"({len(gifts)} NPC TMs and {len(set(owned))} owned TMs avoided)."
+    )
 
 
 def read_item_list(rom, offset, limit=40, end=None):
