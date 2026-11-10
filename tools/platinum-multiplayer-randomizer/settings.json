@@ -1,0 +1,55 @@
+{
+  "paths": {
+    "projectPmSetup": "D:\\Games\\Pokemon Platine Multiplayer\\ProjectPMSetup\\ProjectPMSetup.exe",
+    "inputRom": "D:\\Games\\Pokemon Platine Multiplayer\\_Origin\\PokemonPlatineFRmultidejaPATCH.nds",
+    "outputRom": "D:\\Games\\Pokemon Platine Multiplayer\\NDS_Patched\\PlatinumMultiplayer-Randomized.nds"
+  },
+  "seeds": {
+    "worldSeed": "",
+    "coopSeed": "",
+    "worldCode": "",
+    "coopCode": ""
+  },
+  "yourWorld": {
+    "wildEncounters": true,
+    "starterTrio": true,
+    "evolvingStartersOnly": false,
+    "honeyTreesAndGiftEggs": true,
+    "specialWildEncounters": true,
+    "gbaSlotEncounters": true,
+    "staticEncounters": true,
+    "giftPokemon": true,
+    "inGameTradesYouGet": true,
+    "inGameTradesTheyWant": true
+  },
+  "wildEncounterOptions": {
+    "mode": "completelyRandom",
+    "rule": "none",
+    "grass": true,
+    "surfing": true,
+    "fishing": true,
+    "special": true,
+    "noLegendaries": false
+  },
+  "romTweaks": {
+    "shinyOdds": 128,
+    "guaranteedCatch": false
+  },
+  "coop": {
+    "trainerTeams": true,
+    "pokemonTypes": true,
+    "abilities": true,
+    "movesets": true,
+    "similarStrength": false,
+    "noLegendaries": false
+  },
+  "extras": {
+    "itemBalls": true,
+    "hiddenItems": true,
+    "fieldTms": "random",
+    "specialtyClerks": true,
+    "clerksSellHeldItems": true,
+    "gymTypes": "random",
+    "eliteFourTypes": "random"
+  }
+}

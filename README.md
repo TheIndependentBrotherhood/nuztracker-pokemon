@@ -120,6 +120,10 @@ Keep the app running on the OBS computer. The token is in the URL fragment, not 
 
 Reference JSON is bundled for offline use. Some existing sprite URLs and web fonts are external and can still require an Internet connection; offline fonts use system fallbacks.
 
+## Platinum Multiplayer randomizer
+
+`tools/platinum-multiplayer-randomizer` contains a one-click Windows randomizer for the Platinum Multiplayer hack (Project PM settings, field items, specialty marts, typed gyms, higher shiny odds). See its [README](tools/platinum-multiplayer-randomizer/README.md).
+
 ## Architecture
 
 - `src/lib/tracker`: validated, portable domain records, knowledge isolation, archives, merge rules and observation ingestion.

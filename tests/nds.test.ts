@@ -4,7 +4,7 @@ import { createServer, type Socket } from "node:net";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decodePk4, SnapshotError } from "../desktop/pk4";
+import { decodePk4, readShinyThreshold, SnapshotError } from "../desktop/pk4";
 import { readGen4Message } from "../desktop/nds-text";
 import {
   closeSharedGdbClients,
@@ -52,6 +52,19 @@ test("PK4 decoding covers all shuffle indices, encryption flags, unsigned identi
   assert.throws(() => decodePk4(pk4Fixture(0, { hp: 31 })), /HP/);
   assert.throws(() => decodePk4(pk4Fixture(0, { species: 500 })), /species/);
   assert.equal(decodePk4(pk4Fixture(0, { hp: 0 }))?.pokemon.status, "fainted");
+});
+
+test("Shiny threshold follows the ROM shiny check rewritten by randomizers", () => {
+  const arm9 = (check: string) =>
+    Buffer.from(`00112233${"48405040"}${check}012000e00020ffff`, "hex");
+  assert.equal(readShinyThreshold(arm9("082801d2")), 8);
+  assert.equal(readShinyThreshold(arm9("ff2801d2")), 255);
+  assert.equal(readShinyThreshold(arm9("400a01d1")), 512);
+  assert.equal(readShinyThreshold(arm9("c00a01d1")), 2048);
+  assert.equal(readShinyThreshold(arm9("ff2801d1")), 8);
+  assert.equal(readShinyThreshold(Buffer.alloc(0)), 8);
+  const decoded = decodePk4(pk4Fixture())!;
+  assert.equal(decoded.pokemon.isShiny, decoded.shinyValue < 8);
 });
 
 test("NDS text and ROM archives preserve local modified types without revealing random base stats", async () => {

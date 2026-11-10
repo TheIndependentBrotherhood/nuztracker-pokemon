@@ -4,7 +4,7 @@ import type {
   LiveMove,
   LivePokemon,
 } from "../src/lib/tracker/types";
-import type { DecodedPk4 } from "./pk4";
+import { readShinyThreshold, type DecodedPk4 } from "./pk4";
 import { NdsRom } from "./nds-rom";
 import { readGen4Message } from "./nds-text";
 
@@ -197,6 +197,7 @@ export async function loadPlatinumData(
     rom,
     "poketool/personal/evo.narc",
   );
+  const shinyThreshold = readShinyThreshold(await rom.arm9());
   if (!messages[624])
     throw new Error("This ROM has no supported type-name table.");
   const ninthType = readGen4Message(messages[624], 9)
@@ -339,6 +340,7 @@ export async function loadPlatinumData(
       throw new Error("This ROM's personal-data table is unsupported.");
     return {
       ...decoded.pokemon,
+      isShiny: decoded.shinyValue < shinyThreshold,
       pokemonId: alternate ? form.pokemon + decoded.form - 1 : species,
       types: [...new Set([romTypes[row[6]], romTypes[row[7]]])],
       ability:

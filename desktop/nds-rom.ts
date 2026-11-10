@@ -89,6 +89,11 @@ export class NdsRom {
     walk(0, "", 0);
   }
 
+  async arm9(): Promise<Buffer> {
+    const size = this.header.readUInt32LE(0x2c);
+    return size ? await this.read(this.header.readUInt32LE(0x20), size) : Buffer.alloc(0);
+  }
+
   async archive(path: string): Promise<Buffer[]> {
     const cached = this.archives.get(path);
     if (cached) return cached;

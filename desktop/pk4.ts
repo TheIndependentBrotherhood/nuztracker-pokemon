@@ -63,6 +63,34 @@ export interface DecodedPk4 {
   heldItemId: number;
   ppUps: number[];
   nicknameUnsupported: boolean;
+  shinyValue: number;
+}
+
+export const VANILLA_SHINY_THRESHOLD = 8;
+const SHINY_CHECK_PREFIX = Buffer.from("48405040", "hex");
+const SHINY_CHECK_SUFFIX = Buffer.from("012000e00020", "hex");
+
+// A Pokemon is shiny when its shiny value is below this threshold. Randomizers rewrite the check as
+// `cmp r0,#threshold; bcs` (vanilla, Project PM) or `lsrs r0,r0,#k; bne` (threshold 2^k).
+export function readShinyThreshold(arm9: Buffer): number {
+  const thresholds = new Set<number>();
+  for (
+    let offset = arm9.indexOf(SHINY_CHECK_PREFIX);
+    offset >= 0 && offset + 14 <= arm9.length;
+    offset = arm9.indexOf(SHINY_CHECK_PREFIX, offset + 1)
+  ) {
+    if (
+      arm9[offset + 6] !== 0x01 ||
+      !arm9.subarray(offset + 8, offset + 14).equals(SHINY_CHECK_SUFFIX)
+    )
+      continue;
+    const instruction = arm9.readUInt16LE(offset + 4);
+    if (arm9[offset + 5] === 0x28 && arm9[offset + 7] === 0xd2)
+      thresholds.add(instruction & 0xff);
+    else if ((instruction & 0xf83f) === 0x0800 && arm9[offset + 7] === 0xd1)
+      thresholds.add(1 << ((instruction >>> 6) & 31));
+  }
+  return thresholds.size === 1 ? [...thresholds][0] : VANILLA_SHINY_THRESHOLD;
 }
 
 // The game was rewriting the record while it was read; reading it again shortly is expected to work.
@@ -166,6 +194,11 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
     : undefined;
   const status = tail.readUInt32LE(0);
   const gender = (attacks[24] >>> 1) & 3;
+  const shinyValue =
+    (personality & 0xffff) ^
+    (personality >>> 16) ^
+    (otId & 0xffff) ^
+    (otId >>> 16);
   const moves = [];
   const ppUps = [];
   for (let index = 0; index < 4; index++) {
@@ -181,6 +214,7 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
     heldItemId: growth.readUInt16LE(2),
     ppUps,
     nicknameUnsupported: hasNickname && !name,
+    shinyValue,
     pokemon: {
       identity: `${personality.toString(16).padStart(8, "0")}-${otId.toString(16).padStart(8, "0")}`,
       pokemonId: species,
@@ -205,12 +239,7 @@ export function decodePk4(data: Buffer): DecodedPk4 | null {
                       ? "paralysis"
                       : "healthy",
       isEgg: false,
-      isShiny:
-        ((personality & 0xffff) ^
-          (personality >>> 16) ^
-          (otId & 0xffff) ^
-          (otId >>> 16)) <
-        8,
+      isShiny: shinyValue < VANILLA_SHINY_THRESHOLD,
       gender: gender === 0 ? "male" : gender === 1 ? "female" : "unknown",
       nature: natures[personality % 25],
       experience: growth.readUInt32LE(8),
