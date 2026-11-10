@@ -37,7 +37,7 @@
   },
   "coop": {
     "trainerTeams": true,
-    "pokemonTypes": true,
+    "pokemonTypes": "evolutionLines",
     "abilities": true,
     "movesets": true,
     "similarStrength": false,

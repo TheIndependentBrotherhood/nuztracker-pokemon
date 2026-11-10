@@ -197,7 +197,7 @@ export function hidesEvolutionTargets(run: Run): boolean {
   );
 }
 
-/** Species of the current wild table this player met in battle or caught in the zone; the others stay anonymous. */
+/** Species of the current map's wild table this player met in a wild battle here or caught in the zone; the others stay anonymous. */
 function zoneEncounters(
   tracking: RunRecord["tracking"][string],
   location: NonNullable<GameFrame["location"]>,
@@ -211,12 +211,7 @@ function zoneEncounters(
     ),
   );
   for (const entry of tracking.seenEncounters ?? [])
-    if (
-      entry.gameKey === source &&
-      (entry.locationId === location.id ||
-        (location.encounterTableId !== undefined &&
-          entry.encounterTableId === location.encounterTableId))
-    )
+    if (entry.gameKey === source && entry.locationId === location.id)
       known.add(entry.pokemonId);
   const species = new Set(location.encounters.map((entry) => entry.pokemonId));
   return {

@@ -247,10 +247,13 @@ class RandomEvolutionTests(unittest.TestCase):
                     "fishing": False, "special": False, "noLegendaries": False,
                 },
                 "romTweaks": {"shinyOdds": 8192, "guaranteedCatch": False},
-                "coop": dict.fromkeys(
-                    ("trainerTeams", "pokemonTypes", "abilities", "movesets", "similarStrength", "noLegendaries"),
-                    False,
-                ),
+                "coop": {
+                    **dict.fromkeys(
+                        ("trainerTeams", "abilities", "movesets", "similarStrength", "noLegendaries"),
+                        False,
+                    ),
+                    "pokemonTypes": "off",
+                },
                 "extras": {
                     "gymTypes": "off", "eliteFourTypes": "off", "itemBalls": False, "hiddenItems": False,
                     "specialtyClerks": False,

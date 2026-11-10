@@ -241,9 +241,6 @@ export function ingestFrame(
           gameKey: gameKey(frame.game),
           locationId: frame.location.id,
           ...(frame.location.name ? { locationName: frame.location.name } : {}),
-          ...(frame.location.encounterTableId === undefined
-            ? {}
-            : { encounterTableId: frame.location.encounterTableId }),
           pokemonId: opponent.pokemonId,
           level: opponent.level,
           observedAt: now,

@@ -29,24 +29,10 @@ const speciesId = z.number().int().min(-1).max(100000);
 const speciesMap = <T extends z.ZodType>(value: T) =>
   z.record(z.string().regex(/^-?\d+$/), value);
 const typeNames = z.array(z.string().max(40)).max(2);
-const encounterTableId = z.number().int().min(0).max(0xfffe);
 export const zoneEncounterSchema = z
   .object({
     method: z.enum(["grass", "surf", "old-rod", "good-rod", "super-rod"]),
-    condition: z
-      .enum([
-        "morning",
-        "day",
-        "night",
-        "swarm",
-        "radar",
-        "ruby",
-        "sapphire",
-        "emerald",
-        "firered",
-        "leafgreen",
-      ])
-      .optional(),
+    condition: z.enum(["morning", "day", "night"]).optional(),
     pokemonId: z.number().int().min(1).max(100000),
     rate: z.number().int().min(1).max(100),
     minLevel: z.number().int().min(1).max(100),
@@ -417,7 +403,6 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
       .object({
         id,
         name: text.optional(),
-        encounterTableId: encounterTableId.optional(),
         encounters: z.array(zoneEncounterSchema).max(96).optional(),
       })
       .strict()
@@ -562,7 +547,6 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
             gameKey: id,
             locationId: id,
             locationName: text.optional(),
-            encounterTableId: encounterTableId.optional(),
             pokemonId: z.number().int().min(1).max(100000),
             level: z.number().int().min(1).max(100),
             observedAt: timestamp,

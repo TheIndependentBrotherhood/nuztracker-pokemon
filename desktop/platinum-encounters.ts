@@ -22,17 +22,8 @@ const GOOD_ROD_RATES = [40, 40, 15, 4, 1];
 
 // Offsets of struct WildEncounters (include/struct_defs/wild_encounters.h).
 const GRASS = 0x00;
-const SWARM = 0x64;
 const DAY = 0x6c;
 const NIGHT = 0x74;
-const RADAR = 0x7c;
-const DUAL_SLOTS: [EncounterCondition, number][] = [
-  ["ruby", 0xa4],
-  ["sapphire", 0xac],
-  ["emerald", 0xb4],
-  ["firered", 0xbc],
-  ["leafgreen", 0xc4],
-];
 const WATER: [EncounterMethod, number, number[]][] = [
   ["surf", 0xcc, SURF_RATES],
   ["old-rod", 0x124, SURF_RATES],
@@ -110,19 +101,7 @@ export function parseEncounterTable(data: Buffer): ZoneEncounter[] {
         for (const [condition, pokemonId] of times)
           grass(slot, pokemonId, condition);
     }
-    const replace = (
-      condition: EncounterCondition,
-      offset: number,
-      slots: number[],
-    ) =>
-      slots.forEach((slot, index) => {
-        const pokemonId = replacement(offset, index);
-        if (pokemonId !== species(slot)) grass(slot, pokemonId, condition);
-      });
-    replace("swarm", SWARM, [0, 1]);
-    replace("radar", RADAR, [4, 5, 10, 11]);
-    for (const [condition, offset] of DUAL_SLOTS)
-      replace(condition, offset, [8, 9]);
+    // Swarms, the Poké Radar and GBA-slot replacements are left out for now.
   }
   for (const [method, offset, rates] of WATER) {
     if (!data.readUInt32LE(offset)) continue;

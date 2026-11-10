@@ -12,6 +12,7 @@ from pathlib import Path
 
 import rom_extras
 import rom_evolutions
+import rom_types
 from pm_loader import load_pm_setup
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -20,6 +21,7 @@ PATCHED_SHINY_RATES = {128, 64, 32, 16}
 MODES = {"completelyRandom": "completely_random", "area1to1": "area_1to1", "global1to1": "global_1to1"}
 RULES = {"none": "none", "similarStrength": "similar_strength", "typeTheme": "type_theme"}
 THEME_MODES = {"vanilla", "random", "off"}
+POKEMON_TYPE_MODES = {"off", "random", "evolutionLines"}
 
 
 def log(message=""):
@@ -31,6 +33,13 @@ def random_evolutions_enabled(extras):
     if type(enabled) is not bool:
         raise ValueError("extras.randomEvolutions must be true or false.")
     return enabled
+
+
+def pokemon_types_mode(coop):
+    mode = coop["pokemonTypes"]
+    if not isinstance(mode, str) or mode not in POKEMON_TYPE_MODES:
+        raise ValueError(f"coop.pokemonTypes must be one of {sorted(POKEMON_TYPE_MODES)}.")
+    return mode
 
 
 def build_pm_settings(pm, config):
@@ -66,7 +75,8 @@ def build_pm_settings(pm, config):
         "shiny": PM_SHINY_THRESHOLDS.get(shiny, 255),
         "seed": str(seeds.get("worldSeed") or pm.roll_seed()),
         "trainers": coop["trainerTeams"],
-        "types": coop["pokemonTypes"],
+        # Evolution-line types replace Project PM's per-species types after its run.
+        "types": pokemon_types_mode(coop) == "random",
         "abilities": coop["abilities"],
         "movesets": coop["movesets"],
         "coop_simstr": coop["similarStrength"],
@@ -93,6 +103,7 @@ def run(config_path):
     paths = config["paths"]
     extras = config["extras"]
     random_evolutions = random_evolutions_enabled(extras)
+    line_types = pokemon_types_mode(config["coop"]) == "evolutionLines"
     for key in ("gymTypes", "eliteFourTypes"):
         if extras[key] not in THEME_MODES:
             raise ValueError(f"extras.{key} must be one of {sorted(THEME_MODES)}.")
@@ -131,6 +142,17 @@ def run(config_path):
         report.append(f"Shiny odds: 1 in {shiny} (Project PM).")
     if config["romTweaks"].get("guaranteedCatch", False):
         report.append(rom_extras.patch_guaranteed_catch(rom))
+    if line_types:
+        # Before themed gyms, which pick Pokémon by their final types.
+        report.append(
+            rom_types.randomize_family_types(
+                pm,
+                pm.RandNDSRom(str(source)),
+                rom,
+                rom_extras.seeded("evolution-line-types", settings["coop_seed"]),
+                log,
+            )
+        )
     if random_evolutions:
         report.append(
             rom_evolutions.randomize_evolutions(

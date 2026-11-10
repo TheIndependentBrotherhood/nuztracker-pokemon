@@ -97,8 +97,9 @@ export default function LightTracker() {
   const [focusSelection, setFocusSelection] = useState<BattleFocusSelection>();
   const [now, setNow] = useState(0);
   const [bounds, setBounds] = useState<HTMLElement | null>(null);
+  // Species references are kept across battles so a known species never shows a loading state again.
   const [opponentReferences, setOpponentReferences] = useState<
-    Record<string, PokemonData>
+    Record<number, PokemonData>
   >({});
   const [referenceErrors, setReferenceErrors] = useState<number[]>([]);
   const currentPlayerId = run
@@ -107,12 +108,14 @@ export default function LightTracker() {
   const battle = record?.tracking[currentPlayerId]?.latest.battle;
   const opponents = battle?.opponents ?? NO_OPPONENTS;
   const participants = [...opponents, ...(battle?.allies ?? [])];
-  const opponentSignature = JSON.stringify(
-    participants.map(({ identity, pokemonId }) => [identity, pokemonId]),
-  );
-  const opponentsRef = useRef(participants);
+  const opponentSignature = [
+    ...new Set(participants.map(({ pokemonId }) => pokemonId)),
+  ]
+    .sort((left, right) => left - right)
+    .join(",");
+  const referencesRef = useRef(opponentReferences);
   useEffect(() => {
-    opponentsRef.current = participants;
+    referencesRef.current = opponentReferences;
   });
   const focusForBattle =
     focusSelection?.battleId === battle?.id ? focusSelection : undefined;
@@ -165,29 +168,35 @@ export default function LightTracker() {
   );
   useEffect(() => {
     let cancelled = false;
+    const missing = opponentSignature
+      .split(",")
+      .filter(Boolean)
+      .map(Number)
+      .filter((pokemonId) => !referencesRef.current[pokemonId]);
+    if (!missing.length) return;
     void Promise.all(
-      opponentsRef.current.map(async ({ identity, pokemonId }) => {
+      missing.map(async (pokemonId) => {
         try {
           const pokemon = await getPokemonById(pokemonId);
           if (!pokemon)
             throw new Error(
               `Local reference data for species ${pokemonId} is unavailable.`,
             );
-          return { identity, pokemonId, pokemon };
+          return { pokemonId, pokemon };
         } catch (error: unknown) {
           reportError(error);
-          return { identity, pokemonId, error: true as const };
+          return { pokemonId, error: true as const };
         }
       }),
     ).then((results) => {
       if (cancelled) return;
-      const references: Record<string, PokemonData> = {};
+      const references: Record<number, PokemonData> = {};
       const errors: number[] = [];
       for (const result of results) {
         if ("error" in result) errors.push(result.pokemonId);
-        else references[result.identity] = result.pokemon;
+        else references[result.pokemonId] = result.pokemon;
       }
-      setOpponentReferences(references);
+      setOpponentReferences((previous) => ({ ...previous, ...references }));
       setReferenceErrors(errors);
     });
     return () => {
@@ -214,7 +223,14 @@ export default function LightTracker() {
   }
   const text = translations.liveView;
   if (!loaded || !runId)
-    return <Box sx={{ p: 2 }}>{t(text.loading, lang)}</Box>;
+    return (
+      <Box
+        sx={{ p: 2 }}
+        role="status"
+        aria-busy="true"
+        aria-label={t(text.loading, lang)}
+      />
+    );
   if (!run || !record)
     return (
       <Alert severity="error">
@@ -231,19 +247,30 @@ export default function LightTracker() {
   const playerId = team.playerId;
   const turnOrder = encounterOrder(record.run);
   const enemy =
-    opponent && opponentReferences[opponent.identity]
+    opponent && opponentReferences[opponent.pokemonId]
       ? opponentMember(
           run,
           playerId,
           opponent,
-          opponentReferences[opponent.identity],
+          opponentReferences[opponent.pokemonId],
           seenMoveIds(record, playerId, opponent.pokemonId),
           seenAbilityIds(record, playerId, opponent.pokemonId),
           customSeenWords(record, playerId, opponent.pokemonId),
         )
       : undefined;
-  const member = lightFocusMember(team, enemy, selectedId);
-  const showingOpponent = !selectedId && team.inBattle;
+  const opponentUnavailable =
+    opponentId !== undefined && referenceErrors.includes(opponentId);
+  // While the opponent reference loads, keep the active lead on screen instead of a loading message.
+  const awaitingOpponent =
+    !selectedId && team.inBattle && !enemy && !opponentUnavailable;
+  const member = awaitingOpponent
+    ? (team.members.find(
+        (entry) =>
+          entry.identity !== undefined &&
+          entry.identity === battle?.activePlayerIdentity,
+      ) ?? lightFocusMember({ ...team, inBattle: false }, undefined))
+    : lightFocusMember(team, enemy, selectedId);
+  const showingOpponent = !selectedId && team.inBattle && !awaitingOpponent;
   const manualFocus = Boolean(focusForBattle);
   const runForPlayer = viewRunForPlayer(run, playerId);
   async function changeSprite(captureId: string, sprite: CaptureSpriteOption) {
@@ -386,7 +413,7 @@ export default function LightTracker() {
               sx={{ mb: 0.75 }}
             >
               {opponents.map((candidate, index) => {
-                const pokemon = opponentReferences[candidate.identity];
+                const pokemon = opponentReferences[candidate.pokemonId];
                 const name =
                   pokemon?.names?.[lang] ??
                   pokemon?.technicalName ??
@@ -535,23 +562,11 @@ export default function LightTracker() {
               }
               fallback={
                 showingOpponent ? (
-                  <Alert
-                    severity={
-                      opponentId !== undefined &&
-                      referenceErrors.includes(opponentId)
-                        ? "error"
-                        : "info"
-                    }
-                  >
-                    {t(
-                      opponentId !== undefined &&
-                        referenceErrors.includes(opponentId)
-                        ? translations.focusCard.noReference
-                        : text.loading,
-                      lang,
-                    )}
+                  <Alert severity="error">
+                    {t(translations.focusCard.noReference, lang)}
                   </Alert>
-                ) : selectedId || !faintedInParty(record, playerId).length ? (
+                ) : awaitingOpponent ? null : selectedId ||
+                  !faintedInParty(record, playerId).length ? (
                   <Alert severity="info">
                     {t(selectedId ? text.notInTeam : text.addTeamHint, lang)}
                   </Alert>

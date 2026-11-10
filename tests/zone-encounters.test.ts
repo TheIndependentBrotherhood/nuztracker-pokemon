@@ -54,9 +54,11 @@ test("a Platinum wild table lists each species once per method and condition wit
   assert.equal(find("grass", 399, "morning")?.rate, 10);
   assert.equal(find("grass", 399, "day")?.rate, 10);
   assert.equal(find("grass", 401, "night")?.rate, 10);
-  assert.equal(find("grass", 84, "swarm")?.rate, 20);
-  // A swarm slot that keeps the regular species is not a swarm encounter.
-  assert.equal(find("grass", 396, "swarm"), undefined);
+  // Swarm, Poké Radar and GBA replacements are not listed.
+  assert.equal(
+    entries.some((entry) => entry.pokemonId === 84),
+    false,
+  );
   assert.deepEqual(find("surf", 54), {
     method: "surf",
     pokemonId: 54,
@@ -91,13 +93,12 @@ test("the map header table is found by its shape", () => {
   );
 });
 
-test("zone encounters only name species this player met or caught on the same wild table", () => {
+test("zone encounters only name species met in a wild battle on this map or caught in the zone", () => {
   const route: GameFrame = {
     ...frame(),
     location: {
       id: "platinum-342",
       name: "Route 201",
-      encounterTableId: 140,
       encounters: [
         {
           method: "grass",
@@ -125,26 +126,36 @@ test("zone encounters only name species this player met or caught on the same wi
     },
   };
   assert.equal(gameFrameSchema.safeParse(route).success, true);
-  // A wild battle on another map that shares the table counts too.
-  const battle: GameFrame = {
+  const wild = (id: string, pokemonId: number, locationId: string) => ({
     ...route,
-    sequence: 2,
-    frame: 20,
-    location: { ...route.location!, id: "platinum-343" },
+    location: { ...route.location!, id: locationId },
     battle: {
-      id: "wild-1",
-      kind: "wild",
-      opponents: [{ identity: "enemy", pokemonId: 401, level: 3 }],
+      id,
+      kind: "wild" as const,
+      opponents: [{ identity: id, pokemonId, level: 3 }],
     },
-  };
-  let current = ingestFrame(record(), "solo", battle, pokemon, 100);
-  assert.equal(current.tracking.solo.seenEncounters?.[0].encounterTableId, 140);
+  });
+  // Meeting a species elsewhere, even on a map with the same table, does not reveal it here.
+  let current = ingestFrame(
+    record(),
+    "solo",
+    { ...wild("wild-1", 396, "platinum-343"), sequence: 2, frame: 20 },
+    pokemon,
+    100,
+  );
   current = ingestFrame(
     current,
     "solo",
-    { ...route, sequence: 3, frame: 30 },
+    { ...wild("wild-2", 401, "platinum-342"), sequence: 3, frame: 30 },
     pokemon,
     101,
+  );
+  current = ingestFrame(
+    current,
+    "solo",
+    { ...route, sequence: 4, frame: 40 },
+    pokemon,
+    102,
   );
   const zone = overlayData(current).teams[0].zoneEncounters;
   assert.equal(zone?.seen, 1);

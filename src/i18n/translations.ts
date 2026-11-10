@@ -757,8 +757,8 @@ const translations = {
         `Wild Pokémon in this area: ${seen} of ${total} discovered`,
     },
     zoneEncountersHelp: {
-      fr: "Table de rencontres lue dans votre ROM. Un Pokémon reste « ? » tant que vous ne l'avez pas rencontré en combat sauvage ou capturé ici. Le taux est la chance par rencontre de la méthode. Les rencontres spéciales (arbres à miel, Grand Marais, cadeaux) ne sont pas listées.",
-      en: "Encounter table read from your ROM. A Pokémon stays “?” until you meet it in a wild battle or catch it here. The rate is the chance per encounter of that method. Special encounters (Honey Trees, Great Marsh, gifts) are not listed.",
+      fr: "Table de rencontres lue dans votre ROM. Un Pokémon reste « ? » tant que vous ne l'avez pas rencontré en combat sauvage sur cette carte ou capturé dans cette zone. Le taux est la chance par rencontre de la méthode. Les essaims, le Poké Radar, les jeux GBA et les rencontres spéciales (arbres à miel, Grand Marais, cadeaux) ne sont pas listés.",
+      en: "Encounter table read from your ROM. A Pokémon stays “?” until you meet it in a wild battle on this map or catch it in this zone. The rate is the chance per encounter of that method. Swarms, the Poké Radar, GBA games and special encounters (Honey Trees, Great Marsh, gifts) are not listed.",
     },
     unknownPokemon: { fr: "Pokémon non découvert", en: "Undiscovered Pokémon" },
     encounterMethods: {
@@ -772,13 +772,6 @@ const translations = {
       morning: { fr: "Matin", en: "Morning" },
       day: { fr: "Jour", en: "Day" },
       night: { fr: "Nuit", en: "Night" },
-      swarm: { fr: "Essaim", en: "Swarm" },
-      radar: { fr: "Poké Radar", en: "Poké Radar" },
-      ruby: { fr: "Rubis (GBA)", en: "Ruby (GBA)" },
-      sapphire: { fr: "Saphir (GBA)", en: "Sapphire (GBA)" },
-      emerald: { fr: "Émeraude (GBA)", en: "Emerald (GBA)" },
-      firered: { fr: "Rouge Feu (GBA)", en: "FireRed (GBA)" },
-      leafgreen: { fr: "Vert Feuille (GBA)", en: "LeafGreen (GBA)" },
     },
     player: { fr: "Joueur", en: "Player" },
     nextEncounter: {

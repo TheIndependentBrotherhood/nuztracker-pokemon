@@ -126,18 +126,8 @@ export interface GameObservation {
 
 export type EncounterMethod =
   "grass" | "surf" | "old-rod" | "good-rod" | "super-rod";
-/** Grass slots that only apply at a time of day, during a swarm, with the Poké Radar or a GBA cartridge. */
-export type EncounterCondition =
-  | "morning"
-  | "day"
-  | "night"
-  | "swarm"
-  | "radar"
-  | "ruby"
-  | "sapphire"
-  | "emerald"
-  | "firered"
-  | "leafgreen";
+/** Grass slots that only apply at a time of day. */
+export type EncounterCondition = "morning" | "day" | "night";
 /** One species of a map's wild table; `rate` is the sum of its slot chances, in percent. */
 export interface ZoneEncounter {
   method: EncounterMethod;
@@ -159,8 +149,7 @@ export interface GameFrame {
   location?: {
     id: string;
     name?: string;
-    // Maps sharing a wild table share this id; absent when the connector cannot read the ROM tables.
-    encounterTableId?: number;
+    // Wild table read from the ROM; absent when the connector cannot read it.
     encounters?: ZoneEncounter[];
   };
   battle?: {
@@ -221,7 +210,6 @@ export interface PlayerTracking {
     gameKey: string;
     locationId: string;
     locationName?: string;
-    encounterTableId?: number;
     pokemonId: number;
     level: number;
     observedAt: number;

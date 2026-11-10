@@ -739,14 +739,11 @@ export class PlatinumReader {
     };
   }
 
-  private zoneEncounters(map: number): {
-    encounterTableId?: number;
-    encounters?: ZoneEncounter[];
-  } {
+  private zoneEncounters(map: number): { encounters?: ZoneEncounter[] } {
     try {
       const table = this.encounters?.(map);
       return table && table.encounters.length
-        ? { encounterTableId: table.id, encounters: table.encounters }
+        ? { encounters: table.encounters }
         : {};
     } catch {
       return {};
