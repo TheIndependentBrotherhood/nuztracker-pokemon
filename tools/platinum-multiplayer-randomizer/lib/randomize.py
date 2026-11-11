@@ -13,6 +13,7 @@ from pathlib import Path
 import rom_extras
 import rom_evolutions
 import rom_learnsets
+import rom_text
 import rom_types
 from pm_loader import load_pm_setup
 
@@ -113,6 +114,7 @@ def run(config_path):
     extras = config["extras"]
     random_evolutions = random_evolutions_enabled(extras)
     pre_evolution_moves = move_reminder_pre_evolution_moves_enabled(extras)
+    type_hints = bool_option(extras, "gymTypeHints")
     line_types = pokemon_types_mode(config["coop"]) == "evolutionLines"
     for key in ("gymTypes", "eliteFourTypes"):
         if extras[key] not in THEME_MODES:
@@ -174,11 +176,12 @@ def run(config_path):
         report.append(rom_learnsets.inherit_learnsets(pm, rom, log))
     gym_rng = rom_extras.seeded("gyms", settings["coop_seed"])
     if extras["gymTypes"] != "off" or extras["eliteFourTypes"] != "off":
-        report.append(
-            rom_extras.theme_trainers(
-                pm, rom, gym_rng, extras["gymTypes"], extras["eliteFourTypes"], settings["coop_noleg"], log
-            )
+        themed, themes = rom_extras.theme_trainers(
+            pm, rom, gym_rng, extras["gymTypes"], extras["eliteFourTypes"], settings["coop_noleg"], log
         )
+        report.append(themed)
+        if type_hints:
+            report.append(rom_text.give_type_hints(pm, rom, themes, log))
     items = rom_extras.ItemCatalog(pm, rom, log)
     if extras["itemBalls"] or extras["hiddenItems"]:
         field_tms = rom_extras.FieldTms(items, rom_extras.gift_tms(pm, rom, log))

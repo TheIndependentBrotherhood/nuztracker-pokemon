@@ -242,7 +242,7 @@ def write_rom_file(rom, span, data):
         entry for entry in range(fat, fat + fat_size, 8) if struct.unpack_from("<II", rom.data, entry) == tuple(span)
     ]
     if len(entries) != 1:
-        raise RuntimeError("The learnset archive was not found in the ROM file table.")
+        raise RuntimeError("The archive was not found in the ROM file table.")
     start, end = span
     if len(data) > end - start:
         used = struct.unpack_from("<I", rom.data, 0x80)[0]
@@ -251,7 +251,7 @@ def write_rom_file(rom, span, data):
             raise RuntimeError("Unexpected NDS used-ROM size.")
         start = (used + 0x1FF) & ~0x1FF
         if start + len(data) > len(rom.data) or any(byte != 0xFF for byte in rom.data[start : start + len(data)]):
-            raise RuntimeError("Not enough unused ROM padding for the larger learnset archive.")
+            raise RuntimeError("Not enough unused ROM padding for the larger archive.")
         rom.write(0x80, 0x84, struct.pack("<I", start + len(data)))
     rom.write(start, start + len(data), data)
     rom.write(entries[0], entries[0] + 8, struct.pack("<II", start, start + len(data)))

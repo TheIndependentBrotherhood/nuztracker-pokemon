@@ -4,6 +4,7 @@ import hashlib
 import random
 import re
 import struct
+from dataclasses import dataclass
 
 TYPE_NAMES = [
     "Normal", "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel",
@@ -696,6 +697,19 @@ def rerandomize_existing_marts(rom, rng, items, include_held_items, stock_size):
 
 
 def find_map_headers(rom, zone_events, scripts):
+    code, start, count = map_header_table(rom, zone_events, scripts)
+    return [
+        (u16(code, start + i * MAP_HEADER_SIZE + 4), u16(code, start + i * MAP_HEADER_SIZE + 16)) for i in range(count)
+    ]
+
+
+def map_text_banks(rom, zone_events, scripts):
+    """Message bank of every map, from the map header table."""
+    code, start, count = map_header_table(rom, zone_events, scripts)
+    return [u16(code, start + i * MAP_HEADER_SIZE + 8) for i in range(count)]
+
+
+def map_header_table(rom, zone_events, scripts):
     arm9 = Arm9(rom)
     code = arm9.bytes()
     for start in range(0, len(code) - MAP_HEADER_SIZE * 500, 4):
@@ -712,10 +726,7 @@ def find_map_headers(rom, zone_events, scripts):
                 break
             count += 1
         if count >= 500:
-            return [
-                (u16(code, start + i * MAP_HEADER_SIZE + 4), u16(code, start + i * MAP_HEADER_SIZE + 16))
-                for i in range(count)
-            ]
+            return code, start, count
     raise RuntimeError("The map header table was not found.")
 
 
@@ -781,6 +792,52 @@ def themed_species(db, type_id, target_bst, rng, used, allowed):
     return rng.choice(candidates or pool)
 
 
+def group_trainers(headers, zone_events, scripts, teams, maps):
+    trainers = []
+    for map_id in maps:
+        script_file, event_file = headers[map_id]
+        for trainer in map_trainers(zone_events.get(event_file), scripts.get(script_file), teams.data.num_files):
+            if trainer not in trainers:
+                trainers.append(trainer)
+    return trainers
+
+
+def shared_type(db, species_list):
+    """The only type shared by every species, or None."""
+    common = None
+    for species in species_list:
+        types = {db[species]["type1"], db[species]["type2"]} if species in db else set()
+        common = types if common is None else common & types
+    return next(iter(common)) if common and len(common) == 1 else None
+
+
+def detect_trainer_themes(pm, rom, log):
+    """Themes of an already randomized ROM: a group is themed when all its trainers' Pokémon share one type."""
+    _, zone_events = pm._open_narc(rom, "fielddata/eventdata/zone_event.narc", log)
+    _, scripts = pm._open_narc(rom, "fielddata/script/scr_seq.narc", log)
+    headers = find_map_headers(rom, zone_events, scripts)
+    teams = TrainerTeams(pm, rom, log)
+    db = pm.rand_load_pokemon_db(rom)
+    themes = []
+    for (name, maps), is_gym in [*((group, True) for group in GYMS), *((group, False) for group in ELITE_FOUR)]:
+        trainers = group_trainers(headers, zone_events, scripts, teams, maps)
+        bosses = [trainer for trainer in trainers if teams.trainer_class(trainer) in BOSS_CLASS_TYPES]
+        if not bosses:
+            continue
+        species = [
+            pick
+            for trainer in trainers
+            for party_file, size in teams.teams(trainer)
+            if size
+            for pick in teams.species(party_file, size)[0]
+        ]
+        type_id = shared_type(db, species)
+        if type_id is not None:
+            original_type = BOSS_CLASS_TYPES[teams.trainer_class(bosses[0])]
+            themes.append(TrainerTheme(name, tuple(maps), is_gym, original_type, type_id))
+    return themes
+
+
 def theme_trainers(pm, rom, rng, gym_mode, elite_four_mode, exclude_legendaries, log):
     _, zone_events = pm._open_narc(rom, "fielddata/eventdata/zone_event.narc", log)
     _, scripts = pm._open_narc(rom, "fielddata/script/scr_seq.narc", log)
@@ -791,22 +848,21 @@ def theme_trainers(pm, rom, rng, gym_mode, elite_four_mode, exclude_legendaries,
     allowed = [species for species in db if species not in legendaries]
     available_types = sorted({db[species][key] for species in db for key in ("type1", "type2")})
     random_types = rng.sample(available_types, len(available_types))
-    groups = [(name, maps, gym_mode) for name, maps in GYMS] + [(name, maps, elite_four_mode) for name, maps in ELITE_FOUR]
-    lines = []
-    for name, maps, mode in groups:
+    groups = [(name, maps, gym_mode, True) for name, maps in GYMS] + [
+        (name, maps, elite_four_mode, False) for name, maps in ELITE_FOUR
+    ]
+    lines, themes = [], []
+    for name, maps, mode, is_gym in groups:
         if mode == "off":
             continue
-        trainers = []
-        for map_id in maps:
-            script_file, event_file = headers[map_id]
-            for trainer in map_trainers(zone_events.get(event_file), scripts.get(script_file), teams.data.num_files):
-                if trainer not in trainers:
-                    trainers.append(trainer)
+        trainers = group_trainers(headers, zone_events, scripts, teams, maps)
         bosses = [trainer for trainer in trainers if teams.trainer_class(trainer) in BOSS_CLASS_TYPES]
         if not bosses:
             lines.append(f"  {name}: skipped (leader not found)")
             continue
-        type_id = BOSS_CLASS_TYPES[teams.trainer_class(bosses[0])] if mode == "vanilla" else random_types.pop()
+        original_type = BOSS_CLASS_TYPES[teams.trainer_class(bosses[0])]
+        type_id = original_type if mode == "vanilla" else random_types.pop()
+        themes.append(TrainerTheme(name, tuple(maps), is_gym, original_type, type_id))
         details = []
         for trainer in trainers:
             for party_file, size in teams.teams(trainer):
@@ -824,7 +880,16 @@ def theme_trainers(pm, rom, rng, gym_mode, elite_four_mode, exclude_legendaries,
                     details.append(", ".join(pm.SPECIES_NAMES[species - 1] for species in themed))
         lines.append(f"  {name} [{TYPE_NAMES[type_id]}] {len(trainers)} trainers - leader: {' | '.join(details)}")
     teams.save()
-    return "Type themed gyms / Elite Four:\n" + "\n".join(lines)
+    return "Type themed gyms / Elite Four:\n" + "\n".join(lines), themes
+
+
+@dataclass(frozen=True)
+class TrainerTheme:
+    name: str
+    maps: tuple
+    is_gym: bool
+    original_type: int
+    type_id: int
 
 
 def patch_shiny_rate(pm, rom, one_in):

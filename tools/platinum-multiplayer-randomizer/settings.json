@@ -53,6 +53,7 @@
     "randomEvolutions": true,
     "moveReminderPreEvolutionMoves": true,
     "gymTypes": "random",
+    "gymTypeHints": true,
     "eliteFourTypes": "random"
   }
 }
