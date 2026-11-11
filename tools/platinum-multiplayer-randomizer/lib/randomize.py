@@ -12,6 +12,7 @@ from pathlib import Path
 
 import rom_extras
 import rom_evolutions
+import rom_learnsets
 import rom_types
 from pm_loader import load_pm_setup
 
@@ -28,11 +29,19 @@ def log(message=""):
     print(message, flush=True)
 
 
-def random_evolutions_enabled(extras):
-    enabled = extras.get("randomEvolutions", False)
+def bool_option(extras, name):
+    enabled = extras.get(name, False)
     if type(enabled) is not bool:
-        raise ValueError("extras.randomEvolutions must be true or false.")
+        raise ValueError(f"extras.{name} must be true or false.")
     return enabled
+
+
+def random_evolutions_enabled(extras):
+    return bool_option(extras, "randomEvolutions")
+
+
+def move_reminder_pre_evolution_moves_enabled(extras):
+    return bool_option(extras, "moveReminderPreEvolutionMoves")
 
 
 def pokemon_types_mode(coop):
@@ -103,6 +112,7 @@ def run(config_path):
     paths = config["paths"]
     extras = config["extras"]
     random_evolutions = random_evolutions_enabled(extras)
+    pre_evolution_moves = move_reminder_pre_evolution_moves_enabled(extras)
     line_types = pokemon_types_mode(config["coop"]) == "evolutionLines"
     for key in ("gymTypes", "eliteFourTypes"):
         if extras[key] not in THEME_MODES:
@@ -159,6 +169,9 @@ def run(config_path):
                 pm, rom, rom_extras.seeded("evolutions", settings["coop_seed"]), log
             )
         )
+    if pre_evolution_moves:
+        # After evolutions are randomized, so the Move Reminder follows the final lines.
+        report.append(rom_learnsets.inherit_learnsets(pm, rom, log))
     gym_rng = rom_extras.seeded("gyms", settings["coop_seed"])
     if extras["gymTypes"] != "off" or extras["eliteFourTypes"] != "off":
         report.append(

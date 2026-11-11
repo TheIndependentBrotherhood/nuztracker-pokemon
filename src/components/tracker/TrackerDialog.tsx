@@ -64,7 +64,7 @@ export function TrackerDialogIconButton({
   children,
 }: {
   label: string;
-  active: boolean;
+  active?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -156,6 +156,12 @@ export default function TrackerDialog({
             ?
           </TrackerDialogIconButton>
         ) : null}
+        <TrackerDialogIconButton
+          label={t(translations.focusCard.closeAction, lang)}
+          onClick={onClose}
+        >
+          ×
+        </TrackerDialogIconButton>
       </DialogTitle>
       <DialogContent sx={{ px: 1.5, py: 0.5 }}>
         {help ? (

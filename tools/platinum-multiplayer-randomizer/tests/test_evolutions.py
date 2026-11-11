@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import randomize
 import rom_evolutions
 import rom_extras
+import rom_learnsets
 
 
 def evolution_record(*entries):
@@ -217,6 +218,10 @@ class RandomEvolutionTests(unittest.TestCase):
         for value in (None, 0, 1, "true", [], {}):
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, "randomEvolutions"):
                 randomize.random_evolutions_enabled({"randomEvolutions": value})
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "moveReminderPreEvolutionMoves"):
+                randomize.move_reminder_pre_evolution_moves_enabled({"moveReminderPreEvolutionMoves": value})
+        self.assertFalse(randomize.move_reminder_pre_evolution_moves_enabled({}))
+        self.assertTrue(randomize.move_reminder_pre_evolution_moves_enabled({"moveReminderPreEvolutionMoves": True}))
 
     def test_randomizer_uses_coop_seed_only_when_option_is_enabled(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -266,15 +271,24 @@ class RandomEvolutionTests(unittest.TestCase):
                 patch.object(rom_extras, "ItemCatalog"),
                 patch.object(rom_extras, "fix_header_crc"),
                 patch.object(rom_evolutions, "randomize_evolutions", return_value="Evolution targets hidden.") as apply,
+                patch.object(rom_learnsets, "inherit_learnsets", return_value="Learnsets hidden.") as inherit,
             ):
-                for enabled in (None, False, True):
-                    if enabled is None:
-                        config["extras"].pop("randomEvolutions", None)
-                    else:
-                        config["extras"]["randomEvolutions"] = enabled
+                for evolutions, moves in ((None, None), (False, False), (True, False), (False, True), (True, True)):
+                    apply.reset_mock()
+                    inherit.reset_mock()
+                    for key, value in (("randomEvolutions", evolutions), ("moveReminderPreEvolutionMoves", moves)):
+                        if value is None:
+                            config["extras"].pop(key, None)
+                        else:
+                            config["extras"][key] = value
                     config_path.write_text(json.dumps(config), encoding="utf-8")
                     randomize.run(config_path)
-                    if enabled is not True:
+                    if moves is True:
+                        inherit.assert_called_once()
+                        self.assertIs(inherit.call_args.args[1], rom)
+                    else:
+                        inherit.assert_not_called()
+                    if evolutions is not True:
                         apply.assert_not_called()
                     else:
                         apply.assert_called_once()

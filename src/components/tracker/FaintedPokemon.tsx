@@ -1,11 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, AlertTitle, Button, Stack, Typography } from "@mui/material";
-import type { Capture, Run } from "@/lib/types";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { SOUL_LINK_PLAYER_COLORS, type Capture, type Run } from "@/lib/types";
 import type { RunRecord } from "@/lib/tracker/types";
 import { getPlayerId, getPlayerIndex } from "@/lib/tracker/knowledge";
-import { resolvePendingFaint, reviveCapture } from "@/lib/tracker/run-rules";
+import {
+  resolvePendingFaint,
+  reviveCapture,
+  soulLinkPair,
+} from "@/lib/tracker/run-rules";
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
@@ -150,12 +161,15 @@ export default function FaintedPokemon({
                 spacing={1}
                 sx={{ alignItems: "center", justifyContent: "space-between" }}
               >
-                <Typography variant="body2" sx={textSx}>
-                  {t(
-                    capture.linkedDeath ? tr.linked : tr.fainted,
-                    lang,
-                  )(label(capture))}
-                </Typography>
+                <Stack sx={{ minWidth: 0 }}>
+                  <Typography variant="body2" sx={textSx}>
+                    {t(
+                      capture.linkedDeath ? tr.linked : tr.fainted,
+                      lang,
+                    )(label(capture))}
+                  </Typography>
+                  <SoulLinkPairLine run={run} capture={capture} label={label} />
+                </Stack>
                 {!capture.linkedDeath && (
                   <Button
                     size="small"
@@ -179,5 +193,47 @@ export default function FaintedPokemon({
         </Alert>
       )}
     </Stack>
+  );
+}
+
+/** Small reminder of the SoulLink pair, so every player knows which Pokémon to remove. */
+function SoulLinkPairLine({
+  run,
+  capture,
+  label,
+}: {
+  run: Run;
+  capture: Capture;
+  label: (capture: Capture) => string;
+}) {
+  const { lang } = useLanguage();
+  const pair = soulLinkPair(run, capture.id);
+  if (pair.length < 2) return null;
+  return (
+    <Typography
+      variant="caption"
+      data-testid="soul-link-pair"
+      sx={{ color: "text.secondary", lineHeight: 1.3 }}
+    >
+      {t(tr.pair, lang)}{" "}
+      {pair.map((member, position) => {
+        const index = member.playerIndex ?? 0;
+        const player =
+          run.soulLinkPlayers?.find((entry) => entry.playerIndex === index)
+            ?.name ?? `P${index + 1}`;
+        return (
+          <span key={member.id}>
+            {position > 0 && " · "}
+            <Box
+              component="span"
+              sx={{ color: SOUL_LINK_PLAYER_COLORS[index], fontWeight: 700 }}
+            >
+              {player}
+            </Box>{" "}
+            {label(member)}
+          </span>
+        );
+      })}
+    </Typography>
   );
 }

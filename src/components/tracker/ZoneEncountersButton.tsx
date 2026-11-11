@@ -14,8 +14,9 @@ import type { EncounterMethod } from "@/lib/tracker/types";
 import TrackerDialog from "./TrackerDialog";
 import PixelIcon, {
   GRASS_ICON,
-  MAP_PIN_ICON,
-  ROD_ICON,
+  HOOK_ICON,
+  POKE_BALL_ICON,
+  POKE_BALL_PALETTE,
   SURF_ICON,
 } from "./PixelIcon";
 
@@ -30,9 +31,9 @@ const METHOD_ICONS: Record<EncounterMethod, { rows: string[]; color: string }> =
   {
     grass: { rows: GRASS_ICON, color: "#4ade80" },
     surf: { rows: SURF_ICON, color: "#60a5fa" },
-    "old-rod": { rows: ROD_ICON, color: "#c08a52" },
-    "good-rod": { rows: ROD_ICON, color: "#38bdf8" },
-    "super-rod": { rows: ROD_ICON, color: "#f87171" },
+    "old-rod": { rows: HOOK_ICON, color: "#c08a52" },
+    "good-rod": { rows: HOOK_ICON, color: "#38bdf8" },
+    "super-rod": { rows: HOOK_ICON, color: "#f87171" },
   };
 
 export function EncounterMethodIcon({
@@ -52,7 +53,7 @@ export function EncounterMethodIcon({
   );
 }
 
-/** Ironmon-style "pin X/N" counter of the current map's wild table, with the table in a dialog. */
+/** Ironmon-style "X/N" counter of the current map's wild table, with the table in a dialog. */
 export default function ZoneEncountersButton({
   zone,
 }: {
@@ -113,7 +114,12 @@ export default function ZoneEncountersButton({
           "&:hover, &.Mui-focusVisible": { bgcolor: "#ffffff1a" },
         }}
       >
-        <PixelIcon rows={MAP_PIN_ICON} color="#f87171" size={9} />
+        <PixelIcon
+          rows={POKE_BALL_ICON}
+          color={POKE_BALL_PALETTE.r}
+          palette={POKE_BALL_PALETTE}
+          size={9}
+        />
         {zone.seen}/{zone.total}
       </ButtonBase>
       <TrackerDialog

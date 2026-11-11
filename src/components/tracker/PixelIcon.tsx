@@ -51,16 +51,17 @@ export const SKULL_ICON = [
   "0111110",
   "0101010",
 ];
-// Map marker with a hole, like a Google Maps pin.
-export const MAP_PIN_ICON = [
-  "0111110",
-  "1110111",
-  "1101011",
-  "1110111",
-  "0111110",
-  "0011100",
-  "0001000",
+// Poké Ball drawn with POKE_BALL_PALETTE.
+export const POKE_BALL_ICON = [
+  "00rrr00",
+  "0rrrrr0",
+  "rrrkrrr",
+  "kkkwkkk",
+  "wwwkwww",
+  "0wwwww0",
+  "00www00",
 ];
+export const POKE_BALL_PALETTE = { r: "#ef4444", k: "#111827", w: "#f8fafc" };
 export const GRASS_ICON = [
   "0001000",
   "1001001",
@@ -79,24 +80,28 @@ export const SURF_ICON = [
   "1001100",
   "0000000",
 ];
-export const ROD_ICON = [
-  "0000011",
-  "0000101",
-  "0001001",
-  "0010001",
-  "0100001",
-  "1000010",
-  "0000010",
+// Fishing hook: eye, shank and barbed point.
+export const HOOK_ICON = [
+  "0001110",
+  "0001010",
+  "0001110",
+  "0000100",
+  "0100100",
+  "1100100",
+  "0111000",
 ];
 
 export default function PixelIcon({
   rows,
   color,
+  palette,
   size = 11,
   label,
 }: {
   rows: string[];
   color: string;
+  /** Colors of the non-"1" pixel letters, for multicolor icons. */
+  palette?: Record<string, string>;
   size?: number;
   label?: string;
 }) {
@@ -113,14 +118,14 @@ export default function PixelIcon({
     >
       {rows.flatMap((row, y) =>
         [...row].map((bit, x) =>
-          bit === "1" ? (
+          bit !== "0" ? (
             <rect
               key={`${x}-${y}`}
               x={x}
               y={y}
               width={1}
               height={1}
-              fill={color}
+              fill={bit === "1" ? color : (palette?.[bit] ?? color)}
             />
           ) : null,
         ),

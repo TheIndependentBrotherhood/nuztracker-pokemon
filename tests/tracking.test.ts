@@ -11,6 +11,7 @@ import {
   finalizeRun,
   resolvePendingFaint,
   reviveCapture,
+  soulLinkPair,
 } from "../src/lib/tracker/run-rules";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { opponentMember } from "../src/lib/tracker/overlay";
@@ -53,6 +54,19 @@ test("independent participant edits merge and duplicate commands are idempotent"
     applyRunEdit(merged, command, { enforceOwnership: true }),
     merged,
   );
+});
+
+test("soulLinkPair lists the linked Pokémon of every player in player order", () => {
+  const linked = record(true);
+  const failed = { ...capture("c", 0), failedCapture: true };
+  linked.run.zones[0].captures = [capture("b", 1), failed, capture("a", 0)];
+  assert.deepEqual(
+    soulLinkPair(linked.run, "b").map((entry) => entry.id),
+    ["a", "b"],
+  );
+  const solo = record(false);
+  solo.run.zones[0].captures = [capture("a", 0)];
+  assert.deepEqual(soulLinkPair(solo.run, "a"), []);
 });
 
 test("conflicting edits and attempts to modify another player are rejected", () => {

@@ -17,6 +17,24 @@ export function captureGroup(zone: Zone, capture: Capture): string {
   return capture.soulLinkGroupId ?? defaultCaptureGroup(zone, capture);
 }
 
+/** The SoulLink pair of a capture: one Pokémon per player, in player order. */
+export function soulLinkPair(run: Run, captureId: string): Capture[] {
+  if (!run.isSoulLinkMode) return [];
+  for (const zone of run.zones) {
+    const capture = zone.captures.find((entry) => entry.id === captureId);
+    if (!capture) continue;
+    const group = captureGroup(zone, capture);
+    return zone.captures
+      .filter(
+        (entry) => !entry.failedCapture && captureGroup(zone, entry) === group,
+      )
+      .sort(
+        (left, right) => (left.playerIndex ?? 0) - (right.playerIndex ?? 0),
+      );
+  }
+  return [];
+}
+
 export function applySoulLinkDeaths(run: Run, now = Date.now()): Run {
   if (!run.isSoulLinkMode) return run;
   const roots = run.zones.flatMap((zone) =>

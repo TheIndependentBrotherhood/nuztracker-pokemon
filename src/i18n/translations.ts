@@ -970,6 +970,7 @@ const translations = {
       fr: (name: string) => `${name} est mort à cause du SoulLink.`,
       en: (name: string) => `${name} died through the SoulLink.`,
     },
+    pair: { fr: "Lien :", en: "Link:" },
     undo: { fr: "Annuler la mort", en: "Undo death" },
     confirm: {
       fr: "Annuler cette mort et remettre le Pokémon dans l'équipe ?",
