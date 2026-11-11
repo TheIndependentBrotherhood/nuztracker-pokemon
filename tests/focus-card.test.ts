@@ -559,22 +559,44 @@ test("the current zone reports the player's own regular and shiny captures", () 
         zones: current.run.zones.map((zone) => ({ ...zone, captures })),
       },
     }).teams.find((team) => team.playerId === "p1")?.zoneCapture;
-  assert.deepEqual(zoneCapture([]), { captured: false, shiny: false });
+  assert.deepEqual(zoneCapture([]), {
+    captured: false,
+    shiny: false,
+    lost: false,
+  });
   const own = capture("c1", 0);
-  assert.deepEqual(zoneCapture([own]), { captured: true, shiny: false });
+  assert.deepEqual(zoneCapture([own]), {
+    captured: true,
+    shiny: false,
+    lost: false,
+  });
   assert.deepEqual(zoneCapture([{ ...own, playerIndex: 1 }]), {
     captured: false,
     shiny: false,
+    lost: false,
   });
-  assert.deepEqual(zoneCapture([{ ...own, failedCapture: true }]), {
+  const failed = { ...own, isDead: true, failedCapture: true };
+  assert.deepEqual(zoneCapture([failed]), {
     captured: false,
     shiny: false,
+    lost: true,
   });
-  assert.deepEqual(
-    zoneCapture([{ ...own, isShiny: true, shinyChance: true }]),
-    {
-      captured: true,
-      shiny: true,
-    },
-  );
+  // A partner's failure locks the zone for this player too.
+  assert.deepEqual(zoneCapture([{ ...failed, playerIndex: 1 }]), {
+    captured: false,
+    shiny: false,
+    lost: true,
+  });
+  const shinyChance = { ...own, id: "c2", isShiny: true, shinyChance: true };
+  assert.deepEqual(zoneCapture([shinyChance]), {
+    captured: true,
+    shiny: true,
+    lost: false,
+  });
+  // The first chance stays lost even when the shiny second chance is caught.
+  assert.deepEqual(zoneCapture([failed, shinyChance]), {
+    captured: true,
+    shiny: true,
+    lost: true,
+  });
 });

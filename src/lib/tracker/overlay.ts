@@ -38,6 +38,7 @@ import { z } from "zod";
 import { POKEMON_STAT_NAMES } from "../types";
 import { GAME_VERSIONS, type GameVersionId } from "../game-catalog";
 import { zoneIdForMapName } from "../zones";
+import { isZoneLockedForPlayer } from "../zone-progress";
 import { gameKey } from "./live";
 
 // What the game itself reported for seen moves (ROM data) and hack-added abilities (ROM names).
@@ -100,7 +101,8 @@ export interface OverlayTeam {
   location?: string;
   locationNames?: { fr?: string; en?: string };
   // Captures of this player in the current run zone; absent when the location matches no zone.
-  zoneCapture?: { captured: boolean; shiny: boolean };
+  // `lost`: the regular encounter (not the shiny second chance) was failed or locked by a partner.
+  zoneCapture?: { captured: boolean; shiny: boolean; lost: boolean };
   // Wild table of the current map; undiscovered species carry no pokemonId so the overlay never spoils them.
   zoneEncounters?: OverlayZoneEncounters;
   members: OverlayMember[];
@@ -136,7 +138,11 @@ export const overlaySchema: z.ZodType<OverlayData> = z.object({
         .object({ fr: z.string().optional(), en: z.string().optional() })
         .optional(),
       zoneCapture: z
-        .object({ captured: z.boolean(), shiny: z.boolean() })
+        .object({
+          captured: z.boolean(),
+          shiny: z.boolean(),
+          lost: z.boolean(),
+        })
         .optional(),
       zoneEncounters: z
         .object({
@@ -245,12 +251,19 @@ function teamLocation(
       : undefined);
   const zone = record.run.zones.find((entry) => entry.id === matchedId);
   const names = zone?.zoneNames;
-  const captures = (zone?.captures ?? []).filter(
-    (capture) =>
-      !capture.failedCapture &&
-      (!record.run.isSoulLinkMode ||
-        (capture.playerIndex ?? 0) === playerIndex),
+  const soulLink = Boolean(record.run.isSoulLinkMode);
+  const own = (zone?.captures ?? []).filter(
+    (capture) => !soulLink || (capture.playerIndex ?? 0) === playerIndex,
   );
+  const captures = own.filter((capture) => !capture.failedCapture);
+  const regular = own.filter((capture) => !capture.shinyChance);
+  const lost = !zone
+    ? false
+    : regular.length
+      ? regular.every((capture) => capture.failedCapture)
+      : soulLink
+        ? isZoneLockedForPlayer(zone, playerIndex)
+        : zone.status === "lost";
   return {
     ...zoneEncounters(tracking, location, captures),
     ...(zone
@@ -258,6 +271,7 @@ function teamLocation(
           zoneCapture: {
             captured: captures.length > 0,
             shiny: captures.some((capture) => capture.isShiny),
+            lost,
           },
         }
       : {}),

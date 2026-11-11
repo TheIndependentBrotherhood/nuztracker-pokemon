@@ -746,6 +746,10 @@ const translations = {
       fr: "Aucune capture dans cette zone",
       en: "No capture in this zone",
     },
+    zoneLost: {
+      fr: "Zone perdue : rencontre ratée",
+      en: "Zone lost: encounter failed",
+    },
     zoneShiny: {
       fr: "Shiny capturé dans cette zone",
       en: "Shiny caught in this zone",

@@ -595,27 +595,31 @@ export default function LightTracker() {
                 data-testid="zone-capture"
                 sx={{ ml: 0.5, fontWeight: 800, whiteSpace: "nowrap" }}
               >
-                <Box
-                  component="span"
-                  role="img"
-                  title={t(
-                    team.zoneCapture.captured
-                      ? text.zoneCaptured
-                      : text.zoneNotCaptured,
-                    lang,
-                  )}
-                  aria-label={t(
-                    team.zoneCapture.captured
-                      ? text.zoneCaptured
-                      : text.zoneNotCaptured,
-                    lang,
-                  )}
-                  sx={{
-                    color: team.zoneCapture.captured ? "#4ade80" : "#64748b",
-                  }}
-                >
-                  ✓
-                </Box>
+                {(() => {
+                  const zoneState = team.zoneCapture.lost
+                    ? { label: text.zoneLost, color: "#ef4444" }
+                    : team.zoneCapture.captured
+                      ? { label: text.zoneCaptured, color: "#4ade80" }
+                      : { label: text.zoneNotCaptured, color: "#64748b" };
+                  return (
+                    <Box
+                      component="span"
+                      role="img"
+                      data-state={
+                        team.zoneCapture.lost
+                          ? "lost"
+                          : team.zoneCapture.captured
+                            ? "captured"
+                            : "pending"
+                      }
+                      title={t(zoneState.label, lang)}
+                      aria-label={t(zoneState.label, lang)}
+                      sx={{ color: zoneState.color }}
+                    >
+                      ✓
+                    </Box>
+                  );
+                })()}
                 {team.zoneCapture.shiny && (
                   <Box
                     component="span"
