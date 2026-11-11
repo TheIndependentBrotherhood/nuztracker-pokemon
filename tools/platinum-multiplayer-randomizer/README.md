@@ -60,6 +60,14 @@ Themed types are read from the trainers' teams (the only type shared by every Po
 
 Themed teams keep the randomized team size and each Pokémon's approximate BST. They use the **randomized** species types, so a Rock gym really contains Rock-type Pokémon in this ROM. Legendaries are excluded when `coop.noLegendaries` is enabled. The Champion keeps a mixed team.
 
+Party entries are located from the trainer flags (Project PM clears them without shrinking party files). ROMs themed before this fix have some off-type Pokémon in leaders' and trainers' teams; to complete them without re-randomizing, run from `lib`:
+
+```powershell
+py -3.11 fix_trainer_themes.py "<randomized.nds>" "<fixed.nds>"
+```
+
+It clears the misplaced writes, replaces only off-type Pokémon (similar BST, levels unchanged) and reports counts only.
+
 Random evolutions keep every existing method, parameter and branch; species without evolutions remain unchanged. Targets are drawn from the supported species without type or strength restrictions, including legendary Pokémon, and cannot create cycles or repeat the original target. Different branches remain distinct, while alternative methods for the same original target remain equivalent. Chains may become shorter or longer. The special extra evolution also uses its new target without changing its original requirements. The report does not list evolution targets.
 
 Expanded specialty stocks apply to the 12 city and Pokémon League specialty clerks, not the regular clerk or department stores. Each specialty clerk has at least one evolution stone; the remaining random slots can also contain additional evolution stones. The original randomized items are kept and the remaining slots are filled with distinct sellable items. The expansion requires the supported Platinum Multiplayer shop overlay and enough unused ROM padding; unsupported layouts fail instead of overwriting other data.

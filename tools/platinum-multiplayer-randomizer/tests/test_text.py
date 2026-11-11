@@ -1,3 +1,5 @@
+import random
+import struct
 import sys
 import unittest
 from pathlib import Path
@@ -100,6 +102,30 @@ class TypeMentionTests(unittest.TestCase):
 
 
 class OptionTests(unittest.TestCase):
+    def test_repair_party_clears_misplaced_writes_and_themes_species(self):
+        db = {1: {"type1": 5, "type2": 5, "bst": 300}, 2: {"type1": 9, "type2": 9, "bst": 300}, 3: {"type1": 5, "type2": 0, "bst": 310}}
+        size, stride, file_stride = 3, 16, 28
+        body = bytearray(size * file_stride)
+        for slot, species in enumerate((1, 2, 2)):
+            struct.pack_into("<HH", body, slot * stride + 2, 15, species)
+            body[slot * stride + 10] = 0x19
+        for offset in rom_extras.legacy_theme_offsets(size, stride, file_stride):
+            struct.pack_into("<H", body, offset, 1)
+        fixed, replaced = rom_extras.repair_party(bytes(body), size, stride, 5, db, random.Random(1), [1, 2, 3])
+        self.assertEqual(replaced, 2)
+        for slot in range(size):
+            entry = fixed[slot * stride : (slot + 1) * stride]
+            self.assertIn(rom_extras.u16(entry, 4), (1, 3))
+            self.assertEqual(rom_extras.u16(entry, 2), 15)
+            self.assertEqual((entry[0], entry[8], entry[12], entry[10]), (0, 0, 0, 0x19))
+
+    def test_repair_party_keeps_complete_teams(self):
+        db = {1: {"type1": 5, "type2": 5, "bst": 300}}
+        body = bytearray(32)
+        struct.pack_into("<H", body, 4, 1)
+        struct.pack_into("<H", body, 20, 1)
+        self.assertEqual(rom_extras.repair_party(bytes(body), 2, 16, 5, db, random.Random(1), [1]), (bytes(body), 0))
+
     def test_shared_type(self):
         db = {1: {"type1": 5, "type2": 5}, 2: {"type1": 5, "type2": 9}, 3: {"type1": 9, "type2": 5}}
         self.assertEqual(rom_extras.shared_type(db, [1, 2, 3]), 5)

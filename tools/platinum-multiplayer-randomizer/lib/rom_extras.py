@@ -747,6 +747,12 @@ def map_trainers(zone_event, script, trainer_count):
     return found
 
 
+def party_stride(flags):
+    # Platinum Multiplayer party entries: 16 bytes, +8 with moves (bit 0), +4 with a held item (bit 1).
+    # Project PM clears these flags without shrinking the party files, so the file size is not reliable.
+    return 16 + (8 if flags & 1 else 0) + (4 if flags & 2 else 0)
+
+
 class TrainerTeams:
     def __init__(self, pm, rom, log):
         self.pm, self.rom, self.log = pm, rom, log
@@ -757,21 +763,23 @@ class TrainerTeams:
         return self.data.get(trainer)[1]
 
     def teams(self, trainer):
+        """(party file, size, entry stride) of the normal team and, when present, the hard team."""
         head = self.data.get(trainer)
-        result = [(trainer, head[3])]
-        hard_file, hard_size = u16(head, 24), head[26]
-        if len(head) >= 28 and hard_size and hard_file < self.parties.num_files:
-            result.append((hard_file, hard_size))
+        result = [(trainer, head[3], party_stride(head[0]))]
+        if len(head) >= 28:
+            hard_file, hard_size = u16(head, 24), head[26]
+            if hard_size and hard_file < self.parties.num_files:
+                result.append((hard_file, hard_size, party_stride(head[27])))
         return result
 
-    def species(self, party_file, size):
+    def species(self, party_file, size, stride):
         body = self.parties.get(party_file)
-        stride = len(body) // size if size else 0
-        return [u16(body, slot * stride + 4) & 1023 for slot in range(size)], stride
+        return [u16(body, slot * stride + 4) & 1023 for slot in range(size)]
 
-    def set_species(self, party_file, size, species):
+    def set_species(self, party_file, size, stride, species):
         body = bytearray(self.parties.get(party_file))
-        stride = len(body) // size
+        if size * stride > len(body):
+            raise RuntimeError("Unexpected trainer party layout.")
         for slot, value in enumerate(species):
             struct.pack_into("<H", body, slot * stride + 4, value)
         self.parties.put(party_file, bytes(body))
@@ -824,18 +832,82 @@ def detect_trainer_themes(pm, rom, log):
         bosses = [trainer for trainer in trainers if teams.trainer_class(trainer) in BOSS_CLASS_TYPES]
         if not bosses:
             continue
-        species = [
-            pick
-            for trainer in trainers
-            for party_file, size in teams.teams(trainer)
-            if size
-            for pick in teams.species(party_file, size)[0]
-        ]
+        parties = [party for trainer in trainers for party in teams.teams(trainer) if party[1]]
+        species = [pick for party_file, size, stride in parties for pick in teams.species(party_file, size, stride)]
         type_id = shared_type(db, species)
+        if type_id is None:
+            # ROMs themed before party strides were read from the trainer flags got their species written
+            # at file size / party size; the themed type is the one shared at those positions.
+            legacy = [
+                pick
+                for party_file, size, _ in parties
+                for pick in teams.species(party_file, size, len(teams.parties.get(party_file)) // size)
+            ]
+            type_id = shared_type(db, legacy)
         if type_id is not None:
             original_type = BOSS_CLASS_TYPES[teams.trainer_class(bosses[0])]
             themes.append(TrainerTheme(name, tuple(maps), is_gym, original_type, type_id))
     return themes
+
+
+def legacy_theme_offsets(size, stride, file_stride):
+    """Bytes the old theming wrote in the entries the game reads, other than real species fields."""
+    real = {slot * stride + 4 for slot in range(size)}
+    return sorted(
+        offset
+        for offset in (slot * file_stride + 4 for slot in range(size))
+        if offset not in real and offset + 2 <= size * stride
+    )
+
+
+def repair_party(body, size, stride, type_id, db, rng, allowed):
+    """Clear the old theming's misplaced writes and theme every off-type species; returns (body, replaced)."""
+    body = bytearray(body)
+    file_stride = len(body) // size
+    if file_stride != stride:
+        for offset in legacy_theme_offsets(size, stride, file_stride):
+            # Fields hit there (entry bytes 0, 8 and 12) are always zero in untouched parties.
+            if offset % stride not in (0, 8, 12):
+                raise RuntimeError("Unexpected trainer party layout.")
+            struct.pack_into("<H", body, offset, 0)
+    species = [u16(body, slot * stride + 4) & 1023 for slot in range(size)]
+    used, replaced = set(species), 0
+    for slot, current in enumerate(species):
+        if current in db and type_id in (db[current]["type1"], db[current]["type2"]):
+            continue
+        target = db[current]["bst"] if current in db else 400
+        pick = themed_species(db, type_id, target, rng, used, allowed)
+        used.add(pick)
+        struct.pack_into("<H", body, slot * stride + 4, pick)
+        replaced += 1
+    return bytes(body), replaced
+
+
+def repair_trainer_themes(pm, rom, exclude_legendaries, log):
+    """Finish the themed teams of a ROM themed with the old party stride. Reports counts only."""
+    themes = detect_trainer_themes(pm, rom, log)
+    _, zone_events = pm._open_narc(rom, "fielddata/eventdata/zone_event.narc", log)
+    _, scripts = pm._open_narc(rom, "fielddata/script/scr_seq.narc", log)
+    headers = find_map_headers(rom, zone_events, scripts)
+    teams = TrainerTeams(pm, rom, log)
+    db = pm.rand_load_pokemon_db(rom)
+    legendaries = set(pm.RAND_LEGENDARIES) if exclude_legendaries else set()
+    allowed = [species for species in db if species not in legendaries]
+    rng = seeded("theme-repair", hashlib.sha1(bytes(rom.data[: 0x200])).hexdigest())
+    parties = replaced = 0
+    for theme in themes:
+        for trainer in group_trainers(headers, zone_events, scripts, teams, theme.maps):
+            for party_file, size, stride in teams.teams(trainer):
+                if not size:
+                    continue
+                body = teams.parties.get(party_file)
+                fixed, count = repair_party(body, size, stride, theme.type_id, db, rng, allowed)
+                if fixed != bytes(body):
+                    teams.parties.put(party_file, fixed)
+                    parties += 1
+                    replaced += count
+    teams.save()
+    return f"Themed teams repaired: {len(themes)} gyms / Elite Four rooms, {parties} teams, {replaced} Pokémon replaced."
 
 
 def theme_trainers(pm, rom, rng, gym_mode, elite_four_mode, exclude_legendaries, log):
@@ -865,17 +937,17 @@ def theme_trainers(pm, rom, rng, gym_mode, elite_four_mode, exclude_legendaries,
         themes.append(TrainerTheme(name, tuple(maps), is_gym, original_type, type_id))
         details = []
         for trainer in trainers:
-            for party_file, size in teams.teams(trainer):
+            for party_file, size, stride in teams.teams(trainer):
                 if not size:
                     continue
-                current, _ = teams.species(party_file, size)
+                current = teams.species(party_file, size, stride)
                 used, themed = set(), []
                 for species in current:
                     target = db[species]["bst"] if species in db else 400
                     pick = themed_species(db, type_id, target, rng, used, allowed)
                     used.add(pick)
                     themed.append(pick)
-                teams.set_species(party_file, size, themed)
+                teams.set_species(party_file, size, stride, themed)
                 if trainer in bosses:
                     details.append(", ".join(pm.SPECIES_NAMES[species - 1] for species in themed))
         lines.append(f"  {name} [{TYPE_NAMES[type_id]}] {len(trainers)} trainers - leader: {' | '.join(details)}")
