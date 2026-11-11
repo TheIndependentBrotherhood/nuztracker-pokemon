@@ -90,6 +90,34 @@ export const HOOK_ICON = [
   "1100100",
   "0111000",
 ];
+// Half sun rising over the horizon.
+export const SUNRISE_ICON = [
+  "0001000",
+  "0100010",
+  "0011100",
+  "1011101",
+  "0111110",
+  "0000000",
+  "1111111",
+];
+export const SUN_ICON = [
+  "1001001",
+  "0011100",
+  "0111110",
+  "1111111",
+  "0111110",
+  "0011100",
+  "1001001",
+];
+export const MOON_ICON = [
+  "0011100",
+  "0111000",
+  "1110000",
+  "1110000",
+  "1110000",
+  "0111000",
+  "0011100",
+];
 
 export default function PixelIcon({
   rows,

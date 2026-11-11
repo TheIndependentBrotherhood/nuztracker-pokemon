@@ -10,15 +10,31 @@ import type {
   OverlayZoneEncounter,
   OverlayZoneEncounters,
 } from "@/lib/tracker/overlay";
-import type { EncounterMethod } from "@/lib/tracker/types";
+import type { EncounterCondition, EncounterMethod } from "@/lib/tracker/types";
 import TrackerDialog from "./TrackerDialog";
 import PixelIcon, {
   GRASS_ICON,
   HOOK_ICON,
+  MOON_ICON,
   POKE_BALL_ICON,
   POKE_BALL_PALETTE,
+  SUN_ICON,
+  SUNRISE_ICON,
   SURF_ICON,
 } from "./PixelIcon";
+
+const CONDITION_ORDER: EncounterCondition[] = ["morning", "day", "night"];
+const CONDITION_STYLES: Record<
+  EncounterCondition,
+  { rows: string[]; color: string }
+> = {
+  morning: { rows: SUNRISE_ICON, color: "#fb923c" },
+  day: { rows: SUN_ICON, color: "#facc15" },
+  night: { rows: MOON_ICON, color: "#a5b4fc" },
+};
+
+const conditionRank = (condition?: EncounterCondition) =>
+  condition ? CONDITION_ORDER.indexOf(condition) + 1 : 0;
 
 const METHODS: EncounterMethod[] = [
   "grass",
@@ -134,10 +150,8 @@ export default function ZoneEncountersButton({
               .filter((entry) => entry.method === method)
               .sort(
                 (left, right) =>
-                  Number(Boolean(left.condition)) -
-                    Number(Boolean(right.condition)) ||
-                  (left.condition ?? "").localeCompare(right.condition ?? "") ||
-                  right.rate - left.rate,
+                  conditionRank(left.condition) -
+                    conditionRank(right.condition) || right.rate - left.rate,
               );
             if (!entries.length) return null;
             return (
@@ -199,17 +213,30 @@ function EncounterCell({
     entry.minLevel === entry.maxLevel
       ? `${entry.minLevel}`
       : `${entry.minLevel}-${entry.maxLevel}`;
+  const time = entry.condition ? CONDITION_STYLES[entry.condition] : undefined;
+  const timeLabel = entry.condition
+    ? t(text.encounterConditions[entry.condition], lang)
+    : undefined;
   return (
     <Box
-      title={name}
+      title={timeLabel ? `${name} · ${timeLabel}` : name}
+      data-condition={entry.condition}
       sx={{
         position: "relative",
         p: 0.25,
         border: "1px solid",
-        borderColor: known ? "#7890a5" : "#334155",
+        borderColor: time
+          ? `${time.color}${known ? "b3" : "66"}`
+          : known
+            ? "#7890a5"
+            : "#334155",
         borderRadius: 0.5,
         textAlign: "center",
-        bgcolor: known ? "#ffffff0d" : "transparent",
+        bgcolor: time
+          ? `${time.color}${known ? "1f" : "0d"}`
+          : known
+            ? "#ffffff0d"
+            : "transparent",
       }}
     >
       {known && pokemon ? (
@@ -251,20 +278,27 @@ function EncounterCell({
         {t(translations.focusCard.level, lang)}
         {levels}
       </Typography>
-      {entry.condition && (
-        <Typography
-          sx={{
-            mt: 0.25,
-            fontSize: "0.55rem",
-            lineHeight: 1.1,
-            color: "#fcd34d",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
+      {time && timeLabel && (
+        <Stack
+          direction="row"
+          spacing={0.25}
+          sx={{ mt: 0.25, alignItems: "center", justifyContent: "center" }}
         >
-          {t(text.encounterConditions[entry.condition], lang)}
-        </Typography>
+          <PixelIcon {...time} size={8} />
+          <Typography
+            sx={{
+              fontSize: "0.55rem",
+              fontWeight: 700,
+              lineHeight: 1.1,
+              color: time.color,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {timeLabel}
+          </Typography>
+        </Stack>
       )}
     </Box>
   );
