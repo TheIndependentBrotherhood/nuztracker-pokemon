@@ -905,9 +905,9 @@ const translations = {
     },
     observedScope: {
       fr: (player: string) =>
-        `${player} / ROM et dresseur actuels uniquement. Les observations répétées d'une même rencontre comptent une fois ; les découvertes survivent au retour à une save state.`,
+        `${player} / ROM actuelle uniquement, avec les alliés qui jouent sur la même ROM. Les observations répétées d'une même rencontre comptent une fois ; les découvertes survivent au retour à une save state.`,
       en: (player: string) =>
-        `${player} / current ROM and trainer only. Repeated observations in the same encounter are counted once; discoveries survive save-state rollback.`,
+        `${player} / current ROM only, including allies playing the same ROM. Repeated observations in the same encounter are counted once; discoveries survive save-state rollback.`,
     },
     encounterSummary: {
       fr: (count: number, min: number, max: number) =>

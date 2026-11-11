@@ -50,10 +50,10 @@
     "specialtyClerks": true,
     "specialtyClerkStockSize": 10,
     "clerksSellHeldItems": true,
-    "randomEvolutions": true,
+    "randomEvolutions": false,
     "moveReminderPreEvolutionMoves": true,
     "gymTypes": "random",
-    "gymTypeHints": true,
+    "gymTypeHints": false,
     "eliteFourTypes": "random"
   }
 }

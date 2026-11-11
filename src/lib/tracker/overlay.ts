@@ -19,6 +19,7 @@ import type {
 } from "../types";
 import {
   getPlayerId,
+  getPlayerIndex,
   knowledgeForCapture,
   knowledgeForPlayer,
 } from "./knowledge";
@@ -39,7 +40,12 @@ import { POKEMON_STAT_NAMES } from "../types";
 import { GAME_VERSIONS, type GameVersionId } from "../game-catalog";
 import { zoneIdForMapName } from "../zones";
 import { isZoneLockedForPlayer } from "../zone-progress";
-import { gameKey } from "./live";
+import {
+  romKey,
+  romKeyOfGameKey,
+  sharedRomPlayers,
+  sharedSeenEncounters,
+} from "./shared-rom";
 
 // What the game itself reported for seen moves (ROM data) and hack-added abilities (ROM names).
 export interface CustomSeen {
@@ -203,22 +209,21 @@ export function hidesEvolutionTargets(run: Run): boolean {
   );
 }
 
-/** Species of the current map's wild table this player met in a wild battle here or caught in the zone; the others stay anonymous. */
+/** Species of the current map's wild table met in a wild battle here or caught in the zone, by this player or an ally on the same ROM; the others stay anonymous. */
 function zoneEncounters(
-  tracking: RunRecord["tracking"][string],
+  record: RunRecord,
+  playerId: string,
   location: NonNullable<GameFrame["location"]>,
   captures: Capture[],
 ): Pick<OverlayTeam, "zoneEncounters"> {
   if (!location.encounters?.length) return {};
-  const source = gameKey(tracking.game);
   const known = new Set(
     captures.map(
       (capture) => capture.originalCapturedPokemonId ?? capture.pokemon.id,
     ),
   );
-  for (const entry of tracking.seenEncounters ?? [])
-    if (entry.gameKey === source && entry.locationId === location.id)
-      known.add(entry.pokemonId);
+  for (const entry of sharedSeenEncounters(record, playerId))
+    if (entry.locationId === location.id) known.add(entry.pokemonId);
   const species = new Set(location.encounters.map((entry) => entry.pokemonId));
   return {
     zoneEncounters: {
@@ -264,8 +269,17 @@ function teamLocation(
       : soulLink
         ? isZoneLockedForPlayer(zone, playerIndex)
         : zone.status === "lost";
+  const sharedIndices = new Set(
+    [playerId, ...sharedRomPlayers(record, playerId)].map((id) =>
+      soulLink ? getPlayerIndex(record.run, id) : 0,
+    ),
+  );
+  const seenCaptures = (zone?.captures ?? []).filter(
+    (capture) =>
+      !capture.failedCapture && sharedIndices.has(capture.playerIndex ?? 0),
+  );
   return {
-    ...zoneEncounters(tracking, location, captures),
+    ...zoneEncounters(record, playerId, location, seenCaptures),
     ...(zone
       ? {
           zoneCapture: {
@@ -447,23 +461,35 @@ function singleBattleTarget(
   };
 }
 
+// Observations of this player's current game, and of allies playing the same ROM.
+function romObservations(
+  record: RunRecord,
+  playerId: string,
+): (observation: RunRecord["observations"][number]) => boolean {
+  const game = record.tracking[playerId]?.game;
+  if (!game) return (observation) => observation.playerId === playerId;
+  const players = new Set([playerId, ...sharedRomPlayers(record, playerId)]);
+  const key = romKey(game);
+  return (observation) =>
+    players.has(observation.playerId) &&
+    romKeyOfGameKey(observation.gameKey) === key;
+}
+
 function seenIds(
   record: RunRecord,
   playerId: string,
   pokemonId: number,
   kind: "move" | "ability",
 ): number[] {
-  const game = record.tracking[playerId]?.game;
-  const source = game && gameKey(game);
+  const sameRom = romObservations(record, playerId);
   const latest = new Map<number, number>();
   for (const observation of record.observations) {
     const id = kind === "move" ? observation.moveId : observation.abilityId;
     if (
       observation.kind !== kind ||
       !id ||
-      observation.playerId !== playerId ||
       observation.pokemonId !== pokemonId ||
-      (source && observation.gameKey !== source)
+      !sameRom(observation)
     )
       continue;
     latest.set(id, Math.max(latest.get(id) ?? 0, observation.observedAt));
@@ -488,16 +514,14 @@ export function customSeenWords(
   playerId: string,
   pokemonId: number,
 ): CustomSeen | undefined {
-  const game = record.tracking[playerId]?.game;
-  const source = game && gameKey(game);
+  const sameRom = romObservations(record, playerId);
   const seen: CustomSeen = { moves: {}, abilities: {} };
   let found = false;
   for (const observation of record.observations) {
     if (
       !(observation.custom || observation.move) ||
-      observation.playerId !== playerId ||
       observation.pokemonId !== pokemonId ||
-      (source && observation.gameKey !== source)
+      !sameRom(observation)
     )
       continue;
     if (observation.kind === "move" && observation.moveId) {

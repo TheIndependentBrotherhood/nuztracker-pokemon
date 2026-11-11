@@ -38,6 +38,7 @@ import {
   classifyEffectiveness,
   damageBlockFields,
   hasMoveResult,
+  MAX_BATTLERS,
   mayShiftTypes,
   readEffectivenessMon,
   TYPE_CHANGING_MOVES,
@@ -143,12 +144,7 @@ interface BattleRead {
   side?: number;
   warning?: string;
   verify: { child: number; system: number };
-  effectiveness?: {
-    pokemonId: number;
-    attackType: string;
-    outcome: EffectivenessOutcome;
-    moveId: number;
-  };
+  effectiveness?: EffectivenessResult[];
   usedMoves: { identity: string; pokemonId: number; moveId: number }[];
   battleMons: Buffer;
   revealedAbilities: {
@@ -156,6 +152,13 @@ interface BattleRead {
     pokemonId: number;
     abilityId: number;
   }[];
+}
+
+interface EffectivenessResult {
+  pokemonId: number;
+  attackType: string;
+  outcome: EffectivenessOutcome;
+  moveId: number;
 }
 
 interface OpponentMoves {
@@ -183,6 +186,9 @@ export class PlatinumReader {
     expiresAt: number;
   };
   private pendingEffectiveness?: string;
+  // Battle context sampled between full reads, and the results found there.
+  private effectivenessProbe?: { context: number; identities: string[] };
+  private sampledEffectiveness: EffectivenessResult[] = [];
   // Battlers whose types changed during the current battle never give type clues again.
   private typeShifted = new Set<string>();
   private typeShiftedSystem?: number;
@@ -438,6 +444,8 @@ export class PlatinumReader {
     } else {
       this.battleState = undefined;
       this.pendingEffectiveness = undefined;
+      this.effectivenessProbe = undefined;
+      this.sampledEffectiveness = [];
       this.typeShifted.clear();
       this.typeShiftedSystem = undefined;
       this.opponentMoves.clear();
@@ -507,19 +515,15 @@ export class PlatinumReader {
         : {}),
       ...(pokeBalls === undefined ? {} : { pokeBalls }),
       observations: [
-        ...(battle?.effectiveness
-          ? [
-              {
-                id: `eff-${battle.effectiveness.pokemonId}-${battle.effectiveness.attackType}-${battle.effectiveness.outcome}`,
-                encounterId: battle.battle.id,
-                pokemonId: battle.effectiveness.pokemonId,
-                kind: "effectiveness" as const,
-                value: battle.effectiveness.outcome,
-                attackType: battle.effectiveness.attackType,
-                moveId: battle.effectiveness.moveId,
-              },
-            ]
-          : []),
+        ...(battle?.effectiveness ?? []).map((effectiveness) => ({
+          id: `eff-${effectiveness.pokemonId}-${effectiveness.attackType}-${effectiveness.outcome}`,
+          encounterId: battle!.battle.id,
+          pokemonId: effectiveness.pokemonId,
+          kind: "effectiveness" as const,
+          value: effectiveness.outcome,
+          attackType: effectiveness.attackType,
+          moveId: effectiveness.moveId,
+        })),
         ...(battle?.usedMoves ?? []).map((used) => {
           // Seen moves always carry the ROM data: hacks change vanilla moves too.
           const custom = this.battleData?.customMove(used.moveId);
@@ -843,7 +847,7 @@ export class PlatinumReader {
       side,
       verify: { child, system },
       ...(warning ? { warning } : {}),
-      ...(effectiveness ? { effectiveness } : {}),
+      ...(effectiveness.length ? { effectiveness } : {}),
       usedMoves: [],
       battleMons: mons,
       revealedAbilities,
@@ -933,41 +937,100 @@ export class PlatinumReader {
     return used;
   }
 
-  // Reports the type matchup of the move being executed once two polls agree on it, so a context
-  // caught between two moves is never reported.
+  // Reports the type matchup of the move being executed once two samples agree on it, so a context
+  // caught between two moves is never reported. Results found by probeEffectiveness are reported too.
   private async readEffectiveness(
     system: number,
     context: number,
     mons: Buffer,
     identities: string[],
     stateLoaded: boolean,
-  ): Promise<BattleRead["effectiveness"]> {
-    if (!this.battleData) return undefined;
+  ): Promise<EffectivenessResult[]> {
+    if (!this.battleData) return [];
     if (stateLoaded || this.typeShiftedSystem !== system) {
       this.typeShifted.clear();
       this.pendingEffectiveness = undefined;
+      this.sampledEffectiveness = [];
     }
     this.typeShiftedSystem = system;
-    if (stateLoaded) return undefined;
+    if (stateLoaded) {
+      this.effectivenessProbe = undefined;
+      return [];
+    }
+    this.effectivenessProbe = { context, identities };
+    const moveCur = (
+      await this.memory.readMemory(context + CONTEXT_MOVE_CUR_OFFSET, 4)
+    ).readUInt32LE(0);
+    const result = await this.sampleEffectiveness(
+      context,
+      mons,
+      identities,
+      moveCur,
+    );
+    const found = [...this.sampledEffectiveness, ...(result ? [result] : [])];
+    this.sampledEffectiveness = [];
+    const keys = found.map((entry) => JSON.stringify(entry));
+    return found.filter((_, index) => keys.indexOf(keys[index]) === index);
+  }
+
+  /**
+   * Samples the move result between two full reads. A full read takes several emulated frames, and
+   * with a fast text speed a move result may not stay in memory long enough for two of them to agree.
+   */
+  async probeEffectiveness(): Promise<void> {
+    const probe = this.effectivenessProbe;
+    if (!probe || !this.battleData) return;
+    // Battle mons are followed by the current move id, so one packet holds both.
+    const block = await this.memory.readMemory(
+      probe.context + BATTLE_MON_OFFSET,
+      CONTEXT_MOVE_CUR_OFFSET + 4 - BATTLE_MON_OFFSET,
+    );
+    const mons = block.subarray(0, probe.identities.length * BATTLE_MON_SIZE);
+    const identities = probe.identities.map((_, index) => {
+      const mon = mons.subarray(
+        index * BATTLE_MON_SIZE,
+        (index + 1) * BATTLE_MON_SIZE,
+      );
+      return `${hex(mon.readUInt32LE(0x68))}-${hex(mon.readUInt32LE(0x74))}`;
+    });
+    // A probe racing the end of the battle could read a released context.
+    if (!identities.some((identity) => probe.identities.includes(identity)))
+      return;
+    const result = await this.sampleEffectiveness(
+      probe.context,
+      mons,
+      identities,
+      block.readUInt32LE(CONTEXT_MOVE_CUR_OFFSET - BATTLE_MON_OFFSET),
+    );
+    if (result) this.sampledEffectiveness.push(result);
+  }
+
+  private async sampleEffectiveness(
+    context: number,
+    mons: Buffer,
+    identities: string[],
+    moveCur: number,
+  ): Promise<EffectivenessResult | undefined> {
+    const battleData = this.battleData!;
     const monAt = (index: number) =>
       readEffectivenessMon(
         mons.subarray(index * BATTLE_MON_SIZE, (index + 1) * BATTLE_MON_SIZE),
       );
     identities.forEach((identity, index) => {
-      if (mayShiftTypes(monAt(index), this.battleData!))
+      if (mayShiftTypes(monAt(index), battleData))
         this.typeShifted.add(identity);
     });
-    const battlers = await this.memory.readMemory(
+    // Battlers, field conditions and turn flags are close enough to share one packet.
+    const head = await this.memory.readMemory(
       context + CONTEXT_BATTLERS_OFFSET,
-      0x0c,
+      CONTEXT_TURN_FLAGS_OFFSET +
+        MAX_BATTLERS * CONTEXT_TURN_FLAGS_SIZE -
+        CONTEXT_BATTLERS_OFFSET,
     );
-    const attacker = battlers.readUInt32LE(0);
-    const defender = battlers.readUInt32LE(8);
+    const attacker = head.readUInt32LE(0);
+    const defender = head.readUInt32LE(8);
     if (attacker >= identities.length || defender >= identities.length)
       return undefined;
-    const moveCur = (
-      await this.memory.readMemory(context + CONTEXT_MOVE_CUR_OFFSET, 4)
-    ).readUInt32LE(0);
     // The move may still be animating before the types change in memory.
     if (TYPE_CHANGING_MOVES.has(moveCur))
       this.typeShifted.add(identities[attacker]);
@@ -985,13 +1048,13 @@ export class PlatinumReader {
       defender,
       moveCur,
       ...damageBlockFields(damageBlock),
-      fieldConditions: await this.u32(
-        context + CONTEXT_FIELD_CONDITIONS_OFFSET,
+      fieldConditions: head.readUInt32LE(
+        CONTEXT_FIELD_CONDITIONS_OFFSET - CONTEXT_BATTLERS_OFFSET,
       ),
-      defenderTurnFlags: await this.u32(
-        context +
-          CONTEXT_TURN_FLAGS_OFFSET +
-          defender * CONTEXT_TURN_FLAGS_SIZE,
+      defenderTurnFlags: head.readUInt32LE(
+        CONTEXT_TURN_FLAGS_OFFSET +
+          defender * CONTEXT_TURN_FLAGS_SIZE -
+          CONTEXT_BATTLERS_OFFSET,
       ),
       attackerMon: monAt(attacker),
       defenderMon: monAt(defender),
@@ -1000,11 +1063,10 @@ export class PlatinumReader {
     const stable = key === this.pendingEffectiveness;
     this.pendingEffectiveness = key;
     if (!stable) return undefined;
-    const result = classifyEffectiveness(sample, this.battleData);
+    const result = classifyEffectiveness(sample, battleData);
     return result && { ...result, moveId: sample.moveCur };
   }
 }
-
 export class MelonDsConnector {
   private readonly cancel = new AbortController();
   private rom?: NdsRom;
@@ -1047,6 +1109,8 @@ export class MelonDsConnector {
           // Between battle frames only the keypad register is read, so short Start presses are not missed.
           if (sampling && Date.now() - lastFrameAt < FRAME_INTERVAL_MS) {
             await input.sample();
+            // Best effort: the next full read reports anything found and handles real errors.
+            await reader.probeEffectiveness().catch(() => undefined);
             delay = SAMPLE_INTERVAL_MS;
             return;
           }

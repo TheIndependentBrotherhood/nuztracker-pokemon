@@ -3,9 +3,11 @@ import type { HistoryEntry, RunEdit, RunRecord } from "./types";
 import { finalizeRun } from "./run-rules";
 import {
   getPlayerIndex,
+  knowledgeForPlayer,
   withoutPrivateNotes,
   preservePrivateNotes,
 } from "./knowledge";
+import { shareKnowledgeChange, sharedRomPlayers } from "./shared-rom";
 import { recordSchema, runSchema } from "./schema";
 
 export function newId(): string {
@@ -172,7 +174,14 @@ export function applyRunEdit(
   );
   if (options.enforceOwnership)
     validatePlayerEdit(record.run, merged, edit.playerId);
-  const run = finalizeRun({ ...merged, updatedAt: now }, now);
+  // Manual clues and types also reach the players sharing this ROM.
+  const shared = shareKnowledgeChange(
+    merged,
+    sharedRomPlayers(record, edit.playerId),
+    knowledgeForPlayer(edit.before, edit.playerId),
+    knowledgeForPlayer(edit.after, edit.playerId),
+  );
+  const run = finalizeRun({ ...shared, updatedAt: now }, now);
   let next = addHistory(
     { ...record, run, revision: record.revision + 1 },
     edit.playerId,

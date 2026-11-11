@@ -1,4 +1,11 @@
-import type { Capture, PokemonData, TypeObservation } from "../types";
+import type {
+  Capture,
+  PokemonData,
+  Run,
+  RunKnowledge,
+  TypeObservation,
+} from "../types";
+import { abilitySlug } from "../ability-slug";
 import type {
   GameFrame,
   GameIdentity,
@@ -18,6 +25,11 @@ import {
 import { addHistory, newId, sameValue } from "./records";
 import { finalizeRun } from "./run-rules";
 import { gameFrameSchema, recordSchema } from "./schema";
+import {
+  mergeRomKnowledge,
+  shareKnowledgeChange,
+  sharedRomPlayers,
+} from "./shared-rom";
 import { STARTER_ZONE_ID, zoneIdForMapName } from "../zones";
 import { shinyChanceGroup, soulLinkCaptureSlot } from "../zone-progress";
 
@@ -25,6 +37,37 @@ export type PokemonResolver = (pokemonId: number) => PokemonData | undefined;
 
 export function gameKey(game: GameIdentity): string {
   return `${game.gameCode}.${game.revision}.${game.language}.${game.romHash}.${game.trainerId}`;
+}
+
+/** Captures store abilities by their PokeAPI id so they can be localized; ROM-only abilities keep their ROM name. */
+export function captureAbility(live: LivePokemon): string | undefined {
+  if (!live.ability) return undefined;
+  return live.customAbility ? live.ability : abilitySlug(live.ability);
+}
+
+// With random abilities, an ability read in the party is a confirmed entry of the species panel.
+function withRevealedAbility(
+  run: Run,
+  knowledge: RunKnowledge,
+  live: LivePokemon,
+): RunKnowledge {
+  const ability = captureAbility(live);
+  const panel = knowledge.customAbilitiesByPokemonId?.[live.pokemonId] ?? [];
+  if (
+    !ability ||
+    !run.isRandomMode ||
+    !run.randomizerOptions?.randomizeAbilities ||
+    panel.includes(ability) ||
+    panel.length >= 3
+  )
+    return knowledge;
+  return {
+    ...knowledge,
+    customAbilitiesByPokemonId: {
+      ...knowledge.customAbilitiesByPokemonId,
+      [live.pokemonId]: [...panel, ability],
+    },
+  };
 }
 
 function sameGameOnAnotherRom(a: GameIdentity, b: GameIdentity): boolean {
@@ -352,7 +395,25 @@ export function ingestFrame(
     );
   }
   next = saveObservations(next, playerId, frame, now);
-  if (suspended) return recordSchema.parse(next);
+  // Players on the same ROM share what the game reveals about species.
+  const shareRomKnowledge = (current: RunRecord): RunRecord => {
+    const peers = sharedRomPlayers(current, playerId);
+    if (!peers.length) return current;
+    const run =
+      previous?.sessionId === frame.sessionId
+        ? current.run
+        : mergeRomKnowledge(current.run, [playerId, ...peers]);
+    return {
+      ...current,
+      run: shareKnowledgeChange(
+        run,
+        peers,
+        knowledgeForPlayer(record.run, playerId),
+        knowledgeForPlayer(current.run, playerId),
+      ),
+    };
+  };
+  if (suspended) return recordSchema.parse(shareRomKnowledge(next));
 
   const liveById = new Map(
     frame.party.map((pokemon) => [pokemon.identity, pokemon]),
@@ -411,9 +472,14 @@ export function ingestFrame(
         });
       }
       updated.nickname = live.nickname ?? updated.nickname;
-      updated.ability = live.ability ?? updated.ability;
+      updated.ability = captureAbility(live) ?? updated.ability;
       updated.isShiny = live.isShiny;
       updated.gender = live.gender;
+      playerKnowledge[playerId] = withRevealedAbility(
+        next.run,
+        playerKnowledge[playerId] ?? {},
+        live,
+      );
       if (
         live.types?.length &&
         next.run.isRandomMode &&
@@ -487,6 +553,7 @@ export function ingestFrame(
     else next.run.team = team;
   }
 
+  next = shareRomKnowledge(next);
   next.run = finalizeRun({ ...next.run, updatedAt: now }, now);
   const parsed = recordSchema.parse(next);
   return autoLink
@@ -684,7 +751,7 @@ export function linkPokemon(
     nickname: live.nickname ?? existing?.nickname,
     gender: live.gender,
     isShiny: live.isShiny,
-    ability: live.ability ?? existing?.ability,
+    ability: captureAbility(live) ?? existing?.ability,
     customTypes: live.types ?? existing?.customTypes,
     gameIdentity: live.identity,
     ...(record.run.isSoulLinkMode

@@ -17,7 +17,10 @@ import {
 } from "@mui/material";
 import type { PokemonData, Run } from "@/lib/types";
 import { getPlayerId } from "@/lib/tracker/knowledge";
-import { gameKey } from "@/lib/tracker/live";
+import {
+  sharedSeenEncounters,
+  sharedZoneMappings,
+} from "@/lib/tracker/shared-rom";
 import { getPokemonList } from "@/lib/pokemon-data";
 import { getGameVersion } from "@/lib/game-catalog";
 import {
@@ -103,12 +106,13 @@ export default function ZoneIntel({ run }: { run: Run }) {
   const selectedVersion = versions.includes(version)
     ? version
     : (versions[0] ?? "");
-  const seen = (tracking?.seenEncounters ?? []).filter(
-    (entry) =>
-      entry.gameKey === gameKey(tracking!.game) &&
-      tracking!.zoneMappings[entry.locationId] === zone?.id,
+  const record = records.find((entry) => entry.run.id === run.id);
+  const seen = record ? sharedSeenEncounters(record, playerId) : [];
+  const mappings = record ? sharedZoneMappings(record, playerId) : {};
+  const encountered = seen.filter(
+    (entry) => mappings[entry.locationId] === zone?.id,
   );
-  const species = [...new Set(seen.map((entry) => entry.pokemonId))];
+  const species = [...new Set(encountered.map((entry) => entry.pokemonId))];
   const name = (id: number) =>
     reference?.pokemon.get(id)?.names?.[lang] ??
     reference?.pokemon.get(id)?.names?.en ??
@@ -206,7 +210,7 @@ export default function ZoneIntel({ run }: { run: Run }) {
                 sx={{ flexWrap: "wrap" }}
               >
                 {species.map((id) => {
-                  const entries = seen.filter(
+                  const entries = encountered.filter(
                     (entry) => entry.pokemonId === id,
                   );
                   return (

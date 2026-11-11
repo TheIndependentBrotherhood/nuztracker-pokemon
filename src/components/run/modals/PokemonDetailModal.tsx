@@ -39,6 +39,7 @@ import {
   withSpeciesNotes,
 } from "@/lib/tracker/knowledge";
 import { pokemonForGame } from "@/lib/game-reference";
+import { abilitySlug } from "@/lib/ability-slug";
 import StatAnnotations from "@/components/tracker/StatAnnotations";
 
 interface Props {
@@ -204,7 +205,14 @@ export default function PokemonDetailModal({
   const hasSecondTypeSlot = showSecondTypeSlot || Boolean(activeCustomTypes[1]);
   const firstType = activeCustomTypes[0] || null;
   const secondType = activeCustomTypes[1] || null;
-  const activeAbility = abilityDraft;
+  // Abilities read from older game connections were stored with their English name.
+  const activeAbility =
+    abilityDraft &&
+    abilitiesCache.abilities.some(
+      (entry) => entry.name === abilitySlug(abilityDraft),
+    )
+      ? abilitySlug(abilityDraft)
+      : abilityDraft;
   // Synthetic id used by PokedexView — there is no real capture to update.
   const isPokedexCapture = pokemonCaptured.id.startsWith("pokedex-");
   const savedPokedexObservations =
@@ -462,7 +470,11 @@ export default function PokemonDetailModal({
         !ownsSpeciesKnowledge(c)
       )
         return c;
-      if (c.ability && !nextPanel.includes(c.ability)) {
+      if (
+        c.ability &&
+        !nextPanel.includes(c.ability) &&
+        !nextPanel.includes(abilitySlug(c.ability))
+      ) {
         return { ...c, ability: undefined };
       }
       return c;
@@ -489,7 +501,7 @@ export default function PokemonDetailModal({
       return;
 
     // Also update local draft if the currently-shown capture's ability was removed
-    if (abilityDraft && !nextPanel.includes(abilityDraft)) {
+    if (activeAbility && !nextPanel.includes(activeAbility)) {
       setAbilityDraft(null);
     }
   }
