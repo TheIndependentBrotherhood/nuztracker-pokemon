@@ -1,7 +1,7 @@
 """One-click randomizer for Pokemon Platinum Multiplayer (Project PM v0.4.7 hack).
 
 Runs the Project PM randomizer from the user's ProjectPMSetup.exe with the options of
-settings.json, then applies the NuzTracker extras (items, marts, themed gyms, shiny odds).
+settings.json, then applies the NuzTracker extras (items, marts, themed gyms, shiny odds, day/night cycle).
 """
 
 import hashlib
@@ -10,6 +10,7 @@ import sys
 import time
 from pathlib import Path
 
+import rom_daycycle
 import rom_extras
 import rom_evolutions
 import rom_learnsets
@@ -115,6 +116,7 @@ def run(config_path):
     random_evolutions = random_evolutions_enabled(extras)
     pre_evolution_moves = move_reminder_pre_evolution_moves_enabled(extras)
     type_hints = bool_option(extras, "gymTypeHints")
+    day_cycle = rom_daycycle.parse_cycle(config["romTweaks"].get("dayNightCycle", rom_daycycle.REAL_TIME))
     line_types = pokemon_types_mode(config["coop"]) == "evolutionLines"
     for key in ("gymTypes", "eliteFourTypes"):
         if extras[key] not in THEME_MODES:
@@ -154,6 +156,8 @@ def run(config_path):
         report.append(f"Shiny odds: 1 in {shiny} (Project PM).")
     if config["romTweaks"].get("guaranteedCatch", False):
         report.append(rom_extras.patch_guaranteed_catch(rom))
+    if day_cycle:
+        report.append(rom_daycycle.patch_day_night_cycle(rom, day_cycle))
     if line_types:
         # Before themed gyms, which pick Pokémon by their final types.
         report.append(

@@ -33,7 +33,8 @@
   },
   "romTweaks": {
     "shinyOdds": 64,
-    "guaranteedCatch": true
+    "guaranteedCatch": true,
+    "dayNightCycle": 1
   },
   "coop": {
     "trainerTeams": true,
