@@ -9,6 +9,7 @@ import { abilitySlug } from "../ability-slug";
 import type {
   GameFrame,
   GameIdentity,
+  IgnorePokemonInput,
   LinkPokemonInput,
   LivePokemon,
   MapZoneInput,
@@ -823,6 +824,50 @@ export function linkPokemon(
   );
   next.tracking[input.playerId].sequence = tracking.sequence;
   next.run = finalizeRun(next.run, now);
+  return recordSchema.parse(next);
+}
+
+// Traded or otherwise unwanted Pokémon stay out of the run: later frames no longer report them.
+export function ignorePendingPokemon(
+  record: RunRecord,
+  input: IgnorePokemonInput,
+  now = Date.now(),
+): RunRecord {
+  if (record.run.id !== input.runId)
+    throw new Error("The Pokémon belongs to another run.");
+  const tracking = record.tracking[input.playerId];
+  if (!tracking) throw new Error("There is no game state for this player.");
+  const pokemon = tracking.pendingPokemon.find(
+    (entry) => entry.identity === input.identity,
+  );
+  if (!pokemon) throw new Error("This Pokémon is no longer waiting.");
+  const next = addHistory(
+    {
+      ...record,
+      revision: record.revision + 1,
+      tracking: {
+        ...record.tracking,
+        [input.playerId]: {
+          ...tracking,
+          pendingPokemon: tracking.pendingPokemon.filter(
+            (entry) => entry.identity !== input.identity,
+          ),
+          pendingDetails: Object.fromEntries(
+            Object.entries(tracking.pendingDetails ?? {}).filter(
+              ([identity]) => identity !== input.identity,
+            ),
+          ),
+          ignoredIdentities: [
+            ...new Set([...tracking.ignoredIdentities, input.identity]),
+          ],
+        },
+      },
+    },
+    input.playerId,
+    "capture",
+    `Pokémon #${pokemon.pokemonId} ignored.`,
+    now,
+  );
   return recordSchema.parse(next);
 }
 

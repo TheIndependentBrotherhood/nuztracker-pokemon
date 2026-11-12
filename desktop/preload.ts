@@ -42,6 +42,7 @@ const api: TrackerDesktopApi = {
     request("connectMelonDs", desktopStatusSchema, input),
   disconnectMelonDs: () => request("disconnectMelonDs", desktopStatusSchema),
   linkPokemon: (input) => request("linkPokemon", recordSchema, input),
+  ignorePokemon: (input) => request("ignorePokemon", recordSchema, input),
   mapZone: (input) => request("mapZone", recordSchema, input),
   resumeTracking: (input) => request("resumeTracking", recordSchema, input),
   openCompact: (input) => request("openCompact", z.void(), input),

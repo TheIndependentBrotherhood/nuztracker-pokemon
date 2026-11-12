@@ -611,6 +611,9 @@ export const linkPokemonSchema = bindBridgeSchema.extend({
   captureId: id.optional(),
   soulLinkGroupId: id.optional(),
 });
+export const ignorePokemonSchema = bindBridgeSchema
+  .extend({ identity: id })
+  .strict();
 export const mapZoneSchema = bindBridgeSchema
   .extend({ locationId: id, zoneId: id })
   .strict();

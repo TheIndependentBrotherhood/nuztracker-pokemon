@@ -14,6 +14,7 @@ import {
   bindBridgeSchema,
   connectMelonDsSchema,
   hostRoomSchema,
+  ignorePokemonSchema,
   joinRoomSchema,
   linkPokemonSchema,
   mapZoneSchema,
@@ -217,6 +218,9 @@ async function initialize(): Promise<void> {
   handle("disconnectMelonDs", z.undefined(), () => tracker.disconnectMelonDs());
   handle("linkPokemon", linkPokemonSchema, (input) =>
     tracker.linkPokemon(input),
+  );
+  handle("ignorePokemon", ignorePokemonSchema, (input) =>
+    tracker.ignorePokemon(input),
   );
   handle("mapZone", mapZoneSchema, (input) => tracker.mapZone(input));
   handle("resumeTracking", bindBridgeSchema, (input) =>

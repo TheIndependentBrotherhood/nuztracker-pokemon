@@ -16,6 +16,20 @@ EXTRA_EVOLUTION_TARGET = 292
 EXTRA_EVOLUTION_METHOD = 14
 PRIMARY_EXTRA_METHOD = 13
 EXTRA_EVOLUTION_CODE = bytes.fromhex("492080000090281c0521")
+LEVEL_METHOD = 4
+KNOWN_MOVE_METHOD = 20
+MOVE_EVOLUTION_MODES = {"keep", "level"}
+# Universal Pokemon Randomizer ZX levels for "Change Impossible Evolutions" with random movesets.
+MOVE_EVOLUTION_LEVELS = {
+    108: 33,  # Lickitung, Rollout
+    114: 33,  # Tangela, AncientPower
+    190: 32,  # Aipom, Double Hit
+    193: 33,  # Yanma, AncientPower
+    221: 45,  # Piloswine, AncientPower
+    438: 17,  # Bonsly, Mimic
+    439: 18,  # Mime Jr., Mimic
+}
+DEFAULT_MOVE_EVOLUTION_LEVEL = 33
 
 
 def read_evolution_records(archive, species):
@@ -112,6 +126,40 @@ def extra_evolution_instruction(target):
         raise ValueError("The extra-evolution target is not a supported species.")
     low = min(target, 255)
     return bytes((low, 0x20, target - low, 0x30))
+
+
+def parse_move_evolutions(value):
+    if not isinstance(value, str) or value not in MOVE_EVOLUTION_MODES:
+        raise ValueError(f"extras.moveEvolutions must be one of {sorted(MOVE_EVOLUTION_MODES)}.")
+    return value
+
+
+def level_move_evolutions(pm, rom, log):
+    """Random movesets can make "level up knowing a move" impossible: those evolutions happen at a level instead.
+
+    Sources keep their slot, condition order and (possibly randomized) target; targets are never reported.
+    """
+    species = sorted(pm.rand_load_pokemon_db(rom))
+    if species != list(range(1, SPECIES_COUNT + 1)):
+        raise RuntimeError("The ROM does not contain the supported Platinum species set.")
+    span, archive = pm._open_narc(rom, EVOLUTION_ARCHIVE, log)
+    records, paths = read_evolution_records(archive, set(species))
+    changed = {}
+    for source, entries in paths.items():
+        record = bytearray(records[source])
+        for offset, method, _, _ in entries:
+            if method == KNOWN_MOVE_METHOD:
+                level = MOVE_EVOLUTION_LEVELS.get(source, DEFAULT_MOVE_EVOLUTION_LEVEL)
+                struct.pack_into("<HH", record, offset, LEVEL_METHOD, level)
+        if bytes(record) != records[source]:
+            changed[source] = bytes(record)
+    if not changed:
+        return "Move evolutions: none left to convert."
+    for source, record in changed.items():
+        archive.put(source, record)
+    if not pm._save_narc(rom, span, archive, EVOLUTION_ARCHIVE, log):
+        raise RuntimeError("Could not save the evolution archive.")
+    return f"Move evolutions: {len(changed)} species now evolve at a fixed level instead of knowing a move."
 
 
 def randomize_evolutions(pm, rom, rng, log):

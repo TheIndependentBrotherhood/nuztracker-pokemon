@@ -34,7 +34,17 @@
   "romTweaks": {
     "shinyOdds": 64,
     "guaranteedCatch": true,
-    "dayNightCycle": 1
+    "dayNightCycle": 1,
+    "poketchIndicators": true,
+    "randomWeather": {
+      "clear": 45,
+      "cloudy": 15,
+      "rain": 15,
+      "sun": 10,
+      "fog": 5,
+      "sandstorm": 5,
+      "hail": 5
+    }
   },
   "coop": {
     "trainerTeams": true,
@@ -52,6 +62,7 @@
     "specialtyClerkStockSize": 10,
     "clerksSellHeldItems": true,
     "randomEvolutions": false,
+    "moveEvolutions": "level",
     "moveReminderPreEvolutionMoves": true,
     "gymTypes": "random",
     "gymTypeHints": false,

@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   connectRun,
+  ignorePendingPokemon,
   ingestFrame,
   linkPokemon,
   resumeTracking,
@@ -427,6 +428,32 @@ test("doubtful captures stay pending with a reason and a suggestion", () => {
     undefined,
   );
   assert.equal(current.tracking.solo.pendingPokemon.length, 2);
+  current = ignorePendingPokemon(
+    current,
+    {
+      runId: current.run.id,
+      playerId: "solo",
+      identity: "0000f00d-00000123",
+    },
+    202,
+  );
+  assert.equal(
+    current.tracking.solo.pendingDetails?.["0000f00d-00000123"],
+    undefined,
+  );
+  assert.ok(
+    current.tracking.solo.ignoredIdentities.includes("0000f00d-00000123"),
+  );
+  const later = frame(9);
+  later.location = gift.location;
+  later.party = gift.party;
+  current = ingestFrame(current, "solo", later, pokemon, 203);
+  assert.ok(
+    !current.tracking.solo.pendingPokemon.some(
+      (entry) => entry.identity === "0000f00d-00000123",
+    ),
+  );
+  assert.equal(current.tracking.solo.pendingPokemon.length, 1);
 });
 
 test("SoulLink losses propagate by explicit group rather than matching route names", () => {

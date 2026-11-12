@@ -1035,6 +1035,11 @@ const translations = {
     },
     zone: { fr: "Zone de rencontre", en: "Encounter zone" },
     choose: { fr: "Choisir", en: "Choose" },
+    ignore: { fr: "Ignorer", en: "Ignore" },
+    ignoreHint: {
+      fr: "Ne compte pas ce Pokémon dans la run (échange, don…). Il ne sera plus proposé.",
+      en: "Keep this Pokémon out of the run (trade, gift…). It will not be suggested again.",
+    },
     level: {
       fr: (level: number) => `N. ${level}`,
       en: (level: number) => `Lv. ${level}`,

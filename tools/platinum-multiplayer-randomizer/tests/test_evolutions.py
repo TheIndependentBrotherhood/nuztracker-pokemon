@@ -12,6 +12,7 @@ import randomize
 import rom_evolutions
 import rom_extras
 import rom_learnsets
+import rom_weather
 
 
 def evolution_record(*entries):
@@ -100,6 +101,38 @@ def assert_acyclic(test, archive):
 
     for species in graph:
         visit(species)
+
+
+class MoveEvolutionTests(unittest.TestCase):
+    def test_known_move_evolutions_become_level_evolutions_without_touching_others(self):
+        pm = FakeProjectPm()
+        pm.archive.files[190] = evolution_record((20, 458, 424))
+        pm.archive.files[221] = evolution_record((20, 246, 473))
+        pm.archive.files[300] = evolution_record((20, 1, 301), (7, 80, 302))
+        before = list(pm.archive.files)
+        report = rom_evolutions.level_move_evolutions(pm, FakeRom(), lambda _: None)
+        self.assertTrue(pm.saved)
+        self.assertIn("3 species", report)
+        self.assertNotIn("424", report)
+        self.assertEqual(entries(pm.archive.get(190))[0], (4, 32, 424))
+        self.assertEqual(entries(pm.archive.get(221))[0], (4, 45, 473))
+        self.assertEqual(entries(pm.archive.get(300))[:2], [(4, 33, 301), (7, 80, 302)])
+        for index, record in enumerate(before):
+            if index not in (190, 221, 300):
+                self.assertEqual(pm.archive.get(index), record)
+
+    def test_rom_without_move_evolutions_is_left_untouched(self):
+        pm = FakeProjectPm()
+        report = rom_evolutions.level_move_evolutions(pm, FakeRom(), lambda _: None)
+        self.assertFalse(pm.saved)
+        self.assertIn("none left", report)
+
+    def test_option_accepts_only_known_modes(self):
+        self.assertEqual(rom_evolutions.parse_move_evolutions("keep"), "keep")
+        self.assertEqual(rom_evolutions.parse_move_evolutions("level"), "level")
+        for value in (None, True, "stone", ""):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "moveEvolutions"):
+                rom_evolutions.parse_move_evolutions(value)
 
 
 class RandomEvolutionTests(unittest.TestCase):
@@ -272,6 +305,7 @@ class RandomEvolutionTests(unittest.TestCase):
                 patch.object(rom_extras, "fix_header_crc"),
                 patch.object(rom_evolutions, "randomize_evolutions", return_value="Evolution targets hidden.") as apply,
                 patch.object(rom_learnsets, "inherit_learnsets", return_value="Learnsets hidden.") as inherit,
+                patch.object(rom_weather, "is_installed", return_value=False),
             ):
                 for evolutions, moves in ((None, None), (False, False), (True, False), (False, True), (True, True)):
                     apply.reset_mock()

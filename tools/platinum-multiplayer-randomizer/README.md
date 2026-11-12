@@ -38,6 +38,8 @@ To use another settings file, run `py -3.11 lib\randomize.py path\to\settings.js
 | `romTweaks`            | `shinyOdds`                                                                                                                                                                                                     | `8192`, `4096`, `2048`, `1024`, `512`, `257` (Project PM), or `128`, `64`, `32`, `16` (code patch)                                                                                                                                                                                                                                     |
 | `romTweaks`            | `guaranteedCatch`                                                                                                                                                                                               | `true`: every Poké Ball catches on the first throw (wild Pokémon only, like a Master Ball)                                                                                                                                                                                                                                             |
 | `romTweaks`            | `dayNightCycle`                                                                                                                                                                                                 | `"real"` (default) or a number of real hours from `1` to `24` for one in-game day (code patch, see below)                                                                                                                                                                                                                              |
+| `romTweaks`            | `poketchIndicators`                                                                                                                                                                                             | `true` / `false` (default): digital watch shows cycle time, remaining Repel steps and a real-time countdown to the next encounter period                                                                                                                                                                                               |
+| `romTweaks`            | `randomWeather`                                                                                                                                                                                                 | `false` (default), `true` (default weights) or percentages summing to 100 for `clear`, `cloudy`, `rain`, `sun`, `fog`, `sandstorm`, `hail`: one weather per in-game day on outdoor towns and routes, also applied in battles (code patch, see below)                                                                                   |
 | `coop`                 | `trainerTeams`, `abilities`, `movesets`, `similarStrength`, `noLegendaries`                                                                                                                                     | `true` / `false`                                                                                                                                                                                                                                                                                                                       |
 | `coop`                 | `pokemonTypes`                                                                                                                                                                                                  | `off`, `random` (Project PM, random per species) or `evolutionLines`: each original evolution line gets one type swap (e.g. Grass → Ice, Ground → Steel) applied to all its members and forms, so lines stay coherent and dual types stay dual. Lines are the input ROM's, so random evolutions can still lead to another line's types |
 | `extras`               | `itemBalls`, `hiddenItems`                                                                                                                                                                                      | Randomize visible and hidden field items. HMs and key items are untouched                                                                                                                                                                                                                                                              |
@@ -46,6 +48,7 @@ To use another settings file, run `py -3.11 lib\randomize.py path\to\settings.js
 | `extras`               | `specialtyClerkStockSize`                                                                                                                                                                                       | Number of items per specialty clerk, from `8` to `32`; omit to keep the original stock sizes                                                                                                                                                                                                                                           |
 | `extras`               | `clerksSellHeldItems`                                                                                                                                                                                           | Also add held items to the specialty clerks                                                                                                                                                                                                                                                                                            |
 | `extras`               | `randomEvolutions`                                                                                                                                                                                              | `true` / `false`: randomize evolution targets without changing their conditions; omitted defaults to `false`                                                                                                                                                                                                                           |
+| `extras`               | `moveEvolutions`                                                                                                                                                                                                | `"keep"` / `"level"`: evolutions that need a known move happen at a fixed level instead (UPR-ZX levels); omitted defaults to `"keep"`                                                                                                                                                                                                  |
 | `extras`               | `moveReminderPreEvolutionMoves`                                                                                                                                                                                 | `true` / `false`: the Move Reminder also offers every level-up move of the (final, possibly random) pre-evolutions; level-up learnsets are unchanged; omitted defaults to `false`                                                                                                                                                      |
 | `extras`               | `gymTypes`, `eliteFourTypes`                                                                                                                                                                                    | `vanilla` (original leader type), `random` (one random type per leader), `off`                                                                                                                                                                                                                                                         |
 | `extras`               | `gymTypeHints`                                                                                                                                                                                                  | `true` / `false`: gym city signs show `Type: <type>` and gym guides / Elite Four speeches name the themed type; omitted defaults to `false`; no effect when both type options are `off`                                                                                                                                                |
@@ -94,6 +97,14 @@ py -3.11 fix_learnsets.py "<randomized.nds>" "<fixed.nds>"
 
 It only reports counts, can be run again safely, and existing saves keep working; share the fixed `.nds` and click **Use the new ROM** in NuzTracker as above.
 
+With `moveEvolutions: "level"` (default `"keep"`), evolutions that need a known move — often impossible with random movesets — happen at a fixed level instead, like Universal Pokemon Randomizer ZX's "Change Impossible Evolutions": Lickitung 33, Tangela 33, Aipom 32, Yanma 33, Piloswine 45, Bonsly 17 and Mime Jr. 18 (any other move evolution: 33). Targets, including random ones, are kept and never printed. For an existing ROM, run from `lib`:
+
+```powershell
+py -3.11 fix_move_evolutions.py "<randomized.nds>" "<fixed.nds>"
+```
+
+It can be run again safely and existing saves keep working; share the fixed `.nds` and click **Use the new ROM** in NuzTracker.
+
 With `dayNightCycle` set to a number of hours, one in-game day (morning, day, evening, night) lasts that many real hours instead of 24. The game's clock routines get a virtual time computed from the real date and time, `((days × 24 + hour) mod N) h + minutes` scaled by `24 / N`: the cycle is continuous across midnight and two consoles set to the same real time are always in the same period, so SoulLink players stay synchronized without anything to share. Wild encounters, time-based evolutions, music, field lighting, battle backgrounds, scripts and Pokédex areas follow the accelerated cycle; dates, berries, daily events, timestamps and the Poketch clocks keep the real time. `24` behaves like `real`.
 
 To set or change the cycle of an already randomized ROM, run from `lib`:
@@ -104,9 +115,84 @@ py -3.11 fix_day_cycle.py "<randomized.nds>" "<fixed.nds>" --hours 2
 
 It can be run again to change the length (keep a copy of the unpatched ROM to go back to real time). Existing saves keep working; share the fixed `.nds` and click **Use the new ROM** in NuzTracker as above.
 
+## Poketch exploration indicators
+
+`romTweaks.poketchIndicators` (`true` / `false`, omitted defaults to `false`) enhances only the
+**digital watch** application:
+
+- the large clock shows the current in-game cycle time, including accelerated cycles;
+- `REPEL 125 STEPS` shows the game's actual remaining Repel steps; `REPEL OFF` means it is inactive;
+- `NIGHT IN 00:12:34` shows the **real** hours, minutes and seconds until the next encounter period;
+- with `randomWeather`, `WEATHER RAIN` shows the weather of the current in-game day on outdoor towns and
+  routes (`CLEAR`, `CLOUDY`, `RAIN`, `SUNNY`, `FOG`, `SANDSTORM`, `HAIL`). Caves, buildings and maps with
+  a fixed weather (snowy Twinleaf Town, Route 210 fog...) keep their own weather. The line stays empty
+  without the weather patch, and appears or disappears by itself if it is added or removed later.
+
+Encounter periods are morning at 04:00, day at 10:00 and night at 20:00; evening uses the day encounter
+table. The countdown reads the cycle length from the clock patch, so changing `dayNightCycle` later does
+not require reinstalling the panel. With the normal clock, it counts real-time periods instead.
+
+The panel is part of the ROM, not an emulator or tracker overlay. It works without NuzTracker running,
+uses English labels, preserves the backlight button, and replaces the decorative logo below the clock.
+Other Poketch applications, the actual RTC, daily events and save data are unchanged. ROM layouts that do
+not match the supported French Platinum Multiplayer version are refused.
+
+To add it without re-randomizing, run from `lib`:
+
+```powershell
+py -3.11 fix_poketch.py "<randomized.nds>" "<fixed.nds>"
+```
+
+Running it on a ROM that already has the panel rebuilds it with the current version (e.g. to get the
+weather line). Keep the original ROM to disable the feature. After replacing the ROM, reopen it in MelonDS (do not
+restore an old emulator savestate), share the identical file with your partner and accept **Use the new
+ROM** in NuzTracker. Existing in-game saves remain compatible.
+
+## Random daily weather
+
+`romTweaks.randomWeather` picks one weather per in-game day (per `dayNightCycle` cycle, or per real day
+with the normal clock). `true` uses the default weights; an object sets whole percentages that must sum
+to 100 (missing keys count as 0):
+
+| Weather     | Default | In the field          | In battle                                 |
+| ----------- | ------- | --------------------- | ----------------------------------------- |
+| `clear`     | 45      | Clear                 | None                                      |
+| `cloudy`    | 15      | Clouds                | None                                      |
+| `rain`      | 15      | Rain                  | Rain                                      |
+| `sun`       | 10      | Clear                 | Harsh sunlight (same effect as Sunny Day) |
+| `fog`       | 5       | Fog (Defog clears it) | Fog (lower accuracy)                      |
+| `sandstorm` | 5       | Sandstorm             | Sandstorm (damage each turn)              |
+| `hail`      | 5       | Snow                  | Hail (damage each turn)                   |
+
+Only outdoor towns and routes whose map weather is normally clear are affected. Caves, buildings, gyms,
+fixed weathers (Route 210 fog, sandstorm routes, the Project PM map effects such as snowy Twinleaf
+Town) and the snowy north keep their weather; the five maps that used a date-based weather get a fixed
+one (Route 212 South rain, Route 216 / Acuity Lakefront heavy snow, Snowpoint City snow, Route 213
+random). The pick is computed from the real clock and a seed stored in the ROM, so two consoles with the
+same ROM and time always have the same weather in SoulLink. The weather is read when entering a map: if
+a new day starts while you stay on a route, it changes at the next map transition. Wild battles and
+trainer battles both use it, including the encounter-rate effects of Sand Veil and Snow Cloak.
+
+The patch replaces the unused yearly weather calendar with the picker. To add it, change the weights or remove it
+without re-randomizing, run from `lib` (the weather sequence of a patched ROM is kept unless `--reseed`):
+
+```powershell
+py -3.11 fix_weather.py "<randomized.nds>" "<fixed.nds>"
+```
+
+To turn it off, set `"randomWeather": false` and run the same command (or add `--disable`): the original
+routines and yearly weather calendar, saved inside the patch, are restored byte for byte. A new
+randomization with `randomWeather: false` also removes it from an input ROM that already has it.
+
+The cycle length is read at runtime from the clock patch, so changing `dayNightCycle` later does not
+require reinstalling the weather. Reopen the ROM in MelonDS (no old savestate), share the identical file
+and accept **Use the new ROM**.
+
 ## Tests
 
-From this directory, run `py -3.11 -m unittest discover -s tests -p "test_*.py"` to check specialty stocks, randomized evolutions and ROM safety checks.
+From this directory, run `py -3.11 -m unittest discover -s tests -p "test_*.py"` to check specialty stocks,
+randomized evolutions, clock calculations and ROM safety checks. The native Poketch execution tests use
+the optional `unicorn` Python package; without it, these tests are explicitly skipped.
 
 ## SoulLink
 

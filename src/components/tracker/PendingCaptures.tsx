@@ -114,6 +114,25 @@ export default function PendingCaptures({
     }
   }
 
+  async function ignore(pokemon: LivePokemon) {
+    if (!window.nuztracker) return;
+    setBusy(true);
+    try {
+      receiveRecord(
+        await window.nuztracker.ignorePokemon({
+          runId: run.id,
+          playerId,
+          identity: pokemon.identity,
+        }),
+      );
+      setPending(null);
+    } catch (error) {
+      reportError(error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <>
       <Alert severity="warning" sx={{ mt: compact ? 1 : 0 }}>
@@ -149,21 +168,32 @@ export default function PendingCaptures({
                     </Typography>
                   )}
                 </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="inherit"
-                  disabled={!canLink}
-                  onClick={() => {
-                    setPending(pokemon);
-                    setZoneId(detail?.zoneId ?? "");
-                    setCaptureId("");
-                    setGroupId("");
-                  }}
-                  sx={{ flexShrink: 0 }}
-                >
-                  {t(tr.choose, lang)}
-                </Button>
+                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="inherit"
+                    disabled={!canLink || busy}
+                    title={t(tr.ignoreHint, lang)}
+                    onClick={() => void ignore(pokemon)}
+                  >
+                    {t(tr.ignore, lang)}
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    disabled={!canLink}
+                    onClick={() => {
+                      setPending(pokemon);
+                      setZoneId(detail?.zoneId ?? "");
+                      setCaptureId("");
+                      setGroupId("");
+                    }}
+                  >
+                    {t(tr.choose, lang)}
+                  </Button>
+                </Stack>
               </Stack>
             );
           })}
@@ -252,6 +282,15 @@ export default function PendingCaptures({
           </Stack>
         </DialogContent>
         <DialogActions>
+          <Button
+            color="inherit"
+            disabled={busy || !pending}
+            title={t(tr.ignoreHint, lang)}
+            onClick={() => pending && void ignore(pending)}
+            sx={{ mr: "auto" }}
+          >
+            {t(tr.ignore, lang)}
+          </Button>
           <Button disabled={busy} onClick={() => setPending(null)}>
             {t(tr.cancel, lang)}
           </Button>

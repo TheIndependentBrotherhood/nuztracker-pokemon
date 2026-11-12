@@ -14,8 +14,10 @@ import rom_daycycle
 import rom_extras
 import rom_evolutions
 import rom_learnsets
+import rom_poketch
 import rom_text
 import rom_types
+import rom_weather
 from pm_loader import load_pm_setup
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -117,7 +119,12 @@ def run(config_path):
     pre_evolution_moves = move_reminder_pre_evolution_moves_enabled(extras)
     type_hints = bool_option(extras, "gymTypeHints")
     day_cycle = rom_daycycle.parse_cycle(config["romTweaks"].get("dayNightCycle", rom_daycycle.REAL_TIME))
+    poketch = config["romTweaks"].get("poketchIndicators", False)
+    if type(poketch) is not bool:
+        raise ValueError("romTweaks.poketchIndicators must be true or false.")
+    weather = rom_weather.parse_random_weather(config["romTweaks"].get("randomWeather", False))
     line_types = pokemon_types_mode(config["coop"]) == "evolutionLines"
+    move_evolutions = rom_evolutions.parse_move_evolutions(extras.get("moveEvolutions", "keep"))
     for key in ("gymTypes", "eliteFourTypes"):
         if extras[key] not in THEME_MODES:
             raise ValueError(f"extras.{key} must be one of {sorted(THEME_MODES)}.")
@@ -158,6 +165,13 @@ def run(config_path):
         report.append(rom_extras.patch_guaranteed_catch(rom))
     if day_cycle:
         report.append(rom_daycycle.patch_day_night_cycle(rom, day_cycle))
+    if weather:
+        weather_seed = rom_extras.seeded("weather", settings["seed"]).getrandbits(32)
+        report.append(rom_weather.patch_random_weather(rom, weather, weather_seed))
+    elif rom_weather.is_installed(rom):
+        report.append(rom_weather.remove_random_weather(rom))
+    if poketch:
+        report.append(rom_poketch.patch_poketch_panel(rom))
     if line_types:
         # Before themed gyms, which pick Pokémon by their final types.
         report.append(
@@ -175,6 +189,8 @@ def run(config_path):
                 pm, rom, rom_extras.seeded("evolutions", settings["coop_seed"]), log
             )
         )
+    if move_evolutions == "level":
+        report.append(rom_evolutions.level_move_evolutions(pm, rom, log))
     if pre_evolution_moves:
         # After evolutions are randomized, so the Move Reminder follows the final lines.
         report.append(rom_learnsets.inherit_learnsets(pm, rom, log))

@@ -6,6 +6,7 @@ import type {
   DesktopStatus,
   GameFrame,
   HostRoomOptions,
+  IgnorePokemonInput,
   JoinRoomOptions,
   LinkPokemonInput,
   MapZoneInput,
@@ -17,6 +18,7 @@ import {
   bindBridgeSchema,
   connectMelonDsSchema,
   hostRoomSchema,
+  ignorePokemonSchema,
   joinRoomSchema,
   linkPokemonSchema,
   mapZoneSchema,
@@ -522,6 +524,15 @@ export class TrackerService {
     return this.execute(input.runId, input.playerId, {
       id: newId(),
       kind: "link",
+      input,
+    });
+  }
+
+  ignorePokemon(raw: IgnorePokemonInput): RunRecord {
+    const input = ignorePokemonSchema.parse(raw);
+    return this.execute(input.runId, input.playerId, {
+      id: newId(),
+      kind: "ignore",
       input,
     });
   }

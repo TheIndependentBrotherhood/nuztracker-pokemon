@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   gameFrameSchema,
+  ignorePokemonSchema,
   linkPokemonSchema,
   mapZoneSchema,
   recordSchema,
@@ -9,6 +10,7 @@ import {
 import type { RunRecord } from "../src/lib/tracker/types";
 import { addHistory, applyRunEdit } from "../src/lib/tracker/records";
 import {
+  ignorePendingPokemon,
   ingestFrame,
   linkPokemon,
   mapZone,
@@ -40,6 +42,7 @@ export const roomCommandSchema = z.discriminatedUnion("kind", [
   z.object({ id, kind: z.literal("edit"), edit: runEditSchema }),
   z.object({ id, kind: z.literal("frame"), frame: gameFrameSchema }),
   z.object({ id, kind: z.literal("link"), input: linkPokemonSchema }),
+  z.object({ id, kind: z.literal("ignore"), input: ignorePokemonSchema }),
   z.object({ id, kind: z.literal("map-zone"), input: mapZoneSchema }),
   z.object({ id, kind: z.literal("resume") }),
 ]);
@@ -129,6 +132,17 @@ export function applyRoomCommand(
         playerId,
         "connection",
         "Capture association synchronized.",
+        Date.now(),
+        command.id,
+      );
+    case "ignore":
+      if (command.input.playerId !== playerId)
+        throw new Error("A player cannot ignore another player's Pokémon.");
+      return addHistory(
+        ignorePendingPokemon(record, command.input),
+        playerId,
+        "connection",
+        "Ignored Pokémon synchronized.",
         Date.now(),
         command.id,
       );

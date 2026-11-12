@@ -337,6 +337,12 @@ export interface LinkPokemonInput {
   soulLinkGroupId?: string;
 }
 
+export interface IgnorePokemonInput {
+  runId: string;
+  playerId: string;
+  identity: string;
+}
+
 export interface MapZoneInput {
   runId: string;
   playerId: string;
@@ -375,6 +381,7 @@ export interface TrackerDesktopApi {
   }): Promise<DesktopStatus>;
   disconnectMelonDs(): Promise<DesktopStatus>;
   linkPokemon(input: LinkPokemonInput): Promise<RunRecord>;
+  ignorePokemon(input: IgnorePokemonInput): Promise<RunRecord>;
   mapZone(input: MapZoneInput): Promise<RunRecord>;
   resumeTracking(input: {
     runId: string;
