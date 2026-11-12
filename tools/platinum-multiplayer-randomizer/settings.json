@@ -32,7 +32,7 @@
     "noLegendaries": false
   },
   "romTweaks": {
-    "shinyOdds": 128,
+    "shinyOdds": 64,
     "guaranteedCatch": true
   },
   "coop": {
