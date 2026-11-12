@@ -995,6 +995,38 @@ const translations = {
     countDeath: { fr: "Compter comme mort", en: "Count as death" },
     ignore: { fr: "Ce n'est pas une mort", en: "Not a death" },
   },
+  soulLinkTeamCheck: {
+    title: {
+      fr: "Équipes SoulLink désynchronisées",
+      en: "SoulLink teams out of sync",
+    },
+    intro: {
+      fr: "Règle SoulLink : chaque Pokémon de l'équipe doit être accompagné de son partenaire dans l'équipe de l'autre joueur (la position n'a pas d'importance).",
+      en: "SoulLink rule: every Pokémon in a team must come with its partner in the other player's team (position does not matter).",
+    },
+    pair: {
+      fr: (zone: string) => `Lien ${zone} :`,
+      en: (zone: string) => `${zone} link:`,
+    },
+    missing: {
+      fr: (player: string, name: string) =>
+        `${player} doit ajouter ${name} à son équipe.`,
+      en: (player: string, name: string) =>
+        `${player} must add ${name} to their team.`,
+    },
+    noPartner: {
+      fr: (player: string) =>
+        `${player} n'a pas de Pokémon pour ce lien : ce Pokémon ne devrait pas être dans l'équipe.`,
+      en: (player: string) =>
+        `${player} has no Pokémon for this link: this Pokémon should not be in the team.`,
+    },
+    deadPartner: {
+      fr: (player: string, name: string) =>
+        `${name} de ${player} est mort : son partenaire doit quitter l'équipe.`,
+      en: (player: string, name: string) =>
+        `${player}'s ${name} is dead: its partner must leave the team.`,
+    },
+  },
   pendingCaptures: {
     title: { fr: "Captures à vérifier", en: "Captures to check" },
     intro: {

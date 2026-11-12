@@ -30,6 +30,7 @@ import ConnectionPanel from "./ConnectionPanel";
 import InteractiveFocusCard from "./InteractiveFocusCard";
 import FaintedPokemon, { faintedInParty } from "./FaintedPokemon";
 import PendingCaptures from "./PendingCaptures";
+import SoulLinkTeamCheck from "./SoulLinkTeamCheck";
 import StatAnnotations from "./StatAnnotations";
 import ZoneEncountersButton from "./ZoneEncountersButton";
 import { TrackerBoundsContext } from "./TrackerDialog";
@@ -734,6 +735,7 @@ export default function LightTracker() {
             </Alert>
           )}
           <FaintedPokemon run={run} compact />
+          <SoulLinkTeamCheck run={run} compact />
           <PendingCaptures run={run} compact />
           {desktopStatus?.bridge.runId === run.id &&
             desktopStatus.bridge.error && (

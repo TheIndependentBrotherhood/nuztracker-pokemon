@@ -35,6 +35,65 @@ export function soulLinkPair(run: Run, captureId: string): Capture[] {
   return [];
 }
 
+export interface SoulLinkTeamIssue {
+  key: string;
+  zone: Zone;
+  /** Every pair member, in player order. */
+  pair: Capture[];
+  /** Players whose part of the pair is not in their team; `capture` is absent when they have no Pokémon for this pair. */
+  missing: { playerIndex: number; capture?: Capture }[];
+}
+
+/**
+ * SoulLink rule: a Pokémon may only be in a team when its partners are in the other players' teams.
+ * Positions do not matter. A team that was never received (no entry in `playerTeams`, e.g. a partner
+ * who has not connected yet) cannot be checked; a known empty team is checked like any other.
+ */
+export function soulLinkTeamIssues(run: Run): SoulLinkTeamIssue[] {
+  const players = run.soulLinkPlayers ?? [];
+  if (!run.isSoulLinkMode || players.length < 2) return [];
+  const teams = new Map(
+    players.flatMap((player) => {
+      const team = run.playerTeams?.[player.playerIndex];
+      return team
+        ? [
+            [
+              player.playerIndex as number,
+              new Set(team.map((capture) => capture.id)),
+            ] as const,
+          ]
+        : [];
+    }),
+  );
+
+  const issues = new Map<string, SoulLinkTeamIssue>();
+  for (const zone of run.zones) {
+    for (const capture of zone.captures) {
+      const owner = capture.playerIndex ?? 0;
+      if (!teams.get(owner)?.has(capture.id)) continue;
+      const group = captureGroup(zone, capture);
+      const key = `${zone.id}:${group}`;
+      if (issues.has(key)) continue;
+      const pair = soulLinkPair(run, capture.id);
+      const missing = players
+        .map((player) => player.playerIndex as number)
+        .sort((left, right) => left - right)
+        .flatMap((playerIndex) => {
+          const partner = pair.find(
+            (member) => (member.playerIndex ?? 0) === playerIndex,
+          );
+          if (!partner) return [{ playerIndex }];
+          const team = teams.get(playerIndex);
+          return !team || team.has(partner.id)
+            ? []
+            : [{ playerIndex, capture: partner }];
+        });
+      if (missing.length) issues.set(key, { key, zone, pair, missing });
+    }
+  }
+  return [...issues.values()];
+}
+
 export function applySoulLinkDeaths(run: Run, now = Date.now()): Run {
   if (!run.isSoulLinkMode) return run;
   const roots = run.zones.flatMap((zone) =>

@@ -13,6 +13,7 @@ import {
   resolvePendingFaint,
   reviveCapture,
   soulLinkPair,
+  soulLinkTeamIssues,
 } from "../src/lib/tracker/run-rules";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { opponentMember } from "../src/lib/tracker/overlay";
@@ -68,6 +69,49 @@ test("soulLinkPair lists the linked Pokémon of every player in player order", (
   const solo = record(false);
   solo.run.zones[0].captures = [capture("a", 0)];
   assert.deepEqual(soulLinkPair(solo.run, "a"), []);
+});
+
+test("soulLinkTeamIssues reports team members whose partner is missing", () => {
+  const linked = record(true).run;
+  linked.zones.push({
+    ...structuredClone(linked.zones[0]),
+    id: "route-2",
+    zoneName: "Route 2",
+  });
+  const [a, b, c, d] = [
+    capture("a", 0),
+    capture("b", 1),
+    capture("c", 0),
+    capture("d", 1),
+  ];
+  linked.zones[0].captures = [a, b];
+  linked.zones[1].captures = [c, d];
+  linked.playerTeams = { 0: [c, a], 1: [b, d] };
+  assert.deepEqual(soulLinkTeamIssues(linked), []);
+
+  linked.playerTeams = { 0: [a, c], 1: [b] };
+  const [issue] = soulLinkTeamIssues(linked);
+  assert.equal(issue.zone.id, "route-2");
+  assert.deepEqual(
+    issue.pair.map((member) => member.id),
+    ["c", "d"],
+  );
+  assert.deepEqual(issue.missing, [{ playerIndex: 1, capture: d }]);
+
+  linked.zones[1].captures = [c];
+  assert.deepEqual(soulLinkTeamIssues(linked)[0].missing, [{ playerIndex: 1 }]);
+
+  linked.zones[1].captures = [c, d];
+  linked.playerTeams = { 0: [a, c], 1: [] };
+  assert.deepEqual(
+    soulLinkTeamIssues(linked).map((entry) => entry.missing),
+    [[{ playerIndex: 1, capture: b }], [{ playerIndex: 1, capture: d }]],
+  );
+
+  linked.playerTeams = { 0: [a, c] };
+  assert.deepEqual(soulLinkTeamIssues(linked), []);
+  linked.zones[1].captures = [c];
+  assert.deepEqual(soulLinkTeamIssues(linked)[0].missing, [{ playerIndex: 1 }]);
 });
 
 test("conflicting edits and attempts to modify another player are rejected", () => {
