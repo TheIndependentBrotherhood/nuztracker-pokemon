@@ -82,6 +82,24 @@ export function isManualObservation(observation: TypeObservation): boolean {
   return observation.id.startsWith(MANUAL_CLUE_PREFIX);
 }
 
+/** Two clues with the same outcome against the same attack type say the same thing. */
+export function typeClueKey(observation: TypeObservation): string {
+  return `${observation.type}:${observation.observationType}`;
+}
+
+/** Keeps the first clue of every outcome + attack type pair. */
+export function uniqueTypeObservations(
+  observations: TypeObservation[],
+): TypeObservation[] {
+  const seen = new Set<string>();
+  return observations.filter((observation) => {
+    const key = typeClueKey(observation);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /** Replaces the type clues of a species in a player view (see viewRunForPlayer). */
 export function withSpeciesObservations(
   run: Run,

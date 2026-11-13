@@ -1,4 +1,5 @@
 import type { Run, RunKnowledge, TypeObservation } from "../types";
+import { typeClueKey, uniqueTypeObservations } from "./knowledge";
 import type { GameIdentity, PlayerTracking, RunRecord } from "./types";
 
 type Tracking = Pick<RunRecord, "tracking">;
@@ -81,7 +82,8 @@ function compact(map: SpeciesMap): SpeciesMap | undefined {
 
 /**
  * Replays a player's ROM knowledge changes (before → after) on the players sharing their ROM.
- * Type clues are merged by id so that each player keeps the clues only they observed.
+ * Type clues are merged by outcome + attack type so that each player keeps the clues only they
+ * observed, without duplicating the clues several players observed.
  */
 export function shareKnowledgeChange(
   run: Run,
@@ -109,20 +111,18 @@ export function shareKnowledgeChange(
           map[id] = next[id];
           continue;
         }
-        const kept = new Set(observationsOf(next[id]).map((clue) => clue.id));
+        const kept = new Set(observationsOf(next[id]).map(typeClueKey));
         const removed = new Set(
           observationsOf(old[id])
-            .map((clue) => clue.id)
-            .filter((clueId) => !kept.has(clueId)),
+            .map(typeClueKey)
+            .filter((clue) => !kept.has(clue)),
         );
-        const current = observationsOf(map[id]).filter(
-          (clue) => !removed.has(clue.id),
-        );
-        const known = new Set(current.map((clue) => clue.id));
-        map[id] = [
-          ...current,
-          ...observationsOf(next[id]).filter((clue) => !known.has(clue.id)),
-        ];
+        map[id] = uniqueTypeObservations([
+          ...observationsOf(map[id]).filter(
+            (clue) => !removed.has(typeClueKey(clue)),
+          ),
+          ...observationsOf(next[id]),
+        ]);
       }
       playerKnowledge[peer] = { ...knowledge, [field]: compact(map) };
     }
@@ -151,12 +151,10 @@ export function mergeRomKnowledge(run: Run, players: string[]): Run {
             if (map[id] === undefined) map[id] = value;
             continue;
           }
-          const current = observationsOf(map[id]);
-          const known = new Set(current.map((clue) => clue.id));
-          map[id] = [
-            ...current,
-            ...observationsOf(value).filter((clue) => !known.has(clue.id)),
-          ];
+          map[id] = uniqueTypeObservations([
+            ...observationsOf(map[id]),
+            ...observationsOf(value),
+          ]);
         }
       }
       if (!same(map, playerKnowledge[player]?.[field] ?? {}))

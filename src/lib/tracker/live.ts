@@ -22,6 +22,7 @@ import {
   getPlayerIndex,
   isolateKnowledge,
   knowledgeForPlayer,
+  uniqueTypeObservations,
 } from "./knowledge";
 import { addHistory, newId, sameValue } from "./records";
 import { finalizeRun } from "./run-rules";
@@ -143,12 +144,12 @@ function saveObservations(
         ...knowledge,
         pokedexObservationsByPokemonId: {
           ...knowledge.pokedexObservationsByPokemonId,
-          [observation.pokemonId]: [
+          [observation.pokemonId]: uniqueTypeObservations([
             ...(knowledge.pokedexObservationsByPokemonId?.[
               observation.pokemonId
             ] ?? []),
             observed,
-          ],
+          ]),
         },
       },
     };

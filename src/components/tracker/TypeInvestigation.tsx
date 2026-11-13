@@ -18,6 +18,8 @@ import {
   knowledgeForPlayer,
   isManualObservation,
   manualTypeObservation,
+  typeClueKey,
+  uniqueTypeObservations,
   viewRunForPlayer,
   withSpeciesObservations,
   withSpeciesTypes,
@@ -109,8 +111,9 @@ export default function TypeInvestigation({
 
   const available = typesForGeneration(generation);
   const knowledge = knowledgeForPlayer(run, playerId);
-  const observations =
-    knowledge.pokedexObservationsByPokemonId?.[member.pokemonId] ?? [];
+  const observations = uniqueTypeObservations(
+    knowledge.pokedexObservationsByPokemonId?.[member.pokemonId] ?? [],
+  );
   const abilityPanel =
     knowledge.customAbilitiesByPokemonId?.[member.pokemonId] ?? [];
   const data =
@@ -155,10 +158,16 @@ export default function TypeInvestigation({
 
   async function addClue() {
     if (!clueType) return;
-    const saved = await saveObservations([
-      ...observations,
-      manualTypeObservation(clueOutcome, clueType),
-    ]);
+    const clue = manualTypeObservation(clueOutcome, clueType);
+    if (
+      observations.some(
+        (observation) => typeClueKey(observation) === typeClueKey(clue),
+      )
+    ) {
+      setClueType("");
+      return;
+    }
+    const saved = await saveObservations([...observations, clue]);
     if (saved) setClueType("");
   }
 

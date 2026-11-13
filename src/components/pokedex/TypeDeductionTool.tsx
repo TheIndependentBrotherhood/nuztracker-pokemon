@@ -12,6 +12,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { TypeObservation } from "@/lib/types";
+import { uniqueTypeObservations } from "@/lib/tracker/knowledge";
 import {
   deducePossibleTypes,
   type TypePossibility,
@@ -110,7 +111,7 @@ export default function TypeDeductionTool({
       createdAt: Date.now(),
     };
 
-    onObservationsChange([...observations, newObs]);
+    onObservationsChange(uniqueTypeObservations([...observations, newObs]));
     setSelectedType(null);
     setSelectedObsType("weakness");
   }

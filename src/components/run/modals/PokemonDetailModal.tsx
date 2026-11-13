@@ -35,6 +35,7 @@ import { PokemonEvolutionLineage } from "@/components/run/team/PokemonEvolutionL
 import { EvolutionHistoryDialog } from "@/components/run/modals/EvolutionHistoryDialog";
 import {
   getPlayerId,
+  uniqueTypeObservations,
   viewRunForPlayer,
   withSpeciesNotes,
 } from "@/lib/tracker/knowledge";
@@ -215,9 +216,10 @@ export default function PokemonDetailModal({
       : abilityDraft;
   // Synthetic id used by PokedexView — there is no real capture to update.
   const isPokedexCapture = pokemonCaptured.id.startsWith("pokedex-");
-  const savedPokedexObservations =
+  const savedPokedexObservations = uniqueTypeObservations(
     runToUpdate?.pokedexObservationsByPokemonId?.[pokemonCaptured.pokemon.id] ??
-    [];
+      [],
+  );
   const savedPokedexNotes =
     runToUpdate?.pokedexNotesByPokemonId?.[pokemonCaptured.pokemon.id] ?? "";
   const hasCurrentPokedexDraft =

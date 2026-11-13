@@ -188,6 +188,75 @@ test("connecting pools the knowledge gathered separately on the same ROM", () =>
   assert.equal(merged.playerKnowledge?.p1.pokedexNotesByPokemonId, undefined);
 });
 
+test("the same outcome against the same type is recorded only once", () => {
+  let current = ingestFrame(randomRun(), "p1", playerFrame("p1"), pokemon, 1);
+  current = ingestFrame(current, "p2", playerFrame("p2"), pokemon, 2);
+  const clue = (player: "p1" | "p2", id: string, value: string) => {
+    const next = playerFrame(player, Number(id.slice(-1)) + 2);
+    next.observations = [
+      {
+        id,
+        encounterId: `battle-${id}`,
+        pokemonId: 25,
+        kind: "effectiveness",
+        value,
+        attackType: "ground",
+      },
+    ];
+    return next;
+  };
+  current = ingestFrame(
+    current,
+    "p1",
+    clue("p1", "a1", "resistance"),
+    pokemon,
+    3,
+  );
+  current = ingestFrame(
+    current,
+    "p1",
+    clue("p1", "a2", "resistance"),
+    pokemon,
+    4,
+  );
+  current = ingestFrame(
+    current,
+    "p2",
+    clue("p2", "b3", "resistance"),
+    pokemon,
+    5,
+  );
+  current = ingestFrame(current, "p2", clue("p2", "b4", "neutral"), pokemon, 6);
+  for (const player of ["p1", "p2"])
+    assert.deepEqual(
+      current.run.playerKnowledge?.[
+        player
+      ].pokedexObservationsByPokemonId?.[25]?.map((entry) => entry.type),
+      ["resistance", "neutral"],
+    );
+
+  const initial = randomRun();
+  const duplicate = (id: string) => ({
+    id,
+    type: "weakness" as const,
+    observationType: "fire",
+    createdAt: 1,
+  });
+  initial.run.playerKnowledge = {
+    p1: { pokedexObservationsByPokemonId: { 4: [duplicate("x")] } },
+    p2: { pokedexObservationsByPokemonId: { 4: [duplicate("y")] } },
+  };
+  const merged = mergeRomKnowledge(initial.run, ["p1", "p2"]);
+  assert.deepEqual(
+    merged.playerKnowledge?.p1.pokedexObservationsByPokemonId?.[4],
+    [duplicate("x")],
+  );
+  assert.deepEqual(
+    merged.playerKnowledge?.p2.pokedexObservationsByPokemonId?.[4],
+    [duplicate("y")],
+  );
+});
+
 test("wild encounters of an ally on the same ROM count for the zone", () => {
   let current = ingestFrame(randomRun(), "p1", playerFrame("p1"), pokemon, 1);
   current = ingestFrame(
