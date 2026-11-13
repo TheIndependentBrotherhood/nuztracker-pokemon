@@ -181,6 +181,9 @@ function CaptureThumbnail({
               width: "44px",
               height: "44px",
               objectFit: "contain",
+              filter: capture.isDead
+                ? "grayscale(100%) contrast(0.8)"
+                : undefined,
             }}
           />
           <Box
@@ -197,14 +200,17 @@ function CaptureThumbnail({
                 ✨
               </Typography>
             )}
-            {!isPlaceholder && capture.linkedDeath && (
-              <Typography
-                sx={{ fontSize: "0.6rem", lineHeight: 1 }}
-                title={t(tr.zoneItem.linkedDeath, lang)}
-              >
-                💔
-              </Typography>
-            )}
+            {!isPlaceholder &&
+              run?.isSoulLinkMode &&
+              capture.isDead &&
+              !capture.linkedDeath && (
+                <Typography
+                  sx={{ fontSize: "0.6rem", lineHeight: 1 }}
+                  title={t(tr.zoneItem.linkBreakSource, lang)}
+                >
+                  💔
+                </Typography>
+              )}
             {!isPlaceholder && (
               <Typography
                 sx={{
@@ -468,19 +474,9 @@ export default function ZoneItem({
                 zone,
                 player.playerIndex,
               );
-              if (playerCapture) {
-                return (
-                  <CaptureThumbnail
-                    key={player.id}
-                    capture={playerCapture}
-                    lang={lang}
-                    runId={runId}
-                    zoneId={zone.id}
-                    playerColor={color}
-                    playerLabel={label}
-                  />
-                );
-              }
+              const playerShinyChances = shinyChances.filter(
+                (c) => (c.playerIndex ?? 0) === player.playerIndex,
+              );
               // Placeholder (MissingNo), locked when a partner already lost the zone
               const placeholder: Capture = {
                 id: `placeholder-${player.id}`,
@@ -491,9 +487,17 @@ export default function ZoneItem({
                 createdAt: 0,
                 playerIndex: player.playerIndex,
               };
-              return (
+              const mainSlot = playerCapture ? (
                 <CaptureThumbnail
-                  key={player.id}
+                  capture={playerCapture}
+                  lang={lang}
+                  runId={runId}
+                  zoneId={zone.id}
+                  playerColor={color}
+                  playerLabel={label}
+                />
+              ) : (
+                <CaptureThumbnail
                   capture={placeholder}
                   lang={lang}
                   runId={runId}
@@ -509,19 +513,30 @@ export default function ZoneItem({
                   }
                 />
               );
-            })}
-            {shinyChances.map((capture) => {
-              const index = capture.playerIndex ?? 0;
+              // Each player keeps a single column: main slot, then shiny chances below it.
               return (
-                <CaptureThumbnail
-                  key={capture.id}
-                  capture={capture}
-                  lang={lang}
-                  runId={runId}
-                  zoneId={zone.id}
-                  playerColor={SOUL_LINK_PLAYER_COLORS[index]}
-                  playerLabel={`P${index + 1} ✨`}
-                />
+                <Box
+                  key={player.id}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.75,
+                    minWidth: 0,
+                  }}
+                >
+                  {mainSlot}
+                  {playerShinyChances.map((capture) => (
+                    <CaptureThumbnail
+                      key={capture.id}
+                      capture={capture}
+                      lang={lang}
+                      runId={runId}
+                      zoneId={zone.id}
+                      playerColor={color}
+                      playerLabel={`${label} ✨`}
+                    />
+                  ))}
+                </Box>
               );
             })}
           </Box>

@@ -1309,6 +1309,10 @@ const translations = {
       fr: "Relâché : le Pokémon lié du partenaire a été raté ou est mort",
       en: "Released: the partner's linked Pokémon was lost or died",
     },
+    linkBreakSource: {
+      fr: "Origine du lien brisé : ce Pokémon est mort ou sa capture a échoué",
+      en: "Source of the broken link: this Pokémon died or its capture failed",
+    },
   },
 
   // ── Team View ──────────────────────────────────────────────────────────────
