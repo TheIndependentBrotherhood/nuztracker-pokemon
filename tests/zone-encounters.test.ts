@@ -8,6 +8,13 @@ import { ingestFrame } from "../src/lib/tracker/live";
 import { overlayData } from "../src/lib/tracker/overlay";
 import { gameFrameSchema } from "../src/lib/tracker/schema";
 import type { GameFrame } from "../src/lib/tracker/types";
+import type { Zone } from "../src/lib/types";
+import {
+  mergeSubAreaZones,
+  remapSubAreaZones,
+  subAreaGroups,
+  zoneIdForMapName,
+} from "../src/lib/zones";
 import { frame, pokemon, record } from "./fixtures";
 
 function table(): Buffer {
@@ -38,6 +45,67 @@ function table(): Buffer {
   }
   return data;
 }
+
+test("merged sub-areas keep the captures and SoulLink pairs of each sub-area", () => {
+  const location = {
+    id: "sinnoh-route-204",
+    names: { fr: "Route 204", en: "Route 204" },
+  };
+  const templates = [
+    { id: "starter", regionArea: "" },
+    { id: "sinnoh-route-204-south", regionArea: "Route 204", location },
+    { id: "sinnoh-route-204-north", regionArea: "Route 204", location },
+    { id: "ravaged-path", regionArea: "" },
+  ];
+  assert.deepEqual(
+    mergeSubAreaZones(templates).map((zone) => zone.id),
+    ["starter", "sinnoh-route-204", "ravaged-path"],
+  );
+  const zone = (id: string, captures: Zone["captures"]): Zone => ({
+    id,
+    zoneName: id,
+    regionArea: "",
+    status: captures.length ? "captured" : "not-visited",
+    captures,
+    updatedAt: 0,
+  });
+  const capture = (id: string, playerIndex: number) =>
+    ({
+      id,
+      pokemonId: 396,
+      playerIndex,
+      isDead: false,
+      createdAt: 0,
+    }) as unknown as Zone["captures"][number];
+  const zones = [
+    zone("starter", []),
+    zone("sinnoh-route-204-south", [capture("a", 0), capture("b", 1)]),
+    zone("sinnoh-route-204-north", [capture("c", 0)]),
+  ];
+  const groups = subAreaGroups(templates);
+  const merged = remapSubAreaZones(zones, groups, true);
+  assert.deepEqual(
+    merged.map((entry) => entry.id),
+    ["starter", "sinnoh-route-204"],
+  );
+  assert.deepEqual(
+    merged[1].captures.map((entry) => entry.soulLinkGroupId),
+    [
+      "sinnoh-route-204-south",
+      "sinnoh-route-204-south",
+      "sinnoh-route-204-north",
+    ],
+  );
+  assert.equal(merged[1].status, "captured");
+  const split = remapSubAreaZones(merged, groups, false);
+  assert.deepEqual(
+    split.map((entry) => entry.id),
+    ["starter", "sinnoh-route-204-south"],
+  );
+  assert.equal(split[1].captures.length, 3);
+  // Live tracking still finds the merged zone from the in-game map names.
+  assert.equal(zoneIdForMapName(merged, "Route 204 North"), "sinnoh-route-204");
+});
 
 test("a Platinum wild table lists each species once per method and condition with its chance", () => {
   const entries = parseEncounterTable(table());

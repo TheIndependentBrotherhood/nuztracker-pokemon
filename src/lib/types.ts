@@ -129,6 +129,8 @@ export interface Run {
   soulLinkPlayers?: SoulLinkPlayer[];
   /** Soul Link: remind which player encounters first in the next zone, rotating every zone. */
   soulLinkTurnOrder?: boolean;
+  /** One zone per place: sub-areas such as Route 204 South/North are merged. */
+  mergeSubAreas?: boolean;
   /** Per-player teams in Soul Link mode. Key = playerIndex (0-3). */
   playerTeams?: Record<number, Capture[]>;
   /** Isolated knowledge for each player once a run is connected. */

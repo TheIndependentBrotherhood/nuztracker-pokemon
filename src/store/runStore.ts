@@ -43,6 +43,7 @@ interface CreateRunData {
   isSoulLinkMode?: boolean;
   soulLinkPlayers?: SoulLinkPlayer[];
   soulLinkTurnOrder?: boolean;
+  mergeSubAreas?: boolean;
 }
 
 interface RunStore {
@@ -218,17 +219,19 @@ export const useRunStore = create<RunStore>((set, get) => {
           ...data,
           difficulty: "normal",
           status: "in-progress",
-          zones: getZonesForRegion(data.region, data.gameVersion).map(
-            (zone) => ({
-              id: zone.id,
-              zoneName: zone.zoneNames?.en ?? zone.regionArea ?? "Unknown",
-              zoneNames: zone.zoneNames,
-              regionArea: zone.regionArea,
-              status: "not-visited",
-              captures: [],
-              updatedAt: now,
-            }),
-          ),
+          zones: getZonesForRegion(
+            data.region,
+            data.gameVersion,
+            data.mergeSubAreas,
+          ).map((zone) => ({
+            id: zone.id,
+            zoneName: zone.zoneNames?.en ?? zone.regionArea ?? "Unknown",
+            zoneNames: zone.zoneNames,
+            regionArea: zone.regionArea,
+            status: "not-visited",
+            captures: [],
+            updatedAt: now,
+          })),
           team: [],
           ...(data.isSoulLinkMode ? { playerTeams: {} } : {}),
           createdAt: now,

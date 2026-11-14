@@ -146,6 +146,10 @@ const translations = {
       fr: "🔄 Ordre de tour : rappeler quel joueur fait sa rencontre en premier dans la prochaine zone",
       en: "🔄 Turn order: remind which player encounters first in the next zone",
     },
+    mergeSubAreas: {
+      fr: "🧩 Fusionner les sous-zones d'un même lieu (Route 204 Sud/Nord, Mine Charbourg RdC/sous-sol…)",
+      en: "🧩 Merge the sub-areas of a same place (Route 204 South/North, Oreburgh Mine 1F/B1F…)",
+    },
     player1Name: { fr: "Nom du J1", en: "P1 Name" },
     player2Name: { fr: "Nom du J2", en: "P2 Name" },
     player3Name: { fr: "Nom du J3", en: "P3 Name" },

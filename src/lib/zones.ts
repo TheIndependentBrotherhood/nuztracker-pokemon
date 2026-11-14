@@ -1,5 +1,8 @@
 import { publicPath } from "@/lib/base-path";
 import type { GameVersionId } from "./game-catalog";
+import type { Zone } from "./types";
+import { deriveZoneStatus } from "./tracker/run-rules";
+import { defaultCaptureGroup } from "./zone-progress";
 import platinumMaps from "../../public/data/platinum-maps.json";
 import platinumEncounterAreas from "../../public/data/platinum-encounter-areas.json";
 
@@ -10,6 +13,18 @@ export interface ZoneTemplate {
     en?: string;
   };
   regionArea: string;
+  /** Location of a sub-area zone, used to merge the sub-areas of a same place. */
+  location?: {
+    id: string;
+    names: { fr: string; en: string };
+  };
+}
+
+/** A place split into several sub-area zones (e.g. Route 204 South/North). */
+export interface SubAreaGroup {
+  locationId: string;
+  names: { fr: string; en: string };
+  subAreas: { id: string; names?: { fr?: string; en?: string } }[];
 }
 
 export interface LocationArea {
@@ -93,11 +108,16 @@ function buildZoneTemplates(region: Region): ZoneTemplate[] {
       return;
     }
 
+    const location = {
+      id: loc.name,
+      names: namesFromSlug(loc.name, loc.names),
+    };
     areasWithTranslations.forEach((area) => {
       zones.push({
         id: area.name,
         zoneNames: namesFromSlug(area.name, area.names),
         regionArea: locationLabel,
+        location,
       });
     });
   });
@@ -164,6 +184,23 @@ if (typeof window !== "undefined") {
 export async function getZonesForRegionAsync(
   region: string,
   gameVersion?: GameVersionId,
+  mergeSubAreas = false,
+): Promise<ZoneTemplate[]> {
+  const zones = await loadGameZones(region, gameVersion);
+  return mergeSubAreas ? mergeSubAreaZones(zones) : zones;
+}
+
+/** Sub-area groups of a game, whether or not the run merges them. */
+export async function getSubAreaGroupsAsync(
+  region: string,
+  gameVersion?: GameVersionId,
+): Promise<SubAreaGroup[]> {
+  return subAreaGroups(await loadGameZones(region, gameVersion));
+}
+
+async function loadGameZones(
+  region: string,
+  gameVersion?: GameVersionId,
 ): Promise<ZoneTemplate[]> {
   // Special case: custom region starts with no zones
   if (region === "custom") {
@@ -191,10 +228,11 @@ export async function getZonesForRegionAsync(
   }
 
   // Merge existing runtime zones with JSON translations by id.
-  const namesById = new Map(templatesFromJson.map((z) => [z.id, z.zoneNames]));
+  const templatesById = new Map(templatesFromJson.map((z) => [z.id, z]));
   const enrichedExisting = existing.map((z) => ({
     ...z,
-    zoneNames: z.zoneNames ?? namesById.get(z.id),
+    zoneNames: z.zoneNames ?? templatesById.get(z.id)?.zoneNames,
+    location: z.location ?? templatesById.get(z.id)?.location,
   }));
 
   regionZones[region] = enrichedExisting;
@@ -204,8 +242,100 @@ export async function getZonesForRegionAsync(
 export function getZonesForRegion(
   region: string,
   gameVersion?: GameVersionId,
+  mergeSubAreas = false,
 ): ZoneTemplate[] {
-  return zonesForGame(regionZones[region] ?? [], gameVersion);
+  const zones = zonesForGame(regionZones[region] ?? [], gameVersion);
+  return mergeSubAreas ? mergeSubAreaZones(zones) : zones;
+}
+
+/** Places that keep several sub-area zones once filtered for the game. */
+export function subAreaGroups(zones: ZoneTemplate[]): SubAreaGroup[] {
+  const groups = new Map<string, SubAreaGroup>();
+  zones.forEach((zone) => {
+    if (!zone.location) return;
+    const group = groups.get(zone.location.id);
+    const subArea = { id: zone.id, names: zone.zoneNames };
+    if (group) group.subAreas.push(subArea);
+    else
+      groups.set(zone.location.id, {
+        locationId: zone.location.id,
+        names: zone.location.names,
+        subAreas: [subArea],
+      });
+  });
+  return [...groups.values()].filter((group) => group.subAreas.length > 1);
+}
+
+/**
+ * One zone per place: sub-areas that look the same in game (Route 204 South/North,
+ * Oreburgh Mine 1F/B1F…) become a single zone named after the place.
+ */
+export function mergeSubAreaZones(zones: ZoneTemplate[]): ZoneTemplate[] {
+  const groups = new Map(
+    subAreaGroups(zones).map((group) => [group.locationId, group]),
+  );
+  const merged = new Set<string>();
+  return zones.flatMap((zone) => {
+    const group = zone.location && groups.get(zone.location.id);
+    if (!group) return [zone];
+    if (merged.has(group.locationId)) return [];
+    merged.add(group.locationId);
+    return [{ id: group.locationId, zoneNames: group.names, regionArea: "" }];
+  });
+}
+
+/**
+ * Move the captures of a run between sub-area zones and their merged place zone when
+ * the merge option changes. Captures coming from several sub-areas keep their own
+ * SoulLink pairs through an explicit group.
+ */
+export function remapSubAreaZones(
+  zones: Zone[],
+  groups: SubAreaGroup[],
+  mergeSubAreas: boolean,
+): Zone[] {
+  let next = zones;
+  groups.forEach((group) => {
+    const subAreaIds = group.subAreas.map((subArea) => subArea.id);
+    const target = mergeSubAreas ? group.locationId : subAreaIds[0];
+    const sourceIds = mergeSubAreas ? subAreaIds : [group.locationId];
+    const sources = next.filter((zone) => sourceIds.includes(zone.id));
+    if (!sources.length) return;
+    const existing = next.find((zone) => zone.id === target);
+    const filled = [existing, ...sources].filter((zone): zone is Zone =>
+      Boolean(zone?.captures.length),
+    );
+    const captures = [existing, ...sources].flatMap((zone) =>
+      (zone?.captures ?? []).map((capture) =>
+        filled.length > 1 && !capture.soulLinkGroupId
+          ? { ...capture, soulLinkGroupId: defaultCaptureGroup(zone!, capture) }
+          : capture,
+      ),
+    );
+    const wasLost = [existing, ...sources].some(
+      (zone) => zone?.status === "lost",
+    );
+    const names = mergeSubAreas ? group.names : group.subAreas[0].names;
+    const zone: Zone = {
+      id: target,
+      zoneName: existing?.zoneName ?? names?.en ?? target,
+      zoneNames: existing?.zoneNames ?? names,
+      regionArea: existing?.regionArea ?? "",
+      status: deriveZoneStatus(captures, wasLost ? "lost" : "not-visited"),
+      captures,
+      updatedAt: Math.max(
+        ...[existing, ...sources].map((z) => z?.updatedAt ?? 0),
+      ),
+    };
+    const position = next.findIndex(
+      (entry) => entry.id === target || sourceIds.includes(entry.id),
+    );
+    next = next.filter(
+      (entry) => entry.id !== target && !sourceIds.includes(entry.id),
+    );
+    next.splice(position, 0, zone);
+  });
+  return next;
 }
 
 const encounterAreas = new Set<string>(platinumEncounterAreas);

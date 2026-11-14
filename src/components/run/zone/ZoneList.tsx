@@ -12,7 +12,12 @@ import {
 import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
-import { getZonesForRegionAsync, getZoneDisplayName } from "@/lib/zones";
+import {
+  getSubAreaGroupsAsync,
+  getZonesForRegionAsync,
+  getZoneDisplayName,
+  remapSubAreaZones,
+} from "@/lib/zones";
 import ZoneItem from "./ZoneItem";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledTextField from "@/components/ui/StyledTextField";
@@ -49,9 +54,20 @@ export default function ZoneList({ run }: Props) {
   useEffect(() => {
     let cancelled = false;
     const loadAndSync = async () => {
-      const correctZones = await getZonesForRegionAsync(run.region, run.gameVersion);
+      const merge = Boolean(run.mergeSubAreas);
+      const [correctZones, groups] = await Promise.all([
+        getZonesForRegionAsync(run.region, run.gameVersion, merge),
+        getSubAreaGroupsAsync(run.region, run.gameVersion),
+      ]);
       if (cancelled) return;
       setTemplateZoneIds(correctZones.map((z) => z.id));
+
+      // Captures follow the sub-area merge option: sub-areas <-> their place zone
+      const runZones =
+        run.region === "custom"
+          ? run.zones
+          : remapSubAreaZones(run.zones, groups, merge);
+      const remapped = runZones !== run.zones;
 
       // Template zones explicitly removed by the user must not be re-added
       const removedZoneIds = new Set((run.removedZones ?? []).map((z) => z.id));
@@ -60,18 +76,15 @@ export default function ZoneList({ run }: Props) {
       );
 
       const expectedZoneIds = new Set(expectedZones.map((z) => z.id));
-      const currentZoneIds = new Set(run.zones.map((z) => z.id));
+      const currentZoneIds = new Set(runZones.map((z) => z.id));
 
       // Zones added manually by the user are not part of the template and
       // must always be preserved (otherwise their captures become orphans).
-      const userAddedZones = run.zones.filter(
-        (z) => !expectedZoneIds.has(z.id),
-      );
+      const userAddedZones = runZones.filter((z) => !expectedZoneIds.has(z.id));
 
       // Mismatch when at least one template zone is missing from the run
-      const zonesMismatch = ![...expectedZoneIds].every((id) =>
-        currentZoneIds.has(id),
-      );
+      const zonesMismatch =
+        remapped || ![...expectedZoneIds].every((id) => currentZoneIds.has(id));
 
       // Build a map of zoneId -> translated names for display (never persisted)
       const newMap = new Map<string, { fr?: string; en?: string }>();
@@ -83,7 +96,7 @@ export default function ZoneList({ run }: Props) {
       // For non-custom regions: sync zones if mismatch
       if (canManageZones && run.region !== "custom" && zonesMismatch) {
         const syncedZones = expectedZones.map((expectedZone) => {
-          const currentZone = run.zones.find((z) => z.id === expectedZone.id);
+          const currentZone = runZones.find((z) => z.id === expectedZone.id);
           return currentZone
             ? { ...currentZone }
             : {
@@ -107,9 +120,11 @@ export default function ZoneList({ run }: Props) {
     };
 
     void loadAndSync().catch(reportError);
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run.id, run.region, run.gameVersion, canManageZones]);
+  }, [run.id, run.region, run.gameVersion, run.mergeSubAreas, canManageZones]);
 
   // Derive display zones: run.zones enriched with translated names from map
   const zonesToDisplay = useMemo(

@@ -173,6 +173,7 @@ export const runSchema: z.ZodType<Run> = z
       .max(4)
       .optional(),
     soulLinkTurnOrder: z.boolean().optional(),
+    mergeSubAreas: z.boolean().optional(),
     playerTeams: z
       .record(z.string().regex(/^[0-3]$/), z.array(captureSchema).max(6))
       .optional(),

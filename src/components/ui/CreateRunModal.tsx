@@ -50,6 +50,7 @@ export default function CreateRunModal({ onClose }: Props) {
   const [isRandomMode, setIsRandomMode] = useState(false);
   const [isSoulLinkMode, setIsSoulLinkMode] = useState(false);
   const [soulLinkTurnOrder, setSoulLinkTurnOrder] = useState(false);
+  const [mergeSubAreas, setMergeSubAreas] = useState(false);
   const [player1Name, setPlayer1Name] = useState("");
   const [player2Name, setPlayer2Name] = useState("");
   const [player3Name, setPlayer3Name] = useState<string | null>(null);
@@ -136,6 +137,7 @@ export default function CreateRunModal({ onClose }: Props) {
       isShinyHuntMode,
       isRandomMode,
       randomizerOptions: isRandomMode ? randomizerOptions : undefined,
+      ...(mergeSubAreas && region !== "custom" ? { mergeSubAreas: true } : {}),
       ...(isSoulLinkMode
         ? {
             isSoulLinkMode: true,
@@ -322,6 +324,26 @@ export default function CreateRunModal({ onClose }: Props) {
                 m: 0,
               }}
             />
+
+            {region !== "custom" && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={mergeSubAreas}
+                    onChange={(e) => setMergeSubAreas(e.target.checked)}
+                  />
+                }
+                label={t(tr.createRun.mergeSubAreas, lang)}
+                sx={{
+                  color: "#000",
+                  fontWeight: 600,
+                  p: 1.5,
+                  border: "2px solid #000",
+                  borderRadius: "1rem",
+                  m: 0,
+                }}
+              />
+            )}
           </Stack>
 
           {/* Soul Link Players */}

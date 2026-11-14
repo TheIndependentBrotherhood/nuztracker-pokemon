@@ -156,6 +156,23 @@ export default function RunSettingsModal({ run, open, onClose }: Props) {
             }
           />
         )}
+        {run.region !== "custom" && (
+          <FormControlLabel
+            label={t(tr.createRun.mergeSubAreas, lang)}
+            control={
+              <Checkbox
+                checked={Boolean(run.mergeSubAreas)}
+                disabled={!canEditRun(run.id)}
+                onChange={(event) => {
+                  void updateRun(
+                    { ...run, mergeSubAreas: event.target.checked },
+                    run,
+                  );
+                }}
+              />
+            }
+          />
+        )}
         <Box sx={{ pt: 1 }}>
           <StyledSelect
             label={t(tr.createRun.typeChart, lang)}
