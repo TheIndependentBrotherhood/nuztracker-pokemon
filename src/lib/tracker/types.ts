@@ -65,6 +65,9 @@ export interface LivePokemon {
   friendship?: number;
   hiddenPower?: HiddenPower;
   stats?: Record<string, number>;
+  /** Individual and effort values, keyed by stat name (hp, attack…). */
+  ivs?: Record<string, number>;
+  evs?: Record<string, number>;
   // Only while the Pokémon is on the field in battle.
   statStages?: StatStages;
   /** In-battle weight in hectograms, as used by weight-based moves. */

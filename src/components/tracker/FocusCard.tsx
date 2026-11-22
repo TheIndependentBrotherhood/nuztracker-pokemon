@@ -40,6 +40,7 @@ import PixelIcon, {
 } from "./PixelIcon";
 
 const text = translations.focusCard;
+type StatView = "stats" | "ivs" | "evs";
 type StatusKey = keyof typeof text.statusShort;
 type StatKey = keyof typeof text.stats;
 
@@ -430,6 +431,13 @@ export default function FocusCard({
   const { lang } = useLanguage();
   const gameText = useGameText();
   const live = member.live;
+  // Only our own Pokémon expose IVs and EVs: clicking the stats column cycles through them.
+  const [statView, setStatView] = useState<StatView>("stats");
+  const views: StatView[] =
+    live?.ivs && live.evs ? ["stats", "ivs", "evs"] : ["stats"];
+  const view = views.includes(statView) ? statView : "stats";
+  const cycleView = () =>
+    setStatView(views[(views.indexOf(view) + 1) % views.length]);
   const generation = getGameVersion(gameVersion)?.generation ?? 4;
   const singleSpecial = generation === 1;
   const base = new Map(
@@ -571,14 +579,25 @@ export default function FocusCard({
       }));
 
   const statValue = (stat: string) =>
-    live
-      ? stat === "hp"
-        ? live.maxHp
-        : live.stats?.[stat]
-      : member.randomStats
-        ? undefined
-        : (base.get(stat) ??
-          (stat === "special-attack" ? base.get("special") : undefined));
+    view === "ivs"
+      ? live?.ivs?.[stat]
+      : view === "evs"
+        ? live?.evs?.[stat]
+        : live
+          ? stat === "hp"
+            ? live.maxHp
+            : live.stats?.[stat]
+          : member.randomStats
+            ? undefined
+            : (base.get(stat) ??
+              (stat === "special-attack" ? base.get("special") : undefined));
+  const sum = (values?: Record<string, number>) =>
+    Object.values(values ?? {}).reduce((total, value) => total + value, 0);
+  // Best values stand out: perfect IVs and fully trained EVs.
+  const valueColor = (value?: number) =>
+    (view === "ivs" && value === 31) || (view === "evs" && value === 252)
+      ? "#86efac"
+      : undefined;
 
   return (
     <Box
@@ -897,15 +916,19 @@ export default function FocusCard({
           title={
             <TooltipBody
               title={t(
-                live
-                  ? text.inGameStats
-                  : member.randomStats
-                    ? text.estimates
-                    : text.baseStats,
+                view === "ivs"
+                  ? text.ivs
+                  : view === "evs"
+                    ? text.evs
+                    : live
+                      ? text.inGameStats
+                      : member.randomStats
+                        ? text.estimates
+                        : text.baseStats,
                 lang,
               )}
-              lines={
-                stageEntries.length
+              lines={[
+                ...(stageEntries.length
                   ? [
                       `${t(text.statStages, lang)} :`,
                       ...stageEntries.map(([stat, stage]) =>
@@ -916,14 +939,30 @@ export default function FocusCard({
                         ),
                       ),
                     ]
-                  : []
-              }
+                  : []),
+                ...(views.length > 1 ? [t(text.statViewHint, lang)] : []),
+              ]}
             />
           }
         >
           <Box
             tabIndex={0}
             data-testid="focus-stats"
+            data-view={view}
+            {...(views.length > 1
+              ? {
+                  role: "button",
+                  onClick: (event: React.MouseEvent) => {
+                    event.stopPropagation();
+                    cycleView();
+                  },
+                  onKeyDown: (event: React.KeyboardEvent) => {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    cycleView();
+                  },
+                }
+              : {})}
             sx={{
               display: "grid",
               gridTemplateColumns: stageColumn ? "auto auto auto" : "auto auto",
@@ -933,6 +972,13 @@ export default function FocusCard({
               fontVariantNumeric: "tabular-nums",
               borderLeft: "1px solid #3f4e5f",
               pl: 0.75,
+              ...(views.length > 1
+                ? {
+                    cursor: "pointer",
+                    userSelect: "none",
+                    "&:hover": { bgcolor: "rgba(255, 255, 255, 0.05)" },
+                  }
+                : {}),
             }}
           >
             {stats.map((stat) => {
@@ -942,7 +988,8 @@ export default function FocusCard({
                   : (stat as StatKey);
               const boosted = !neutral && nature?.increased === stat;
               const lowered = !neutral && nature?.decreased === stat;
-              const estimate = member.annotations?.[stat];
+              const estimate = view === "stats" && member.annotations?.[stat];
+              const value = statValue(stat);
               return [
                 <Box
                   key={`${stat}-label`}
@@ -957,9 +1004,13 @@ export default function FocusCard({
                 <Box
                   key={`${stat}-value`}
                   component="span"
-                  sx={{ textAlign: "right", fontWeight: 700 }}
+                  sx={{
+                    textAlign: "right",
+                    fontWeight: 700,
+                    color: valueColor(value),
+                  }}
                 >
-                  {statValue(stat) ?? "?"}
+                  {value ?? "?"}
                   {member.randomStats && estimate && (
                     <Box
                       component="span"
@@ -987,10 +1038,21 @@ export default function FocusCard({
               ];
             })}
             <Box component="span" sx={{ color: muted }}>
-              {t(text.stats.total, lang)}
+              {t(
+                view === "ivs"
+                  ? text.ivTotal
+                  : view === "evs"
+                    ? text.evTotal
+                    : text.stats.total,
+                lang,
+              )}
             </Box>
             <Box component="span" sx={{ textAlign: "right", fontWeight: 700 }}>
-              {member.bst || "?"}
+              {view === "ivs"
+                ? `${sum(live?.ivs)}/186`
+                : view === "evs"
+                  ? `${sum(live?.evs)}/510`
+                  : member.bst || "?"}
             </Box>
             {stageColumn && <span />}
           </Box>

@@ -53,6 +53,22 @@ test("PK4 decoding covers all shuffle indices, encryption flags, unsigned identi
         "special-defense": 25,
       });
       assert.deepEqual(pokemon.moves, [{ id: 33, pp: 35 }]);
+      assert.deepEqual(pokemon.ivs, {
+        hp: 31,
+        attack: 0,
+        defense: 15,
+        speed: 30,
+        "special-attack": 1,
+        "special-defense": 20,
+      });
+      assert.deepEqual(pokemon.evs, {
+        hp: 252,
+        attack: 4,
+        defense: 0,
+        speed: 0,
+        "special-attack": 252,
+        "special-defense": 2,
+      });
       assert.equal(decodePk4(pk4Fixture(shuffle, { flags, egg: true })), null);
     }
   }

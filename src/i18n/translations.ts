@@ -2062,6 +2062,17 @@ const translations = {
       en: "Manual · no in-game values",
     },
     inGameStats: { fr: "Stats en jeu", en: "In-game stats" },
+    ivs: { fr: "IV (0-31)", en: "IVs (0-31)" },
+    evs: {
+      fr: "EV (max 252 par stat, 510 au total)",
+      en: "EVs (max 252 per stat, 510 total)",
+    },
+    ivTotal: { fr: "IV", en: "IV" },
+    evTotal: { fr: "EV", en: "EV" },
+    statViewHint: {
+      fr: "Clique pour alterner Stats → IV → EV",
+      en: "Click to cycle Stats → IVs → EVs",
+    },
     estimates: { fr: "Tes estimations", en: "Your estimates" },
     baseStats: { fr: "Stats de base", en: "Base stats" },
     noReference: {

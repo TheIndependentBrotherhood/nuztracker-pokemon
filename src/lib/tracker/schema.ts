@@ -291,6 +291,15 @@ const evolutionsSchema = z
   )
   .max(8);
 
+const statName = z.enum([
+  "hp",
+  "attack",
+  "defense",
+  "speed",
+  "special-attack",
+  "special-defense",
+]);
+
 export const livePokemonSchema: z.ZodType<LivePokemon> = z
   .object({
     identity: id,
@@ -332,6 +341,8 @@ export const livePokemonSchema: z.ZodType<LivePokemon> = z
         z.number().int().min(0).max(65535),
       )
       .optional(),
+    ivs: z.record(statName, z.number().int().min(0).max(31)).optional(),
+    evs: z.record(statName, z.number().int().min(0).max(255)).optional(),
     moves: z
       .array(
         z

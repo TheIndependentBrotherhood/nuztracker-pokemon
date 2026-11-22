@@ -215,17 +215,17 @@ function decodeRecord(
   if (species < 1 || species > 493)
     throw new Error("This ROM's party species layout is not supported.");
   const experience = growth.readUInt32LE(8);
-  const { level, hp, maxHp, status, stats } = tailOf(
-    {
-      species,
-      form: attacks[24] >>> 3,
-      experience,
-      nature: personality % 25,
-      ivs: PK4_STATS.map((_, index) => (ivs >>> (index * 5)) & 31),
-      evs: PK4_STATS.map((_, index) => growth[16 + index]),
-    },
-    personality,
-  );
+  const core: BoxRecordInput = {
+    species,
+    form: attacks[24] >>> 3,
+    experience,
+    nature: personality % 25,
+    ivs: PK4_STATS.map((_, index) => (ivs >>> (index * 5)) & 31),
+    evs: PK4_STATS.map((_, index) => growth[16 + index]),
+  };
+  const { level, hp, maxHp, status, stats } = tailOf(core, personality);
+  const byStat = (values: number[]) =>
+    Object.fromEntries(PK4_STATS.map((stat, index) => [stat, values[index]]));
   if (!level || level > 100 || !maxHp || maxHp > 9999 || hp > maxHp)
     throw new SnapshotError(
       "Pokemon level or HP changed during the read. No partial team was sent.",
@@ -288,6 +288,8 @@ function decodeRecord(
       friendship: growth[12],
       hiddenPower: hiddenPowerFromIvs(ivs & 0x3fffffff),
       ...(stats ? { stats } : {}),
+      ivs: byStat(core.ivs),
+      evs: byStat(core.evs),
       moves,
     },
   };

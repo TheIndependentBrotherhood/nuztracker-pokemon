@@ -35,10 +35,18 @@ export function pk4Fixture(
   blocks[0].writeUInt32LE(1234, 8);
   blocks[0][13] = 9;
   blocks[0][15] = 3;
+  // EVs in Gen 4 order: HP, Atk, Def, Spe, SpA, SpD.
+  [252, 4, 0, 0, 252, 2].forEach((value, index) => {
+    blocks[0][16 + index] = value;
+  });
+  const ivs = [31, 0, 15, 30, 1, 20].reduce(
+    (word, value, index) => word | (value << (index * 5)),
+    0,
+  );
   blocks[1].writeUInt16LE(33, 0);
   blocks[1][8] = 35;
   blocks[1].writeUInt32LE(
-    (0x80000000 | (options.egg ? 0x40000000 : 0)) >>> 0,
+    (0x80000000 | (options.egg ? 0x40000000 : 0) | ivs) >>> 0,
     16,
   );
   blocks[1][24] = 2;
