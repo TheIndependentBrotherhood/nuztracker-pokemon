@@ -42,6 +42,7 @@ import {
 import { pokemonForGame } from "@/lib/game-reference";
 import { abilitySlug } from "@/lib/ability-slug";
 import StatAnnotations from "@/components/tracker/StatAnnotations";
+import { matchesSearch } from "@/lib/search";
 
 interface Props {
   pokemonCaptured: Capture;
@@ -1310,17 +1311,15 @@ export default function PokemonDetailModal({
                           }}
                         >
                           {(() => {
-                            const searchLower = panelSearch.toLowerCase();
                             const filtered = abilitiesCache.abilities.filter(
                               (a) =>
                                 !abilityPanel.includes(a.name) &&
-                                (a.name.toLowerCase().includes(searchLower) ||
-                                  a.names?.fr
-                                    ?.toLowerCase()
-                                    .includes(searchLower) ||
-                                  a.names?.en
-                                    ?.toLowerCase()
-                                    .includes(searchLower)),
+                                matchesSearch(
+                                  panelSearch,
+                                  a.name,
+                                  a.names?.fr,
+                                  a.names?.en,
+                                ),
                             );
                             return (
                               <>
@@ -1701,16 +1700,14 @@ export default function PokemonDetailModal({
                             }}
                           >
                             {(() => {
-                              const searchLower = abilitySearch.toLowerCase();
                               const filtered = abilitiesCache.abilities.filter(
                                 (a) =>
-                                  a.name.toLowerCase().includes(searchLower) ||
-                                  a.names?.fr
-                                    ?.toLowerCase()
-                                    .includes(searchLower) ||
-                                  a.names?.en
-                                    ?.toLowerCase()
-                                    .includes(searchLower),
+                                  matchesSearch(
+                                    abilitySearch,
+                                    a.name,
+                                    a.names?.fr,
+                                    a.names?.en,
+                                  ),
                               );
                               return (
                                 <>

@@ -1,4 +1,4 @@
-import type { PlatinumBattleData } from "./platinum-data";
+import type { PlatinumBattleData } from "./data";
 
 // BattleContext fields (pret/pokeplatinum include/battle/battle_context.h).
 export const CONTEXT_BATTLERS_OFFSET = 0x64;

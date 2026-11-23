@@ -51,7 +51,7 @@ for (const entry of await readdir(output, {
 await Promise.all(
   ["main", "preload"].map((entry) =>
     build({
-      entryPoints: [join(root, "desktop", `${entry}.ts`)],
+      entryPoints: [join(root, "desktop", "app", `${entry}.ts`)],
       outfile: join(root, "dist-desktop", `${entry}.cjs`),
       bundle: true,
       platform: "node",

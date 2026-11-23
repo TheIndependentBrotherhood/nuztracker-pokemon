@@ -12,8 +12,8 @@ import { createInterface } from "node:readline";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { parseArgs } from "node:util";
-import { NdsRom } from "../../desktop/nds-rom";
-import { readShinyThreshold } from "../../desktop/pk4";
+import { NdsRom } from "../../desktop/formats/nds/rom";
+import { readShinyThreshold } from "../../desktop/formats/gen4/pk4";
 
 // Virtual-key codes matching the MelonDS keyboard mapping (melonDS.toml).
 const KEY = {

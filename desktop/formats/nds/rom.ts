@@ -13,8 +13,12 @@ export class NdsRom {
     private readonly size: number,
   ) {}
 
-  get gameCode(): string { return this.header.toString("ascii", 12, 16); }
-  get revision(): number { return this.header[30]; }
+  get gameCode(): string {
+    return this.header.toString("ascii", 12, 16);
+  }
+  get revision(): number {
+    return this.header[30];
+  }
 
   static async open(path: string): Promise<NdsRom> {
     const file = await open(path, "r");
@@ -24,8 +28,13 @@ export class NdsRom {
         throw new Error("Select a valid Platinum NDS ROM (up to 512 MB).");
       const header = Buffer.alloc(0x200);
       await file.read(header, 0, header.length, 0);
-      if (!["CPUE", "CPUF"].includes(header.toString("ascii", 12, 16)) || header[30] > 1)
-        throw new Error("This connector supports Platinum CPUE / CPUF revisions 0 and 1 only.");
+      if (
+        !["CPUE", "CPUF"].includes(header.toString("ascii", 12, 16)) ||
+        header[30] > 1
+      )
+        throw new Error(
+          "This connector supports Platinum CPUE / CPUF revisions 0 and 1 only.",
+        );
       const hash = createHash("sha256");
       for await (const chunk of createReadStream(path)) hash.update(chunk);
       const rom = new NdsRom(file, header, hash.digest("hex"), size);
@@ -38,13 +47,24 @@ export class NdsRom {
   }
 
   private async read(start: number, length: number): Promise<Buffer> {
-    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(length) ||
-        start < 0 || length < 1 || length > 16 * 1024 * 1024 || start + length > this.size)
+    if (
+      !Number.isSafeInteger(start) ||
+      !Number.isSafeInteger(length) ||
+      start < 0 ||
+      length < 1 ||
+      length > 16 * 1024 * 1024 ||
+      start + length > this.size
+    )
       throw new Error("The NDS filesystem contains an invalid range.");
     const buffer = Buffer.alloc(length);
     let offset = 0;
     while (offset < length) {
-      const { bytesRead } = await this.file.read(buffer, offset, length - offset, start + offset);
+      const { bytesRead } = await this.file.read(
+        buffer,
+        offset,
+        length - offset,
+        start + offset,
+      );
       if (!bytesRead) throw new Error("The NDS ROM is truncated.");
       offset += bytesRead;
     }
@@ -52,11 +72,21 @@ export class NdsRom {
   }
 
   private async loadDirectory(): Promise<void> {
-    const names = await this.read(this.header.readUInt32LE(0x40), this.header.readUInt32LE(0x44));
-    const allocations = await this.read(this.header.readUInt32LE(0x48), this.header.readUInt32LE(0x4c));
+    const names = await this.read(
+      this.header.readUInt32LE(0x40),
+      this.header.readUInt32LE(0x44),
+    );
+    const allocations = await this.read(
+      this.header.readUInt32LE(0x48),
+      this.header.readUInt32LE(0x4c),
+    );
     const visited = new Set<number>();
     const walk = (directory: number, parent: string, depth: number) => {
-      if (depth > 20 || visited.has(directory) || directory * 8 + 8 > names.length)
+      if (
+        depth > 20 ||
+        visited.has(directory) ||
+        directory * 8 + 8 > names.length
+      )
         throw new Error("The NDS directory table is invalid.");
       visited.add(directory);
       let cursor = names.readUInt32LE(directory * 8);
@@ -91,14 +121,49 @@ export class NdsRom {
 
   async arm9(): Promise<Buffer> {
     const size = this.header.readUInt32LE(0x2c);
-    return size ? await this.read(this.header.readUInt32LE(0x20), size) : Buffer.alloc(0);
+    return size
+      ? await this.read(this.header.readUInt32LE(0x20), size)
+      : Buffer.alloc(0);
+  }
+
+  get arm9Ram(): number {
+    return this.header.readUInt32LE(0x28);
+  }
+
+  // Uncompressed ARM9 overlay image and its load address; undefined when absent or compressed.
+  async overlay(
+    id: number,
+  ): Promise<{ ram: number; data: Buffer } | undefined> {
+    const table = this.header.readUInt32LE(0x50);
+    const tableSize = this.header.readUInt32LE(0x54);
+    const fat = this.header.readUInt32LE(0x48);
+    const fatSize = this.header.readUInt32LE(0x4c);
+    if (!tableSize || tableSize % 32 || fatSize % 8) return undefined;
+    const entries = await this.read(table, tableSize);
+    for (let entry = 0; entry < entries.length; entry += 32) {
+      if (entries.readUInt32LE(entry) !== id) continue;
+      const fileId = entries.readUInt32LE(entry + 24);
+      if (entries[entry + 31] & 1 || fileId >= fatSize / 8) return undefined;
+      const range = await this.read(fat + fileId * 8, 8);
+      const start = range.readUInt32LE(0);
+      const end = range.readUInt32LE(4);
+      if (end <= start) return undefined;
+      return {
+        ram: entries.readUInt32LE(entry + 4),
+        data: await this.read(start, end - start),
+      };
+    }
+    return undefined;
   }
 
   async archive(path: string): Promise<Buffer[]> {
     const cached = this.archives.get(path);
     if (cached) return cached;
     const file = this.files.get(path);
-    if (!file) throw new Error(`This ROM is missing ${path}; its layout is unsupported.`);
+    if (!file)
+      throw new Error(
+        `This ROM is missing ${path}; its layout is unsupported.`,
+      );
     const data = await this.read(file.start, file.end - file.start);
     if (data.toString("ascii", 0, 4) !== "NARC")
       throw new Error(`Invalid NDS archive: ${path}.`);
@@ -110,23 +175,28 @@ export class NdsRom {
         throw new Error("The NDS archive contains an invalid block.");
       const block = data.toString("ascii", offset, offset + 4);
       if (block === "BTAF") table = data.subarray(offset + 8, offset + length);
-      if (block === "GMIF") contents = data.subarray(offset + 8, offset + length);
+      if (block === "GMIF")
+        contents = data.subarray(offset + 8, offset + length);
       offset += length;
     }
     if (!table || table.length < 4 || !contents)
       throw new Error("The NDS archive is missing its file table or data.");
     const count = table.readUInt16LE(0);
-    if (count * 8 + 4 > table.length) throw new Error("The NDS archive table is truncated.");
+    if (count * 8 + 4 > table.length)
+      throw new Error("The NDS archive table is truncated.");
     const result: Buffer[] = [];
     for (let index = 0; index < count; index++) {
       const start = table.readUInt32LE(4 + index * 8);
       const end = table.readUInt32LE(8 + index * 8);
-      if (end < start || end > contents.length) throw new Error("An NDS archive entry is invalid.");
+      if (end < start || end > contents.length)
+        throw new Error("An NDS archive entry is invalid.");
       result.push(contents.subarray(start, end));
     }
     this.archives.set(path, result);
     return result;
   }
 
-  async close(): Promise<void> { await this.file.close(); }
+  async close(): Promise<void> {
+    await this.file.close();
+  }
 }

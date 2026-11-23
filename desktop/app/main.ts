@@ -22,11 +22,11 @@ import {
   recordSchema,
   runEditSchema,
   validationMessage,
-} from "../src/lib/tracker/schema";
+} from "../../src/lib/tracker/schema";
 import { TrackerDatabase } from "./database";
 import { TrackerService } from "./service";
 import { LocalServer } from "./local-server";
-import { overlayCommandSchema } from "../src/lib/tracker/overlay-control";
+import { overlayCommandSchema } from "../../src/lib/tracker/overlay-control";
 
 if (process.env.NUZTRACKER_DATA_DIR)
   app.setPath("userData", process.env.NUZTRACKER_DATA_DIR);

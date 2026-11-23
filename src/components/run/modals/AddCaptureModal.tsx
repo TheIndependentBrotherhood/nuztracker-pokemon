@@ -33,6 +33,7 @@ import CaptureRateBadge from "@/components/pokedex/CaptureRateBadge";
 import { getPlayerId, knowledgeForPlayer } from "@/lib/tracker/knowledge";
 import { pokemonForGame } from "@/lib/game-reference";
 import { getGameVersion } from "@/lib/game-catalog";
+import { matchesSearch } from "@/lib/search";
 
 interface Props {
   runId: string;
@@ -1206,17 +1207,15 @@ export default function AddCaptureModal({
                             }}
                           >
                             {(() => {
-                              const searchLower = abilitySearch.toLowerCase();
                               const filtered = abilitiesCache.abilities.filter(
                                 (a) =>
                                   !abilityPanelDraft.includes(a.name) &&
-                                  (a.name.toLowerCase().includes(searchLower) ||
-                                    a.names?.fr
-                                      ?.toLowerCase()
-                                      .includes(searchLower) ||
-                                    a.names?.en
-                                      ?.toLowerCase()
-                                      .includes(searchLower)),
+                                  matchesSearch(
+                                    abilitySearch,
+                                    a.name,
+                                    a.names?.fr,
+                                    a.names?.en,
+                                  ),
                               );
                               return (
                                 <>

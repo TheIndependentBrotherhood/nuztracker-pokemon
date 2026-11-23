@@ -33,19 +33,14 @@ import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useCache } from "@/context/CacheContext";
 import { getLocalizedPokemonName } from "@/lib/pokemon-data";
+import { matchesSearch } from "@/lib/search";
 
 interface Props {
   run: Run;
 }
 
 /** Core analysis logic scoped to a specific team */
-function TypeAnalysisCore({
-  run,
-  team,
-}: {
-  run: Run;
-  team: Capture[];
-}) {
+function TypeAnalysisCore({ run, team }: { run: Run; team: Capture[] }) {
   const [teamTypes, setTeamTypes] = useState<string[][]>([]);
   const [tabValue, setTabValue] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -1139,15 +1134,12 @@ function TypeAnalysisCore({
                     const filteredAbilities = relevantAbilities.filter(
                       (a) =>
                         !selectedAbilities.includes(a.name) &&
-                        (a.name
-                          .toLowerCase()
-                          .includes(abilitySearch.toLowerCase()) ||
-                          a.names?.fr
-                            ?.toLowerCase()
-                            .includes(abilitySearch.toLowerCase()) ||
-                          a.names?.en
-                            ?.toLowerCase()
-                            .includes(abilitySearch.toLowerCase())),
+                        matchesSearch(
+                          abilitySearch,
+                          a.name,
+                          a.names?.fr,
+                          a.names?.en,
+                        ),
                     );
                     return (
                       <>
@@ -1575,11 +1567,14 @@ function TypeAnalysisCore({
 }
 
 export default function TypeAnalysis({ run }: Props) {
-  const { lang } = useLanguage();
   const isSoulLink = Boolean(run.isSoulLinkMode && run.soulLinkPlayers?.length);
   const players = run.soulLinkPlayers ?? [];
-  const [activePlayer, setActivePlayer] = useState(() => players[0]?.playerIndex ?? 0);
-  const resolvedActivePlayer = players.some((p) => p.playerIndex === activePlayer)
+  const [activePlayer, setActivePlayer] = useState(
+    () => players[0]?.playerIndex ?? 0,
+  );
+  const resolvedActivePlayer = players.some(
+    (p) => p.playerIndex === activePlayer,
+  )
     ? activePlayer
     : (players[0]?.playerIndex ?? 0);
 

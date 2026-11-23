@@ -22,7 +22,7 @@ import {
 } from "../src/lib/tracker/knowledge";
 import { exportArchive, readArchive } from "../src/lib/tracker/archive";
 import { ingestFrame, linkPokemon, mapZone } from "../src/lib/tracker/live";
-import { applyRoomCommand } from "../desktop/room-protocol";
+import { applyRoomCommand } from "../desktop/room/protocol";
 import { zonesForGame } from "../src/lib/zones";
 import { encounterAreasForZone } from "../src/lib/encounter-reference";
 import encounterData from "../public/data/game-encounters.json";

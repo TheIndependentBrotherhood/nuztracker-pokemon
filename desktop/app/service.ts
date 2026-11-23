@@ -13,7 +13,7 @@ import type {
   RunEdit,
   RunRecord,
   RoomStatus,
-} from "../src/lib/tracker/types";
+} from "../../src/lib/tracker/types";
 import {
   bindBridgeSchema,
   connectMelonDsSchema,
@@ -25,23 +25,23 @@ import {
   recordSchema,
   runEditSchema,
   validationMessage,
-} from "../src/lib/tracker/schema";
+} from "../../src/lib/tracker/schema";
 import {
   connectRun,
   gameKey,
   materiallyChanged,
   type PokemonResolver,
-} from "../src/lib/tracker/live";
-import { newId, receiveSharedRecord } from "../src/lib/tracker/records";
-import { importAsCopies } from "../src/lib/tracker/archive";
+} from "../../src/lib/tracker/live";
+import { newId, receiveSharedRecord } from "../../src/lib/tracker/records";
+import { importAsCopies } from "../../src/lib/tracker/archive";
 import { TrackerDatabase } from "./database";
-import { RoomHost } from "./room-host";
-import { RoomClient, savedClientSchema } from "./room-client";
-import { applyRoomCommand, type RoomCommand } from "./room-protocol";
-import { NdsRom } from "./nds-rom";
-import { MelonDsConnector } from "./platinum-reader";
-import type { VanillaMoveNames } from "./platinum-data";
-import { closeSharedGdbClients } from "./gdb-client";
+import { RoomHost } from "../room/host";
+import { RoomClient, savedClientSchema } from "../room/client";
+import { applyRoomCommand, type RoomCommand } from "../room/protocol";
+import { NdsRom } from "../formats/nds/rom";
+import { MelonDsConnector } from "../games/platinum/melonds-connector";
+import type { VanillaMoveNames } from "../games/platinum/data";
+import { closeSharedGdbClients } from "../emulators/melonds/gdb-client";
 
 const melonRomSchema = z.object({
   path: z.string(),

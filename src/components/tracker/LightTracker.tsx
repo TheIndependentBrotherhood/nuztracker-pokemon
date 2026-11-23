@@ -33,12 +33,15 @@ import PendingCaptures from "./PendingCaptures";
 import SoulLinkTeamCheck from "./SoulLinkTeamCheck";
 import StatAnnotations from "./StatAnnotations";
 import ZoneEncountersButton from "./ZoneEncountersButton";
+import MartsPanel from "./MartsPanel";
 import { TrackerBoundsContext } from "./TrackerDialog";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { getPokemonById, type CaptureSpriteOption } from "@/lib/pokemon-data";
 import type { Capture, PokemonData } from "@/lib/types";
 import type { GameFrame } from "@/lib/tracker/types";
+import { gameKey } from "@/lib/tracker/shared-rom";
+import { latestVisitedMarts } from "@/lib/tracker/marts";
 import {
   nextBattleFocus,
   type BattleFocusSelection,
@@ -95,6 +98,7 @@ export default function LightTracker() {
   const record = records.find((entry) => entry.run.id === runId);
   const [hovered, setHovered] = useState(false);
   const [pinnedTeam, setPinnedTeam] = useState(false);
+  const [martsOpen, setMartsOpen] = useState(false);
   const [focusSelection, setFocusSelection] = useState<BattleFocusSelection>();
   const [now, setNow] = useState(0);
   const [bounds, setBounds] = useState<HTMLElement | null>(null);
@@ -297,7 +301,13 @@ export default function LightTracker() {
   }
   const tracking = record.tracking[playerId];
   const live = Boolean(desktopStatus && isOverlayTeamLive(team, now));
-  const expanded = hovered || pinnedTeam;
+  const expanded = !martsOpen && (hovered || pinnedTeam);
+  const visitedMarts = tracking
+    ? latestVisitedMarts(tracking.visitedMarts, gameKey(tracking.game))
+    : [];
+  const showMarts = Boolean(
+    tracking?.latest.randomizedMarts || visitedMarts.length,
+  );
   return (
     <ThemeProvider theme={lightTheme}>
       <TrackerBoundsContext.Provider value={bounds}>
@@ -309,6 +319,11 @@ export default function LightTracker() {
               clearTimeout(hoverTimer.current);
               setHovered(false);
               setPinnedTeam(false);
+              if (martsOpen) {
+                setMartsOpen(false);
+                document.getElementById("light-marts-toggle")?.focus();
+                return;
+              }
               document.getElementById("light-party-toggle")?.focus();
             }
           }}
@@ -368,6 +383,7 @@ export default function LightTracker() {
                 onClick={() => {
                   clearTimeout(hoverTimer.current);
                   setHovered(false);
+                  setMartsOpen(false);
                   setPinnedTeam(!pinnedTeam);
                 }}
               >
@@ -379,6 +395,7 @@ export default function LightTracker() {
               variant={!manualFocus ? "contained" : "outlined"}
               onClick={() => {
                 setFocusSelection(undefined);
+                setMartsOpen(false);
                 clearTimeout(hoverTimer.current);
                 setHovered(false);
                 setPinnedTeam(false);
@@ -386,6 +403,23 @@ export default function LightTracker() {
             >
               {t(text.liveButton, lang)}
             </Button>
+            {showMarts && (
+              <Button
+                id="light-marts-toggle"
+                size="small"
+                variant={martsOpen ? "contained" : "outlined"}
+                aria-expanded={martsOpen}
+                aria-controls="light-marts-panel"
+                onClick={() => {
+                  clearTimeout(hoverTimer.current);
+                  setHovered(false);
+                  setPinnedTeam(false);
+                  setMartsOpen(!martsOpen);
+                }}
+              >
+                {t(translations.marts.button, lang)}
+              </Button>
+            )}
             <Typography
               sx={{
                 ml: "auto !important",
@@ -479,6 +513,15 @@ export default function LightTracker() {
             </Stack>
           )}
           <Box sx={{ position: "relative" }}>
+            {martsOpen && showMarts && (
+              <MartsPanel
+                marts={visitedMarts}
+                onClose={() => {
+                  setMartsOpen(false);
+                  document.getElementById("light-marts-toggle")?.focus();
+                }}
+              />
+            )}
             <Box
               id="light-party-drawer"
               data-testid="party-drawer"

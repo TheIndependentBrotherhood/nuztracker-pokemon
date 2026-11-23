@@ -1,6 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { MelonDsInput, NDS_KEY_INPUT } from "../desktop/melonds-input";
+import {
+  MelonDsInput,
+  NDS_KEY_INPUT,
+} from "../desktop/emulators/melonds/input";
 import { movePower } from "../src/lib/tracker/move-power";
 import {
   nextBattleFocus,

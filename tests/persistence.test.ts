@@ -12,7 +12,7 @@ import {
   readArchive,
   LEGACY_STORAGE_KEY,
 } from "../src/lib/tracker/archive";
-import { TrackerDatabase } from "../desktop/database";
+import { TrackerDatabase } from "../desktop/app/database";
 import { capture, record, run } from "./fixtures";
 
 function randomizedRecord() {

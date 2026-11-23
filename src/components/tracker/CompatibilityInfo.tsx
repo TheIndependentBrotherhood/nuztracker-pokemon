@@ -10,12 +10,8 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import {
-  GAME_VERSIONS,
-  getGameConnector,
-  getGameName,
-  getGameVersion,
-} from "@/lib/game-catalog";
+import { GAME_VERSIONS, getGameName, getGameVersion } from "@/lib/game-catalog";
+import { getGameConnector } from "@/lib/games";
 import type { Run } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";

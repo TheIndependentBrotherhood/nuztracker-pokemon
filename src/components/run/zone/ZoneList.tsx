@@ -22,6 +22,7 @@ import ZoneItem from "./ZoneItem";
 import StyledButton from "@/components/ui/StyledButton";
 import StyledTextField from "@/components/ui/StyledTextField";
 import ZoneIntel from "@/components/tracker/ZoneIntel";
+import { matchesSearch } from "@/lib/search";
 
 interface Props {
   run: Run;
@@ -145,10 +146,7 @@ export default function ZoneList({ run }: Props) {
 
   const filtered = zonesToDisplay.filter((z) => {
     if (filter !== "all" && z.status !== filter) return false;
-    if (search) {
-      const displayName = getZoneDisplayName(z, lang).toLowerCase();
-      if (!displayName.includes(search.toLowerCase())) return false;
-    }
+    if (!matchesSearch(search, getZoneDisplayName(z, lang))) return false;
     return true;
   });
 

@@ -1,3 +1,4 @@
+import type { MartId } from "../games/platinum/marts";
 import type { Run } from "../types";
 import type {
   OverlayCommand,
@@ -156,7 +157,11 @@ export interface GameFrame {
     name?: string;
     // Wild table read from the ROM; absent when the connector cannot read it.
     encounters?: ZoneEncounter[];
+    // Specialty clerk stock of the shop the player stands in (randomized ROMs only).
+    mart?: { id: MartId; items: number[] };
   };
+  // The ROM's specialty clerks were randomized: visited shops are worth listing.
+  randomizedMarts?: boolean;
   battle?: {
     id: string;
     kind: "wild" | "trainer";
@@ -193,6 +198,13 @@ export interface RewindCheckpoint {
   party: { identity: string; pokemonId: number; level: number }[];
 }
 
+export interface VisitedMart {
+  id: MartId;
+  gameKey: string;
+  items: number[];
+  visitedAt: number;
+}
+
 export interface PlayerTracking {
   game: GameIdentity;
   sessionId: string;
@@ -212,6 +224,8 @@ export interface PlayerTracking {
   retiredSessions: string[];
   // Same game and trainer on a ROM with another hash (e.g. a patched ROM); adopted only once the player resumes.
   pendingGame?: GameIdentity;
+  // Specialty shops entered at least once, with the stock read at the last visit.
+  visitedMarts?: VisitedMart[];
   seenEncounters?: {
     id: string;
     gameKey: string;

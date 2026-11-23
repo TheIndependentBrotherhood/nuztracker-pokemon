@@ -1,5 +1,5 @@
-import type { LivePokemon } from "../src/lib/tracker/types";
-import { hiddenPowerFromIvs } from "../src/lib/tracker/hidden-power";
+import type { LivePokemon } from "../../../src/lib/tracker/types";
+import { hiddenPowerFromIvs } from "../../../src/lib/tracker/hidden-power";
 
 const orders = [
   "ABCD",

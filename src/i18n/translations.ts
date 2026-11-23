@@ -2123,6 +2123,51 @@ const translations = {
     switchToEnglish: { fr: "Switch to English", en: "Switch to English" },
     switchToFrench: { fr: "Passer en français", en: "Switch to French" },
   },
+
+  // ── Specialty marts (light tracker) ────────────────────────────────────────
+  marts: {
+    button: { fr: "Boutiques", en: "Shops" },
+    title: { fr: "Boutiques visitées", en: "Visited shops" },
+    hint: {
+      fr: "Stock du vendeur spécialisé de chaque boutique déjà visitée.",
+      en: "Specialty clerk stock of every shop visited so far.",
+    },
+    city: { fr: "Ville", en: "City" },
+    allCities: { fr: "Toutes les villes", en: "All cities" },
+    search: { fr: "Rechercher un objet", en: "Search an item" },
+    none: {
+      fr: "Aucune boutique visitée pour l'instant : entre dans une boutique pour l'enregistrer.",
+      en: "No shop visited yet: walk into a shop to record it.",
+    },
+    noMatch: {
+      fr: "Aucune boutique visitée ne vend cet objet.",
+      en: "No visited shop sells this item.",
+    },
+    soldIn: {
+      fr: (count: number) =>
+        `Vendu dans ${count} boutique${count > 1 ? "s" : ""}`,
+      en: (count: number) => `Sold in ${count} shop${count > 1 ? "s" : ""}`,
+    },
+    unknownItem: {
+      fr: (id: number) => `Objet #${id}`,
+      en: (id: number) => `Item #${id}`,
+    },
+    close: { fr: "Fermer", en: "Close" },
+    cities: {
+      jubilife: { fr: "Littorella", en: "Jubilife City" },
+      oreburgh: { fr: "Charbourg", en: "Oreburgh City" },
+      floaroma: { fr: "Floraville", en: "Floaroma Town" },
+      eterna: { fr: "Vestigion", en: "Eterna City" },
+      hearthome: { fr: "Unionpolis", en: "Hearthome City" },
+      solaceon: { fr: "Bonville", en: "Solaceon Town" },
+      pastoria: { fr: "Verchamps", en: "Pastoria City" },
+      celestic: { fr: "Célestia", en: "Celestic Town" },
+      snowpoint: { fr: "Frimapic", en: "Snowpoint City" },
+      canalave: { fr: "Joliberges", en: "Canalave City" },
+      sunyshore: { fr: "Rivamar", en: "Sunyshore City" },
+      pokemonLeague: { fr: "Ligue Pokémon", en: "Pokémon League" },
+    },
+  },
 } as const;
 
 type TranslationText = string | ((...args: never[]) => string);

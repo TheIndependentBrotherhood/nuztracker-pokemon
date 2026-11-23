@@ -3,16 +3,16 @@ import type {
   LiveEvolution,
   LiveMove,
   LivePokemon,
-} from "../src/lib/tracker/types";
+} from "../../../src/lib/tracker/types";
 import {
   levelFromExperience,
   maxHpFor,
   readShinyThreshold,
   type BoxStatsResolver,
   type DecodedPk4,
-} from "./pk4";
-import { NdsRom } from "./nds-rom";
-import { readGen4Message } from "./nds-text";
+} from "../../formats/gen4/pk4";
+import { NdsRom } from "../../formats/nds/rom";
+import { readGen4Message } from "../../formats/gen4/text";
 
 const types = [
   "normal",

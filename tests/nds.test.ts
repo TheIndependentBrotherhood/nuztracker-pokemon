@@ -14,21 +14,21 @@ import {
   SnapshotError,
   type BoxRecordInput,
   type BoxStatsResolver,
-} from "../desktop/pk4";
-import { readGen4Message } from "../desktop/nds-text";
+} from "../desktop/formats/gen4/pk4";
+import { readGen4Message } from "../desktop/formats/gen4/text";
 import {
   closeSharedGdbClients,
   ReadOnlyGdbClient,
   sharedGdbClient,
-} from "../desktop/gdb-client";
-import { NdsRom } from "../desktop/nds-rom";
-import { PlatinumReader } from "../desktop/platinum-reader";
+} from "../desktop/emulators/melonds/gdb-client";
+import { NdsRom } from "../desktop/formats/nds/rom";
+import { PlatinumReader } from "../desktop/games/platinum/reader";
 import {
   loadPlatinumData,
   readEvolutions,
   sameMoveName,
   type PlatinumBattleData,
-} from "../desktop/platinum-data";
+} from "../desktop/games/platinum/data";
 import { pk4Fixture, messageBank, ndsRomFixture } from "./nds-fixtures";
 
 test("PK4 decoding covers all shuffle indices, encryption flags, unsigned identities and egg privacy", () => {

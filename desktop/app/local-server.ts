@@ -7,14 +7,21 @@ import { createReadStream, statSync } from "node:fs";
 import { extname, isAbsolute, relative, resolve, join } from "node:path";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { gameFrameSchema, validationMessage } from "../src/lib/tracker/schema";
-import { overlayData } from "../src/lib/tracker/overlay";
-import { TrackerService } from "./service";
-import { getPlayerId, getPlayerIndex } from "../src/lib/tracker/knowledge";
 import {
-  applyOverlayCommand, defaultOverlayControl, overlayCommandSchema,
-  overlayControlSchema, type OverlayCommand, type OverlayControlConfig,
-} from "../src/lib/tracker/overlay-control";
+  gameFrameSchema,
+  validationMessage,
+} from "../../src/lib/tracker/schema";
+import { overlayData } from "../../src/lib/tracker/overlay";
+import { TrackerService } from "./service";
+import { getPlayerId, getPlayerIndex } from "../../src/lib/tracker/knowledge";
+import {
+  applyOverlayCommand,
+  defaultOverlayControl,
+  overlayCommandSchema,
+  overlayControlSchema,
+  type OverlayCommand,
+  type OverlayControlConfig,
+} from "../../src/lib/tracker/overlay-control";
 
 class HttpError extends Error {
   constructor(
@@ -96,14 +103,24 @@ export class LocalServer {
   controlConfig(runId: string): OverlayControlConfig {
     this.service.database.require(runId);
     const key = `overlay-control-token-${runId}`;
-    const token = this.service.database.readSetting(key, z.string()) ?? randomBytes(32).toString("base64url");
+    const token =
+      this.service.database.readSetting(key, z.string()) ??
+      randomBytes(32).toString("base64url");
     this.service.database.writeSetting(key, token);
-    return { url: `${this.origin}/overlay-control/${encodeURIComponent(runId)}`, token };
+    return {
+      url: `${this.origin}/overlay-control/${encodeURIComponent(runId)}`,
+      token,
+    };
   }
 
   controlState(runId: string) {
     this.service.database.require(runId);
-    return this.service.database.readSetting(`overlay-state-${runId}`, overlayControlSchema) ?? defaultOverlayControl();
+    return (
+      this.service.database.readSetting(
+        `overlay-state-${runId}`,
+        overlayControlSchema,
+      ) ?? defaultOverlayControl()
+    );
   }
 
   commandOverlay(runId: string, input: OverlayCommand) {
@@ -112,9 +129,18 @@ export class LocalServer {
     if (command.action !== "hide") {
       const index = getPlayerIndex(run, command.playerId ?? getPlayerId(run));
       if (command.action === "show-pokemon") {
-        const team = run.isSoulLinkMode ? run.playerTeams?.[index] ?? [] : run.team;
-        if (!(command.slot ? team[command.slot - 1] : team.find((capture) => capture.id === command.captureId)))
-          throw new HttpError("The selected Pokemon is not in this player's team.", 400);
+        const team = run.isSoulLinkMode
+          ? (run.playerTeams?.[index] ?? [])
+          : run.team;
+        if (
+          !(command.slot
+            ? team[command.slot - 1]
+            : team.find((capture) => capture.id === command.captureId))
+        )
+          throw new HttpError(
+            "The selected Pokemon is not in this player's team.",
+            400,
+          );
       }
     }
     const state = applyOverlayCommand(this.controlState(runId), command);
@@ -142,13 +168,29 @@ export class LocalServer {
       if (request.method !== "POST")
         throw new HttpError("Overlay commands require POST.", 405);
       if (request.headers.origin && request.headers.origin !== this.origin)
-        throw new HttpError("Overlay commands are only available locally.", 403);
-      const runId = decodeURIComponent(url.pathname.slice("/overlay-control/".length));
-      const expected = this.service.database.readSetting(`overlay-control-token-${runId}`, z.string());
-      const actual = request.headers.authorization?.slice("Bearer ".length) ?? "";
-      if (!request.headers.authorization?.startsWith("Bearer ") || !expected || !sameToken(actual, expected))
+        throw new HttpError(
+          "Overlay commands are only available locally.",
+          403,
+        );
+      const runId = decodeURIComponent(
+        url.pathname.slice("/overlay-control/".length),
+      );
+      const expected = this.service.database.readSetting(
+        `overlay-control-token-${runId}`,
+        z.string(),
+      );
+      const actual =
+        request.headers.authorization?.slice("Bearer ".length) ?? "";
+      if (
+        !request.headers.authorization?.startsWith("Bearer ") ||
+        !expected ||
+        !sameToken(actual, expected)
+      )
         throw new HttpError("Invalid overlay control token.", 401);
-      const state = this.commandOverlay(runId, overlayCommandSchema.parse(await readJson(request)));
+      const state = this.commandOverlay(
+        runId,
+        overlayCommandSchema.parse(await readJson(request)),
+      );
       this.json(response, 200, { ok: true, state });
       return;
     }
@@ -195,14 +237,13 @@ export class LocalServer {
         request.headers.authorization?.replace(/^Bearer /, "") ?? "";
       if (!expected || !sameToken(actual, expected))
         throw new HttpError("Invalid overlay token.", 401);
-      this.json(
-        response,
-        200,
-        {
-          ...overlayData(this.service.database.require(runId), this.service.status.bridge),
-          control: this.controlState(runId),
-        },
-      );
+      this.json(response, 200, {
+        ...overlayData(
+          this.service.database.require(runId),
+          this.service.status.bridge,
+        ),
+        control: this.controlState(runId),
+      });
       return;
     }
     if (!["GET", "HEAD"].includes(request.method ?? ""))

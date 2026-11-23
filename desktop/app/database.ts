@@ -2,8 +2,8 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { z } from "zod";
-import { recordSchema } from "../src/lib/tracker/schema";
-import type { RunRecord } from "../src/lib/tracker/types";
+import { recordSchema } from "../../src/lib/tracker/schema";
+import type { RunRecord } from "../../src/lib/tracker/types";
 
 export interface PendingMessage {
   id: string;

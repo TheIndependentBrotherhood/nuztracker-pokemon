@@ -1,7 +1,8 @@
 import { createConnection, type Socket } from "node:net";
 
 const frame = (payload: string) => {
-  const checksum = [...payload].reduce((sum, char) => sum + char.charCodeAt(0), 0) & 255;
+  const checksum =
+    [...payload].reduce((sum, char) => sum + char.charCodeAt(0), 0) & 255;
   return `$${payload}#${checksum.toString(16).padStart(2, "0")}`;
 };
 
@@ -14,7 +15,9 @@ const timedOut = () =>
     "MelonDS did not answer in time. Make sure the game is running and not paused; the connection is kept and reading resumes automatically.",
   );
 const stillWaiting = () =>
-  new Error("Still waiting for MelonDS to answer. Make sure the game is running and not paused.");
+  new Error(
+    "Still waiting for MelonDS to answer. Make sure the game is running and not paused.",
+  );
 
 function deadline<T>(
   promise: Promise<T>,
@@ -29,7 +32,8 @@ function deadline<T>(
       signal?.removeEventListener("abort", abort);
       action();
     };
-    const abort = () => settle(() => reject(new Error("The MelonDS connection was cancelled.")));
+    const abort = () =>
+      settle(() => reject(new Error("The MelonDS connection was cancelled.")));
     if (signal?.aborted) {
       abort();
       return;
@@ -90,10 +94,15 @@ export class ReadOnlyGdbClient {
   }
 
   // Joins the connection that is already open or being negotiated instead of abandoning it.
-  connect(port: number, options: { timeoutMs?: number; signal?: AbortSignal } = {}): Promise<void> {
+  connect(
+    port: number,
+    options: { timeoutMs?: number; signal?: AbortSignal } = {},
+  ): Promise<void> {
     if (this.socket && this.port !== port)
       return Promise.reject(
-        new Error(`NuzTracker is already connected to MelonDS on port ${this.port}.`),
+        new Error(
+          `NuzTracker is already connected to MelonDS on port ${this.port}.`,
+        ),
       );
     let ready = this.ready;
     if (!this.socket || !ready) {
@@ -102,7 +111,12 @@ export class ReadOnlyGdbClient {
       ready.catch(() => undefined);
       this.ready = ready;
     }
-    return deadline(ready, options.timeoutMs ?? 5000, unanswered, options.signal);
+    return deadline(
+      ready,
+      options.timeoutMs ?? 5000,
+      unanswered,
+      options.signal,
+    );
   }
 
   private async open(port: number): Promise<void> {
@@ -142,7 +156,9 @@ export class ReadOnlyGdbClient {
       await this.handshake();
       // MelonDS's subcommand parser requires the separator even with no features.
       const capabilities = await this.command("qSupported:", true);
-      const packetSize = /(?:^|;)PacketSize=([0-9a-f]+)/i.exec(capabilities)?.[1];
+      const packetSize = /(?:^|;)PacketSize=([0-9a-f]+)/i.exec(
+        capabilities,
+      )?.[1];
       if (packetSize) {
         const bytes = Math.floor(Number.parseInt(packetSize, 16) / 2);
         if (bytes >= 64) this.readChunkSize = Math.min(4096, bytes);
@@ -153,10 +169,13 @@ export class ReadOnlyGdbClient {
       else await this.command("c", false);
       if (!this.noAck && capabilities.split(";").includes("QStartNoAckMode+")) {
         if ((await this.command("QStartNoAckMode", true)) !== "OK")
-          throw new Error("MelonDS did not enable its advertised no-acknowledgement mode.");
+          throw new Error(
+            "MelonDS did not enable its advertised no-acknowledgement mode.",
+          );
         this.noAck = true;
       }
-      if (this.socket !== socket) throw new Error("The MelonDS GDB connection is not open.");
+      if (this.socket !== socket)
+        throw new Error("The MelonDS GDB connection is not open.");
       this.isReady = true;
     } catch (error) {
       if (this.socket === socket)
@@ -170,9 +189,15 @@ export class ReadOnlyGdbClient {
   private handshake(): Promise<boolean> {
     const socket = this.socket;
     if (!socket || socket.destroyed)
-      return Promise.reject(new Error("The MelonDS GDB connection is not open."));
+      return Promise.reject(
+        new Error("The MelonDS GDB connection is not open."),
+      );
     return new Promise((resolve, reject) => {
-      const pending: Pending = { reply: false, resolve: () => resolve(true), reject };
+      const pending: Pending = {
+        reply: false,
+        resolve: () => resolve(true),
+        reject,
+      };
       pending.timer = setTimeout(() => {
         if (this.pending !== pending) return;
         this.pending = undefined;
@@ -185,14 +210,22 @@ export class ReadOnlyGdbClient {
     });
   }
 
-  private command(payload: string, reply: boolean, timeoutMs?: number): Promise<string> {
+  private command(
+    payload: string,
+    reply: boolean,
+    timeoutMs?: number,
+  ): Promise<string> {
     if (this.pending)
       return Promise.reject(
-        this.pending.stale ? stillWaiting() : new Error("GDB reads must be serialized."),
+        this.pending.stale
+          ? stillWaiting()
+          : new Error("GDB reads must be serialized."),
       );
     const socket = this.socket;
     if (!socket || socket.destroyed)
-      return Promise.reject(new Error("The MelonDS GDB connection is not open."));
+      return Promise.reject(
+        new Error("The MelonDS GDB connection is not open."),
+      );
     return new Promise((resolve, reject) => {
       const pending: Pending = { reply, resolve, reject };
       if (timeoutMs !== undefined) {
@@ -237,7 +270,8 @@ export class ReadOnlyGdbClient {
       const payload = this.buffer.slice(1, end);
       const expected = this.buffer.slice(end + 1, end + 3);
       this.buffer = this.buffer.slice(end + 3);
-      const checksum = [...payload].reduce((sum, char) => sum + char.charCodeAt(0), 0) & 255;
+      const checksum =
+        [...payload].reduce((sum, char) => sum + char.charCodeAt(0), 0) & 255;
       if (checksum.toString(16).padStart(2, "0") !== expected.toLowerCase()) {
         this.fail(new Error("The GDB response checksum is invalid."));
         return;
@@ -245,7 +279,9 @@ export class ReadOnlyGdbClient {
       if (!this.noAck) this.socket?.write("+");
       this.probingAck = false;
       if (!this.pending?.reply) {
-        this.fail(new Error("Unexpected GDB response. Disconnect any other debugger."));
+        this.fail(
+          new Error("Unexpected GDB response. Disconnect any other debugger."),
+        );
         return;
       }
       this.complete(payload);

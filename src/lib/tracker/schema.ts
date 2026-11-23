@@ -2,6 +2,7 @@ import { z } from "zod";
 import { POKEMON_STAT_NAMES } from "../types";
 import { GAME_VERSIONS } from "../game-catalog";
 import { STAT_STAGE_NAMES } from "./types";
+import { MART_IDS } from "../games/platinum/marts";
 import type { Run, RunKnowledge, PokemonData } from "../types";
 import type {
   DesktopEvent,
@@ -29,6 +30,10 @@ const speciesId = z.number().int().min(-1).max(100000);
 const speciesMap = <T extends z.ZodType>(value: T) =>
   z.record(z.string().regex(/^-?\d+$/), value);
 const typeNames = z.array(z.string().max(40)).max(2);
+const martStockSchema = z.object({
+  id: z.enum(MART_IDS),
+  items: z.array(z.number().int().min(1).max(1000)).min(1).max(40),
+});
 export const zoneEncounterSchema = z
   .object({
     method: z.enum(["grass", "surf", "old-rod", "good-rod", "super-rod"]),
@@ -417,9 +422,11 @@ export const gameFrameSchema: z.ZodType<GameFrame> = z
         id,
         name: text.optional(),
         encounters: z.array(zoneEncounterSchema).max(96).optional(),
+        mart: martStockSchema.optional(),
       })
       .strict()
       .optional(),
+    randomizedMarts: z.boolean().optional(),
     battle: z
       .object({
         id,
@@ -554,6 +561,15 @@ export const recordSchema: z.ZodType<RunRecord> = z.object({
       zoneMappings: z.record(id, id),
       retiredSessions: z.array(id).max(10000).default([]),
       pendingGame: gameIdentitySchema.optional(),
+      visitedMarts: z
+        .array(
+          martStockSchema.extend({
+            gameKey: id,
+            visitedAt: timestamp,
+          }),
+        )
+        .max(MART_IDS.length * 20)
+        .optional(),
       seenEncounters: z
         .array(
           z.object({

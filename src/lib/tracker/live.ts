@@ -17,7 +17,9 @@ import type {
   PlayerTracking,
   RewindCheckpoint,
   RunRecord,
+  VisitedMart,
 } from "./types";
+import { MART_IDS } from "../games/platinum/marts";
 import {
   getPlayerIndex,
   isolateKnowledge,
@@ -28,6 +30,7 @@ import { addHistory, newId, sameValue } from "./records";
 import { finalizeRun } from "./run-rules";
 import { gameFrameSchema, recordSchema } from "./schema";
 import {
+  gameKey,
   mergeRomKnowledge,
   shareKnowledgeChange,
   sharedRomPlayers,
@@ -37,8 +40,25 @@ import { shinyChanceGroup, soulLinkCaptureSlot } from "../zone-progress";
 
 export type PokemonResolver = (pokemonId: number) => PokemonData | undefined;
 
-export function gameKey(game: GameIdentity): string {
-  return `${game.gameCode}.${game.revision}.${game.language}.${game.romHash}.${game.trainerId}`;
+export { gameKey };
+
+// Entering a specialty shop records its stock; the latest visit replaces the previous one.
+export function recordMartVisit(
+  visited: VisitedMart[] | undefined,
+  frame: GameFrame,
+  now: number,
+): VisitedMart[] | undefined {
+  const mart = frame.location?.mart;
+  if (!mart) return visited;
+  const key = gameKey(frame.game);
+  const previous = visited?.find(
+    (entry) => entry.id === mart.id && entry.gameKey === key,
+  );
+  if (previous && sameValue(previous.items, mart.items)) return visited;
+  return [
+    ...(visited ?? []).filter((entry) => entry !== previous),
+    { id: mart.id, gameKey: key, items: mart.items, visitedAt: now },
+  ].slice(-MART_IDS.length * 20);
 }
 
 /** Captures store abilities by their PokeAPI id so they can be localized; ROM-only abilities keep their ROM name. */
@@ -330,6 +350,7 @@ export function ingestFrame(
       }
     }
   }
+  const visitedMarts = recordMartVisit(previous?.visitedMarts, frame, now);
   // A wild Pokémon sent straight to the PC never joins the party: it is linked like a party newcomer.
   const wildPids = new Set(
     seenEncounters
@@ -374,6 +395,7 @@ export function ingestFrame(
             ? [...previous.retiredSessions, previous.sessionId]
             : (previous?.retiredSessions ?? []),
         seenEncounters,
+        ...(visitedMarts ? { visitedMarts } : {}),
       },
     },
   };
@@ -908,6 +930,7 @@ export function resumeTracking(
                 game: adopted,
                 latest: { ...tracking.latest, game: adopted },
                 seenEncounters: tracking.seenEncounters?.map(rekey),
+                visitedMarts: tracking.visitedMarts?.map(rekey),
               }
             : {}),
           suspended: false,

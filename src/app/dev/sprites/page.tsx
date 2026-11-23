@@ -9,6 +9,7 @@ import {
 } from "react";
 import { publicPath } from "@/lib/base-path";
 import { PokemonData } from "@/lib/types";
+import { matchesSearch } from "@/lib/search";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,10 +25,7 @@ interface SpriteEntry {
   candidates: string[];
   spriteVariant?: "normal" | "shiny";
   provider?:
-    | "deviantart"
-    | "animated-catalog"
-    | "pokemon-list-static"
-    | "manual";
+    "deviantart" | "animated-catalog" | "pokemon-list-static" | "manual";
   isStaticFallback?: boolean;
   unownLetter?: string;
 }
@@ -468,9 +466,9 @@ export default function DevSpritesPage() {
     () => false,
   );
   const [spriteMap, setSpriteMap] = useState<SpriteMap | null>(null);
-  const [pokemonNames, setPokemonNames] = useState<
-    Record<string, PokemonData>
-  >({});
+  const [pokemonNames, setPokemonNames] = useState<Record<string, PokemonData>>(
+    {},
+  );
   const [spriteCorrections, setSpriteCorrections] = useState<SpriteCorrections>(
     {},
   );
@@ -739,13 +737,8 @@ export default function DevSpritesPage() {
         if (brokenOnly && !sprites.some((s) => brokenUrls.has(s.url)))
           return false;
         if (search) {
-          const q = search.toLowerCase();
           const name = pokemonNames[key];
-          if (
-            !key.includes(q) &&
-            !name?.names?.fr?.toLowerCase().includes(q) &&
-            !name?.names?.en?.toLowerCase().includes(q)
-          ) {
+          if (!matchesSearch(search, key, name?.names?.fr, name?.names?.en)) {
             return false;
           }
         }

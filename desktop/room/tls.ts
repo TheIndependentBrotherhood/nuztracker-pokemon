@@ -1,7 +1,7 @@
 import { createHash, X509Certificate } from "node:crypto";
 import { generate } from "selfsigned";
 import { z } from "zod";
-import type { TrackerDatabase } from "./database";
+import type { TrackerDatabase } from "../app/database";
 
 const DAY = 24 * 60 * 60 * 1000;
 const tlsSchema = z.object({ key: z.string(), cert: z.string() });

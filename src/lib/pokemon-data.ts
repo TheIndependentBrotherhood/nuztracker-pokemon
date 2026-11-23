@@ -3,6 +3,7 @@ import { Lang } from "@/i18n/translations";
 import { publicPath } from "@/lib/base-path";
 import { pokemonForGame } from "./game-reference";
 import type { GameVersionId } from "./game-catalog";
+import { matchesSearch } from "@/lib/search";
 
 export interface CaptureSpriteOption {
   url: string;
@@ -131,8 +132,6 @@ export async function searchPokemonByName(
 ): Promise<PokemonData[]> {
   if (!query || query.length < 2) return [];
 
-  const lower = query.toLowerCase();
-
   // Attempt to use the pre-generated static cache
   try {
     if (!pokemonListJsonCache) {
@@ -151,14 +150,11 @@ export async function searchPokemonByName(
         .filter((p) => {
           if (gameVersion && pokemonForGame(p, gameVersion).stats.length === 0)
             return false;
-          const nameFr = p.names?.fr?.toLowerCase() ?? "";
-          const nameEn =
-            p.names?.en?.toLowerCase() ?? p.technicalName.toLowerCase();
-          const technicalNames = getTechnicalNames(p);
-          return (
-            nameFr.includes(lower) ||
-            nameEn.includes(lower) ||
-            technicalNames.some((name) => name.includes(lower))
+          return matchesSearch(
+            query,
+            p.names?.fr,
+            p.names?.en ?? p.technicalName,
+            ...getTechnicalNames(p),
           );
         })
         .slice(0, 10);

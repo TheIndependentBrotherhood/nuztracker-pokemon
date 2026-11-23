@@ -6,9 +6,9 @@ import {
   mapZoneSchema,
   recordSchema,
   runEditSchema,
-} from "../src/lib/tracker/schema";
-import type { RunRecord } from "../src/lib/tracker/types";
-import { addHistory, applyRunEdit } from "../src/lib/tracker/records";
+} from "../../src/lib/tracker/schema";
+import type { RunRecord } from "../../src/lib/tracker/types";
+import { addHistory, applyRunEdit } from "../../src/lib/tracker/records";
 import {
   ignorePendingPokemon,
   ingestFrame,
@@ -16,8 +16,8 @@ import {
   mapZone,
   resumeTracking,
   type PokemonResolver,
-} from "../src/lib/tracker/live";
-import { withoutPrivateNotes } from "../src/lib/tracker/knowledge";
+} from "../../src/lib/tracker/live";
+import { withoutPrivateNotes } from "../../src/lib/tracker/knowledge";
 
 const id = z
   .string()

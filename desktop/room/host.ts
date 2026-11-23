@@ -17,12 +17,12 @@ import type {
   RoomParticipant,
   RoomStatus,
   RunRecord,
-} from "../src/lib/tracker/types";
-import { connectRun, type PokemonResolver } from "../src/lib/tracker/live";
-import { getPlayerIndex } from "../src/lib/tracker/knowledge";
-import { shareRecord } from "../src/lib/tracker/records";
-import { validationMessage } from "../src/lib/tracker/schema";
-import { TrackerDatabase } from "./database";
+} from "../../src/lib/tracker/types";
+import { connectRun, type PokemonResolver } from "../../src/lib/tracker/live";
+import { getPlayerIndex } from "../../src/lib/tracker/knowledge";
+import { shareRecord } from "../../src/lib/tracker/records";
+import { validationMessage } from "../../src/lib/tracker/schema";
+import { TrackerDatabase } from "../app/database";
 import {
   applyRoomCommand,
   clientMessageSchema,
@@ -30,8 +30,8 @@ import {
   joinInvitation,
   splitInvitation,
   type ServerMessage,
-} from "./room-protocol";
-import { roomTls, type RoomTls } from "./room-tls";
+} from "./protocol";
+import { roomTls, type RoomTls } from "./tls";
 
 const credentialsSchema = z.object({
   roomId: z.string(),

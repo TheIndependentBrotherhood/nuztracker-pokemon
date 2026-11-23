@@ -31,6 +31,7 @@ import {
 import { useRunStore } from "@/store/runStore";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
+import { matchesSearch } from "@/lib/search";
 
 interface Props {
   pokemonCaptured: Capture;
@@ -79,17 +80,11 @@ export default function EvolutionModal({
 
   // Filter evolutions based on search query
   const filteredEvolutions = evolutions.filter((evolution) => {
-    const nameEn =
-      evolution.names?.en?.toLowerCase() ??
-      evolution.technicalName.toLowerCase();
-    const nameFr = evolution.names?.fr?.toLowerCase() ?? "";
-    const technicalName = evolution.technicalName.toLowerCase();
-    const searchLower = searchQuery.toLowerCase();
-
-    return (
-      nameEn.includes(searchLower) ||
-      nameFr.includes(searchLower) ||
-      technicalName.includes(searchLower)
+    return matchesSearch(
+      searchQuery,
+      evolution.names?.en ?? evolution.technicalName,
+      evolution.names?.fr,
+      evolution.technicalName,
     );
   });
 

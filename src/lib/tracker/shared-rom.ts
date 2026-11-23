@@ -22,6 +22,11 @@ export function romKey(game: GameIdentity): string {
   return `${game.gameCode}.${game.revision}.${game.language}.${game.romHash}`;
 }
 
+/** Identifies one trainer's game on one ROM. */
+export function gameKey(game: GameIdentity): string {
+  return `${romKey(game)}.${game.trainerId}`;
+}
+
 /** ROM part of a gameKey (see live.ts), which ends with the trainer id. */
 export function romKeyOfGameKey(key: string): string {
   return key.slice(0, key.lastIndexOf("."));

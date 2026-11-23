@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   findMapHeaders,
   parseEncounterTable,
-} from "../desktop/platinum-encounters";
+} from "../desktop/games/platinum/encounters";
 import { ingestFrame } from "../src/lib/tracker/live";
 import { overlayData } from "../src/lib/tracker/overlay";
 import { gameFrameSchema } from "../src/lib/tracker/schema";

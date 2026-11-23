@@ -41,6 +41,7 @@ import { useRunStore } from "@/store/runStore";
 import { publicPath } from "@/lib/base-path";
 import { getDefaultSprite, getPokemonById } from "@/lib/pokemon-data";
 import { pokemonForGame } from "@/lib/game-reference";
+import { matchesSearch } from "@/lib/search";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -61,9 +62,9 @@ export default function PokedexView({ runId }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [currentPage, setCurrentPage] = useState(0);
   const [sourceEntries, setPokedexEntries] = useState<PokemonData[]>([]);
-  const [sourcePokemonData, setPokemonData] = useState<Record<number, PokemonData>>(
-    {},
-  );
+  const [sourcePokemonData, setPokemonData] = useState<
+    Record<number, PokemonData>
+  >({});
   const [selectedCapture, setSelectedCapture] = useState<Capture | null>(null);
   const [typeData, setTypeData] = useState<TypeChartData | null>(null);
   const [regionalPokedexes, setRegionalPokedexes] = useState<Map<
@@ -78,7 +79,13 @@ export default function PokedexView({ runId }: Props) {
     [sourceEntries, run?.gameVersion],
   );
   const pokemonData = useMemo(
-    () => Object.fromEntries(Object.entries(sourcePokemonData).map(([id, entry]) => [id, pokemonForGame(entry, run?.gameVersion)])),
+    () =>
+      Object.fromEntries(
+        Object.entries(sourcePokemonData).map(([id, entry]) => [
+          id,
+          pokemonForGame(entry, run?.gameVersion),
+        ]),
+      ),
     [sourcePokemonData, run?.gameVersion],
   );
   const randomTypesMode = isRandomTypesMode(run);
@@ -111,18 +118,17 @@ export default function PokedexView({ runId }: Props) {
   );
 
   const addCandidates = useMemo(() => {
-    const normalized = addSearch.trim().toLowerCase();
     return pokedexEntries
       .filter((entry) => !dexEntryIds.has(entry.id))
-      .filter((entry) => {
-        if (!normalized) return true;
-        return (
-          entry.technicalName.toLowerCase().includes(normalized) ||
-          (entry.names?.fr?.toLowerCase() ?? "").includes(normalized) ||
-          (entry.names?.en?.toLowerCase() ?? "").includes(normalized) ||
-          String(entry.id).includes(normalized)
-        );
-      })
+      .filter((entry) =>
+        matchesSearch(
+          addSearch,
+          entry.technicalName,
+          entry.names?.fr,
+          entry.names?.en,
+          entry.id,
+        ),
+      )
       .slice(0, 30);
   }, [pokedexEntries, dexEntryIds, addSearch]);
 
@@ -244,23 +250,15 @@ export default function PokedexView({ runId }: Props) {
   }, [pokedexEntries]);
 
   const filteredAndSortedEntries = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-
-    const filtered = dexEntries.filter((entry) => {
-      if (!normalizedQuery) return true;
-
-      const nameFr = entry.names?.fr?.toLowerCase() ?? "";
-      const nameEn = entry.names?.en?.toLowerCase() ?? "";
-      const technicalName = entry.technicalName.toLowerCase();
-      const dexNumber = String(entry.id);
-
-      return (
-        technicalName.includes(normalizedQuery) ||
-        nameFr.includes(normalizedQuery) ||
-        nameEn.includes(normalizedQuery) ||
-        dexNumber.includes(normalizedQuery)
-      );
-    });
+    const filtered = dexEntries.filter((entry) =>
+      matchesSearch(
+        searchQuery,
+        entry.technicalName,
+        entry.names?.fr,
+        entry.names?.en,
+        entry.id,
+      ),
+    );
 
     const sorted = [...filtered].sort((a, b) => {
       let result = 0;

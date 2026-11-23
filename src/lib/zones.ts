@@ -3,8 +3,7 @@ import type { GameVersionId } from "./game-catalog";
 import type { Zone } from "./types";
 import { deriveZoneStatus } from "./tracker/run-rules";
 import { defaultCaptureGroup } from "./zone-progress";
-import platinumMaps from "../../public/data/platinum-maps.json";
-import platinumEncounterAreas from "../../public/data/platinum-encounter-areas.json";
+import { getGameSupport } from "./games";
 
 export interface ZoneTemplate {
   id: string;
@@ -338,12 +337,6 @@ export function remapSubAreaZones(
   return next;
 }
 
-const encounterAreas = new Set<string>(platinumEncounterAreas);
-
-const mapSlugs = platinumMaps.map((name) =>
-  name.toLowerCase().replaceAll(" ", "-"),
-);
-
 function zoneSlug(zoneId: string): string {
   return zoneId.replace(/^sinnoh-/, "").replace(/-area(?=-|$)/g, "");
 }
@@ -388,19 +381,12 @@ export function zonesForGame(
   zones: ZoneTemplate[],
   gameVersion?: GameVersionId,
 ): ZoneTemplate[] {
-  if (gameVersion !== "platinum") return zones;
-  return zones.filter((zone) => {
-    if (zone.id === STARTER_ZONE_ID || encounterAreas.has(zone.id)) return true;
-    const slug = zoneSlug(zone.id);
-    // Maps and zones may each be the finer one: "Route 204 South" and
-    // "route-204-south-towards-jubilife-city", or "Eterna Forest Outside" and "eterna-forest".
-    return mapSlugs.some(
-      (map) =>
-        map === slug ||
-        map.startsWith(`${slug}-`) ||
-        slug.startsWith(`${map}-`),
-    );
-  });
+  const includesZone = getGameSupport(gameVersion)?.includesZone;
+  if (!includesZone) return zones;
+  return zones.filter(
+    (zone) =>
+      zone.id === STARTER_ZONE_ID || includesZone(zone.id, zoneSlug(zone.id)),
+  );
 }
 
 export function getZoneDisplayName(

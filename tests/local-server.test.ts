@@ -4,9 +4,9 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { request as httpRequest } from "node:http";
-import { TrackerDatabase } from "../desktop/database";
-import { TrackerService } from "../desktop/service";
-import { LocalServer } from "../desktop/local-server";
+import { TrackerDatabase } from "../desktop/app/database";
+import { TrackerService } from "../desktop/app/service";
+import { LocalServer } from "../desktop/app/local-server";
 import { frame, pokemon, record, capture } from "./fixtures";
 import { currentOverlayView } from "../src/lib/tracker/overlay-control";
 

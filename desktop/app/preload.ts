@@ -5,12 +5,12 @@ import {
   desktopStatusSchema,
   desktopWindowStateSchema,
   recordSchema,
-} from "../src/lib/tracker/schema";
-import type { TrackerDesktopApi } from "../src/lib/tracker/types";
+} from "../../src/lib/tracker/schema";
+import type { TrackerDesktopApi } from "../../src/lib/tracker/types";
 import {
   overlayControlConfigSchema,
   overlayControlSchema,
-} from "../src/lib/tracker/overlay-control";
+} from "../../src/lib/tracker/overlay-control";
 
 async function request<T>(
   method: string,

@@ -22,12 +22,8 @@ import {
 } from "@mui/material";
 import type { Run } from "@/lib/types";
 import { getPlayerId } from "@/lib/tracker/knowledge";
-import {
-  getGameConnector,
-  getGameName,
-  getGameVersion,
-  type GameConnector,
-} from "@/lib/game-catalog";
+import { getGameName, getGameVersion } from "@/lib/game-catalog";
+import { getGameConnector, type GameConnector } from "@/lib/games";
 import { useRunStore } from "@/store/runStore";
 import ArchiveControls from "./ArchiveControls";
 import BizHawkGuide from "./BizHawkGuide";

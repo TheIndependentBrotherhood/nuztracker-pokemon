@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Box, Button, TextField, Tooltip, IconButton } from "@mui/material";
+import { Box, Button, TextField } from "@mui/material";
 import { Capture } from "@/lib/types";
 import PokemonDetailModal from "./PokemonDetailModal";
 import { useLanguage } from "@/context/LanguageContext";
 import translations, { t } from "@/i18n/translations";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { useCaptureDisplayNames } from "@/lib/pokemon-display";
+import { matchesSearch } from "@/lib/search";
 
 interface Props {
   pokemonCaptured: Capture;
@@ -41,12 +42,9 @@ export default function AdvancedComparisonModal({
   // Build search results for both sides
   const getFilteredCaptures = (query: string) => {
     if (!query.trim()) return [];
-    const queryLower = query.toLowerCase();
-    return allCaptures.filter((capture) => {
-      const name = captureDisplayNames[capture.id].toLowerCase();
-      const id = capture.pokemon.id.toString();
-      return name.includes(queryLower) || id.includes(queryLower);
-    });
+    return allCaptures.filter((capture) =>
+      matchesSearch(query, captureDisplayNames[capture.id], capture.pokemon.id),
+    );
   };
 
   const leftSearchResults = getFilteredCaptures(leftSearchQuery);

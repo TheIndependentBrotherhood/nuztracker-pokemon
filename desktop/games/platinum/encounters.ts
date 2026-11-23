@@ -1,9 +1,9 @@
-import type { NdsRom } from "./nds-rom";
+import type { NdsRom } from "../../formats/nds/rom";
 import type {
   EncounterCondition,
   EncounterMethod,
   ZoneEncounter,
-} from "../src/lib/tracker/types";
+} from "../../../src/lib/tracker/types";
 
 const MAP_HEADER_SIZE = 24;
 const MAP_HEADER_SCRIPTS = 4;

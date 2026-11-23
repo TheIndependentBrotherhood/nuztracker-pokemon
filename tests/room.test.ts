@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { TrackerDatabase } from "../desktop/database";
-import { hostAddresses, RoomHost } from "../desktop/room-host";
-import { RoomClient } from "../desktop/room-client";
-import { normalizeRoomAddress } from "../desktop/room-protocol";
+import { TrackerDatabase } from "../desktop/app/database";
+import { hostAddresses, RoomHost } from "../desktop/room/host";
+import { RoomClient } from "../desktop/room/client";
+import { normalizeRoomAddress } from "../desktop/room/protocol";
 import { createRecord, newId } from "../src/lib/tracker/records";
 import { capture, pokemon, run } from "./fixtures";
 

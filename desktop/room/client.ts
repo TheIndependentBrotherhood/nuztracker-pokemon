@@ -5,11 +5,11 @@ import type {
   JoinRoomOptions,
   RoomStatus,
   RunRecord,
-} from "../src/lib/tracker/types";
-import type { PokemonResolver } from "../src/lib/tracker/live";
-import { receiveSharedRecord } from "../src/lib/tracker/records";
-import { recordSchema, validationMessage } from "../src/lib/tracker/schema";
-import { TrackerDatabase } from "./database";
+} from "../../src/lib/tracker/types";
+import type { PokemonResolver } from "../../src/lib/tracker/live";
+import { receiveSharedRecord } from "../../src/lib/tracker/records";
+import { recordSchema, validationMessage } from "../../src/lib/tracker/schema";
+import { TrackerDatabase } from "../app/database";
 import {
   applyRoomCommand,
   MAX_ROOM_MESSAGE_BYTES,
@@ -19,8 +19,8 @@ import {
   sharedCommand,
   splitInvitation,
   type RoomCommand,
-} from "./room-protocol";
-import { certificateFingerprint } from "./room-tls";
+} from "./protocol";
+import { certificateFingerprint } from "./tls";
 
 export const savedClientSchema = z.object({
   address: z.string(),
