@@ -41,6 +41,18 @@ import PixelIcon, {
 
 const text = translations.focusCard;
 type StatView = "stats" | "ivs" | "evs";
+const MAX_IV = 31;
+const MAX_EV = 252;
+const MAX_IV_TOTAL = 186;
+const MAX_EV_TOTAL = 510;
+
+/** Red to green hue scale (like Showdown stat bars), with a cyan accent for maxed values. */
+function progressColor(value: number | undefined, max: number) {
+  if (value === undefined) return undefined;
+  const ratio = Math.min(1, Math.max(0, value / max));
+  if (ratio === 1) return "hsl(170, 80%, 60%)";
+  return `hsl(${Math.round(ratio * 130)}, 85%, 65%)`;
+}
 type StatusKey = keyof typeof text.statusShort;
 type StatKey = keyof typeof text.stats;
 
@@ -593,11 +605,12 @@ export default function FocusCard({
               (stat === "special-attack" ? base.get("special") : undefined));
   const sum = (values?: Record<string, number>) =>
     Object.values(values ?? {}).reduce((total, value) => total + value, 0);
-  // Best values stand out: perfect IVs and fully trained EVs.
   const valueColor = (value?: number) =>
-    (view === "ivs" && value === 31) || (view === "evs" && value === 252)
-      ? "#86efac"
-      : undefined;
+    view === "ivs"
+      ? progressColor(value, MAX_IV)
+      : view === "evs"
+        ? progressColor(value, MAX_EV)
+        : undefined;
 
   return (
     <Box
@@ -915,18 +928,20 @@ export default function FocusCard({
         <Hint
           title={
             <TooltipBody
-              title={t(
+              title={
                 view === "ivs"
-                  ? text.ivs
+                  ? `${t(text.ivs, lang)} (${sum(live?.ivs)}/${MAX_IV_TOTAL})`
                   : view === "evs"
-                    ? text.evs
-                    : live
-                      ? text.inGameStats
-                      : member.randomStats
-                        ? text.estimates
-                        : text.baseStats,
-                lang,
-              )}
+                    ? `${t(text.evs, lang)} (${sum(live?.evs)}/${MAX_EV_TOTAL})`
+                    : t(
+                        live
+                          ? text.inGameStats
+                          : member.randomStats
+                            ? text.estimates
+                            : text.baseStats,
+                        lang,
+                      )
+              }
               lines={[
                 ...(stageEntries.length
                   ? [
@@ -1047,11 +1062,24 @@ export default function FocusCard({
                 lang,
               )}
             </Box>
-            <Box component="span" sx={{ textAlign: "right", fontWeight: 700 }}>
+            {/* Only the sum is shown so the column keeps the 3-digit width of the BST. */}
+            <Box
+              component="span"
+              sx={{
+                textAlign: "right",
+                fontWeight: 700,
+                color:
+                  view === "ivs"
+                    ? progressColor(sum(live?.ivs), MAX_IV_TOTAL)
+                    : view === "evs"
+                      ? progressColor(sum(live?.evs), MAX_EV_TOTAL)
+                      : undefined,
+              }}
+            >
               {view === "ivs"
-                ? `${sum(live?.ivs)}/186`
+                ? sum(live?.ivs)
                 : view === "evs"
-                  ? `${sum(live?.evs)}/510`
+                  ? sum(live?.evs)
                   : member.bst || "?"}
             </Box>
             {stageColumn && <span />}
