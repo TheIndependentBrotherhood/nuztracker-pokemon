@@ -15,10 +15,8 @@ import {
 import { Run, Zone, Capture, SOUL_LINK_PLAYER_COLORS } from "@/lib/types";
 import { getAllTeamCaptures, getRunTeams } from "@/lib/team-utils";
 import {
+  countCaptureSlotOutcomes,
   countLinkedDeathsCausedByPlayer,
-  countZoneOutcomes,
-  getZoneOutcome,
-  getZoneOutcomeForPlayer,
 } from "@/lib/zone-progress";
 import StatCard from "@/components/ui/StatCard";
 import StyledTextField from "@/components/ui/StyledTextField";
@@ -370,8 +368,8 @@ export default function StatsBar({
   const runTeams = getRunTeams(run);
   const allTeamCaptures = getAllTeamCaptures(run);
 
-  // Segmented progress: captured / dead / lost zones
-  const zoneOutcomes = countZoneOutcomes(run.zones, getZoneOutcome);
+  // Segmented progress by capture slot: captured / dead / lost
+  const zoneOutcomes = countCaptureSlotOutcomes(run.zones);
   const finishedZones =
     zoneOutcomes.captured + zoneOutcomes.dead + zoneOutcomes.lost;
 
@@ -437,9 +435,7 @@ export default function StatsBar({
   const perPlayerProgress = isSoulLink
     ? soulLinkPlayers.map((player) => ({
         player,
-        outcomes: countZoneOutcomes(run.zones, (z: Zone) =>
-          getZoneOutcomeForPlayer(z, player.playerIndex),
-        ),
+        outcomes: countCaptureSlotOutcomes(run.zones, player.playerIndex),
         linksBroken: countLinkedDeathsCausedByPlayer(
           run.zones,
           player.playerIndex,
@@ -563,7 +559,9 @@ export default function StatsBar({
         showTypes: dialogShowTypes,
         tightTypes: dialogTightTypes,
         gameVersion: run.gameVersion,
-        randomTypes: Boolean(run.isRandomMode && run.randomizerOptions?.randomizeTypes),
+        randomTypes: Boolean(
+          run.isRandomMode && run.randomizerOptions?.randomizeTypes,
+        ),
       });
       const link = document.createElement("a");
       link.href = shareUrl;
@@ -667,7 +665,9 @@ export default function StatsBar({
         tightTypes: false,
         isRip: true,
         gameVersion: run.gameVersion,
-        randomTypes: Boolean(run.isRandomMode && run.randomizerOptions?.randomizeTypes),
+        randomTypes: Boolean(
+          run.isRandomMode && run.randomizerOptions?.randomizeTypes,
+        ),
       });
       const link = document.createElement("a");
       link.href = shareUrl;
@@ -1078,7 +1078,7 @@ export default function StatsBar({
       {/* Global progress bar: captured / dead / lost */}
       <ZoneProgressBar
         lang={lang}
-        total={total}
+        total={zoneOutcomes.total}
         captured={zoneOutcomes.captured}
         dead={zoneOutcomes.dead}
         lost={zoneOutcomes.lost}
@@ -1098,7 +1098,7 @@ export default function StatsBar({
             <ZoneProgressBar
               key={player.id}
               lang={lang}
-              total={total}
+              total={outcomes.total}
               captured={outcomes.captured}
               dead={outcomes.dead}
               lost={outcomes.lost}

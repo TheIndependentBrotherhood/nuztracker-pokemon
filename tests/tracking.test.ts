@@ -18,6 +18,7 @@ import {
 import { gameFrameSchema } from "../src/lib/tracker/schema";
 import { opponentMember } from "../src/lib/tracker/overlay";
 import {
+  countCaptureSlotOutcomes,
   getZoneOutcomeForPlayer,
   soulLinkCaptureSlot,
 } from "../src/lib/zone-progress";
@@ -790,4 +791,20 @@ test("a loaded state that revives a dead Pokémon stays paused", () => {
   revived.stateLoaded = true;
   current = ingestFrame(current, "solo", revived, pokemon, 101);
   assert.equal(current.tracking.solo.suspended, true);
+});
+
+test("progress counts a shiny second chance as its own capture slot", () => {
+  const current = record(true);
+  current.run.isShinyHuntMode = true;
+  current.run.zones[0].captures = [
+    { ...capture("regular", 0), isDead: true },
+    { ...capture("shiny", 0), shinyChance: true, isShiny: true },
+  ];
+  const counts = countCaptureSlotOutcomes(current.run.zones, 0);
+  assert.deepEqual(
+    { captured: counts.captured, dead: counts.dead, lost: counts.lost },
+    { captured: 1, dead: 1, lost: 0 },
+  );
+  assert.equal(counts.total, current.run.zones.length + 1);
+  assert.equal(countCaptureSlotOutcomes(current.run.zones, 1).lost, 1);
 });

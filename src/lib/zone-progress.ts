@@ -136,14 +136,55 @@ export function countLinkedDeathsCausedByPlayer(
     ).length;
 }
 
-export function countZoneOutcomes(
+/**
+ * Outcome of one capture slot of a zone: the regular encounter or the shiny second chance,
+ * for the whole run or for a single Soul Link player.
+ */
+export function getCaptureSlotOutcome(
+  zone: Zone,
+  shinyChance: boolean,
+  playerIndex?: number,
+): ZoneOutcome {
+  const captures = zone.captures.filter(
+    (c) =>
+      Boolean(c.shinyChance) === shinyChance &&
+      (playerIndex === undefined || (c.playerIndex ?? 0) === playerIndex),
+  );
+  const locked =
+    playerIndex !== undefined &&
+    isZoneLockedForPlayer(zone, playerIndex, shinyChance);
+  if (captures.length === 0) {
+    const lost = playerIndex === undefined ? zone.status === "lost" : locked;
+    return lost && !shinyChance ? "lost" : "pending";
+  }
+  if (captures.every(isFailed)) return "lost";
+  // An alive Pokémon in a zone a partner lost is as good as dead
+  if (captures.some(isAlive) && !locked) return "captured";
+  return "dead";
+}
+
+export interface CaptureSlotCounts extends ZoneOutcomeCounts {
+  /** Regular slots of every zone, plus the shiny second chances already used. */
+  total: number;
+}
+
+/**
+ * Count capture slots by outcome so that the progress matches the Pokémon of the team, box and
+ * graveyard: a zone with a regular capture and a shiny second chance counts twice.
+ */
+export function countCaptureSlotOutcomes(
   zones: Zone[],
-  classify: (zone: Zone) => ZoneOutcome,
-): ZoneOutcomeCounts {
-  const counts: ZoneOutcomeCounts = { captured: 0, dead: 0, lost: 0 };
+  playerIndex?: number,
+): CaptureSlotCounts {
+  const counts: CaptureSlotCounts = { captured: 0, dead: 0, lost: 0, total: 0 };
   for (const zone of zones) {
-    const outcome = classify(zone);
-    if (outcome !== "pending") counts[outcome]++;
+    for (const shinyChance of [false, true]) {
+      const outcome = getCaptureSlotOutcome(zone, shinyChance, playerIndex);
+      if (!shinyChance) counts.total++;
+      if (outcome === "pending") continue;
+      if (shinyChance) counts.total++;
+      counts[outcome]++;
+    }
   }
   return counts;
 }
